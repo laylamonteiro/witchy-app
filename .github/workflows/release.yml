@@ -353,8 +353,6 @@ jobs:
         with:
           groq-api-key: ${{ secrets.GROQ_API_KEY }}
           gemini-api-key: ${{ secrets.GEMINI_API_KEY }}
-          prokerala-client-id: ${{ secrets.PROKERALA_CLIENT_ID }}
-          prokerala-client-secret: ${{ secrets.PROKERALA_CLIENT_SECRET }}
           google-services-json: ${{ secrets.GOOGLE_SERVICES_JSON }}
 
       - name: 🛠️ Setup Flutter (pinado)
@@ -391,10 +389,21 @@ jobs:
           if [ -n "$ADMOB_ANDROID_INTERSTITIAL_ID" ]; then
             ADMOB_FLAG="--dart-define=ADMOB_ANDROID_INTERSTITIAL_ID=$ADMOB_ANDROID_INTERSTITIAL_ID"
           fi
-          CAPTCHA_FLAG=""
-          if [ -n "$TURNSTILE_SITE_KEY" ]; then
-            CAPTCHA_FLAG="--dart-define=TURNSTILE_SITE_KEY=$TURNSTILE_SITE_KEY"
+          # Trava: o captcha está EXIGIDO no servidor (Supabase →
+          # Authentication → Attack Protection, Turnstile, conferido em
+          # 23/08/2026). Com ele ligado lá, um app compilado sem a site key
+          # não sabe produzir o token — e o Supabase recusa 100% dos
+          # cadastros e das entradas por e-mail. Publicar assim é publicar
+          # um app onde ninguém consegue entrar.
+          #
+          # Antes esta esteira apenas omitia o define quando o secret
+          # faltava. Isso era correto ENQUANTO a exigência do servidor
+          # estava desligada; hoje é a receita de um release morto.
+          if [ -z "$TURNSTILE_SITE_KEY" ]; then
+            echo "::error::TURNSTILE_SITE_KEY vazio e o captcha está exigido no Supabase — este build não conseguiria cadastrar nem entrar ninguém. Cadastre o secret (Cloudflare Turnstile → site key) ou desligue Attack Protection no painel antes de publicar."
+            exit 1
           fi
+          CAPTCHA_FLAG="--dart-define=TURNSTILE_SITE_KEY=$TURNSTILE_SITE_KEY"
           DEFINES=(
             --build-name="$NOME"
             --build-number="$CODIGO"
@@ -457,6 +466,42 @@ jobs:
           fi
           echo "✅ $ARQUIVO assinado com o keystore esperado."
 
+          # O keystore ser o certo NÃO basta para o login com o Google. O
+          # Google não olha o keystore: olha se ESTA impressão digital está
+          # registrada no cliente OAuth Android do projeto — e o que o app
+          # carrega dentro é o android/app/google-services.json.
+          #
+          # As duas constantes do repositório se contradizem hoje: o
+          # SHA1_ESPERADO acima é 54:84:… e o único certificate_hash do
+          # google-services.json efetivo é 8b:d7:… Sem esta conferência, um
+          # APK desta pipeline instalado direto abre a tela do Google e
+          # volta com "ApiException: 10", sem nada acusando — nem teste, nem
+          # build. Foi assim que o defeito chegou até aqui.
+          #
+          # (Existe um SEGUNDO google-services.json em android/, divergente
+          # deste e NÃO lido pelo Gradle. Só android/app/ vale.)
+          registrados=$(jq -r '
+            [ .client[]?.oauth_client[]?.android_info?.certificate_hash // empty ] | .[]
+          ' android/app/google-services.json 2>/dev/null | tr -d ' :' | tr 'a-f' 'A-F')
+
+          if printf '%s\n' "$registrados" | grep -qx "$sha1"; then
+            echo "✅ SHA-1 registrado no google-services.json: o login com o Google reconhece este binário."
+          elif [ "$FORMATO" = "apk" ]; then
+            # O APK é o binário que se instala direto — é ele que o próprio
+            # checklist de docs/GOOGLE_SIGNIN_SETUP.md manda instalar para
+            # testar o login. Se a digital dele não está registrada, o login
+            # está quebrado NESTE artefato, com certeza.
+            echo "::error::SHA-1 $sha1 não está em android/app/google-services.json (registradas: $(printf '%s ' $registrados))."
+            echo "::error::O login com o Google vai falhar (ApiException: 10) em quem instalar este APK. Conserto: Google Cloud → Credentials → o client OAuth *Android* do pacote com.grimoriodebolso.app → adicione esta SHA-1; baixe o google-services.json de novo e substitua android/app/google-services.json."
+            exit 1
+          else
+            # No AAB isto pode ser normal: a Play re-assina com a chave dela
+            # (Play App Signing), e a digital que precisa estar registrada é
+            # a de Play Console → Test and release → App integrity — que o
+            # repositório não tem como conhecer. Por isso aqui é aviso.
+            echo "::warning::SHA-1 $sha1 (chave de upload) não está em android/app/google-services.json (registradas: $(printf '%s ' $registrados)). Para a Play isso pode ser esperado — confirme que a SHA-1 de *App integrity* está registrada no client OAuth Android."
+          fi
+
       - name: 📦 Empacotar artefato
         # Os símbolos saem só do AAB: os dois builds os produzem, e com
         # nomes iguais eles colidiriam ao juntar os artifacts na publicação.
@@ -504,8 +549,6 @@ jobs:
         with:
           groq-api-key: ${{ secrets.GROQ_API_KEY }}
           gemini-api-key: ${{ secrets.GEMINI_API_KEY }}
-          prokerala-client-id: ${{ secrets.PROKERALA_CLIENT_ID }}
-          prokerala-client-secret: ${{ secrets.PROKERALA_CLIENT_SECRET }}
 
       - name: 🛠️ Setup Flutter (pinado)
         uses: ./.github/actions/setup-flutter
@@ -536,6 +579,38 @@ jobs:
             echo "::error::REVENUECAT_WEB_KEY é uma chave sandbox (rcb_sb_). A produção precisa da chave real (rcb_)."
             exit 1
           fi
+
+          # Trava: sem GOOGLE_WEB_CLIENT_ID a entrada com o Google DENTRO da
+          # página não existe, e o app volta ao redirecionamento — que deixa
+          # accounts.google.com no histórico da aba e faz o voltar sair do
+          # app. Era o defeito que originou a feature.
+          #
+          # O que torna isso pior do que uma falha comum: o build passa, o
+          # site publica, tudo parece certo, e o único sintoma é um botão de
+          # voltar se comportando mal. Ninguém liga uma coisa à outra. Por
+          # isso a produção PARA aqui em vez de avisar.
+          # Mesma trava do build Android, pelo mesmo motivo: o captcha é
+          # exigido no servidor, e o site sem a site key compilada recusaria
+          # todo cadastro e toda entrada por e-mail.
+          if [ -z "$TURNSTILE_SITE_KEY" ]; then
+            echo "::error::TURNSTILE_SITE_KEY vazio e o captcha está exigido no Supabase — o site publicaria sem conseguir cadastrar nem entrar ninguém."
+            exit 1
+          fi
+
+          if [ -z "$GOOGLE_WEB_CLIENT_ID" ]; then
+            echo "::error::GOOGLE_WEB_CLIENT_ID vazio. Cadastre o secret (Google Cloud → Credentials → o client OAuth *Web*) — sem ele a produção publica com o login antigo, e o voltar volta a sair do app."
+            exit 1
+          fi
+          # Forma, não só presença: o valor certo é o Web client ID, não o
+          # id do client Android nem o secret. Um valor de outro formato
+          # falharia só no navegador da usuária, com origin_mismatch.
+          case "$GOOGLE_WEB_CLIENT_ID" in
+            *.apps.googleusercontent.com) ;;
+            *)
+              echo "::error::GOOGLE_WEB_CLIENT_ID não parece um client ID do Google (esperado terminar em .apps.googleusercontent.com)."
+              exit 1
+              ;;
+          esac
           flutter build web --release --no-wasm-dry-run \
             --dart-define=SUPABASE_URL="$SUPABASE_URL" \
             --dart-define=SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY" \

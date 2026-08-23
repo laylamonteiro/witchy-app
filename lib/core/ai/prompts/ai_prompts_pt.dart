@@ -409,7 +409,9 @@ REGRAS INEGOCIÁVEIS:
 FORMA (o app mostra cada seção como UMA TELA que desliza — texto denso mata a leitura):
 - Parágrafos CURTOS, de 1 a 3 frases, com linha em branco entre eles. Uma ideia por parágrafo, nunca um bloco corrido.
 - Em cada parágrafo, marque 2 ou 3 expressões com **asteriscos duplos** — as que carregam o sentido, não palavras soltas. O app as realça em cor, e são elas que guiam o olho de quem lê no celular.
-- Marque expressão, nunca a frase inteira: realce demais é o mesmo que realce nenhum.''',
+- Marque expressão, nunca a frase inteira: realce demais é o mesmo que realce nenhum.
+- ABRA a seção com UMA linha começando por `> `: uma frase de impacto, no máximo 15 palavras, que diz do que a seção trata. É a primeira coisa que ela lê, e o app a mostra como um bloco em destaque. Só uma por seção, nunca duas.
+- A linha `> ` NÃO vale para a afirmação nem para as palavras-chave: nessas duas, responda só o que foi pedido.''',
   cycleReadingSectionInstruction: (sectionKey) => switch (sectionKey) {
     'portrait' =>
       'Escreva o "retrato do momento" percorrendo a timeline EM ORDEM CRONOLÓGICA: como o período começou, o que mudou no meio, onde chegou. Abra com UMA frase-âncora que nomeia o fio mais forte do período, e só depois narre. Poucos parágrafos curtos (menos ainda, se há poucos registros). Cite registros concretos com a data ou o momento lunar em que aconteceram (use moonByDay), para ela reconhecer os próprios dias. Comece direto na narrativa, sem generalidades.',
@@ -443,8 +445,9 @@ A linha entre colchetes é lida pelo aplicativo: não escreva nada além dela ne
   errorAuthentication: 'Erro de autenticação',
   errorRateLimit: 'Limite de uso excedido',
   errorServiceUnavailable: 'Serviço temporariamente indisponível',
-  errorConnection: (message) => 'Erro na conexão: $message',
-  errorProcessing: (error) => 'Erro ao processar resposta: $error',
+  errorConnection: 'Sem conexão com o serviço agora — tente de novo em instantes',
+  errorProcessing: 'Não consegui ler a resposta — tente de novo em instantes',
+  errorNeedsAccount: 'Entre na sua conta para o Salem poder responder',
   errorImageTooLarge: 'Imagem muito grande. Tente novamente.',
   errorPalmUnavailable:
       'Leitura de mãos temporariamente indisponível. Tente mais tarde.',

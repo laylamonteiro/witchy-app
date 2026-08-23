@@ -23,7 +23,6 @@ import 'core/providers/sync_provider.dart';
 import 'core/providers/language_provider.dart';
 import 'core/services/ad_service.dart';
 import 'core/services/payment_service.dart';
-import 'core/services/premium_access.dart';
 import 'core/services/debug_log_service.dart';
 import 'core/services/data_sync_service.dart';
 import 'core/navigation/app_deep_link.dart';
@@ -150,11 +149,20 @@ Future<SharedPreferences> _initializeApp() async {
     await debugLog('SYNC', 'DataSyncService inicializado');
   }
 
-  // Initialize RevenueCat (only for mobile platforms)
-  if (!kIsWeb) {
-    await PaymentService().initialize();
-    await debugLog('SYSTEM', 'PaymentService inicializado');
-  }
+  // Initialize RevenueCat — TAMBÉM na web.
+  //
+  // Pular a web deixava o `Purchases.configure` sem rodar no navegador. Aí o
+  // `logIn`, que é o único ponto onde a compra é associada à conta do
+  // Supabase, estourava e o erro morria num debugPrint: quem comprava pelo
+  // navegador ficava num usuário anônimo do RevenueCat, sem ligação nenhuma
+  // com a própria conta. Era o único defeito de pagamento que atingia todo
+  // mundo que compra pela web.
+  //
+  // Quem decide se há pagamento é a presença da chave — na web, a `rcb_` do
+  // RevenueCat Billing. Sem chave, o `initialize` sai na primeira linha e
+  // nada quebra.
+  await PaymentService().initialize();
+  await debugLog('SYSTEM', 'PaymentService inicializado');
 
   // Initialize SharedPreferences
   final prefs = await SharedPreferences.getInstance();
@@ -316,14 +324,11 @@ class _GrimorioDeBolsoAppState extends State<GrimorioDeBolsoApp>
 
   Future<void> _triggerBackgroundSync() async {
     final syncService = DataSyncService();
-    // Sincronização é exclusiva para usuários Premium (fonte única:
-    // RevenueCat OU premium local via Código Premium/admin) E precisa estar
-    // habilitada nas configurações de Privacidade.
+    // Sem trava de plano: sincronizar é de todo mundo. O que ainda decide é
+    // a preferência da pessoa e haver conta (`isReady`).
     final syncEnabled = await syncService.cloudSyncEnabled;
-    if (syncEnabled &&
-        syncService.isReady &&
-        PremiumAccess.instance.isPremium) {
-      await debugLog('SYNC', 'Auto-sync (Premium) iniciado em background');
+    if (syncEnabled && syncService.isReady) {
+      await debugLog('SYNC', 'Auto-sync iniciado em background');
       final result = await syncService.syncAll();
       if (result.success) {
         await debugLog('SYNC', 'Auto-sync concluído com sucesso');
@@ -442,7 +447,12 @@ class _GrimorioDeBolsoAppState extends State<GrimorioDeBolsoApp>
       child: Consumer2<LanguageProvider, ThemeProvider>(
         builder: (context, languageProvider, themeProvider, child) => MaterialApp(
           navigatorKey: _rootNavigatorKey,
-          title: 'Grimório de Bolso',
+          // `onGenerateTitle` e não `title`: o nome do app é TRADUZIDO
+          // ("Pocket Grimoire", "Grimorio de Bolsillo") e a chave `appTitle`
+          // existia nos quatro ARBs sem nenhum chamador. Cravado, o nome
+          // chegava em português para todo mundo — na aba do navegador e no
+          // alternador de tarefas do Android, que é onde ele aparece.
+          onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
           locale: languageProvider.locale,
           localizationsDelegates: const [
             AppLocalizations.delegate,

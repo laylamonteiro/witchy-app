@@ -4,6 +4,7 @@ import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 
 import '../../../../core/services/payment_service.dart';
 import '../../../../core/theme/grimoire_colors.dart';
+import '../../../../core/widgets/staggered_entrance.dart';
 
 class SubscriptionHero extends StatelessWidget {
   const SubscriptionHero({super.key});
@@ -286,58 +287,78 @@ class PremiumBenefitsSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final benefits = <_Benefit>[
-      _Benefit.asset('assets/premium/icon_orb.png', l10n.premiumBenefitAdvisor),
+      // O vislumbre de cada peça é o MESMO texto da página de descoberta,
+      // de propósito: as duas telas precisam parecer a mesma ideia vista de
+      // dois ângulos, e não dois times escrevendo sobre o mesmo produto.
+      _Benefit.asset(
+        'assets/premium/icon_orb.png',
+        l10n.premiumBenefitAdvisor,
+        vislumbre: l10n.conviteVislumbreConselheiroLinha,
+      ),
       _Benefit.asset(
         'assets/premium/icon_book.png',
         l10n.premiumBenefitEncyclopedia,
+        vislumbre: l10n.conviteVislumbreEnciclopediaLinha,
       ),
       _Benefit.asset(
         'assets/premium/icon_moon.png',
         l10n.premiumBenefitDailyClimate,
+        vislumbre: l10n.conviteVislumbreClimaLinha,
       ),
       _Benefit.asset(
         'assets/premium/icon_runes.png',
         l10n.premiumBenefitUnlimitedReadings,
+        vislumbre: l10n.conviteVislumbreLeiturasLinha,
       ),
-      _Benefit.asset(
-        'assets/premium/icon_cloud.png',
-        l10n.premiumBenefitCloudSync,
-      ),
+      // A sincronização SAIU da lista, sem substituto: ela deixou de ser
+      // exclusiva do Premium. São quatro benefícios agora — Conselheiro,
+      // Enciclopédia, Clima do Dia e leituras sem limite —, mais os dois
+      // extras do Vitalício. Nada de inventar uma linha nova para preencher
+      // o buraco: o substituto é o redesenho do convite.
       if (selectedPlan == SubscriptionType.lifetime) ...[
         _Benefit.icon(Icons.auto_awesome, l10n.premiumBenefitLifetimeCycle),
         _Benefit.icon(Icons.all_inclusive, l10n.premiumBenefitLifetimeNoRenew),
       ],
     ];
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+    // A cascata que o app já usa nas outras telas dá o senso de "grandioso"
+    // sem efeito novo — e sem pressa inventada. A divisória entre linhas
+    // saiu: peça precisa de ar, e régua entre elas as devolvia à condição
+    // de lista.
+    return StaggeredEntrance(
       children: [
         for (var index = 0; index < benefits.length; index++) ...[
           _PremiumBenefitRow(benefit: benefits[index]),
-          if (index != benefits.length - 1)
-            Divider(height: 10, color: context.gc.surfaceBorder),
+          if (index != benefits.length - 1) const SizedBox(height: 14),
         ],
       ],
     );
   }
 }
 
-/// Uma linha da lista: ou uma arte do pacote premium, ou um ícone do sistema
-/// (as exclusivas do Vitalício não têm arte própria e ganham realce lilás).
+/// Uma PEÇA da oferta: a arte, o nome e — quando há — o vislumbre do que ela
+/// entrega. As exclusivas do Vitalício não têm arte própria nem vislumbre:
+/// são fato do plano, ganham ícone do sistema e realce lilás.
 class _Benefit {
   const _Benefit._({
     required this.label,
+    this.vislumbre,
     this.assetPath,
     this.iconData,
     this.highlighted = false,
   });
 
-  factory _Benefit.asset(String assetPath, String label) =>
-      _Benefit._(assetPath: assetPath, label: label);
+  factory _Benefit.asset(String assetPath, String label, {String? vislumbre}) =>
+      _Benefit._(assetPath: assetPath, label: label, vislumbre: vislumbre);
 
   factory _Benefit.icon(IconData iconData, String label) =>
       _Benefit._(iconData: iconData, label: label, highlighted: true);
 
   final String label;
+
+  /// A linha do que a feature entrega. Nula nas peças que são fato, não
+  /// desejo.
+  final String? vislumbre;
+
   final String? assetPath;
   final IconData? iconData;
   final bool highlighted;
@@ -354,7 +375,7 @@ class _PremiumBenefitRow extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
             width: 44,
@@ -387,14 +408,35 @@ class _PremiumBenefitRow extends StatelessWidget {
           ),
           const SizedBox(width: 10),
           Expanded(
-            child: Text(
-              benefit.label,
-              style: GoogleFonts.lora(
-                color: destaque ? context.gc.lilac : context.gc.textPrimary,
-                fontSize: 14.5,
-                height: 1.22,
-                fontWeight: FontWeight.w700,
-              ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  benefit.label,
+                  style: GoogleFonts.lora(
+                    color: destaque ? context.gc.lilac : context.gc.textPrimary,
+                    fontSize: 14.5,
+                    height: 1.22,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                // Sem vislumbre a peça vira a linha de antes — é o caso das
+                // duas exclusivas do Vitalício, que são FATO do plano e não
+                // desejo: explicar "sem renovação" com uma segunda frase
+                // seria vender o que já está dito.
+                if (benefit.vislumbre != null) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    benefit.vislumbre!,
+                    style: TextStyle(
+                      color: context.gc.textSecondary,
+                      fontSize: 12.5,
+                      height: 1.4,
+                    ),
+                  ),
+                ],
+              ],
             ),
           ),
         ],
@@ -417,6 +459,14 @@ class PremiumOfferPanel extends StatelessWidget {
   final VoidCallback onPurchase;
   final Widget? unavailableNotice;
 
+  /// Quanto o anual economiza, em porcento — null esconde o selo.
+  ///
+  /// Vem calculado dos preços que a LOJA devolveu. Era texto fixo no ARB
+  /// ("Economize 50%"): uma conta com dois números que a tela não tinha na
+  /// mão, e que mentia se a loja mudasse o preço ou a pessoa estivesse fora
+  /// do Brasil.
+  final int? economiaAnual;
+
   const PremiumOfferPanel({
     super.key,
     required this.selectedPlan,
@@ -431,6 +481,7 @@ class PremiumOfferPanel extends StatelessWidget {
     this.yearlyEnabled = true,
     this.lifetimeEnabled = false,
     this.unavailableNotice,
+    this.economiaAnual,
   });
 
   @override
@@ -480,6 +531,7 @@ class PremiumOfferPanel extends StatelessWidget {
                 monthlyEnabled: monthlyEnabled,
                 yearlyEnabled: yearlyEnabled,
                 lifetimeEnabled: lifetimeEnabled,
+                economiaAnual: economiaAnual,
               ),
               const SizedBox(height: 12),
               SubscriptionPurchaseButton(
@@ -488,7 +540,7 @@ class PremiumOfferPanel extends StatelessWidget {
                 onPressed: onPurchase,
               ),
               const SizedBox(height: 8),
-              const SubscriptionGuarantees(),
+              SubscriptionGuarantees(selectedPlan: selectedPlan),
             ],
           ),
         );
@@ -507,6 +559,9 @@ class SubscriptionPlanSelector extends StatelessWidget {
   final bool yearlyEnabled;
   final bool lifetimeEnabled;
 
+  /// Quanto o anual economiza, em porcento — null esconde o selo.
+  final int? economiaAnual;
+
   const SubscriptionPlanSelector({
     super.key,
     required this.selectedPlan,
@@ -517,6 +572,7 @@ class SubscriptionPlanSelector extends StatelessWidget {
     this.monthlyEnabled = true,
     this.yearlyEnabled = true,
     this.lifetimeEnabled = false,
+    this.economiaAnual,
   });
 
   @override
@@ -542,7 +598,11 @@ class SubscriptionPlanSelector extends StatelessWidget {
       title: l10n.premiumPlanYearly,
       price: yearlyPrice,
       period: l10n.premiumPerYear,
-      savings: l10n.premiumSaveYearly,
+      // Sem número, sem selo: esconder é melhor do que mostrar uma conta
+      // que pode estar errada numa tela de venda.
+      savings: economiaAnual == null
+          ? null
+          : l10n.premiumSaveYearlyPercent(economiaAnual!),
       popular: true,
       emphasized: true,
       selected: selectedPlan == SubscriptionType.yearly,
@@ -857,7 +917,15 @@ class SubscriptionPurchaseButton extends StatelessWidget {
 }
 
 class SubscriptionGuarantees extends StatelessWidget {
-  const SubscriptionGuarantees({super.key});
+  const SubscriptionGuarantees({super.key, required this.selectedPlan});
+
+  /// O rodapé precisa acompanhar o plano escolhido.
+  ///
+  /// A lista de benefícios já respondia ao plano; este rodapé não: era `const`
+  /// e dizia sempre "cancele a qualquer momento". Com o Vitalício em foco, a
+  /// mesma dobra da tela prometia "sem renovação, para sempre" e, duas linhas
+  /// abaixo, oferecia cancelar uma assinatura que não existe.
+  final SubscriptionType selectedPlan;
 
   @override
   Widget build(BuildContext context) {
@@ -870,7 +938,9 @@ class SubscriptionGuarantees extends StatelessWidget {
     return Column(
       children: [
         Text(
-          l10n.premiumCancelAnytime,
+          selectedPlan == SubscriptionType.lifetime
+              ? l10n.premiumLifetimeOnce
+              : l10n.premiumCancelAnytime,
           style: GoogleFonts.lora(
             color: context.gc.textSecondary,
             fontSize: 12,

@@ -57,6 +57,7 @@ class AiPrompts {
     required this.errorServiceUnavailable,
     required this.errorConnection,
     required this.errorProcessing,
+    required this.errorNeedsAccount,
     required this.errorImageTooLarge,
     required this.errorPalmUnavailable,
     required this.errorUnknown,
@@ -187,8 +188,19 @@ class AiPrompts {
   final String errorAuthentication;
   final String errorRateLimit;
   final String errorServiceUnavailable;
-  final String Function(String? message) errorConnection;
-  final String Function(Object error) errorProcessing;
+  /// Sem payload de propósito: o detalhe técnico da DioException carrega a
+  /// URL do provedor de IA, e ele chegava à tela dentro de "Erro na conexão:
+  /// ...". Além de não dizer nada a quem lê, publicava para onde o app manda
+  /// os dados. O motivo agora vai para o log.
+  final String errorConnection;
+  final String errorProcessing;
+
+  /// Quando a IA passa pelo intermediário do servidor e não há sessão.
+  ///
+  /// Não é erro de conexão nem de leitura: é a única falha da camada de IA
+  /// que a pessoa resolve sozinha, e por isso ela precisa dizer o que fazer
+  /// em vez de pedir para tentar de novo.
+  final String errorNeedsAccount;
   final String errorImageTooLarge;
   final String errorPalmUnavailable;
   final String errorUnknown;

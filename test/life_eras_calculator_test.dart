@@ -89,6 +89,19 @@ void main() {
         expect(mesAno(linha.eras[i].inicio), inicio, reason: 'início da Era $i');
         expect(mesAno(linha.eras[i].fim), fim, reason: 'fim da Era $i');
       }
+
+      // Este expect é o MECANISMO que o doc de kLifeErasAlgoVersion promete.
+      //
+      // A constante dizia "subir este número invalida os caches gravados por
+      // versões anteriores" e nada obrigava ninguém a subi-la — era lembrete,
+      // e lembrete não é trava. O carimbo do cache é só das ENTRADAS
+      // (longitude da Lua, instante do nascimento, versão), então mudar o
+      // CÁLCULO sem mexer na versão deixa cache velho na máquina de todo
+      // mundo que já abriu a tela, e ele nunca cai sozinho.
+      //
+      // Os valores congelados acima são o contrato do algoritmo. Mudou algum?
+      // Suba a constante no mesmo commit — e este expect junto.
+      expect(kLifeErasAlgoVersion, 1);
     });
 
     test('a Fase de Vênus dentro de Júpiter vai de Fev 2024 a Out 2026', () {

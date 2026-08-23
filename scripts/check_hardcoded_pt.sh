@@ -31,7 +31,22 @@ fi
 
 PATTERN='[ãõáéíóúâêôçÃÕÁÉÍÓÚÂÊÔÇ]'
 
-matches=$(rg -n "$PATTERN" "$ROOT/lib" \
+# Segunda rede: português SEM acento.
+#
+# O scanner detectava português pela acentuação, e por isso deixou passar
+# "Compra cancelada", "Nenhuma compra encontrada para restaurar", "Erro ao
+# fazer login" e quinze irmãs — todas chegando à tela em inglês e espanhol.
+# Uma delas ainda era comparada como string literal em duas telas, então
+# traduzi-la faria o app acusar erro num cancelamento normal.
+#
+# A regra é conservadora de propósito: só olha DENTRO de literais de string,
+# e só acusa com DUAS palavras distintas da lista. Palavra solta não basta —
+# "para" aparece em identificador, "dia" em nome de variável. As palavras
+# foram escolhidas por não colidirem com inglês nem com fragmento de domínio
+# (por isso "com" não está aqui).
+PALAVRAS='nenhum|nenhuma|nenhuns|nenhumas|cancelada|cancelado|canceladas|cancelados|encontrada|encontrado|encontradas|encontrados|restaurar|novamente|tentar|tente|seu|sua|seus|suas|voce|seja|esta|este|isso|aqui|agora|hoje|ontem|amanha|sem|para|pelo|pela|pelos|pelas|dos|das|uma|umas|foi|eram|sao|salvar|apagar|excluir|enviar|entrar|sair|falha|falhou|erro|erros|conta|contas|senha|senhas|compra|compras|leitura|leituras|dia|dias|mes|meses|ainda|depois|antes|quando|porque|mas|nao|sim|tudo|nada|algo|alguns'
+
+matches=$(rg -n "$PATTERN|(?i:\\b($PALAVRAS)\\b)" "$ROOT/lib" \
   --glob '!lib/l10n/**' \
   --glob '!**/*_pt.dart' \
   --glob '!**/*_en.dart' \
@@ -41,6 +56,42 @@ import linecache, re, sys
 accent = re.compile(r'$PATTERN')
 logcall = re.compile(r'(unawaited\s*\(\s*)?(await\s+)?(print|debugPrint|debugLog|_log|_addLog)\s*\(')
 assertopen = re.compile(r'.*\bassert\s*\(')
+
+ASPA = chr(39)
+ASPAS = chr(34)
+palavra = re.compile(r'\b($PALAVRAS)\b', re.IGNORECASE)
+
+
+def sem_comentario(code):
+    # Tira o comentário de fim de linha quando ele está fora de string
+    # (contagem par de aspas antes dele).
+    m = re.search(r'(?<!:)//', code)
+    if m is None:
+        return code
+    antes = code[:m.start()]
+    if antes.count(ASPA) % 2 == 0 and antes.count(ASPAS) % 2 == 0:
+        return antes
+    return code
+
+
+def literais(code):
+    # Aproximação: pedaços entre aspas simples e entre aspas duplas. Não
+    # entende escape, e não precisa — o que interessa é a frase lá dentro.
+    trecho = sem_comentario(code)
+    for aspa in (ASPA, ASPAS):
+        for m in re.finditer(aspa + '([^' + aspa + ']*)' + aspa, trecho):
+            yield m.group(1)
+
+
+def maior_contagem(code):
+    # Quantas palavras DISTINTAS da lista cabem no literal mais suspeito.
+    maior = 0
+    for texto in literais(code):
+        if not texto or ' ' not in texto:
+            continue
+        maior = max(maior, len({w.lower() for w in palavra.findall(texto)}))
+    return maior
+
 
 def in_log_continuation(path, lineno):
     # Continuação multilinha de chamada de log/assert: procura, até 5 linhas
@@ -84,12 +135,19 @@ for line in sys.stdin:
     # conteúdo já localizado inline; o EN fica ao lado sem acentos.
     if re.match(r\"(pt|pt_BR|es)\s*:\s*['\\\"]\", stripped):
         continue
-    # Comentário no fim da linha: só conta se houver acento ANTES do '//'
-    # (fora de string, aproximado ignorando '//' precedido por ':', ex. URLs).
-    m = re.search(r'(?<!:)//', code)
-    if m and not accent.search(code[:m.start()]):
+    if accent.search(code):
+        # Comentário no fim da linha: só conta se houver acento ANTES do '//'
+        # (fora de string, aproximado ignorando '//' precedido por ':', ex. URLs).
+        m = re.search(r'(?<!:)//', code)
+        if m and not accent.search(code[:m.start()]):
+            continue
+        print(line)
         continue
-    print(line)
+    # Sem acento: só acusa DENTRO de literal de string, e só com DUAS
+    # palavras distintas da lista. Palavra solta não basta — 'para' aparece
+    # em identificador, 'dia' em nome de variável.
+    if maior_contagem(code) >= 2:
+        print(line)
 " || true)
 
 if [ -s "$ALLOWLIST" ]; then

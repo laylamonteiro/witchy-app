@@ -1,14 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
-import 'package:provider/provider.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/magical_button.dart';
 import '../../../../core/widgets/magical_card.dart';
-import '../../../auth/data/models/feature_access.dart';
-import '../../../auth/presentation/providers/auth_provider.dart';
-import '../../../auth/presentation/widgets/premium_blur_widget.dart';
 import '../../../encyclopedia/presentation/widgets/related_link.dart';
 import '../../data/models/guided_ritual_model.dart';
 import '../../data/models/guided_rituals_data.dart';
@@ -30,20 +26,15 @@ class GuidedRitualPage extends StatefulWidget {
 }
 
 class _GuidedRitualPageState extends State<GuidedRitualPage> {
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _ensureAccess());
-  }
-
-  Future<void> _ensureAccess() async {
-    final access = context
-        .read<AuthProvider>()
-        .checkFeatureAccess(AppFeature.guidedRitualPlayer);
-    if (!access.hasFullAccess && mounted) {
-      await showPaywallThenPop(context);
-    }
-  }
+  // Sem paywall na ENTRADA. Este era o último fluxo do app que barrava na
+  // porta — o padrão já abolido na Quiromancia e no Guia da Natureza. A
+  // pessoa tocava num ritual e a tela abria só para empurrá-la de volta.
+  //
+  // O conteúdo desta página (materiais, correspondências, para que serve)
+  // fica visível para todo mundo, e o bloqueio aparece onde ele realmente
+  // está: no player, que já mostra o primeiro passo e põe os demais atrás
+  // de um cadeado. Não havia nada a construir aqui — só parar de fechar a
+  // porta antes de ela ser aberta.
 
   @override
   Widget build(BuildContext context) {

@@ -128,10 +128,12 @@ bash scripts/release.sh 2.1.0
 ## Setup que vive fora do repositório
 
 1. **Secrets** (Settings → Secrets and variables → Actions): os já
-   existentes (`ANDROID_KEYSTORE_*`, `GOOGLE_SERVICES_JSON`, `GROQ/GEMINI/
-   PROKERALA`, `SUPABASE_*`, `REVENUECAT_*`, `ADMIN_*`, `TURNSTILE_SITE_KEY`,
-   `CLOUDFLARE_*`) mais **`PLAY_SERVICE_ACCOUNT_JSON`** — ver
-   `docs/PLAY_SERVICE_ACCOUNT.md`.
+   existentes (`ANDROID_KEYSTORE_*`, `GOOGLE_SERVICES_JSON`,
+   `GROQ/GEMINI`, `SUPABASE_*`, `REVENUECAT_*`, `ADMIN_*`,
+   `TURNSTILE_SITE_KEY`, `CLOUDFLARE_*`) mais
+   **`PLAY_SERVICE_ACCOUNT_JSON`** — ver `docs/PLAY_SERVICE_ACCOUNT.md`.
+   Os secrets `PROKERALA_*` deixaram de ser lidos por qualquer workflow (o
+   mapa astral é calculado no aparelho); podem ser apagados do GitHub.
 1b. **Variável `PLAY_TRACK`** (mesma tela, aba *Variables*): o identificador
    da faixa da Play que recebe o AAB. Como descobrir o seu está em
    `docs/PLAY_SERVICE_ACCOUNT.md`.

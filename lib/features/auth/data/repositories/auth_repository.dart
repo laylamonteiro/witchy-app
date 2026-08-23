@@ -90,8 +90,11 @@ abstract class AuthRepository {
     String? captchaToken,
   });
 
-  /// Verifica o email do usuário
-  Future<AuthResult> verifyEmail();
+  /// Reenvia o e-mail de confirmação da conta.
+  ///
+  /// Pede [captchaToken] porque o Supabase exige captcha também no reenvio
+  /// (Attack Protection ligado): sem token, a chamada é recusada.
+  Future<AuthResult> verifyEmail({String? captchaToken});
 
   /// Atualiza perfil do usuário
   Future<AuthResult> updateProfile({

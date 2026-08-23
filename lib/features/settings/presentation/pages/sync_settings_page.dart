@@ -6,8 +6,6 @@ import '../../../../core/providers/sync_provider.dart';
 import '../../../../core/services/data_sync_service.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
-import '../../../auth/presentation/providers/auth_provider.dart';
-import '../../../subscription/presentation/pages/subscription_page.dart';
 
 /// Sincronização e Backup com item PRÓPRIO nas Configurações — morava
 /// dentro de Privacidade, onde ninguém achava (e semanticamente privacidade
@@ -30,13 +28,10 @@ class _SyncSettingsPageState extends State<SyncSettingsPage> {
   }
 
   Future<void> _loadSettings() async {
-    final authProvider = context.read<AuthProvider>();
     final syncProvider = context.read<SyncProvider>();
     final prefs = await SharedPreferences.getInstance();
-    final cloudSyncEnabled = await DataSyncService.ensureCloudSyncPreference(
-      prefs,
-      isPremium: authProvider.isPremiumEffective,
-    );
+    final cloudSyncEnabled =
+        await DataSyncService.ensureCloudSyncPreference(prefs);
     await syncProvider.refreshState();
     if (!mounted) return;
     setState(() {
@@ -79,31 +74,21 @@ class _SyncSettingsPageState extends State<SyncSettingsPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _buildSectionHeader(l10n.editSyncBackup),
-                  Consumer<AuthProvider>(
-                    builder: (context, authProvider, _) {
-                      final isPremium = authProvider.isPremiumEffective;
-                      return _buildSettingsCard([
-                        _buildSwitchTile(
-                          icon: Icons.sync,
-                          title: l10n.editSyncBackupCloud,
-                          subtitle: isPremium
-                              ? l10n.editSyncBackupOn
-                              : l10n.editSyncPremiumOnly,
-                          value: isPremium && _cloudSyncEnabled,
-                          onChanged: (value) {
-                            // Free não altera o toggle: qualquer toque abre
-                            // o convite Premium.
-                            if (!isPremium) {
-                              _showUpgradeDialog();
-                              return;
-                            }
-                            setState(() => _cloudSyncEnabled = value);
-                            _saveCloudSync(value);
-                          },
-                        ),
-                      ]);
-                    },
-                  ),
+                  // Sem paywall: o interruptor é da pessoa, seja qual for o
+                  // plano. Era aqui que o Free batia num cadeado e ficava sem
+                  // cópia nenhuma do grimório.
+                  _buildSettingsCard([
+                    _buildSwitchTile(
+                      icon: Icons.sync,
+                      title: l10n.editSyncBackupCloud,
+                      subtitle: l10n.editSyncBackupOn,
+                      value: _cloudSyncEnabled,
+                      onChanged: (value) {
+                        setState(() => _cloudSyncEnabled = value);
+                        _saveCloudSync(value);
+                      },
+                    ),
+                  ]),
                   const SizedBox(height: 24),
                   _buildSectionHeader(l10n.privacySyncStatusSection),
                   _buildSyncStatusCard(),
@@ -182,90 +167,9 @@ class _SyncSettingsPageState extends State<SyncSettingsPage> {
     return Consumer<SyncProvider>(
       builder: (context, syncProvider, _) {
         final l10n = AppLocalizations.of(context);
-        final isPremium = syncProvider.isPremium;
         final isReady = syncProvider.isReady && _cloudSyncEnabled;
         final status = syncProvider.status;
         final isSyncing = syncProvider.isSyncing;
-
-        // Se não é premium, mostrar upsell
-        if (!isPremium) {
-          return Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  context.gc.lilac.withValues(alpha: 0.2),
-                  context.gc.gold.withValues(alpha: 0.1),
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: context.gc.gold.withValues(alpha: 0.5)),
-            ),
-            child: Column(
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: context.gc.gold.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Icon(Icons.workspace_premium,
-                          color: context.gc.gold, size: 28),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            l10n.privacyCloudSyncUpsellTitle,
-                            style: TextStyle(
-                              color: context.gc.textPrimary,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            l10n.editSyncPremiumOnly,
-                            style: TextStyle(
-                              color: context.gc.gold,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  l10n.privacyCloudSyncUpsellBody,
-                  style:
-                      TextStyle(color: context.gc.textSecondary, fontSize: 13),
-                ),
-                const SizedBox(height: 16),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    onPressed: () => openSubscriptionPage(context),
-                    icon: const Icon(Icons.star, size: 18),
-                    label: Text(l10n.premiumBePremium),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: context.gc.lilac,
-                      foregroundColor: context.gc.onPrimary,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          );
-        }
 
         return Container(
           padding: const EdgeInsets.all(16),
@@ -310,23 +214,6 @@ class _SyncSettingsPageState extends State<SyncSettingsPage> {
                                   color: context.gc.textPrimary,
                                   fontWeight: FontWeight.w600,
                                   fontSize: 16,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 6, vertical: 2),
-                              decoration: BoxDecoration(
-                                color: context.gc.gold.withValues(alpha: 0.2),
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                              child: Text(
-                                l10n.privacyPremiumBadge,
-                                style: TextStyle(
-                                  color: context.gc.gold,
-                                  fontSize: 9,
-                                  fontWeight: FontWeight.bold,
                                 ),
                               ),
                             ),
@@ -419,49 +306,4 @@ class _SyncSettingsPageState extends State<SyncSettingsPage> {
     }
   }
 
-  void _showUpgradeDialog() {
-    final l10n = AppLocalizations.of(context);
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: context.gc.surface,
-        title: Row(
-          children: [
-            const Icon(Icons.workspace_premium, color: Color(0xFFFFD700)),
-            const SizedBox(width: 8),
-            Text(
-              l10n.editPremiumFeature,
-              style: TextStyle(color: context.gc.textPrimary),
-            ),
-          ],
-        ),
-        content: Text(
-          l10n.editSyncPremiumPitch,
-          style: TextStyle(color: context.gc.textSecondary, height: 1.5),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(
-              l10n.editNotNow,
-              style: TextStyle(color: context.gc.textSecondary),
-            ),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              openSubscriptionPage(this.context);
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF9C27B0),
-            ),
-            child: Text(
-              l10n.profileUpgrade,
-              style: TextStyle(color: context.gc.textPrimary),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }

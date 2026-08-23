@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../astrology/data/models/birth_chart_model.dart';
@@ -67,6 +68,10 @@ class LifeErasRepository {
         horaIncerta: chart.unknownBirthTime,
       );
     } catch (e) {
+      // A causa morria aqui: a tela mostra um cartão genérico e o campo
+      // `erro` de LifeErasError não tem leitor nenhum no app inteiro. Quando
+      // alguém reclamar, o log é o que vai existir.
+      debugPrint('Eras: falha ao montar a linha do tempo: $e');
       return LifeErasError(e);
     }
   }

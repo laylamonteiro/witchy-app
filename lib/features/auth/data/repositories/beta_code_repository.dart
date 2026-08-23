@@ -236,6 +236,14 @@ class BetaCodeRepository {
   /// Grava role=premium/plan=lifetime em `profiles` após um resgate
   /// (best-effort). Só tenta para ids que são UUID de conta Supabase e nunca
   /// propaga erro — o resgate em si já foi concluído.
+  ///
+  /// Depois de `supabase/profiles_lockdown_migration.sql`, esta escrita é
+  /// NEGADA pelo banco: `role` e `plan` saíram do grant do cliente
+  /// justamente porque um PATCH nelas virava conta admin. Quem concede o
+  /// premium agora é a RPC `redeem_beta_code`, que roda como dona do banco.
+  /// Este caminho só é alcançado quando a RPC não existe no projeto — aí o
+  /// cupom é consumido e o premium não vem, e o log abaixo é a única
+  /// evidência. Rode a migração.
   Future<void> _persistPremiumProfile(
     SupabaseClient supabase,
     String userId,

@@ -1,7 +1,7 @@
 name: Credenciais do app
 description: >-
-  Escreve os arquivos de credencial que o código importa (Groq, Gemini,
-  Prokerala) e, quando pedido, o google-services.json. Inputs vazios geram
+  Escreve os arquivos de credencial que o código importa (Groq, Gemini) e,
+  quando pedido, o google-services.json. Inputs vazios geram
   stubs válidos — o mesmo passo serve para analyze/teste (sem chaves) e para
   builds reais (com chaves). Composite não lê secrets sozinha: tudo entra
   explícito por input, então o que cada job expõe fica visível no workflow.
@@ -11,12 +11,6 @@ inputs:
     required: false
     default: ''
   gemini-api-key:
-    required: false
-    default: ''
-  prokerala-client-id:
-    required: false
-    default: ''
-  prokerala-client-secret:
     required: false
     default: ''
   google-services-json:
@@ -42,18 +36,6 @@ runs:
         ///
         class GeminiCredentials {
           static const String apiKey = '${{ inputs.gemini-api-key }}';
-        }
-        CREDENTIALS
-
-    - name: 🔐 Credenciais Prokerala
-      shell: bash
-      run: |
-        cat > lib/features/astrology/data/services/prokerala_credentials.dart << 'CREDENTIALS'
-        /// Credentials for the Prokerala API.
-        ///
-        class ProkeralaCredentials {
-          static const String clientId = '${{ inputs.prokerala-client-id }}';
-          static const String clientSecret = '${{ inputs.prokerala-client-secret }}';
         }
         CREDENTIALS
 

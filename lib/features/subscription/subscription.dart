@@ -1,6 +1,7 @@
 /// Módulo de Subscription - Gerenciamento de assinaturas com RevenueCat
 ///
 /// Este módulo contém:
+/// - PaginaDeDescoberta: "O que você ainda não viu" — o convite, antes do preço
 /// - PaywallPage: Página para apresentar ofertas de assinatura
 /// - SubscriptionPage: Página de gerenciamento de assinatura
 /// - CustomerCenterPage: Central do assinante para gerenciar assinatura
@@ -24,6 +25,7 @@
 /// ```
 library;
 
+export 'presentation/pages/pagina_de_descoberta.dart';
 export 'presentation/pages/paywall_page.dart';
 export 'presentation/pages/subscription_page.dart';
 export 'presentation/pages/customer_center_page.dart';

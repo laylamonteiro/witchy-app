@@ -5,7 +5,6 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
-import '../../../auth/presentation/widgets/premium_blur_widget.dart';
 import '../../data/models/trail_model.dart';
 import '../providers/learning_provider.dart';
 import 'lesson_page.dart';
@@ -74,15 +73,11 @@ class TrailPage extends StatelessWidget {
 
     return InkWell(
       onTap: () {
-        if (needsPremium) {
-          showModalBottomSheet(
-            context: context,
-            isScrollControlled: true,
-            backgroundColor: Colors.transparent,
-            builder: (context) => const PremiumUpgradeSheet(),
-          );
-          return;
-        }
+        // Lição Premium também NAVEGA: a LessonPage é quem tranca (gate
+        // central) e mostra a degustação — o primeiro parágrafo real, o véu
+        // e o convite. Abrir o paywall daqui era a porta na cara: a pessoa
+        // gratuita nunca via o que estava comprando, e a exposição nem
+        // chegava a ser registrada no motor de ofertas.
         Navigator.of(context).push(
           MaterialPageRoute(
             builder: (_) => LessonPage(trail: trail, lesson: lesson),

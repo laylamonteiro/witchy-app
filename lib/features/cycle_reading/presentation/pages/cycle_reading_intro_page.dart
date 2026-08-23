@@ -19,6 +19,8 @@ import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../diary/data/models/free_writing_model.dart';
 import '../../../diary/data/repositories/free_writing_repository.dart';
 import '../../../grimoire/presentation/pages/records_archive_list_page.dart';
+import '../../../../core/services/debug_log_service.dart';
+import '../../data/compra_pendente_store.dart';
 import '../../data/models/cycle_reading_model.dart';
 import '../../data/services/cycle_reading_composer.dart';
 import '../../data/services/cycle_reading_service.dart';
@@ -120,6 +122,11 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
       ? RevenueCatConfig.cycleReadingWeekProductId
       : RevenueCatConfig.cycleReadingMonthProductId;
 
+  /// A rede da compra avulsa: consumível não gera entitlement e o
+  /// restore da loja não devolve avulso, então este registro é o único
+  /// caminho de volta se a gravação do crédito falhar depois da cobrança.
+  final _compras = CompraPendenteStore();
+
   bool _isLoading = true;
   bool _isWorking = false;
   int _recordCount = 0;
@@ -143,6 +150,12 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
     // janela. O que a primeira tela precisa é do calendário.
     _loadPrices();
     _carregarDensidade();
+
+    // Antes de qualquer oferta: se houve cobrança que não virou crédito,
+    // a pessoa não pode ver o botão de comprar de novo o que já pagou.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _recuperarCompraPendente();
+    });
 
     final janela = widget.initialPeriod;
     if (janela != null) {
@@ -187,10 +200,10 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
     // A loja precisa estar configurada para haver preço. Contas que entram
     // sem passar pelo login de servidor (admin local, simulação de plano)
     // nunca chamam initialize — e aí o catálogo fica vazio e o preço some.
-    // initialize é idempotente: no-op se já rodou.
-    if (!_payment.isInitialized) {
-      await _payment.initialize();
-    }
+    // `garantirCatalogo` também tenta de novo quando o catálogo faltou no
+    // boot: `isInitialized` era true até depois de erro, então a conferência
+    // anterior nunca deixava a segunda tentativa acontecer.
+    await _payment.garantirCatalogo();
     for (final id in [
       RevenueCatConfig.cycleReadingWeekProductId,
       RevenueCatConfig.cycleReadingMonthProductId,
@@ -325,6 +338,7 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
     required ({DateTime start, DateTime end}) period,
     String? productId,
     String origin = CycleReadingOrigin.purchase,
+    String? periodType,
   }) async {
     final anterior = await _service.repository.findForExactPeriod(
       userId,
@@ -335,7 +349,9 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
       id: anterior?.id,
       writingId: anterior?.writingId,
       userId: userId,
-      periodType: _periodType,
+      // A recuperação de uma compra pendente credita a janela GRAVADA, que
+      // pode não ser a que está na tela agora.
+      periodType: periodType ?? _periodType,
       periodStart: period.start,
       periodEnd: period.end,
       productId: productId,
@@ -347,38 +363,115 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
     if (_isWorking) return;
     setState(() => _isWorking = true);
     final messenger = ScaffoldMessenger.of(context);
+    final l10n = AppLocalizations.of(context);
+    final gc = context.gc;
     final userId = context.read<AuthProvider>().currentUser.id;
     final period = _period;
     try {
       final result = await _payment.purchaseConsumable(_productId);
       if (!result.success) {
-        if (result.errorMessage != null &&
-            result.errorMessage != 'Compra cancelada' &&
-            mounted) {
+        // Cancelar é escolha, não defeito: só fala quem tem o que dizer.
+        // A conferência é pelo campo `foiCancelada`, não pelo texto da
+        // mensagem — comparar com o literal 'Compra cancelada' quebrava
+        // assim que a mensagem fosse traduzida, e passava a acusar erro num
+        // cancelamento normal.
+        if (!result.foiCancelada && result.errorMessage != null && mounted) {
           messenger.showSnackBar(SnackBar(
             content: Text(result.errorMessage!),
-            backgroundColor: context.gc.alert,
+            backgroundColor: gc.alert,
           ));
         }
         return;
       }
 
-      // Compra confirmada: registra o crédito ANTES de gerar — se a geração
-      // falhar, o crédito sobrevive e a pessoa tenta de novo sem pagar.
-      final credit = await _creditoPara(
-        userId,
-        period: period,
+      // A COBRANÇA PASSOU. Daqui em diante todo caminho de erro precisa
+      // deixar a compra recuperável: o registro é gravado ANTES do crédito,
+      // não no catch, porque uma queda entre a cobrança e o catch também
+      // precisa deixar rastro.
+      final pendente = CompraPendente(
+        userId: userId,
         productId: _productId,
+        periodType: _periodType,
+        periodStart: period.start,
+        periodEnd: period.end,
       );
-      await _service.repository.insert(credit);
-      final engine = await OfferEngine.load();
-      await engine.recordConversion(OfferSlot.cycleReading);
+      await _compras.registrar(pendente);
+
+      final credit = await _creditarPendente(pendente);
       if (!mounted) return;
       setState(() => _existing = credit);
       await _generate(credit);
+    } catch (e) {
+      // Sem este catch a exceção escapava de um `onPressed:` que ninguém
+      // aguarda: virava uma linha de log e a tela apenas parava de girar,
+      // com a pessoa já cobrada. Agora ela sabe o que houve, e o crédito
+      // volta sozinho na próxima abertura desta tela.
+      await debugLog('CYCLE_READING', 'Falha depois da cobrança aprovada: $e');
+      if (!mounted) return;
+      messenger.showSnackBar(SnackBar(
+        content: Text(l10n.cycleReadingPurchaseRecoverable),
+        backgroundColor: gc.alert,
+        duration: const Duration(seconds: 8),
+      ));
     } finally {
       if (mounted) setState(() => _isWorking = false);
     }
+  }
+
+  /// Transforma a compra aprovada em crédito e só então apaga a pendência.
+  ///
+  /// Rodar duas vezes para a mesma janela não duplica nada: `_creditoPara`
+  /// reaproveita a leitura da janela exata e o `insert` do repositório é
+  /// `ConflictAlgorithm.replace`. É o que torna a recuperação segura.
+  Future<CycleReadingModel> _creditarPendente(CompraPendente compra) async {
+    final credit = await _creditoPara(
+      compra.userId,
+      period: (start: compra.periodStart, end: compra.periodEnd),
+      productId: compra.productId,
+      periodType: compra.periodType,
+    );
+    await _service.repository.insert(credit);
+    await _compras.limpar();
+
+    final engine = await OfferEngine.load();
+    await engine.recordConversion(OfferSlot.cycleReading);
+    return credit;
+  }
+
+  /// Devolve o crédito de uma compra que foi cobrada e não virou leitura.
+  ///
+  /// Roda na abertura da tela, antes de qualquer oferta: sem isto a pessoa
+  /// veria de novo o botão de comprar aquilo que já pagou.
+  Future<void> _recuperarCompraPendente() async {
+    // Tudo que depende do context é lido ANTES do primeiro await: depois
+    // dele a tela pode ter saído, e tocar no context seria uso após gap
+    // assíncrono.
+    final userId = context.read<AuthProvider>().currentUser.id;
+    final messenger = ScaffoldMessenger.of(context);
+    final l10n = AppLocalizations.of(context);
+    final gc = context.gc;
+
+    final pendente = await _compras.pendenteDe(userId);
+    if (pendente == null) return;
+
+    try {
+      await _creditarPendente(pendente);
+    } catch (e) {
+      // A pendência FICA: a próxima abertura tenta de novo. Melhor insistir
+      // do que apagar a única prova de que houve cobrança.
+      await debugLog('CYCLE_READING', 'Falha ao recuperar compra: $e');
+      return;
+    }
+
+    if (!mounted) return;
+    // Não gera sozinha: a leitura consome IA e a escolha das fontes é dela.
+    // O crédito aparece na tela, e a pessoa decide quando tecer.
+    messenger.showSnackBar(SnackBar(
+      content: Text(l10n.cycleReadingPurchaseRecovered),
+      backgroundColor: gc.success,
+      duration: const Duration(seconds: 6),
+    ));
+    await _load();
   }
 
   /// Crédito incluído no Vitalício: sem loja, sem cobrança. Vale para todo

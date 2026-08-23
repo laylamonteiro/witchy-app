@@ -5,10 +5,15 @@
 /// guardada no painel do Supabase. Mesmo assim entra por `--dart-define`
 /// para não ficar versionada e para permitir builds sem captcha.
 ///
-/// ORDEM DO ROLLOUT: publique a versão com a chave compilada ANTES de
-/// ligar o captcha no Supabase. A proteção é por projeto — no instante em
-/// que ela é ligada, versões antigas do app, que não sabem enviar o token,
-/// param de conseguir entrar.
+/// A EXIGÊNCIA JÁ ESTÁ LIGADA no servidor (Supabase → Authentication →
+/// Attack Protection, provedor Turnstile — conferido em 23/08/2026). Isso
+/// muda o significado de não ter a chave: não é mais "app sem captcha", é
+/// "app que não entra". O Supabase recusa cadastro, entrada por senha e
+/// recuperação de senha quando chegam sem token.
+///
+/// Por isso o release.yml PARA quando o secret TURNSTILE_SITE_KEY falta, em
+/// vez de compilar sem ele. Se um dia a exigência do painel for desligada,
+/// aquela trava pode voltar a ser aviso — nesta ordem, nunca na inversa.
 class CaptchaConfig {
   const CaptchaConfig._();
 
@@ -17,7 +22,10 @@ class CaptchaConfig {
     defaultValue: '',
   );
 
-  /// Sem chave o app se comporta exatamente como antes: nenhum widget de
-  /// verificação aparece e nenhum token é enviado.
+  /// Falso significa: nenhum widget de verificação aparece e nenhum token é
+  /// enviado. Com a exigência ligada no painel, isso equivale a um app que
+  /// não consegue autenticar ninguém por e-mail — não a um app "sem
+  /// captcha". A esteira de release existe para esse caso nunca ser
+  /// publicado.
   static bool get isConfigured => siteKey.isNotEmpty;
 }

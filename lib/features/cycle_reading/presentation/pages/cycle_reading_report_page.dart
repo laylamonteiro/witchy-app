@@ -21,12 +21,36 @@ import '../../data/models/cycle_reading_model.dart';
 import '../../data/repositories/cycle_reading_repository.dart';
 import '../../data/services/cycle_reading_service.dart';
 
+/// Um título de seção como ele pode aparecer no relatório GRAVADO.
+///
+/// A leitura é markdown, e o título foi escrito no idioma em que ela foi
+/// gerada — enquanto a tela lê no idioma de agora. Comparar só com o título
+/// atual fazia a seção desaparecer das leituras antigas de quem troca o
+/// idioma do app: o texto continuava lá, os cartõezinhos de ritual não.
+///
+/// A chave estável seria o certo, mas ela não existe no que já está gravado.
+/// Cobrir os três idiomas resolve o acervo sem reescrever nada.
+Set<String> _tituloEmTodosOsIdiomas(
+  String Function(AppLocalizations) escolher,
+) =>
+    {
+      for (final locale in AppLocalizations.supportedLocales)
+        escolher(lookupAppLocalizations(locale)),
+    };
+
+final _titulosDeRituais =
+    _tituloEmTodosOsIdiomas((l) => l.cycleReadingSectionRituals);
+
+final _titulosDaAfirmacao =
+    _tituloEmTodosOsIdiomas((l) => l.cycleReadingSectionAffirmation);
+
 /// O relatório da Leitura do Ciclo: Markdown das 7 seções + os dois
 /// cartões compartilháveis (afirmação sob medida e selo do ciclo).
 ///
 /// A entrada já vive no acervo (`free_writings`, source `cycle_reading`):
 /// esta página é a moldura de leitura — reabrir depois cai em Meus
 /// Registros ou de novo aqui.
+
 class CycleReadingReportPage extends StatelessWidget {
   final FreeWritingModel writing;
 
@@ -60,12 +84,12 @@ class CycleReadingReportPage extends StatelessWidget {
     final resolvedSeal = sealKeywords ??
         CycleReadingService.sealFromMarkdown(writing.content);
 
-    final corpo = _forDisplay(writing.content);
+    final corpo = _semTitulo(writing.content);
     final secoes = _sections(corpo);
     final ondeVaiAAfirmacao =
-        _indiceDaAfirmacao(secoes, l10n, resolvedAffirmation);
+        _indiceDaAfirmacao(secoes, resolvedAffirmation);
     final ondeVaoOsRituais = secoes.indexWhere(
-      (secao) => secao.contains(l10n.cycleReadingSectionRituals),
+      (secao) => _titulosDeRituais.any(secao.contains),
     );
 
     return Scaffold(
@@ -93,7 +117,7 @@ class CycleReadingReportPage extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    _markdown(context, corpo),
+                    _markdown(context, _semAnotacoes(corpo)),
                     const SizedBox(height: 24),
                     if (_temAfirmacao(resolvedAffirmation))
                       _botaoAfirmacao(context, l10n, resolvedAffirmation!),
@@ -191,12 +215,10 @@ class CycleReadingReportPage extends StatelessWidget {
   /// o botão pode ficar fora de lugar, mas nunca some.
   static int _indiceDaAfirmacao(
     List<String> secoes,
-    AppLocalizations l10n,
     String? afirmacao,
   ) {
-    final titulo = l10n.cycleReadingSectionAffirmation;
     for (var i = 0; i < secoes.length; i++) {
-      if (secoes[i].contains(titulo)) return i;
+      if (_titulosDaAfirmacao.any(secoes[i].contains)) return i;
     }
     if (_temAfirmacao(afirmacao)) {
       for (var i = 0; i < secoes.length; i++) {
@@ -221,7 +243,7 @@ class CycleReadingReportPage extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         if (ritos != null) ...[
-          _markdown(context, ritos.cabecalho),
+          _markdown(context, _semAnotacoes(ritos.cabecalho)),
           for (final rito in ritos.itens)
             _CartaoDeRitual(
               nome: rito.nome,
@@ -231,7 +253,7 @@ class CycleReadingReportPage extends StatelessWidget {
               periodo: _periodoParaNota(),
             ),
         ] else
-          _markdown(context, secao),
+          _markdown(context, _semAnotacoes(secao)),
         if (_temAfirmacao(afirmacao)) ...[
           const SizedBox(height: 20),
           _botaoAfirmacao(context, l10n, afirmacao!),
@@ -462,13 +484,16 @@ class CycleReadingReportPage extends StatelessWidget {
           fontStyle: FontStyle.italic,
           color: context.gc.textSecondary,
         ),
-        // As expressões que a leitura marca com `**` saem em COR, não em
-        // negrito — a mesma gramática das leituras das Eras. Negrito no meio
-        // do parágrafo pesa; cor guia o olho sem quebrar o ritmo.
-        strong: TextStyle(
-          color: context.gc.lilac,
-          fontWeight: FontWeight.normal,
-        ),
+        // O `strong` fica como a base do grimório o define: cor E peso.
+        //
+        // Aqui ele era sobrescrito para `FontWeight.normal` — cor sem peso.
+        // Era literalmente o que a Leitura do Ciclo tinha de tímido perto do
+        // Perfil Mágico, que recebeu negrito de verdade e ficou legível de
+        // relance. As duas leituras agora falam a mesma língua.
+        //
+        // Junto vem o respiro entre blocos, o mesmo do Perfil: com parágrafos
+        // colados, dois curtos voltam a parecer um só longo.
+        blockSpacing: 18,
         // O destaque desta leitura é um cartão fechado, com borda inteira —
         // a barra à esquerda da base é para as leituras que deslizam.
         blockquotePadding: const EdgeInsets.all(16),
@@ -483,9 +508,15 @@ class CycleReadingReportPage extends StatelessWidget {
     );
   }
 
-  /// Só para exibição: remove o `# Título` inicial (a AppBar já o traz),
-  /// preservando o resto — inclusive a linha `_período_`.
-  static String _forDisplay(String markdown) {
+  /// Remove o `# Título` inicial (a AppBar já o traz), preservando o resto —
+  /// inclusive a linha `_período_` E as anotações dos rituais.
+  ///
+  /// As anotações ficam de propósito: elas são o que alimenta as pílulas de
+  /// lua e de ingredientes dos cartõezinhos. Elas eram apagadas AQUI, antes
+  /// de a seção chegar ao `_rituais` que as lê — então o código de extração
+  /// existia, rodava e nunca produzia nada na tela. Quem tira as anotações
+  /// agora é [_semAnotacoes], na hora de renderizar o texto.
+  static String _semTitulo(String markdown) {
     final lines = markdown.split('\n');
     if (lines.isNotEmpty && lines.first.trimLeft().startsWith('# ')) {
       lines.removeAt(0);
@@ -493,11 +524,15 @@ class CycleReadingReportPage extends StatelessWidget {
         lines.removeAt(0);
       }
     }
-    // A anotação dos rituais é campo de máquina: some do texto exibido,
-    // inclusive nesta rolagem de reserva (usada quando os títulos de seção
-    // não são reconhecidos e não há cartões).
-    return lines.join('\n').replaceAll(_anotacao, '');
+    return lines.join('\n');
   }
+
+  /// O texto como a pessoa lê: sem a anotação de máquina.
+  ///
+  /// Aplicado no RENDER, e não antes: assim o extrator dos cartões ainda
+  /// encontra `[moon: ...]` e `[items: ...]` na seção original.
+  static String _semAnotacoes(String texto) =>
+      texto.replaceAll(_anotacao, '').replaceAll(RegExp(r'[ \t]{2,}'), ' ');
 
   void _shareAffirmation(
     BuildContext context,

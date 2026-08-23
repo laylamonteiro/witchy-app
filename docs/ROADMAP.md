@@ -109,6 +109,8 @@
 
 ### UI Premium ✅
 - [x] `PremiumUpgradeSheet` (tela de upgrade)
+> **Preço:** os valores abaixo são de quando este documento foi escrito e NÃO são a fonte da verdade. O preço vigente vem sempre da RevenueCat em tempo de execução; os valores de RESERVA (usados só quando a loja não responde) ficam em `lib/features/auth/presentation/widgets/premium_blur_widget.dart`. Documento que repete preço apodrece no próximo reajuste.
+
 - [x] Preços definidos (R$ 9,90/mês, R$ 79,90/ano)
 - [x] Botão "Seja Premium" nas seções bloqueadas
 - [x] Blur para conteúdo premium (título visível, conteúdo blur)

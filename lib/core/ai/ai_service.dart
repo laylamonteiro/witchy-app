@@ -2,11 +2,14 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:dio/dio.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' show Supabase;
 import 'package:flutter/widgets.dart';
 import 'package:uuid/uuid.dart';
 
 import '../i18n/gender.dart';
+import '../config/supabase_config.dart';
 import '../services/debug_log_service.dart';
+import 'ia_pelo_servidor.dart';
 import '../utils/accents.dart';
 import '../../features/astrology/data/models/birth_chart_model.dart';
 import '../../features/astrology/data/models/aspect_model.dart';
@@ -24,6 +27,26 @@ import 'prompts/ai_prompts.dart';
 /// a mensagem (para poder localizar e orientar o reenvio).
 class AiRateLimitException implements Exception {
   const AiRateLimitException();
+}
+
+/// A falha de rede como a pessoa precisa ver — com o detalhe técnico indo
+/// para o log, e não para a tela.
+///
+/// A mensagem da DioException carrega a URL do provedor de IA dentro. Ela
+/// chegava à tela inteira, dentro de "Erro na conexão: ...": não dizia nada a
+/// quem lia e publicava para onde o app manda os dados. O teste que deveria
+/// pegar isso usava um dublê que devolvia uma frase amigável — o provider
+/// real devolvia o dump.
+String _falhaDeConexao(DioException e) {
+  debugPrint('IA: falha de conexão (${e.type}): ${e.message}');
+  return aiPrompts.errorConnection;
+}
+
+/// Idem para a resposta que não dá para ler: o texto cru da exceção fica no
+/// log, a tela recebe uma frase e um caminho de volta.
+String _falhaDeLeitura(Object e) {
+  debugPrint('IA: resposta ilegível: $e');
+  return aiPrompts.errorProcessing;
 }
 
 /// Provedores de IA disponíveis. Qual atende cada ponto do app é decidido
@@ -169,9 +192,9 @@ class AIService {
       } else if (e.response?.statusCode == 503) {
         throw Exception(_prompts.errorServiceUnavailable);
       }
-      throw Exception(_prompts.errorConnection(e.message));
+      throw Exception(_falhaDeConexao(e));
     } catch (e) {
-      throw Exception(_prompts.errorProcessing(e));
+      throw Exception(_falhaDeLeitura(e));
     }
   }
 
@@ -275,7 +298,15 @@ class AIService {
             receiveTimeout: const Duration(seconds: 45),
           );
         } on DioException catch (e) {
-          if (e.response?.statusCode != 429) rethrow;
+          if (e.response?.statusCode != 429) {
+            // Este `rethrow` era o ÚNICO furo do arquivo. Sem resposta do
+            // servidor (rede caída, timeout) `e.response` é nulo, então
+            // `null != 429` e a DioException saía crua até a tela do card —
+            // com a URL do provedor de IA dentro dela. Os outros onze
+            // pontos de chamada já passavam por `_falhaDeConexao`; este não,
+            // e era justamente o caminho da falta de rede.
+            throw Exception(_falhaDeConexao(e));
+          }
           ultimo429 = e;
           if (tentativa < _quotaRetryDelays.length) {
             await Future.delayed(_quotaRetryDelays[tentativa]);
@@ -649,9 +680,9 @@ class AIService {
       } else if (e.response?.statusCode == 503) {
         throw Exception(_prompts.errorServiceUnavailable);
       }
-      throw Exception(_prompts.errorConnection(e.message));
+      throw Exception(_falhaDeConexao(e));
     } catch (e) {
-      throw Exception(_prompts.errorProcessing(e));
+      throw Exception(_falhaDeLeitura(e));
     }
   }
 
@@ -838,6 +869,83 @@ class AIService {
     };
   }
 
+  /// Manda o pedido ao provedor — direto, ou pelo intermediário.
+  ///
+  /// É o ÚNICO lugar do arquivo que sabe onde a chave mora. Os quatro
+  /// caminhos (texto e visão, Groq e Gemini) montam o corpo como sempre e
+  /// passam por aqui; o corpo e a leitura da resposta não mudam, porque o
+  /// intermediário devolve o JSON do provedor sem tocar nele.
+  ///
+  /// Com [IaPeloServidor.ativo] desligado — o padrão —, nada muda: o pedido
+  /// sai daqui direto para o provedor, com a chave no cabeçalho, como
+  /// sempre foi.
+  Future<Response<dynamic>> _postarNoProvedor({
+    required AiProvider provedor,
+    required String modelo,
+    required Map<String, dynamic> corpo,
+    required Options opcoes,
+  }) {
+    if (!IaPeloServidor.ativo) {
+      return _dio.post(
+        _enderecoDireto(provedor, modelo),
+        options: opcoes.copyWith(headers: {
+          ..._chaveDoProvedor(provedor),
+          'Content-Type': 'application/json',
+        }),
+        data: corpo,
+      );
+    }
+
+    // A função recusa quem não tem sessão. Conferir aqui não é redundância:
+    // é a diferença entre uma frase que diz o que fazer e um 401 cru que
+    // viraria "erro de conexão" na tela.
+    final token = _tokenDaSessao();
+    if (token == null) throw Exception(aiPrompts.errorNeedsAccount);
+
+    return _dio.post(
+      IaPeloServidor.endereco,
+      options: opcoes.copyWith(headers: {
+        'Authorization': 'Bearer $token',
+        'apikey': SupabaseConfig.anonKey,
+        'Content-Type': 'application/json',
+      }),
+      data: {
+        'provedor': provedor.name,
+        'modelo': modelo,
+        'corpo': corpo,
+      },
+    );
+  }
+
+  String _enderecoDireto(AiProvider provedor, String modelo) =>
+      switch (provedor) {
+        AiProvider.groq => 'https://api.groq.com/openai/v1/chat/completions',
+        AiProvider.gemini =>
+          'https://generativelanguage.googleapis.com/v1beta/models/'
+              '$modelo:generateContent',
+      };
+
+  Map<String, String> _chaveDoProvedor(AiProvider provedor) =>
+      switch (provedor) {
+        AiProvider.groq => {
+            'Authorization': 'Bearer ${GroqCredentials.apiKey}',
+          },
+        AiProvider.gemini => {'x-goog-api-key': GeminiCredentials.apiKey},
+      };
+
+  /// O token da sessão, ou nulo quando não há conta.
+  ///
+  /// Dentro de try: `Supabase.instance` estoura se o SDK não subiu, e um
+  /// build sem Supabase configurado é caso legítimo (o `ativo` já cobre,
+  /// mas o boot pode falhar por outro motivo).
+  String? _tokenDaSessao() {
+    try {
+      return Supabase.instance.client.auth.currentSession?.accessToken;
+    } catch (_) {
+      return null;
+    }
+  }
+
   Future<String> _groqText({
     required String systemPrompt,
     required String userText,
@@ -847,17 +955,14 @@ class AIService {
     required bool jsonResponse,
     required Duration receiveTimeout,
   }) async {
-    final response = await _dio.post(
-      'https://api.groq.com/openai/v1/chat/completions',
-      options: Options(
-        headers: {
-          'Authorization': 'Bearer ${GroqCredentials.apiKey}',
-          'Content-Type': 'application/json',
-        },
+    final response = await _postarNoProvedor(
+      provedor: AiProvider.groq,
+      modelo: _textModel,
+      opcoes: Options(
         receiveTimeout: receiveTimeout,
         sendTimeout: const Duration(seconds: 30),
       ),
-      data: {
+      corpo: {
         'model': _textModel,
         'messages': [
           if (systemPrompt.isNotEmpty)
@@ -882,18 +987,14 @@ class AIService {
     required bool jsonResponse,
     required Duration receiveTimeout,
   }) async {
-    final response = await _dio.post(
-      'https://generativelanguage.googleapis.com/v1beta/models/'
-      '$_geminiTextModel:generateContent',
-      options: Options(
-        headers: {
-          'x-goog-api-key': GeminiCredentials.apiKey,
-          'Content-Type': 'application/json',
-        },
+    final response = await _postarNoProvedor(
+      provedor: AiProvider.gemini,
+      modelo: _geminiTextModel,
+      opcoes: Options(
         receiveTimeout: receiveTimeout,
         sendTimeout: const Duration(seconds: 30),
       ),
-      data: {
+      corpo: {
         if (systemPrompt.isNotEmpty)
           'system_instruction': {
             'parts': [
@@ -1055,14 +1156,11 @@ class AIService {
     );
 
     if (provider == AiProvider.gemini) {
-      final response = await _dio.post(
-        'https://generativelanguage.googleapis.com/v1beta/models/'
-        '$_geminiVisionModel:generateContent',
-        options: timeouts.copyWith(headers: {
-          'x-goog-api-key': GeminiCredentials.apiKey,
-          'Content-Type': 'application/json',
-        }),
-        data: {
+      final response = await _postarNoProvedor(
+        provedor: AiProvider.gemini,
+        modelo: _geminiVisionModel,
+        opcoes: timeouts,
+        corpo: {
           if (systemPrompt.isNotEmpty)
             'system_instruction': {
               'parts': [
@@ -1110,13 +1208,11 @@ class AIService {
       return text;
     }
 
-    final response = await _dio.post(
-      'https://api.groq.com/openai/v1/chat/completions',
-      options: timeouts.copyWith(headers: {
-        'Authorization': 'Bearer ${GroqCredentials.apiKey}',
-        'Content-Type': 'application/json',
-      }),
-      data: {
+    final response = await _postarNoProvedor(
+      provedor: AiProvider.groq,
+      modelo: _visionModel,
+      opcoes: timeouts,
+      corpo: {
         'model': _visionModel,
         'messages': [
           if (systemPrompt.isNotEmpty)
@@ -1187,9 +1283,9 @@ class AIService {
         // Modelo de visão indisponível (ex.: descontinuado pelo provedor).
         throw Exception(_prompts.errorPalmUnavailable);
       }
-      throw Exception(_prompts.errorConnection(e.message));
+      throw Exception(_falhaDeConexao(e));
     } catch (e) {
-      throw Exception(_prompts.errorProcessing(e));
+      throw Exception(_falhaDeLeitura(e));
     }
   }
 
@@ -1392,9 +1488,9 @@ class AIService {
       } else if (e.response?.statusCode == 404) {
         throw Exception(_prompts.errorPalmUnavailable);
       }
-      throw Exception(_prompts.errorConnection(e.message));
+      throw Exception(_falhaDeConexao(e));
     } catch (e) {
-      throw Exception(_prompts.errorProcessing(e));
+      throw Exception(_falhaDeLeitura(e));
     }
   }
 
@@ -1436,9 +1532,9 @@ class AIService {
       if (e.response?.statusCode == 429) {
         throw const AiRateLimitException();
       }
-      throw Exception(_prompts.errorConnection(e.message));
+      throw Exception(_falhaDeConexao(e));
     } catch (e) {
-      throw Exception(_prompts.errorProcessing(e));
+      throw Exception(_falhaDeLeitura(e));
     }
   }
 
@@ -1556,9 +1652,9 @@ class AIService {
       if (e.response?.statusCode == 429) {
         throw Exception(_prompts.errorRateLimit);
       }
-      throw Exception(_prompts.errorConnection(e.message));
+      throw Exception(_falhaDeConexao(e));
     } catch (e) {
-      throw Exception(_prompts.errorProcessing(e));
+      throw Exception(_falhaDeLeitura(e));
     }
   }
 
@@ -1618,9 +1714,9 @@ class AIService {
       if (e.response?.statusCode == 429) {
         throw Exception(_prompts.errorRateLimit);
       }
-      throw Exception(_prompts.errorConnection(e.message));
+      throw Exception(_falhaDeConexao(e));
     } catch (e) {
-      throw Exception(_prompts.errorProcessing(e));
+      throw Exception(_falhaDeLeitura(e));
     }
   }
 
@@ -1645,9 +1741,9 @@ class AIService {
       if (e.response?.statusCode == 429) {
         throw Exception(_prompts.errorRateLimit);
       }
-      throw Exception(_prompts.errorConnection(e.message));
+      throw Exception(_falhaDeConexao(e));
     } catch (e) {
-      throw Exception(_prompts.errorProcessing(e));
+      throw Exception(_falhaDeLeitura(e));
     }
   }
 
@@ -1680,9 +1776,9 @@ class AIService {
       } else if (e.response?.statusCode == 503) {
         throw Exception(_prompts.errorServiceUnavailable);
       }
-      throw Exception(_prompts.errorConnection(e.message));
+      throw Exception(_falhaDeConexao(e));
     } catch (e) {
-      throw Exception(_prompts.errorProcessing(e));
+      throw Exception(_falhaDeLeitura(e));
     }
   }
 
@@ -1729,7 +1825,7 @@ class AIService {
         return content.trim();
       } on DioException catch (e) {
         if (e.response?.statusCode != 429) {
-          throw Exception(_prompts.errorConnection(e.message));
+          throw Exception(_falhaDeConexao(e));
         }
         lastRateLimit = e;
         if (attempt < _quotaRetryDelays.length) {

@@ -42,4 +42,50 @@ void main() {
       expect(mapId(''), isNull);
     });
   });
+
+  /// O selo "Economize 50%" era texto fixo num ARB — uma conta com dois
+  /// números que a tela não tinha na mão. Se a loja devolvesse outro preço,
+  /// ou se a pessoa estivesse fora do Brasil, o selo mentia numa tela de
+  /// venda. Agora ele sai dos preços reais, e some quando não dá para
+  /// afirmar.
+  group('economia do plano anual', () {
+    int? economia(double mensal, double anual,
+            {String moedaMensal = 'BRL', String moedaAnual = 'BRL'}) =>
+        PaymentService.economiaEntre(
+          mensal: mensal,
+          anual: anual,
+          moedaMensal: moedaMensal,
+          moedaAnual: moedaAnual,
+        );
+
+    test('os preços de reserva dão os mesmos 50% que o texto fixo dizia', () {
+      // R$ 19,90 x 12 = R$ 238,80 contra R$ 119,90.
+      expect(economia(19.90, 119.90), 50);
+    });
+
+    test('acompanha o preço quando a loja muda', () {
+      expect(economia(20.00, 180.00), 25);
+      expect(economia(10.00, 60.00), 50);
+    });
+
+    test('moedas diferentes não se comparam', () {
+      // Acontece de verdade quando o catálogo vem meio resolvido.
+      expect(economia(19.90, 119.90, moedaAnual: 'USD'), isNull);
+    });
+
+    test('sem economia, sem selo', () {
+      expect(economia(10.00, 120.00), isNull, reason: 'anual = 12 mensais');
+      expect(economia(10.00, 200.00), isNull, reason: 'anual mais caro');
+    });
+
+    test('preço zerado ou negativo não vira porcentagem', () {
+      expect(economia(0, 119.90), isNull);
+      expect(economia(19.90, 0), isNull);
+      expect(economia(-1, 119.90), isNull);
+    });
+
+    test('nada de 100%: seria dizer que o anual é de graça', () {
+      expect(economia(1000.00, 0.01), isNull);
+    });
+  });
 }

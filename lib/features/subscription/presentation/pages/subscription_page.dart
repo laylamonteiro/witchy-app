@@ -9,7 +9,6 @@ import '../../../../core/widgets/magical_card.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../auth/data/models/user_model.dart';
 import '../../../auth/presentation/widgets/premium_blur_widget.dart';
-import '../../../cycle_reading/presentation/pages/cycle_reading_intro_page.dart';
 
 /// Página de gerenciamento de assinatura
 ///
@@ -43,11 +42,14 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
   }
 
   Future<void> _initializePaymentService() async {
-    if (!_paymentService.isInitialized) {
-      setState(() => _isLoading = true);
-      await _paymentService.initialize();
-      setState(() => _isLoading = false);
-    }
+    // Sempre passa por `garantirCatalogo`: a conferência de `isInitialized`
+    // que existia aqui saía cedo justamente no caso ruim — boot com rede
+    // ruim marca inicializado, o catálogo fica vazio e a tela dizia "planos
+    // indisponíveis" até a pessoa fechar e reabrir o app.
+    setState(() => _isLoading = true);
+    await _paymentService.garantirCatalogo();
+    if (!mounted) return;
+    setState(() => _isLoading = false);
   }
 
   @override
@@ -111,12 +113,12 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
 
                         const SizedBox(height: 24),
 
-                        // A Leitura do Ciclo é compra avulsa: não entra na
-                        // assinatura, nem para quem já é Pro. Por isso ela
-                        // aparece nos DOIS ramos — é aqui que a pessoa está
-                        // decidindo gastar, e antes ela não era citada.
-                        _buildCycleReadingCard(),
-                        const SizedBox(height: 24),
+                        // A porta da Leitura do Ciclo SAIU daqui, por
+                        // decisão da dona do produto — o plano original já
+                        // mandava remover, e ficou pendente até agora. Esta
+                        // tela decide assinatura; a leitura avulsa se
+                        // descobre onde ela é usada, não na tabela de
+                        // preços. A porta das Configurações já tinha saído.
 
                         // Restaurar compras
                         _buildRestoreButton(),
@@ -271,7 +273,6 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
           _buildFeatureItem(Icons.wb_sunny, _l10n.subsBenefitDailyWeather),
           _buildFeatureItem(
               Icons.calendar_today, _l10n.subsBenefitLunarCalendar),
-          _buildFeatureItem(Icons.sync, _l10n.premiumBenefitCloudSync),
           _buildFeatureItem(Icons.support_agent, _l10n.subsBenefitSupport),
         ],
       ),
@@ -309,9 +310,13 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
             key: const ValueKey('open_premium_paywall_button'),
             onPressed: _showPaywall,
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(
-                  0xFF9C27B0), // Cor consistente com outros botões Premium
-              foregroundColor: context.gc.textPrimary,
+              // Era `Color(0xFF9C27B0)` cravado, com o comentário "cor
+              // consistente com outros botões Premium" — e não era: os
+              // outros usam o acento do tema, então este roxo era o único
+              // que ficava igual nos seis temas enquanto tudo em volta
+              // mudava.
+              backgroundColor: context.gc.lilac,
+              foregroundColor: context.gc.onPrimary,
               padding: const EdgeInsets.symmetric(vertical: 16),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
@@ -366,7 +371,6 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
                   Icons.wb_sunny, _l10n.subsBenefitDailyWeather),
               _buildFeatureItem(
                   Icons.calendar_today, _l10n.subsBenefitLunarCalendar),
-              _buildFeatureItem(Icons.sync, _l10n.premiumBenefitCloudSync),
             ],
           ),
         ),
@@ -535,54 +539,6 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
             const SizedBox(width: 8),
             Text(_l10n.profileManageSubscription),
           ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildCycleReadingCard() {
-    return SizedBox(
-      width: double.infinity,
-      child: MagicalCard(
-        margin: EdgeInsets.zero,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(12),
-          onTap: () => Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => const CycleReadingIntroPage()),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  const Text('🌙', style: TextStyle(fontSize: 24)),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      _l10n.cycleReadingTitle,
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: context.gc.lilac,
-                      ),
-                    ),
-                  ),
-                  Icon(
-                    Icons.chevron_right,
-                    color: context.gc.softWhite.withValues(alpha: 0.5),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Text(
-                _l10n.cycleReadingIntroTagline,
-                style: TextStyle(
-                  color: context.gc.softWhite.withValues(alpha: 0.7),
-                  fontSize: 14,
-                ),
-              ),
-            ],
-          ),
         ),
       ),
     );
@@ -777,7 +733,8 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
               ? _l10n.subsRestored
               : result.errorMessage ?? _l10n.subsNoPurchases,
         ),
-        backgroundColor: result.success ? Colors.green : Colors.orange,
+        backgroundColor:
+            result.success ? context.gc.success : context.gc.alert,
       ),
     );
   }

@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show kIsWeb, debugPrint;
 import 'package:flutter/material.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:image_picker/image_picker.dart';
@@ -19,6 +19,7 @@ import '../../../../core/widgets/magical_button.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/widgets/premium_locked_preview.dart';
 import '../../../auth/data/models/feature_access.dart';
+import '../../../auth/data/models/user_model.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../data/models/user_entry_model.dart';
 import '../providers/encyclopedia_provider.dart';
@@ -46,7 +47,6 @@ class AddEntryPage extends StatefulWidget {
 
 class _AddEntryPageState extends State<AddEntryPage> {
   static const int _maxUploadBytes = 4 * 1024 * 1024; // limite da API (base64)
-  static const int _dailyLimit = 5;
 
   final ImagePicker _picker = ImagePicker();
   final TextEditingController _nameController = TextEditingController();
@@ -95,8 +95,9 @@ class _AddEntryPageState extends State<AddEntryPage> {
 
     final provider = context.read<EncyclopediaProvider>();
     final usedToday = await provider.userEntriesCreatedToday();
-    if (usedToday >= _dailyLimit) {
-      setState(() => _error = l10n.encyAddDailyLimit(_dailyLimit));
+    if (usedToday >= UserModel.dailyNatureIdentifyLimit) {
+      setState(() => _error =
+          l10n.encyAddDailyLimit(UserModel.dailyNatureIdentifyLimit));
       return;
     }
 
@@ -159,15 +160,22 @@ class _AddEntryPageState extends State<AddEntryPage> {
             .completeRite(DailyRites.natureIdentify));
       }
     } catch (e) {
+      debugPrint('Guia da Natureza: falha ao identificar: $e');
       if (!mounted) return;
       setState(() {
         _identifying = false;
         _identified = false;
         // Teto de requisições do provedor (compartilhado pelo app inteiro):
         // sem isto, o 429 viraria um "não identificado" enganoso.
-        if (e is AiRateLimitException) {
-          _error = AppLocalizations.of(context).aiVisionRateLimit;
-        }
+        //
+        // E TODA falha aparece, não só a de limite. Engolir o resto deixava
+        // a pessoa achando que a foto dela é que estava ruim — e, quando
+        // reclamasse, não haveria o que olhar. Este era o fluxo que ficou
+        // parecido com a Quiromancia na aparência e diferente no
+        // comportamento.
+        _error = e is AiRateLimitException
+            ? AppLocalizations.of(context).aiVisionRateLimit
+            : AppLocalizations.of(context).errorsGeneric;
       });
     }
   }

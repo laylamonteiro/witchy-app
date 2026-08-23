@@ -4,7 +4,6 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import '../services/data_sync_service.dart';
 import '../services/debug_log_service.dart';
-import '../services/premium_access.dart';
 
 AppLocalizations get _l10n =>
     lookupAppLocalizations(ContentLocale.instance.locale);
@@ -72,8 +71,12 @@ class SyncProvider extends ChangeNotifier {
   int get pendingSyncCount => _pendingSyncCount;
   bool get isSyncing => _status == SyncStatus.syncing;
   bool get hasConflicts => _conflicts.isNotEmpty;
-  bool get isReady => _syncService.isReady && PremiumAccess.instance.isPremium;
-  bool get isPremium => PremiumAccess.instance.isPremium;
+  /// Pronto para sincronizar: só depende de haver CONTA.
+  ///
+  /// O `&& isPremium` saiu daqui junto com o paywall do sync. O que
+  /// permanece é a exigência de conta — sem `auth.uid()` não há dono da
+  /// linha no servidor, e o RLS recusa.
+  bool get isReady => _syncService.isReady;
 
   /// Status formatado para exibição
   String get statusText {
@@ -104,12 +107,6 @@ class SyncProvider extends ChangeNotifier {
 
   /// Inicia sincronização manual
   Future<SyncResult> sync() async {
-    if (!PremiumAccess.instance.isPremium) {
-      _lastError = _l10n.syncPremiumOnly;
-      notifyListeners();
-      return SyncResult.error(_lastError!);
-    }
-
     if (!_syncService.isReady) {
       _lastError = _l10n.syncNotAuthenticated;
       notifyListeners();
@@ -133,10 +130,6 @@ class SyncProvider extends ChangeNotifier {
 
   /// Upload completo (enviar tudo para nuvem)
   Future<SyncResult> fullUpload() async {
-    if (!PremiumAccess.instance.isPremium) {
-      return SyncResult.error(_l10n.syncPremiumOnly);
-    }
-
     if (!_syncService.isReady) {
       return SyncResult.error(_l10n.syncNotAuthenticated);
     }
@@ -154,10 +147,6 @@ class SyncProvider extends ChangeNotifier {
 
   /// Download completo (baixar tudo da nuvem)
   Future<SyncResult> fullDownload() async {
-    if (!PremiumAccess.instance.isPremium) {
-      return SyncResult.error(_l10n.syncPremiumOnly);
-    }
-
     if (!_syncService.isReady) {
       return SyncResult.error(_l10n.syncNotAuthenticated);
     }
