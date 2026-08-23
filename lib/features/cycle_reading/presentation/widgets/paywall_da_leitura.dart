@@ -81,6 +81,23 @@ class PaywallDaLeitura extends StatelessWidget {
 
   bool get _isWeek => periodType == CycleReadingPeriodType.week;
 
+  /// Só os DESTAQUES viram bullet (decisão da dona, 23/08: no máximo 3-4).
+  /// A lista completa mora na tela anterior, no "O que vem na leitura"; a
+  /// folha fecha a venda com o essencial — e a linha "+ N seções" diz que
+  /// há mais sem listar.
+  List<String> get _destaques => _isWeek
+      ? const [
+          CycleReadingSections.portrait,
+          CycleReadingSections.sky,
+          CycleReadingSections.forecast,
+        ]
+      : const [
+          CycleReadingSections.portrait,
+          CycleReadingSections.sky,
+          CycleReadingSections.forecast,
+          CycleReadingSections.rituals,
+        ];
+
   /// O título de cada seção, no idioma da tela — mesmo mapeamento da intro
   /// (as chaves são invariantes; os títulos, não).
   String _tituloDaSecao(AppLocalizations l10n, String chave) =>
@@ -194,7 +211,9 @@ class PaywallDaLeitura extends StatelessWidget {
 
   /// O painel da oferta — a mesma casca do [PremiumOfferPanel].
   Widget _painel(BuildContext context, AppLocalizations l10n) {
-    final secoes = CycleReadingSections.forPeriod(periodType);
+    final secoes = _destaques;
+    final restantes =
+        CycleReadingSections.forPeriod(periodType).length - secoes.length;
 
     return Container(
       padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
@@ -245,6 +264,17 @@ class PaywallDaLeitura extends StatelessWidget {
                 if (i != secoes.length - 1) const SizedBox(height: 6),
               ],
             ],
+          ),
+          const SizedBox(height: 6),
+          // As seções que não viraram bullet continuam contadas: a folha
+          // vende o produto inteiro, só não o lista inteiro.
+          Text(
+            l10n.cyclePaywallMoreSections(restantes),
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: context.gc.textSecondary,
+              fontSize: 11.5,
+            ),
           ),
           if (_isWeek) ...[
             const SizedBox(height: 8),

@@ -1608,6 +1608,7 @@
   "cycleSectionHintSeal": "Tres palabras que resumen tu ciclo",
   "cycleReadingOneTime": "pago único",
   "cycleReadingPaywallWeekUpsell": "La Lunación completa trae además: tu práctica, rituales para el próximo ciclo y las palabras clave",
+  "cyclePaywallMoreSections": "{count, plural, one{+ 1 sección más incluida} other{+ {count} secciones más incluidas}}",
   "cycleHeroPower": "LA HISTORIA",
   "cycleHeroMagic": "DE TU CICLO",
   "cycleReadingSectionNumbers": "🔢 El ciclo en números",

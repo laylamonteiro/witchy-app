@@ -95,7 +95,7 @@ void main() {
     expect(find.text(r'R$ 14,90'), findsOneWidget);
   });
 
-  testWidgets('a folha da semana tece 5 seções e convida para a lunação',
+  testWidgets('a folha da semana tece 3 destaques e convida para a lunação',
       (tester) async {
     await abrirFolha(
       tester,
@@ -105,18 +105,16 @@ void main() {
     expect(find.text(l10n.cycleReadingWeekTitle), findsOneWidget);
     for (final titulo in [
       l10n.cycleReadingSectionPortrait,
-      l10n.cycleReadingSectionThreads,
       l10n.cycleReadingSectionSky,
       l10n.cycleReadingSectionForecast,
-      l10n.cycleReadingSectionAffirmation,
     ]) {
       expect(find.text(rotulo(titulo)), findsOneWidget);
     }
-    // O que só a lunação sustenta fica FORA da folha da semana...
-    expect(find.text(rotulo(l10n.cycleReadingSectionPractice)), findsNothing);
+    // Rituais é da lunação; na semana nem como bullet nem escondido.
     expect(find.text(rotulo(l10n.cycleReadingSectionRituals)), findsNothing);
-    expect(find.text(rotulo(l10n.cycleReadingSectionSeal)), findsNothing);
-    // ...e vira o upsell honesto, dito com todas as letras.
+    // 5 seções, 3 em bullet: as outras 2 ficam contadas...
+    expect(find.text(l10n.cyclePaywallMoreSections(2)), findsOneWidget);
+    // ...e o que só a lunação sustenta vira o upsell honesto.
     expect(find.text(l10n.cycleReadingPaywallWeekUpsell), findsOneWidget);
   });
 

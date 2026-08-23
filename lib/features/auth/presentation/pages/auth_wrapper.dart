@@ -4,6 +4,7 @@ import '../../../../core/utils/mask.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/services/debug_log_service.dart';
 import '../providers/auth_provider.dart';
+import '../../../../core/navigation/recomeco.dart';
 import 'welcome_page.dart';
 import '../../../../features/home/presentation/pages/home_page.dart';
 import '../../../../core/widgets/guarda_de_voltar_web.dart';
@@ -50,6 +51,24 @@ class AuthWrapper extends StatelessWidget {
           // O guarda é o que faltava aqui: são até 15 segundos logo depois
           // de voltar do Google, e é JUSTAMENTE quando o Google é a entrada
           // anterior do histórico. Um voltar nesta janela saía do app.
+          return const GuardaDeVoltarWeb(child: _EsperandoASessao());
+        }
+
+        // A volta do login social por redirecionamento carrega um defeito
+        // de histórico que nenhum guarda de DENTRO do app conserta: ao
+        // limpar o ?code= da URL, o Supabase atropela (replaceState) o
+        // estado que o motor do Flutter usa para segurar o voltar — e o
+        // primeiro voltar, em vez de ficar no app, caía na página do
+        // Google que ainda mora no histórico (visto em produção, 23/08).
+        // A saída é DESCARTAR este documento: com a sessão já gravada,
+        // recomeça na raiz via location.replace. O documento novo nasce
+        // sem ?code=, com a guarda do motor intacta, e o voltar volta a
+        // ser segurado pelo PopScope da Home. Uma vez por login social;
+        // o boot seguinte não tem ?code= e não passa por aqui.
+        if (isAuthenticated && AuthProvider.bootCameFromOAuthReturn) {
+          AuthProvider.bootCameFromOAuthReturn = false;
+          debugLog('NAV', 'AuthWrapper: sessão do OAuth pronta → recomeço');
+          recomecarNaRaiz(); // no-op fora da web
           return const GuardaDeVoltarWeb(child: _EsperandoASessao());
         }
 
