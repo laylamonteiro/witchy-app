@@ -1,5 +1,3 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
@@ -7,25 +5,27 @@ import 'package:intl/intl.dart';
 
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/staggered_entrance.dart';
-import '../../../subscription/presentation/widgets/subscription_offer_widgets.dart';
+import '../../../subscription/presentation/widgets/avulso_offer_widgets.dart';
 import '../../data/models/cycle_reading_model.dart';
 import '../../data/services/cycle_reading_service.dart';
 
-/// O paywall próprio da Leitura do Ciclo (decisão da dona, 23/08).
+/// O paywall próprio da Leitura do Ciclo (decisão da dona, 23/08) — e SÓ
+/// do webapp: no aplicativo, a folha da própria loja faz este papel.
 ///
 /// O preço saiu da tela de intro: esta folha explica primeiro O QUE a
 /// leitura tece — seção por seção do produto escolhido — e só então mostra
 /// o valor e o botão de pagar. Quem chega ao preço já sabe o que ele compra.
 ///
-/// A FORMA é a do paywall oficial ([PremiumUpgradeSheet]) por construção
-/// ("o mesmo exato componente, alterando apenas os textos necessários"),
-/// em MEIA ESCALA (as duas, decisão da dona, 23/08): produto avulso tem
-/// metade do tamanho do paywall de assinatura. São os MESMOS componentes
-/// nos modos compactos deles — [SubscriptionHero] com [HeroTexts] e
-/// `meiaEscala`, [OfferBenefitRow] `compacto`, o preço na casca dos cards
-/// de plano e o [SubscriptionPurchaseButton] `compacto`. E SEM o rodapé de
-/// mensagens ("cancele quando quiser", selos): isso é conversa de
-/// assinatura, e aqui se compra uma leitura, uma vez.
+/// A FORMA é a do paywall oficial em meia escala, com as peças PRÓPRIAS dos
+/// avulsos (decisão da dona, 23/08: componente específico, copiado do
+/// oficial, em vez de ficar adequando o existente) — [AvulsoHero],
+/// [AvulsoBeneficioRow], [AvulsoBotaoComprar]. E SEM o rodapé de mensagens
+/// ("cancele quando quiser", selos): isso é conversa de assinatura, e aqui
+/// se compra uma leitura, uma vez.
+///
+/// A folha ABRAÇA o conteúdo: nada de altura fixa — meia oferta numa folha
+/// de tela inteira flutuava num vazio (visto no preview, 23/08), e o
+/// conteúdo maior que a tela rola por dentro, com o CTA sempre alcançável.
 ///
 /// A folha só APRESENTA: nenhuma lógica de compra mora aqui. Ao tocar o CTA
 /// ela se fecha e devolve a decisão pelo [onComprar] — o pop acontece ANTES
@@ -145,13 +145,17 @@ class PaywallDaLeitura extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final bottomPadding = MediaQuery.viewPaddingOf(context).bottom;
 
-    // Moldura idêntica à do PremiumUpgradeSheet: alça + fechar, altura
-    // máxima, teto de largura e rolagem interna.
+    // Moldura do paywall oficial (alça + fechar, teto de largura), mas a
+    // folha ABRAÇA o conteúdo: o Center que vivia FORA da rolagem esticava
+    // para a altura toda e a meia oferta flutuava numa folha de tela
+    // inteira, com o CTA cortado na dobra (visto no preview, 23/08).
+    // Dentro da rolagem, o Center só centraliza na largura — a altura é a
+    // do conteúdo, e o que passar do teto rola com o CTA alcançável.
     return Material(
       color: Colors.transparent,
       child: Container(
         constraints: BoxConstraints(
-          maxHeight: MediaQuery.sizeOf(context).height * 0.96,
+          maxHeight: MediaQuery.sizeOf(context).height * 0.92,
         ),
         padding: EdgeInsets.fromLTRB(10, 10, 10, 10 + bottomPadding),
         decoration: BoxDecoration(
@@ -185,22 +189,15 @@ class PaywallDaLeitura extends StatelessWidget {
               ],
             ),
             Flexible(
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  final maxWidth = math.min(constraints.maxWidth - 8, 720.0);
-                  return Padding(
-                    padding: const EdgeInsets.fromLTRB(4, 0, 4, 8),
-                    child: Center(
-                      child: ConstrainedBox(
-                        constraints: BoxConstraints(maxWidth: maxWidth),
-                        child: SingleChildScrollView(
-                          physics: const ClampingScrollPhysics(),
-                          child: _painel(context, l10n),
-                        ),
-                      ),
-                    ),
-                  );
-                },
+              child: SingleChildScrollView(
+                physics: const ClampingScrollPhysics(),
+                padding: const EdgeInsets.fromLTRB(4, 0, 4, 8),
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 720),
+                    child: _painel(context, l10n),
+                  ),
+                ),
               ),
             ),
           ],
@@ -231,35 +228,29 @@ class PaywallDaLeitura extends StatelessWidget {
       ),
       child: Column(
         children: [
-          // O MESMO herói do paywall Premium — Salem, halo, tipografia —
-          // com os textos da Leitura nos mesmos quatro lugares.
-          SubscriptionHero(
-            meiaEscala: true,
-            textos: HeroTexts(
-              access: _isWeek
-                  ? l10n.cycleReadingWeekTitle
-                  : l10n.cycleReadingLunationTitle,
-              power: l10n.cycleHeroPower,
-              magic: l10n.cycleHeroMagic,
-              tagline: _linhaDoPeriodo(l10n),
-            ),
+          // O herói dos avulsos — o desenho do herói Premium (Salem, halo,
+          // tipografia) em peça própria, com os textos da Leitura nos
+          // mesmos quatro lugares.
+          AvulsoHero(
+            access: _isWeek
+                ? l10n.cycleReadingWeekTitle
+                : l10n.cycleReadingLunationTitle,
+            power: l10n.cycleHeroPower,
+            magic: l10n.cycleHeroMagic,
+            tagline: _linhaDoPeriodo(l10n),
           ),
           const SizedBox(height: 6),
-          const PremiumOfferDivider(),
+          const AvulsoDivider(),
           const SizedBox(height: 8),
-          // As seções do produto nas MESMAS peças dos benefícios do paywall
-          // Premium — em meia escala: 8 na lunação, 5 na semana, e a
-          // diferença visível é o que justifica a diferença de preço.
+          // Só os destaques, nas peças próprias dos avulsos — a anatomia
+          // dos benefícios Premium, no selo menor.
           StaggeredEntrance(
             children: [
               for (var i = 0; i < secoes.length; i++) ...[
-                OfferBenefitRow(
-                  compacto: true,
-                  benefit: OfferBenefit.emoji(
-                    separarEmoji(_tituloDaSecao(l10n, secoes[i])).emoji,
-                    separarEmoji(_tituloDaSecao(l10n, secoes[i])).rotulo,
-                    vislumbre: _vislumbreDaSecao(l10n, secoes[i]),
-                  ),
+                AvulsoBeneficioRow(
+                  emoji: separarEmoji(_tituloDaSecao(l10n, secoes[i])).emoji,
+                  rotulo: separarEmoji(_tituloDaSecao(l10n, secoes[i])).rotulo,
+                  vislumbre: _vislumbreDaSecao(l10n, secoes[i]),
                 ),
                 if (i != secoes.length - 1) const SizedBox(height: 6),
               ],
@@ -297,16 +288,13 @@ class PaywallDaLeitura extends StatelessWidget {
           // tela de onde esta folha nasceu, e repetir vira alarme.
           _cartaoDoPreco(context, l10n),
           const SizedBox(height: 8),
-          // O MESMO botão do paywall Premium, com o verbo do produto. Fecha
-          // ANTES de avisar: o fluxo de compra é assíncrono e não pode
-          // depender do context desta folha.
-          // O CTA fecha a folha: sem rodapé de mensagens depois dele
-          // (decisão da dona, 23/08) — "cancele quando quiser" e selos são
-          // conversa de assinatura, e aqui se compra uma leitura, uma vez.
-          SubscriptionPurchaseButton(
-            loading: false,
-            enabled: true,
-            compacto: true,
+          // O botão dos avulsos — o gradiente e a forma do botão Premium,
+          // com o verbo do produto. Fecha ANTES de avisar: o fluxo de
+          // compra é assíncrono e não pode depender do context desta folha.
+          // Sem rodapé de mensagens depois dele (decisão da dona, 23/08) —
+          // "cancele quando quiser" e selos são conversa de assinatura, e
+          // aqui se compra uma leitura, uma vez.
+          AvulsoBotaoComprar(
             label: l10n.cycleReadingWantFull,
             onPressed: () {
               Navigator.pop(context);

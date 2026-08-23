@@ -6,64 +6,11 @@ import '../../../../core/services/payment_service.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/staggered_entrance.dart';
 
-/// Os quatro textos do herói. Nulo em [SubscriptionHero.textos] = a copy do
-/// Premium; o paywall da Leitura do Ciclo passa os dele — MESMO componente,
-/// só os textos trocam (decisão da dona, 23/08).
-class HeroTexts {
-  const HeroTexts({
-    required this.access,
-    required this.power,
-    required this.magic,
-    required this.tagline,
-  });
-
-  /// A linha de abertura, em Lora ("ACESSE").
-  final String access;
-
-  /// As duas linhas grandes em Cinzel — a primeira leva o degradê lilás.
-  final String power;
-  final String magic;
-
-  /// A linha de fecho, pequena. No Premium ela tem um trecho em lilás; com
-  /// textos próprios ela sai inteira na cor de apoio.
-  final String tagline;
-}
-
 class SubscriptionHero extends StatelessWidget {
-  const SubscriptionHero({super.key, this.textos, this.meiaEscala = false});
-
-  final HeroTexts? textos;
-
-  /// Metade do tamanho — a medida dos paywalls de produto AVULSO (decisão
-  /// da dona, 23/08): mesmo Salem, mesmo halo, mesma tipografia, tudo pela
-  /// metade, para a peça não parecer maior que a assinatura.
-  final bool meiaEscala;
+  const SubscriptionHero({super.key});
 
   @override
   Widget build(BuildContext context) {
-    if (meiaEscala) {
-      return Container(
-        width: double.infinity,
-        padding: const EdgeInsets.fromLTRB(8, 6, 10, 6),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(20),
-          gradient: LinearGradient(
-            colors: [context.gc.background, context.gc.surface],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-        ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            const SizedBox(width: 72, child: CatHeroArt(height: 64)),
-            const SizedBox(width: 10),
-            Expanded(child: _HeroCopy(textos: textos, meia: true)),
-          ],
-        ),
-      );
-    }
-
     return LayoutBuilder(
       builder: (context, constraints) {
         final compact = constraints.maxWidth < 300;
@@ -80,21 +27,21 @@ class SubscriptionHero extends StatelessWidget {
             ),
           ),
           child: compact
-              ? Column(
+              ? const Column(
                   children: [
-                    const CatHeroArt(height: 92),
-                    _HeroCopy(centered: true, compact: true, textos: textos),
+                    CatHeroArt(height: 92),
+                    _HeroCopy(centered: true, compact: true),
                   ],
                 )
-              : Row(
+              : const Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    const Expanded(
+                    Expanded(
                       flex: 4,
                       child: CatHeroArt(height: 120),
                     ),
-                    const SizedBox(width: 6),
-                    Expanded(flex: 7, child: _HeroCopy(textos: textos)),
+                    SizedBox(width: 6),
+                    Expanded(flex: 7, child: _HeroCopy()),
                   ],
                 ),
         );
@@ -104,8 +51,8 @@ class SubscriptionHero extends StatelessWidget {
 }
 
 /// A arte do herói — o Salem no halo lilás. Pública porque é a ASSINATURA
-/// visual dos paywalls: o da Leitura do Ciclo usa a mesma arte, em altura
-/// menor, para as duas folhas lerem como o mesmo app.
+/// visual dos paywalls: o herói dos avulsos ([AvulsoHero]) usa a mesma
+/// arte, em altura menor, para as folhas lerem como o mesmo app.
 class CatHeroArt extends StatelessWidget {
   final double height;
 
@@ -215,14 +162,10 @@ class CatHeroArt extends StatelessWidget {
 class _HeroCopy extends StatelessWidget {
   final bool centered;
   final bool compact;
-  final bool meia;
-  final HeroTexts? textos;
 
   const _HeroCopy({
     this.centered = false,
     this.compact = false,
-    this.meia = false,
-    this.textos,
   });
 
   @override
@@ -236,15 +179,15 @@ class _HeroCopy extends StatelessWidget {
       crossAxisAlignment: alignment,
       children: [
         Text(
-          textos?.access ?? AppLocalizations.of(context).premiumHeroAccess,
+          AppLocalizations.of(context).premiumHeroAccess,
           textAlign: textAlign,
           style: GoogleFonts.lora(
             color: context.gc.textPrimary,
-            fontSize: meia ? 12 : (compact ? 18 : 20),
+            fontSize: compact ? 18 : 20,
             fontWeight: FontWeight.w600,
           ),
         ),
-        SizedBox(height: meia ? 1 : 3),
+        const SizedBox(height: 3),
         ShaderMask(
           shaderCallback: (bounds) => LinearGradient(
             colors: [
@@ -255,11 +198,11 @@ class _HeroCopy extends StatelessWidget {
           child: FittedBox(
             fit: BoxFit.scaleDown,
             child: Text(
-              textos?.power ?? AppLocalizations.of(context).premiumHeroPower,
+              AppLocalizations.of(context).premiumHeroPower,
               textAlign: textAlign,
               style: GoogleFonts.cinzelDecorative(
                 color: context.gc.textPrimary,
-                fontSize: meia ? 14 : (compact ? 20 : 23),
+                fontSize: compact ? 20 : 23,
                 fontWeight: FontWeight.w700,
                 letterSpacing: 0.4,
               ),
@@ -269,40 +212,38 @@ class _HeroCopy extends StatelessWidget {
         FittedBox(
           fit: BoxFit.scaleDown,
           child: Text(
-            textos?.magic ?? AppLocalizations.of(context).premiumHeroMagic,
+            AppLocalizations.of(context).premiumHeroMagic,
             textAlign: textAlign,
             style: GoogleFonts.cinzelDecorative(
               color: context.gc.textPrimary,
-              fontSize: meia ? 13 : (compact ? 19 : 22),
+              fontSize: compact ? 19 : 22,
               fontWeight: FontWeight.w600,
               letterSpacing: 0.4,
             ),
           ),
         ),
-        SizedBox(height: meia ? 3 : 8),
+        const SizedBox(height: 8),
         Text.rich(
           textAlign: textAlign,
           TextSpan(
             style: GoogleFonts.lora(
               color: context.gc.textSecondary,
-              fontSize: meia ? 10.5 : (compact ? 11 : 12),
+              fontSize: compact ? 11 : 12,
               height: 1.34,
             ),
-            children: textos != null
-                ? [TextSpan(text: textos!.tagline)]
-                : [
-                    TextSpan(
-                      text: AppLocalizations.of(context).premiumHeroTagline1,
-                    ),
-                    TextSpan(
-                      text: AppLocalizations.of(context)
-                          .premiumHeroTaglineHighlight,
-                      style: TextStyle(color: context.gc.lilac),
-                    ),
-                    TextSpan(
-                      text: AppLocalizations.of(context).premiumHeroTagline2,
-                    ),
-                  ],
+            children: [
+              TextSpan(
+                text: AppLocalizations.of(context).premiumHeroTagline1,
+              ),
+              TextSpan(
+                text:
+                    AppLocalizations.of(context).premiumHeroTaglineHighlight,
+                style: TextStyle(color: context.gc.lilac),
+              ),
+              TextSpan(
+                text: AppLocalizations.of(context).premiumHeroTagline2,
+              ),
+            ],
           ),
         ),
       ],
@@ -414,7 +355,6 @@ class OfferBenefit {
     this.vislumbre,
     this.assetPath,
     this.iconData,
-    this.emoji,
     this.highlighted = false,
   });
 
@@ -434,16 +374,6 @@ class OfferBenefit {
         vislumbre: vislumbre,
       );
 
-  /// Selo por EMOJI: as seções da Leitura do Ciclo têm o próprio emoji no
-  /// título, e ele dentro do selo circular faz o papel das artes pintadas
-  /// dos benefícios Premium — colorido, com o rótulo limpo ao lado.
-  factory OfferBenefit.emoji(
-    String emoji,
-    String label, {
-    String? vislumbre,
-  }) =>
-      OfferBenefit._(emoji: emoji, label: label, vislumbre: vislumbre);
-
   final String label;
 
   /// A linha do que a feature entrega. Nula nas peças que são fato, não
@@ -452,38 +382,26 @@ class OfferBenefit {
 
   final String? assetPath;
   final IconData? iconData;
-  final String? emoji;
   final bool highlighted;
 }
 
 class OfferBenefitRow extends StatelessWidget {
   final OfferBenefit benefit;
 
-  /// Meia escala: selo de 30 e tipografia menor. É a medida das ofertas
-  /// que vendem PEÇAS de um todo maior (o paywall da Leitura do Ciclo) —
-  /// a peça inteira, no tamanho do paywall Premium, faria a parte parecer
-  /// maior que o todo.
-  final bool compacto;
-
-  const OfferBenefitRow({
-    super.key,
-    required this.benefit,
-    this.compacto = false,
-  });
+  const OfferBenefitRow({super.key, required this.benefit});
 
   @override
   Widget build(BuildContext context) {
     final destaque = benefit.highlighted;
-    final selo = compacto ? 30.0 : 44.0;
     return Padding(
-      padding: EdgeInsets.symmetric(vertical: compacto ? 2 : 4),
+      padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            width: selo,
-            height: selo,
-            padding: EdgeInsets.all(compacto ? 4 : 6),
+            width: 44,
+            height: 44,
+            padding: const EdgeInsets.all(6),
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: destaque
@@ -497,7 +415,7 @@ class OfferBenefitRow extends StatelessWidget {
               boxShadow: [
                 BoxShadow(
                   color: context.gc.lilac.withValues(alpha: 0.20),
-                  blurRadius: compacto ? 8 : 12,
+                  blurRadius: 12,
                 ),
               ],
             ),
@@ -507,19 +425,11 @@ class OfferBenefitRow extends StatelessWidget {
                     fit: BoxFit.contain,
                     filterQuality: FilterQuality.high,
                   )
-                : benefit.emoji != null
-                    ? Center(
-                        child: Text(
-                          benefit.emoji!,
-                          style:
-                              TextStyle(fontSize: compacto ? 13 : 19),
-                        ),
-                      )
-                    : Icon(
-                        benefit.iconData,
-                        size: compacto ? 15 : 22,
-                        color: context.gc.lilac,
-                      ),
+                : Icon(
+                    benefit.iconData,
+                    size: 22,
+                    color: context.gc.lilac,
+                  ),
           ),
           const SizedBox(width: 10),
           Expanded(
@@ -531,7 +441,7 @@ class OfferBenefitRow extends StatelessWidget {
                   benefit.label,
                   style: GoogleFonts.lora(
                     color: destaque ? context.gc.lilac : context.gc.textPrimary,
-                    fontSize: compacto ? 13 : 14.5,
+                    fontSize: 14.5,
                     height: 1.22,
                     fontWeight: FontWeight.w700,
                   ),
@@ -546,7 +456,7 @@ class OfferBenefitRow extends StatelessWidget {
                     benefit.vislumbre!,
                     style: TextStyle(
                       color: context.gc.textSecondary,
-                      fontSize: compacto ? 11.5 : 12.5,
+                      fontSize: 12.5,
                       height: 1.4,
                     ),
                   ),
@@ -987,22 +897,11 @@ class SubscriptionPurchaseButton extends StatelessWidget {
   final bool enabled;
   final VoidCallback onPressed;
 
-  /// Texto do botão. Nulo usa o padrão do paywall Premium ("Começar Agora").
-  /// Existe para o paywall da Leitura do Ciclo usar ESTE botão — o mesmo
-  /// gradiente, a mesma forma — com o verbo do produto dele.
-  final String? label;
-
-  /// Meia altura (40) e fonte menor — o par do herói em [SubscriptionHero]
-  /// nos paywalls de produto avulso.
-  final bool compacto;
-
   const SubscriptionPurchaseButton({
     super.key,
     required this.loading,
     required this.enabled,
     required this.onPressed,
-    this.label,
-    this.compacto = false,
   });
 
   @override
@@ -1012,7 +911,7 @@ class SubscriptionPurchaseButton extends StatelessWidget {
       opacity: enabled ? 1 : 0.45,
       child: SizedBox(
       width: double.infinity,
-      height: compacto ? 40 : 50,
+      height: 50,
         child: DecoratedBox(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(28),
@@ -1054,9 +953,9 @@ class SubscriptionPurchaseButton extends StatelessWidget {
                     ),
                   )
                 : Text(
-                    label ?? AppLocalizations.of(context).premiumStartNow,
+                    AppLocalizations.of(context).premiumStartNow,
                     style: GoogleFonts.lora(
-                      fontSize: compacto ? 14 : 16,
+                      fontSize: 16,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
@@ -1100,8 +999,7 @@ class SubscriptionGuarantees extends StatelessWidget {
 }
 
 /// Os dois selos de confiança do paywall (pagamento seguro, dados
-/// protegidos) — públicos para o paywall da Leitura do Ciclo mostrar
-/// exatamente os mesmos.
+/// protegidos).
 class GuaranteeBadges extends StatelessWidget {
   const GuaranteeBadges({super.key});
 
