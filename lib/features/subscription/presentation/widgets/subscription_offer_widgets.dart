@@ -971,11 +971,6 @@ class SubscriptionGuarantees extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final guarantees = [
-      ('assets/premium/icon_shield.png', l10n.premiumSecurePayment),
-      ('assets/premium/icon_lock.png', l10n.premiumDataProtected),
-    ];
-
     return Column(
       children: [
         Text(
