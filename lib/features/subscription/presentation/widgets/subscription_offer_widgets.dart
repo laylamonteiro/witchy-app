@@ -837,6 +837,30 @@ class _SubscriptionPlanCard extends StatelessWidget {
                     ),
                   ),
                 ],
+                // A Leitura da Lunação SÓ no rodapé do Vitalício: a Leitura
+                // do Ciclo é produto avulso, fora do Premium, e a única
+                // verdade vendável aqui é que o lifetime a inclui (regra em
+                // `CycleReadingOrigin.lifetime`). Nos outros planos a mesma
+                // linha faria a tela mentir.
+                if (type == SubscriptionType.lifetime) ...[
+                  const SizedBox(height: 6),
+                  Icon(
+                    Icons.nightlight_round,
+                    size: 14,
+                    color: context.gc.gold,
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    l10n.paywallLifetimeCycleReading,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: context.gc.gold,
+                      fontSize: compacto ? 11 : 12.5,
+                      height: 1.3,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
@@ -890,7 +914,11 @@ class SubscriptionPurchaseButton extends StatelessWidget {
               backgroundColor: Colors.transparent,
               disabledBackgroundColor: Colors.transparent,
               shadowColor: Colors.transparent,
-              foregroundColor: context.gc.textPrimary,
+              // O fundo de verdade é o gradiente lilás do DecoratedBox de
+              // fora: o texto usa onPrimary, o token que os testes de
+              // contraste garantem sobre o acento — textPrimary sumia nos
+              // temas de lilás claro.
+              foregroundColor: context.gc.onPrimary,
               shape: const StadiumBorder(),
             ),
             child: loading
@@ -899,7 +927,7 @@ class SubscriptionPurchaseButton extends StatelessWidget {
                     height: 22,
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
-                      color: context.gc.textPrimary,
+                      color: context.gc.onPrimary,
                     ),
                   )
                 : Text(

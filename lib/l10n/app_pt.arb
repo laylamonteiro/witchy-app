@@ -1480,7 +1480,6 @@
     }
   },
   "subsTitle": "Assinatura",
-  "subsUnlockAll": "Desbloqueie todos os recursos",
   "subsLifetime": "Acesso Vitalício",
   "subsValidUntil": "Válido até {date}",
   "@subsValidUntil": {
@@ -1506,14 +1505,6 @@
   "subsAppPremium": "Grimório de Bolso Premium",
   "subsYourBenefits": "Seus Benefícios Premium",
   "subsWhatYouGet": "O que você ganha com o Premium:",
-  "subsBenefitUnlimitedForecasts": "Previsões Mágicas ilimitadas",
-  "subsBenefitFullGrimoire": "Grimório completo",
-  "subsBenefitFullGrimoireAccess": "Acesso ao Grimório completo",
-  "subsBenefitAdvisor": "Conselheiro Místico",
-  "subsBenefitProfile": "Perfil mágico personalizado",
-  "subsBenefitTransits": "Sugestões personalizadas pelos trânsitos",
-  "subsBenefitDailyWeather": "Clima mágico diário completo",
-  "subsBenefitLunarCalendar": "Calendário lunar avançado",
   "subsBenefitSupport": "Suporte prioritário",
   "subsBetaLifetimeInfo": "Seu acesso Premium foi resgatado via Código Premium e não expira",
   "subsLifetimeActiveInfo": "Seu acesso Premium vitalício está ativo",

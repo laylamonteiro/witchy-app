@@ -356,8 +356,11 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
               backgroundColor: context.gc.lilac,
             ),
             child:
+                // textPrimary é quase branco nos temas escuros e sumia
+                // sobre o fundo lilás; onPrimary é o token para texto
+                // sobre o acento.
                 Text(l10n.editExportAction,
-                    style: TextStyle(color: context.gc.textPrimary)),
+                    style: TextStyle(color: context.gc.onPrimary)),
           ),
         ],
       ),

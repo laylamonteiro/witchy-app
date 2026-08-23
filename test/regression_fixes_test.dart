@@ -36,6 +36,19 @@ import 'package:grimorio_de_bolso/features/grimoire/presentation/providers/spell
 void _ignoreSubscriptionSelection(SubscriptionType _) {}
 void _ignoreTap() {}
 
+/// Desliga as animações via MediaQuery para a árvore INTEIRA do app —
+/// inclusive rotas empilhadas no navigator raiz, como a SubscriptionPage.
+///
+/// A página ganhou o céu estrelado, que anima em laço eterno e prenderia
+/// qualquer `pumpAndSettle` para sempre; o StarfieldBackground para sozinho
+/// quando `disableAnimations` é true. `copyWith` a partir do context, e não
+/// um MediaQueryData cru: um cru zeraria o tamanho da tela e o layout
+/// inteiro viraria zero.
+Widget _semAnimacoes(BuildContext context, Widget? child) => MediaQuery(
+      data: MediaQuery.of(context).copyWith(disableAnimations: true),
+      child: child!,
+    );
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   sqfliteFfiInit();
@@ -413,7 +426,8 @@ void main() {
               create: (_) => LanguageProvider(prefs),
             ),
           ],
-          child: MaterialApp(locale: const Locale('pt', 'BR'), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales, 
+          child: MaterialApp(locale: const Locale('pt', 'BR'), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales,
+            builder: _semAnimacoes,
             home: Navigator(
               onGenerateRoute: (_) => MaterialPageRoute<void>(
                 builder: (_) => const SettingsPage(),
@@ -865,7 +879,7 @@ void main() {
       await tester.pumpWidget(
         ChangeNotifierProvider<AuthProvider>.value(
           value: AuthProvider(),
-          child: const MaterialApp(locale: const Locale('pt', 'BR'), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales, home: SubscriptionPage()),
+          child: MaterialApp(locale: const Locale('pt', 'BR'), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales, builder: _semAnimacoes, home: const SubscriptionPage()),
         ),
       );
       await tester.pump();
@@ -920,7 +934,7 @@ void main() {
       await tester.pumpWidget(
         ChangeNotifierProvider<AuthProvider>.value(
           value: AuthProvider(),
-          child: const MaterialApp(locale: const Locale('pt', 'BR'), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales, home: SubscriptionPage()),
+          child: MaterialApp(locale: const Locale('pt', 'BR'), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales, builder: _semAnimacoes, home: const SubscriptionPage()),
         ),
       );
       await tester.pump();
@@ -973,7 +987,7 @@ void main() {
       await tester.pumpWidget(
         ChangeNotifierProvider<AuthProvider>.value(
           value: authProvider,
-          child: const MaterialApp(locale: const Locale('pt', 'BR'), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales, home: SubscriptionPage()),
+          child: MaterialApp(locale: const Locale('pt', 'BR'), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales, builder: _semAnimacoes, home: const SubscriptionPage()),
         ),
       );
       await tester.pumpAndSettle();
