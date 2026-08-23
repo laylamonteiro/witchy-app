@@ -338,19 +338,32 @@ class _GrimorioDeBolsoAppState extends State<GrimorioDeBolsoApp>
     await _triggerBackgroundSync();
   }
 
+  /// Não vale a pena sincronizar de novo antes disto: o retorno à aba
+  /// dispara o resume a cada troca de app, e na web a varredura roda na
+  /// thread da interface — sincronizar a cada volta travava a tela (visto
+  /// no preview, 23/08). O login e o botão de sincronizar não passam por
+  /// aqui e continuam imediatos.
+  static const _folgaEntreAutoSyncs = Duration(minutes: 10);
+
   Future<void> _triggerBackgroundSync() async {
     final syncService = DataSyncService();
     // Sem trava de plano: sincronizar é de todo mundo. O que ainda decide é
     // a preferência da pessoa e haver conta (`isReady`).
     final syncEnabled = await syncService.cloudSyncEnabled;
-    if (syncEnabled && syncService.isReady) {
-      await debugLog('SYNC', 'Auto-sync iniciado em background');
-      final result = await syncService.syncAll();
-      if (result.success) {
-        await debugLog('SYNC', 'Auto-sync concluído com sucesso');
-      } else {
-        await debugLog('SYNC', 'Auto-sync falhou: ${result.detailedError}');
-      }
+    if (!syncEnabled || !syncService.isReady) return;
+
+    final ultima = await syncService.lastSuccessfulSyncTime;
+    if (ultima != null &&
+        DateTime.now().difference(ultima) < _folgaEntreAutoSyncs) {
+      return;
+    }
+
+    await debugLog('SYNC', 'Auto-sync iniciado em background');
+    final result = await syncService.syncAll();
+    if (result.success) {
+      await debugLog('SYNC', 'Auto-sync concluído com sucesso');
+    } else {
+      await debugLog('SYNC', 'Auto-sync falhou: ${result.detailedError}');
     }
   }
 

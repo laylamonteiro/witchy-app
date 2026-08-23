@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:flutter/services.dart';
@@ -244,13 +243,12 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
       return;
     }
 
-    // 4. Seu Dia. Na web não existe "sair do app": o que existe embaixo da
-    // primeira tela é a página anterior do navegador — depois de um login
-    // social, a do Google. Sair dali parece o app ter quebrado, não ter
-    // fechado. Quem quer sair fecha a aba.
-    if (kIsWeb) return;
-
-    // No celular, sair só com toque duplo.
+    // 4. Seu Dia: sair só com toque duplo — na web TAMBÉM (decisão da
+    // dona, 23/08: o voltar desce até o Seu Dia e então sai, como no app).
+    // Engolir o voltar aqui para sempre fazia sentido quando o histórico
+    // podia ter o Google logo abaixo; com o login em janela própria ele
+    // nunca entra, e sair devolve a pessoa para onde a aba estava antes do
+    // app. No web o SystemNavigator.pop entrega o voltar ao navegador.
     final now = DateTime.now();
     if (_lastBackPress == null ||
         now.difference(_lastBackPress!) > const Duration(seconds: 2)) {
