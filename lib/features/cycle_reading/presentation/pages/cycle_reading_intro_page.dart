@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:intl/intl.dart';
@@ -1221,22 +1222,29 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
             ),
       );
     }
-    // O botão abre o paywall da leitura, não o pagamento (decisão da dona,
-    // 23/08): o preço saiu desta tela e mora na folha, que explica seção
-    // por seção o que a leitura entrega ANTES de cobrar. O toque a mais é
-    // proposital — quem chega ao valor já sabe o que ele compra.
+    // A folha da leitura é SÓ do webapp (decisão da dona, 23/08): lá não
+    // há loja, então a folha faz o papel dela — explica o que a leitura
+    // entrega e mostra o preço ANTES de cobrar. No aplicativo, o paywall é
+    // a folha da PRÓPRIA loja, como na versão em produção: o toque abre
+    // direto a compra, e preço e meios de pagamento vêm da Play/App Store.
     final period = _period;
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton.icon(
-        onPressed: () => mostrarPaywallDaLeitura(
-          context,
-          periodType: _periodType,
-          periodStart: period.start,
-          periodEnd: period.end,
-          price: price,
-          onComprar: _buy,
-        ),
+        onPressed: () {
+          if (!kIsWeb) {
+            _buy();
+            return;
+          }
+          mostrarPaywallDaLeitura(
+            context,
+            periodType: _periodType,
+            periodStart: period.start,
+            periodEnd: period.end,
+            price: price,
+            onComprar: _buy,
+          );
+        },
         icon: const Icon(Icons.auto_awesome, size: 18),
         label: Text(l10n.cycleReadingWantFull),
       ),
