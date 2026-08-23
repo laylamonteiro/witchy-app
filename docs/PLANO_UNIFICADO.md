@@ -7,7 +7,8 @@
 > desde que os relatórios foram escritos.
 
 **Atualizado em:** 23/08/2026
-**Branch:** `claude/artifact-access-aea6wn` — 26 commits, nenhum PR aberto
+**Branch:** `claude/tombstone-sync-qvki0e` (continua a
+`claude/artifact-access-aea6wn`, 28 commits) — nenhum PR aberto
 **Validação:** a CI da branch. Não há Flutter neste ambiente (o host do SDK
 é bloqueado pela política de rede da sessão). Nada aqui foi executado
 localmente; o que está marcado como verificado foi verificado pela CI ou
@@ -169,6 +170,14 @@ equipe e ~20 testadoras, quase um terço da base não é usuária.
 
 **Sincronização**
 - aberta para todo mundo, nas duas pontas (era Premium)
+- **tombstone/lápide**: item apagado não ressuscita mais no download. O
+  `deleteItem` grava a lápide antes de qualquer guarda de rede; as
+  varreduras sincronizam exclusões antes de entidades; edição/recriação
+  mais nova que a exclusão vence (regra `mostRecent`). Local na v23 do
+  banco; o lado do servidor é `sync_tombstones_migration.sql` (seção 7).
+  Teste antes-e-depois: o commit só com o teste ficou vermelho na CI
+  reproduzindo a ressurreição, o seguinte ficou verde. Sem dublê do
+  método de risco — só a borda de rede virou porta (`ServidorDeSync`)
 
 **Convite ao Premium**
 - placar do plano Free trocado por convite que reage ao momento
@@ -206,11 +215,8 @@ equipe e ~20 testadoras, quase um terço da base não é usuária.
 ## 6. O que está aberto
 
 **Custa dado se ficar aberto**
-- **Tombstone / exclusão suave.** O relatório de produto pedia isto no
-  mesmo PR da sincronização gratuita, e não foi feito. Sem tombstone, o
-  item apagado num aparelho ressuscita na próxima sincronização — e agora
-  que a sincronização é de todos, o alcance saiu de 15 para 116 pessoas.
-  **É o próximo item.**
+- ~~Tombstone / exclusão suave~~ — **feito** (ver seção 5). O que restou
+  dele é painel: rodar `sync_tombstones_migration.sql` (seção 7).
 - Teste de concorrência do acúmulo por seção.
 
 **Segurança**
@@ -237,7 +243,7 @@ Nada aqui foi contornado. O material está pronto; a execução é sua.
 
 | O quê | Onde | Material pronto |
 |---|---|---|
-| Rodar os `.sql` | Supabase → SQL Editor | `marcar_contas_de_teste.sql`, `profiles_lockdown_migration.sql` |
+| Rodar os `.sql` | Supabase → SQL Editor | `marcar_contas_de_teste.sql`, `profiles_lockdown_migration.sql`, **`sync_tombstones_migration.sql`** (novo: até rodar, a exclusão não propaga ENTRE aparelhos — no próprio aparelho a ressurreição já está barrada — e as lápides locais ficam pendentes, retentadas a cada varredura) |
 | **Ligar "Prevent use of leaked passwords"** | Supabase → Authentication → Attack Protection | está **desligado** no painel (visto em 23/08); é um clique, na mesma tela do captcha |
 | Impressão digital do Google | Google Cloud + `google-services.json` | `release.yml:67` espera `54:84:54:75:7F:…`; o arquivo tem só `8BD7BB97…`. Nenhum dos dois é a chave de release |
 | Publicar a Edge Function da IA | Supabase → Functions | `supabase/functions/ia/index.ts`, nunca executado |
@@ -264,12 +270,12 @@ ligar isso algum dia, se um dia valer a pena.
 
 ## 8. Ordem sugerida
 
-1. **Tombstone** — é o único aberto que custa dado da usuária, e a
-   sincronização gratuita já está no ar sem ele.
+1. ~~Tombstone~~ — feito (seção 5); o `.sql` dele entrou na lista do
+   painel.
 2. **Decidir os seis conflitos** (seção 3). Metade do relatório de produto
    está parada atrás deles.
-3. **Painel**: ligar leaked passwords, rodar os `.sql`, resolver a
-   impressão digital do Google.
+3. **Painel**: ligar leaked passwords, rodar os `.sql` (agora três),
+   resolver a impressão digital do Google.
 4. **Consentimento → analytics**, nesta ordem.
 5. Segurança restante (`search_path`, `handle_new_user`).
 6. Cobertura e `dart format`.
