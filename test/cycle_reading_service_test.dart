@@ -1,7 +1,10 @@
 import 'dart:io';
 
+import 'package:flutter/material.dart' show Locale;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:grimorio_de_bolso/core/database/database_helper.dart';
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart'
+    show lookupAppLocalizations;
 import 'package:grimorio_de_bolso/features/cycle_reading/data/models/cycle_reading_model.dart';
 import 'package:grimorio_de_bolso/features/cycle_reading/data/repositories/cycle_reading_repository.dart';
 import 'package:grimorio_de_bolso/features/cycle_reading/data/services/cycle_reading_composer.dart';
@@ -127,6 +130,36 @@ void main() {
         '> Eu **honro minhas conquistas** e sigo.',
       ),
       'Eu honro minhas conquistas e sigo.',
+    );
+  });
+
+  test('reabrir do acervo recorta a afirmação da SEÇÃO dela, não o gancho',
+      () {
+    // A leitura ABRE com um gancho em citação; era ele que saía no cartão
+    // de compartilhar enquanto a tela mostrava a afirmação certa (visto no
+    // preview, 23/08). O título da seção é o do idioma da geração.
+    final titulo = lookupAppLocalizations(const Locale('pt', 'BR'))
+        .cycleReadingSectionAffirmation;
+    final markdown = '''
+# Leitura da Lunação
+
+## 🕯️ Retrato do momento
+
+> Da tempestade interna ao nascimento das suas criações.
+
+Texto do retrato.
+
+## $titulo
+
+> Eu confio na minha criação.
+
+## 🔮 Selo do ciclo
+
+**raiz** · **agua**
+''';
+    expect(
+      CycleReadingService.affirmationFromMarkdown(markdown),
+      'Eu confio na minha criação.',
     );
   });
 

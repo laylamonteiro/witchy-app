@@ -37,15 +37,24 @@ class AffirmationProvider with ChangeNotifier {
   /// Semeia as afirmações padrão na primeira vez e, quando o conteúdo é
   /// revisado (seedVersion sobe), troca as antigas pelas novas na próxima
   /// abertura. As favoritadas ficam — viraram escolha da pessoa.
+  ///
+  /// A marca de versão NÃO basta sozinha: o logout de quem não tem conta
+  /// limpa o banco inteiro (`clearAllTables`), mas a marca mora no
+  /// SharedPreferences e sobrevivia — e aí a conta seguinte abria sem
+  /// NENHUMA afirmação original, com a semeadura se recusando a rodar
+  /// ("já semeei"). A conferência é pelas LINHAS: marca em dia sem linha
+  /// no banco é banco limpo, e semeia de novo (visto no preview, 23/08,
+  /// numa conta free criada depois de um logout).
   Future<void> _ensureSeed() async {
     final prefs = await SharedPreferences.getInstance();
+    final temPreCarregadas = await _repository.hasPreloadedData();
     final seeded = prefs.getInt(_seedVersionKey) ??
         // Sem marca: quem já tem linhas veio da semeadura 1; banco vazio
         // ainda não foi semeado.
-        (await _repository.hasPreloadedData() ? 1 : 0);
-    if (seeded >= AffirmationModel.seedVersion) return;
+        (temPreCarregadas ? 1 : 0);
+    if (seeded >= AffirmationModel.seedVersion && temPreCarregadas) return;
 
-    if (seeded > 0) {
+    if (seeded > 0 && temPreCarregadas) {
       await _repository.deletePreloadedExceptFavorites();
     }
     await _repository.insertAll(AffirmationModel.getPreloadedAffirmations());

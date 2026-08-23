@@ -541,20 +541,42 @@ class CycleReadingService {
     };
   }
 
-  /// Recupera a afirmação de um relatório já salvo (linha de citação `>`)
-  /// — para reabrir os cartões compartilháveis sem regerar nada.
+  /// O título da seção da afirmação como ele pode estar GRAVADO — a leitura
+  /// foi escrita no idioma da geração, e a tela relê no idioma de agora.
+  static final Set<String> _titulosDaAfirmacaoSalvos = {
+    for (final locale in AppLocalizations.supportedLocales)
+      lookupAppLocalizations(locale).cycleReadingSectionAffirmation,
+  };
+
+  /// Recupera a afirmação de um relatório já salvo — para reabrir os
+  /// cartões compartilháveis sem regerar nada.
+  ///
+  /// A afirmação é a citação DA SEÇÃO da afirmação, não a primeira citação
+  /// do relatório: a leitura ABRE com um gancho em citação, e era ele que
+  /// saía no cartão de compartilhar enquanto a tela mostrava a afirmação
+  /// certa (visto no preview, 23/08). A primeira citação fica como plano B
+  /// para leituras cujo título de seção não é reconhecível.
   static String? affirmationFromMarkdown(String markdown) {
+    var naSecaoDaAfirmacao = false;
+    String? primeiraCitacao;
     for (final line in markdown.split('\n')) {
       final trimmed = line.trim();
+      if (trimmed.startsWith('## ')) {
+        naSecaoDaAfirmacao =
+            _titulosDaAfirmacaoSalvos.any(trimmed.contains);
+        continue;
+      }
       if (trimmed.startsWith('> ')) {
         // Leituras já salvas trazem o realce dentro da citação; aqui a
         // afirmação sai como frase, para o cartão e para o texto do
         // compartilhamento.
         final text = semRealce(trimmed.substring(2)).trim();
-        if (text.isNotEmpty) return text;
+        if (text.isEmpty) continue;
+        if (naSecaoDaAfirmacao) return text;
+        primeiraCitacao ??= text;
       }
     }
-    return null;
+    return primeiraCitacao;
   }
 
   /// Recupera as palavras-chave do selo de um relatório já salvo: a linha

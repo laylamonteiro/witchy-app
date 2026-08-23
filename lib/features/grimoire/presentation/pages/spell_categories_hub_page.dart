@@ -234,9 +234,11 @@ class _SpellCategoriesHubPageState extends State<SpellCategoriesHubPage> {
           onTap: () => Navigator.push(
             context,
             MaterialPageRoute(
+              // Abre com o chip "Todos" aceso (decisão da dona, 23/08: é o
+              // padrão de TODO filtro de chips) — quem quer só os seus toca
+              // em "Meus" ali mesmo.
               builder: (_) => UserSpellsListPage(
                 title: AppLocalizations.of(context).grimoireMySpells,
-                initialSource: SpellSource.mine,
               ),
             ),
           ),
