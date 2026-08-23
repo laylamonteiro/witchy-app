@@ -377,20 +377,31 @@ class OfferBenefit {
 class OfferBenefitRow extends StatelessWidget {
   final OfferBenefit benefit;
 
-  const OfferBenefitRow({super.key, required this.benefit});
+  /// Meia escala: selo de 30 e tipografia menor. É a medida das ofertas
+  /// que vendem PEÇAS de um todo maior (o paywall da Leitura do Ciclo) —
+  /// a peça inteira, no tamanho do paywall Premium, faria a parte parecer
+  /// maior que o todo.
+  final bool compacto;
+
+  const OfferBenefitRow({
+    super.key,
+    required this.benefit,
+    this.compacto = false,
+  });
 
   @override
   Widget build(BuildContext context) {
     final destaque = benefit.highlighted;
+    final selo = compacto ? 30.0 : 44.0;
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+      padding: EdgeInsets.symmetric(vertical: compacto ? 2 : 4),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            width: 44,
-            height: 44,
-            padding: const EdgeInsets.all(6),
+            width: selo,
+            height: selo,
+            padding: EdgeInsets.all(compacto ? 4 : 6),
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: destaque
@@ -404,7 +415,7 @@ class OfferBenefitRow extends StatelessWidget {
               boxShadow: [
                 BoxShadow(
                   color: context.gc.lilac.withValues(alpha: 0.20),
-                  blurRadius: 12,
+                  blurRadius: compacto ? 8 : 12,
                 ),
               ],
             ),
@@ -414,7 +425,11 @@ class OfferBenefitRow extends StatelessWidget {
                     fit: BoxFit.contain,
                     filterQuality: FilterQuality.high,
                   )
-                : Icon(benefit.iconData, size: 22, color: context.gc.lilac),
+                : Icon(
+                    benefit.iconData,
+                    size: compacto ? 15 : 22,
+                    color: context.gc.lilac,
+                  ),
           ),
           const SizedBox(width: 10),
           Expanded(
@@ -426,7 +441,7 @@ class OfferBenefitRow extends StatelessWidget {
                   benefit.label,
                   style: GoogleFonts.lora(
                     color: destaque ? context.gc.lilac : context.gc.textPrimary,
-                    fontSize: 14.5,
+                    fontSize: compacto ? 13 : 14.5,
                     height: 1.22,
                     fontWeight: FontWeight.w700,
                   ),

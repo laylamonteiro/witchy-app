@@ -26,6 +26,11 @@ import '../../data/services/cycle_reading_service.dart';
 /// selos de confiança ([GuaranteeBadges]). Dois paywalls com caras
 /// diferentes leriam como dois apps.
 ///
+/// Em MEIA ESCALA, também de propósito (decisão da dona, 23/08): aqui se
+/// compra uma PEÇA de um todo maior, e a peça não pode parecer maior que o
+/// todo — herói baixo, selos de 30, menos ar. A língua é a mesma; o volume,
+/// metade.
+///
 /// A folha só APRESENTA: nenhuma lógica de compra mora aqui. Ao tocar o CTA
 /// ela se fecha e devolve a decisão pelo [onComprar] — o pop acontece ANTES
 /// do callback, então nenhum context desta folha sobrevive a um await do
@@ -192,7 +197,7 @@ class PaywallDaLeitura extends StatelessWidget {
     final secoes = CycleReadingSections.forPeriod(periodType);
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
+      padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
       decoration: BoxDecoration(
         color: context.gc.surface,
         borderRadius: BorderRadius.circular(24),
@@ -208,28 +213,27 @@ class PaywallDaLeitura extends StatelessWidget {
       child: Column(
         children: [
           _heroi(context, l10n),
-          const SizedBox(height: 10),
+          const SizedBox(height: 8),
           const PremiumOfferDivider(),
-          const SizedBox(height: 12),
+          const SizedBox(height: 8),
           // As seções do produto nas MESMAS peças dos benefícios do paywall
-          // Premium: 8 na lunação, 5 na semana — a diferença fica visível e
-          // é o que justifica a diferença de preço.
+          // Premium — em meia escala: 8 na lunação, 5 na semana, e a
+          // diferença visível é o que justifica a diferença de preço.
           StaggeredEntrance(
             children: [
-              for (var i = 0; i < secoes.length; i++) ...[
+              for (final chave in secoes)
                 OfferBenefitRow(
+                  compacto: true,
                   benefit: OfferBenefit.icon(
-                    _iconeDaSecao(secoes[i]),
-                    _tituloDaSecao(l10n, secoes[i]),
+                    _iconeDaSecao(chave),
+                    _tituloDaSecao(l10n, chave),
                     highlighted: false,
                   ),
                 ),
-                if (i != secoes.length - 1) const SizedBox(height: 6),
-              ],
             ],
           ),
           if (_isWeek) ...[
-            const SizedBox(height: 10),
+            const SizedBox(height: 8),
             // Upsell honesto: diz o que SÓ a lunação traz, sem esconder que
             // a semana já entrega uma leitura inteira.
             Text(
@@ -237,29 +241,29 @@ class PaywallDaLeitura extends StatelessWidget {
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: context.gc.textSecondary,
-                fontSize: 12.5,
-                height: 1.4,
+                fontSize: 11.5,
+                height: 1.35,
               ),
             ),
           ],
           if (recordCount < minRecords) ...[
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
             // O aviso de material raso continua vindo ANTES da cobrança
             // (regra inegociável da feature).
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.all(10),
+              padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
                 color: context.gc.warning.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Text(
                 l10n.cycleReadingShallowWarning,
-                style: TextStyle(color: context.gc.warning, fontSize: 12.5),
+                style: TextStyle(color: context.gc.warning, fontSize: 11.5),
               ),
             ),
           ],
-          const SizedBox(height: 12),
+          const SizedBox(height: 8),
           Text(
             _isWeek
                 ? l10n.cycleReadingWeekRecordCount(recordCount)
@@ -267,10 +271,10 @@ class PaywallDaLeitura extends StatelessWidget {
             textAlign: TextAlign.center,
             style: TextStyle(
               color: context.gc.textSecondary,
-              fontSize: 12.5,
+              fontSize: 11.5,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 6),
           // O preço na MESMA tipografia dos cards de plano do paywall
           // Premium — e é a primeira aparição dele no fluxo inteiro.
           Text(
@@ -278,11 +282,11 @@ class PaywallDaLeitura extends StatelessWidget {
             textAlign: TextAlign.center,
             style: GoogleFonts.lora(
               color: context.gc.textPrimary,
-              fontSize: 23,
+              fontSize: 20,
               fontWeight: FontWeight.w700,
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
           // O MESMO botão do paywall Premium, com o verbo do produto. Fecha
           // ANTES de avisar: o fluxo de compra é assíncrono e não pode
           // depender do context desta folha.
@@ -322,7 +326,7 @@ class PaywallDaLeitura extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(8, 8, 10, 8),
+      padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
         gradient: LinearGradient(
@@ -334,34 +338,28 @@ class PaywallDaLeitura extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Expanded(
-            flex: 4,
-            child: Center(
-              child: BreathingBadge(
-                glowColor: context.gc.lilac,
-                haloSize: 96,
-                child: Container(
-                  width: 66,
-                  height: 66,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: context.gc.lilac.withValues(alpha: 0.16),
-                    border: Border.all(
-                      color: context.gc.lilac.withValues(alpha: 0.45),
-                    ),
-                  ),
-                  child: Icon(
-                    Icons.nightlight_round,
-                    size: 30,
-                    color: context.gc.lilac,
-                  ),
+          BreathingBadge(
+            glowColor: context.gc.lilac,
+            haloSize: 52,
+            child: Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: context.gc.lilac.withValues(alpha: 0.16),
+                border: Border.all(
+                  color: context.gc.lilac.withValues(alpha: 0.45),
                 ),
+              ),
+              child: Icon(
+                Icons.nightlight_round,
+                size: 20,
+                color: context.gc.lilac,
               ),
             ),
           ),
-          const SizedBox(width: 6),
+          const SizedBox(width: 10),
           Expanded(
-            flex: 7,
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -385,28 +383,28 @@ class PaywallDaLeitura extends StatelessWidget {
                           : l10n.cycleReadingLunationTitle,
                       style: GoogleFonts.cinzelDecorative(
                         color: context.gc.textPrimary,
-                        fontSize: 19,
+                        fontSize: 16,
                         fontWeight: FontWeight.w700,
                         letterSpacing: 0.4,
                       ),
                     ),
                   ),
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: 3),
                 Text(
                   periodo,
                   style: GoogleFonts.lora(
                     color: context.gc.textSecondary,
-                    fontSize: 12,
-                    height: 1.34,
+                    fontSize: 11,
+                    height: 1.3,
                   ),
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: 3),
                 Text(
                   l10n.cycleReadingPaywallTitle,
                   style: GoogleFonts.lora(
                     color: context.gc.textPrimary,
-                    fontSize: 14,
+                    fontSize: 12.5,
                     fontWeight: FontWeight.w600,
                   ),
                 ),

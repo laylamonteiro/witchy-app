@@ -70,7 +70,7 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
   ///
   /// Existe para ler um pedaço RETROATIVO: a lunação passada, aquela semana
   /// específica. Quando está preenchida, ela manda — e o [_periodType]
-  /// passa a sair do TAMANHO dela (até 7 dias = semana; 8 a 31 = lunação),
+  /// passa a sair do TAMANHO dela (até 8 dias = semana; 9 a 31 = lunação),
   /// porque é o tamanho que define o produto, não o rótulo escolhido antes.
   ({DateTime start, DateTime end})? _customPeriod;
 
@@ -81,20 +81,15 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
   /// vista). Fica na tela até a pessoa escolher outra.
   String? _customRejection;
 
-  /// A tela abre no CALENDÁRIO e mais nada: escolher o pedaço da vida a ser
-  /// lido é a primeira decisão, e é ela que define o produto e o preço.
-  /// Enquanto isto for falso, a oferta e o resto da tela nem existem.
-  bool _periodoEscolhido = false;
-
   /// Mapa de calor do último ano (null = ainda carregando).
   Map<String, int>? _densidade;
 
   /// Leitura já gerada que cruza a janela escolhida — AVISO, nunca recusa.
   CycleReadingModel? _conflito;
 
-  /// Onde a oferta mora na rolagem — para levar a pessoa até ela depois de
-  /// confirmar o período (o cartão nasce abaixo da dobra, e uma tela que não
-  /// se mexe parece uma tela que não obedeceu).
+  /// Onde a oferta mora na rolagem — para trazer a pessoa DE VOLTA a ela
+  /// depois de confirmar outro período no calendário, que agora vive mais
+  /// abaixo (uma tela que não se mexe parece uma tela que não obedeceu).
   final GlobalKey _ancoraDaOferta = GlobalKey();
 
   /// As leituras já geradas (null = ainda carregando).
@@ -147,8 +142,6 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
   @override
   void initState() {
     super.initState();
-    // Sem `_load()` aqui: nada da tela depende de janela antes de haver
-    // janela. O que a primeira tela precisa é do calendário.
     _loadPrices();
     _carregarDensidade();
 
@@ -158,16 +151,19 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
       if (mounted) _recuperarCompraPendente();
     });
 
+    // A tela abre COMPLETA (decisão da dona, 23/08): a janela sugerida já
+    // nasce escolhida — cartão da leitura com avisos e sumário, e a
+    // privacidade logo abaixo — e o calendário vira o "ler outro período",
+    // mais adiante na página, em vez de ser a única coisa à vista.
     final janela = widget.initialPeriod;
     if (janela != null) {
       _customPeriod = janela;
       _periodType =
           CycleReadingService.periodTypeForSpan(janela.start, janela.end);
-      _periodoEscolhido = true;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) _load();
-      });
     }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _load();
+    });
   }
 
   /// O mapa de calor do último ano — quantos registros em cada dia.
@@ -269,7 +265,6 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
       _periodType = veredito.periodType;
       _conflito = veredito.conflict;
       _customRejection = null;
-      _periodoEscolhido = true;
       _isLoading = true;
     });
     await _load();
@@ -596,28 +591,25 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // O calendário abre a tela: antes de qualquer oferta, a pessoa vê
-            // o mapa de calor dos próprios dias e escolhe o pedaço que quer
-            // ler. Era um botão discreto no meio da tela; virou a primeira
-            // coisa, porque é a primeira decisão.
+            // A tela abre COMPLETA (decisão da dona, 23/08): o cartão da
+            // leitura — com os avisos e o "O que vem na leitura" dentro —
+            // já na janela sugerida, e logo abaixo o que é enviado para a
+            // análise. O calendário deixa de ser a única coisa à vista e
+            // vira o "ler outro período", mais adiante.
+            Container(key: _ancoraDaOferta),
+            _buildOfferCard(l10n),
+            _buildPrivacidade(l10n),
             _buildCalendario(l10n),
-            if (_periodoEscolhido) ...[
-              Container(key: _ancoraDaOferta),
-              _buildOfferCard(l10n),
-            ],
             _buildConviteDoMapa(l10n),
             _buildLeiturasRecentes(l10n),
-            if (_periodoEscolhido) ...[
-              _buildSumario(l10n),
-              _buildPrivacidade(l10n),
-            ],
           ],
         ),
       ),
     );
   }
 
-  /// O calendário com o mapa de calor — sempre à vista, no topo.
+  /// O calendário com o mapa de calor — o "ler outro período", abaixo
+  /// do cartão da oferta (a tela abre completa; ele deixou de ser o topo).
   Widget _buildCalendario(AppLocalizations l10n) {
     final densidade = _densidade;
     if (densidade == null) {
@@ -729,9 +721,9 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
       ),
     );
     if (!mounted) return;
-    // Com mapa novo, o céu do período entra na leitura: se já havia uma
-    // janela escolhida, ela é relida com o material completo.
-    if (_periodoEscolhido) await _load();
+    // Com mapa novo, o céu do período entra na leitura: a janela em foco
+    // é relida com o material completo.
+    await _load();
   }
 
   /// As leituras já geradas, da mais recente para a mais antiga.
@@ -913,15 +905,15 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
   /// O sumário da leitura: as seções, uma a uma, com cadeado.
   ///
   /// A lista faz o que o parágrafo não fazia — dá forma ao que vem dentro.
-  /// Ver sete títulos concretos, cada um prometendo uma coisa diferente
-  /// sobre a SUA vida, cria a curiosidade que "sete seções personalizadas"
-  /// não cria. O cadeado some quando a leitura é sua.
-  Widget _buildSumario(AppLocalizations l10n) {
+  /// Ver os títulos concretos, cada um prometendo uma coisa diferente
+  /// sobre a SUA vida, cria a curiosidade que "oito seções personalizadas"
+  /// não cria. O cadeado some quando a leitura é sua. Vive DENTRO do
+  /// cartão da oferta — janela, avisos e sumário são um convite só.
+  Widget _sumarioDaLeitura(AppLocalizations l10n) {
     final chaves = CycleReadingSections.forPeriod(_periodType);
     final destrancada = _existing != null || _lifetimeCoversThisWindow;
 
-    return MagicalCard(
-      child: Column(
+    return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
@@ -973,7 +965,6 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
                 ),
           ),
         ],
-      ),
     );
   }
 
@@ -1093,6 +1084,11 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
                 context.gc.textSecondary,
               ),
             ],
+            const SizedBox(height: 14),
+            // O sumário mora DENTRO do cartão (decisão da dona, 23/08):
+            // janela, avisos e "O que vem na leitura" são um convite só,
+            // com o CTA fechando o cartão.
+            _sumarioDaLeitura(l10n),
             const SizedBox(height: 16),
             _buildActions(l10n),
           ],
