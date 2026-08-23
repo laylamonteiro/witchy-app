@@ -180,8 +180,8 @@ class LocalAuthRepository implements AuthRepository {
   }
 
   @override
-  Future<AuthResult> verifyEmail() async {
-    // Simulação local - sempre verificado
+  Future<AuthResult> verifyEmail({String? captchaToken}) async {
+    // Simulação local - sempre verificado (não há captcha para validar)
     await Future.delayed(const Duration(milliseconds: 500));
     if (_currentUser != null) {
       return AuthResult.success(_currentUser!);

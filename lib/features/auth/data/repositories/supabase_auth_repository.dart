@@ -415,15 +415,20 @@ class SupabaseAuthRepository implements AuthRepository {
   }
 
   @override
-  Future<AuthResult> verifyEmail() async {
-    // Supabase envia email de verificação automaticamente
-    // Este método pode ser usado para reenviar
+  Future<AuthResult> verifyEmail({String? captchaToken}) async {
+    // O Supabase manda o e-mail de confirmação sozinho no cadastro; este
+    // método é o reenvio, para quando ele se perde.
+    //
+    // O token do captcha vai junto porque o reenvio passa pela mesma
+    // proteção do cadastro. Sem ele, o Supabase responde com
+    // AuthException e nenhum e-mail sai.
     try {
       final user = _supabase.auth.currentUser;
       if (user?.email != null) {
         await _supabase.auth.resend(
           type: OtpType.signup,
           email: user!.email!,
+          captchaToken: captchaToken,
         );
         return AuthResult.success(await _userFromSupabaseUser(user));
       }

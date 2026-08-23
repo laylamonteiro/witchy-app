@@ -389,10 +389,21 @@ jobs:
           if [ -n "$ADMOB_ANDROID_INTERSTITIAL_ID" ]; then
             ADMOB_FLAG="--dart-define=ADMOB_ANDROID_INTERSTITIAL_ID=$ADMOB_ANDROID_INTERSTITIAL_ID"
           fi
-          CAPTCHA_FLAG=""
-          if [ -n "$TURNSTILE_SITE_KEY" ]; then
-            CAPTCHA_FLAG="--dart-define=TURNSTILE_SITE_KEY=$TURNSTILE_SITE_KEY"
+          # Trava: o captcha está EXIGIDO no servidor (Supabase →
+          # Authentication → Attack Protection, Turnstile, conferido em
+          # 23/08/2026). Com ele ligado lá, um app compilado sem a site key
+          # não sabe produzir o token — e o Supabase recusa 100% dos
+          # cadastros e das entradas por e-mail. Publicar assim é publicar
+          # um app onde ninguém consegue entrar.
+          #
+          # Antes esta esteira apenas omitia o define quando o secret
+          # faltava. Isso era correto ENQUANTO a exigência do servidor
+          # estava desligada; hoje é a receita de um release morto.
+          if [ -z "$TURNSTILE_SITE_KEY" ]; then
+            echo "::error::TURNSTILE_SITE_KEY vazio e o captcha está exigido no Supabase — este build não conseguiria cadastrar nem entrar ninguém. Cadastre o secret (Cloudflare Turnstile → site key) ou desligue Attack Protection no painel antes de publicar."
+            exit 1
           fi
+          CAPTCHA_FLAG="--dart-define=TURNSTILE_SITE_KEY=$TURNSTILE_SITE_KEY"
           DEFINES=(
             --build-name="$NOME"
             --build-number="$CODIGO"
@@ -578,6 +589,14 @@ jobs:
           # site publica, tudo parece certo, e o único sintoma é um botão de
           # voltar se comportando mal. Ninguém liga uma coisa à outra. Por
           # isso a produção PARA aqui em vez de avisar.
+          # Mesma trava do build Android, pelo mesmo motivo: o captcha é
+          # exigido no servidor, e o site sem a site key compilada recusaria
+          # todo cadastro e toda entrada por e-mail.
+          if [ -z "$TURNSTILE_SITE_KEY" ]; then
+            echo "::error::TURNSTILE_SITE_KEY vazio e o captcha está exigido no Supabase — o site publicaria sem conseguir cadastrar nem entrar ninguém."
+            exit 1
+          fi
+
           if [ -z "$GOOGLE_WEB_CLIENT_ID" ]; then
             echo "::error::GOOGLE_WEB_CLIENT_ID vazio. Cadastre o secret (Google Cloud → Credentials → o client OAuth *Web*) — sem ele a produção publica com o login antigo, e o voltar volta a sair do app."
             exit 1

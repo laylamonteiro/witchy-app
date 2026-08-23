@@ -369,6 +369,16 @@ jobs:
           # continua no redirecionamento de sempre — não é obrigatório.
           GOOGLE_WEB_CLIENT_ID: ${{ secrets.GOOGLE_WEB_CLIENT_ID }}
         run: |
+          # Aviso, não trava: o captcha está EXIGIDO no servidor (Supabase →
+          # Authentication → Attack Protection), e o staging fala com o
+          # MESMO projeto. Sem a site key compilada, a prévia sobe mas
+          # ninguém consegue entrar nem cadastrar por e-mail — e quem for
+          # testar vai achar que quebrou o login. Aqui só avisa (prévia não
+          # publica nada); no release.yml a mesma falta PARA o build.
+          if [ -z "$TURNSTILE_SITE_KEY" ]; then
+            echo "::warning::TURNSTILE_SITE_KEY vazio. Esta prévia sobe sem captcha e o Supabase vai recusar cadastro e entrada por e-mail — teste só o que não depende de login."
+          fi
+
           # Trava: no staging a chave web PRECISA ser sandbox. Se veio uma
           # que não começa com rcb_sb_ (ex.: a de produção por engano), para
           # aqui em vez de aceitar pagamento real numa prévia.
@@ -646,9 +656,13 @@ jobs:
           if [ -n "$ADMOB_ANDROID_INTERSTITIAL_ID" ]; then
             ADMOB_FLAG="--dart-define=ADMOB_ANDROID_INTERSTITIAL_ID=$ADMOB_ANDROID_INTERSTITIAL_ID"
           fi
+          # Mesmo aviso do build web: com o captcha exigido no servidor,
+          # um APK sem a site key não cadastra nem entra ninguém.
           CAPTCHA_FLAG=""
           if [ -n "$TURNSTILE_SITE_KEY" ]; then
             CAPTCHA_FLAG="--dart-define=TURNSTILE_SITE_KEY=$TURNSTILE_SITE_KEY"
+          else
+            echo "::warning::TURNSTILE_SITE_KEY vazio. Este APK de prévia não consegue cadastrar nem entrar por e-mail — o Supabase exige o token do captcha."
           fi
           flutter build apk --release \
             --build-name="${{ steps.versao.outputs.nome }}" \
