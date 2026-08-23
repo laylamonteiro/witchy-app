@@ -24,5 +24,12 @@ void sairDaAba() {
   // alcance é ignorado em silêncio, e a pessoa ficaria com o aviso
   // consumido e nada acontecendo na tela.
   if (!podeSairDaAba()) return;
+
+  // Dupla conferência do comprimento do histórico: se por algum motivo a
+  // contagem mudou entre a chamada de podeSairDaAba() e agora, não sair.
+  // Cenário improvável, mas melhor ser redundante que deixar uma falha de
+  // edge case fechar a aba sem aviso.
+  if (_entradasDaAba() <= _entradasDoMotor) return;
+
   web.window.history.go(-_entradasDoMotor);
 }

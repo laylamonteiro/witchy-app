@@ -121,6 +121,11 @@ class CaminhadaDoVoltar {
 
     // 4. Seu Dia, raiz. Onde não há para onde ir, a saída nem é oferecida:
     // o voltar simplesmente fica aqui.
+    //
+    // Dupla conferência: além do `if` acima, verifica de novo que a aba
+    // é a 0 (Seu Dia) NESTE MOMENTO. Race condition improvável (o setState
+    // é síncrono), mas melhor prevenir.
+    if (abaAtual() != 0) return;
     if (!saida.podeSair()) return;
 
     final decisao = regra.registrar(agora());
