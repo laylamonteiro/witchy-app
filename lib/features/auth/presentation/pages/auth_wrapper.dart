@@ -4,6 +4,7 @@ import '../../../../core/utils/mask.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/services/debug_log_service.dart';
 import '../providers/auth_provider.dart';
+import '../../../../core/navigation/janela_de_login.dart';
 import '../../../../core/navigation/recomeco.dart';
 import 'welcome_page.dart';
 import '../../../../features/home/presentation/pages/home_page.dart';
@@ -54,21 +55,25 @@ class AuthWrapper extends StatelessWidget {
           return const GuardaDeVoltarWeb(child: _EsperandoASessao());
         }
 
-        // A volta do login social por redirecionamento carrega um defeito
-        // de histórico que nenhum guarda de DENTRO do app conserta: ao
-        // limpar o ?code= da URL, o Supabase atropela (replaceState) o
-        // estado que o motor do Flutter usa para segurar o voltar — e o
-        // primeiro voltar, em vez de ficar no app, caía na página do
-        // Google que ainda mora no histórico (visto em produção, 23/08).
-        // A saída é DESCARTAR este documento: com a sessão já gravada,
-        // recomeça na raiz via location.replace. O documento novo nasce
-        // sem ?code=, com a guarda do motor intacta, e o voltar volta a
-        // ser segurado pelo PopScope da Home. Uma vez por login social;
-        // o boot seguinte não tem ?code= e não passa por aqui.
+        // A volta do login social com a sessão pronta. Se este documento é
+        // a JANELA DE LOGIN (aberta pelo app para o Google não entrar no
+        // histórico da aba principal), o trabalho dele acabou: a sessão já
+        // está gravada e a aba principal a recolhe — fecha-se. Se o fechar
+        // não for permitido (o navegador cortou o vínculo), ou se a volta
+        // veio do redirecionamento de página inteira (pop-up bloqueado),
+        // vale o plano B de sempre: DESCARTAR este documento e recomeçar
+        // na raiz — o Supabase atropela (replaceState) o estado que o
+        // motor usa para segurar o voltar ao limpar o ?code= da URL, e o
+        // documento novo nasce com a guarda intacta. Uma vez por login
+        // social; o boot seguinte não tem ?code= e não passa por aqui.
         if (isAuthenticated && AuthProvider.bootCameFromOAuthReturn) {
           AuthProvider.bootCameFromOAuthReturn = false;
-          debugLog('NAV', 'AuthWrapper: sessão do OAuth pronta → recomeço');
-          recomecarNaRaiz(); // no-op fora da web
+          if (fecharSeJanelaDeLogin()) {
+            debugLog('NAV', 'AuthWrapper: janela de login fechada');
+          } else {
+            debugLog('NAV', 'AuthWrapper: sessão do OAuth pronta → recomeço');
+            recomecarNaRaiz(); // no-op fora da web
+          }
           return const GuardaDeVoltarWeb(child: _EsperandoASessao());
         }
 

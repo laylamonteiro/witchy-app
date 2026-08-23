@@ -12,9 +12,12 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/user_model.dart';
 import 'auth_repository.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 import '../../../../core/config/captcha_config.dart';
 import '../../../../core/config/google_signin_config.dart';
 import '../../../../core/config/supabase_config.dart';
+import '../../../../core/navigation/janela_de_login.dart';
 import '../../../../core/services/debug_log_service.dart';
 import '../../../../core/services/data_sync_service.dart';
 import '../services/google_one_tap.dart';
@@ -268,6 +271,114 @@ class SupabaseAuthRepository implements AuthRepository {
     return base64Url.encode(bytes);
   }
 
+  /// Para onde a usuária volta DEPOIS do login web — a origem do próprio
+  /// app (grimoriodebolso.app em produção, staging ou prévia, ou localhost
+  /// em dev), não o callback interno do Supabase.
+  ///
+  /// COM BARRA NO FIM. Os padrões de Redirect URLs do Supabase são globs
+  /// literais: `https://*.grimorio-de-bolso.pages.dev/**` exige a barra
+  /// para casar, e `Uri.base.origin` não a tem. Sem casar, o Supabase
+  /// ignora o pedido em silêncio e manda para o *Site URL* — quem logava
+  /// no staging reaparecia em PRODUÇÃO, com um código PKCE inútil.
+  static String get _redirectDaWeb => '${Uri.base.origin}/';
+
+  /// A chave onde o supabase_flutter PERSISTE a sessão (SharedPreferences;
+  /// na web, o localStorage compartilhado da origem). É por ela que a aba
+  /// principal enxerga a sessão que a janela de login gravou.
+  static String get _chaveDaSessao =>
+      'sb-${Uri.parse(SupabaseConfig.url).host.split('.').first}-auth-token';
+
+  /// Login do Google numa janela PRÓPRIA (só web).
+  ///
+  /// O fluxo: a URL de autorização nasce aqui (o segredo PKCE fica no
+  /// armazenamento da origem, que a janela compartilha), a janela faz a
+  /// jornada inteira do Google e volta ao app, que troca o código, GRAVA a
+  /// sessão e se fecha (ver `fecharSeJanelaDeLogin` no AuthWrapper). Esta
+  /// aba só observa o armazenamento: quando a sessão aparece, a recupera e
+  /// segue como qualquer login.
+  ///
+  /// Devolve null quando o navegador bloqueia a janela — quem chama cai no
+  /// redirecionamento de sempre, porque login funcionando vale mais que
+  /// histórico limpo. Janela fechada sem sessão = desistência (erro suave,
+  /// como o cancelar do login nativo).
+  Future<AuthResult?> _entrarPelaJanelaPropria() async {
+    final OAuthResponse resposta;
+    try {
+      resposta = await _supabase.auth.getOAuthSignInUrl(
+        provider: OAuthProvider.google,
+        redirectTo: _redirectDaWeb,
+      );
+    } catch (e) {
+      await debugLog('AUTH', 'URL do login em janela falhou ($e) — redirecionando');
+      return null;
+    }
+
+    final url = resposta.url;
+    if (url.isEmpty) return null;
+
+    final janela = abrirJanelaDeLogin(url);
+    if (janela == null) {
+      await debugLog('AUTH', 'Janela de login bloqueada — redirecionando');
+      return null;
+    }
+    await debugLog('AUTH', 'Login do Google em janela própria — aguardando a sessão');
+
+    final sessaoCrua = await _aguardarSessaoDaJanela(janela);
+    if (sessaoCrua == null) {
+      await debugLog('AUTH', 'Janela de login fechou sem sessão');
+      return AuthResult.error(_l10n.authErrLoginCancelled);
+    }
+
+    try {
+      final recuperada = await _supabase.auth.recoverSession(sessaoCrua);
+      final supabaseUser = recuperada.user ?? _supabase.auth.currentUser;
+      if (supabaseUser == null) {
+        return AuthResult.error(_l10n.authErrGoogleCredentials);
+      }
+      await debugLog('AUTH', 'Sessão da janela de login recuperada');
+      await _createProfile(
+        supabaseUser,
+        supabaseUser.userMetadata?['name']?.toString(),
+      );
+      return AuthResult.success(await _userFromSupabaseUser(supabaseUser));
+    } on AuthException catch (e) {
+      return _handleAuthException(e);
+    } catch (e) {
+      await debugLog('AUTH', 'Falha ao recuperar a sessão da janela: $e');
+      return AuthResult.error(_l10n.authErrGoogleCredentials);
+    }
+  }
+
+  /// Observa o armazenamento até a janela de login gravar a sessão.
+  ///
+  /// Devolve a sessão CRUA (o JSON persistido) ou null na desistência: a
+  /// janela fechada sem nada gravado (com uma folga de alguns segundos —
+  /// a gravação acontece instantes antes de a janela se fechar) ou o
+  /// tempo esgotado.
+  Future<String?> _aguardarSessaoDaJanela(Object janela) async {
+    final prefs = await SharedPreferences.getInstance();
+    final chave = _chaveDaSessao;
+    final antes = prefs.getString(chave);
+    final limite = DateTime.now().add(const Duration(minutes: 3));
+    DateTime? fechadaEm;
+
+    while (DateTime.now().isBefore(limite)) {
+      await Future.delayed(const Duration(seconds: 1));
+      await prefs.reload();
+      final agora = prefs.getString(chave);
+      if (agora != null && agora.isNotEmpty && agora != antes) return agora;
+
+      if (janelaDeLoginFechada(janela)) {
+        fechadaEm ??= DateTime.now();
+        if (DateTime.now().difference(fechadaEm) >
+            const Duration(seconds: 5)) {
+          return null;
+        }
+      }
+    }
+    return null;
+  }
+
   @override
   Future<AuthResult> signInWithGoogle({String? captchaToken}) async {
     try {
@@ -278,22 +389,19 @@ class SupabaseAuthRepository implements AuthRepository {
         final semSair = await _entrarSemSairDaAba(captchaToken);
         if (semSair != null) return semSair;
 
+        // Depois, numa JANELA PRÓPRIA: o redirecionamento na mesma aba
+        // deixava as páginas do Google no histórico DELA, e o gesto de
+        // voltar reabria a tela de login do Google — mesmo com todas as
+        // guardas de histórico (visto em produção e no preview, 23/08).
+        // Com o login em janela própria, o Google nunca ENTRA no
+        // histórico da aba do app; só o bloqueio de pop-up cai no
+        // redirecionamento de sempre.
+        final pelaJanela = await _entrarPelaJanelaPropria();
+        if (pelaJanela != null) return pelaJanela;
+
         await _supabase.auth.signInWithOAuth(
           OAuthProvider.google,
-          // Para onde a usuária volta DEPOIS do login — a origem do próprio
-          // app (grimoriodebolso.app em produção, staging ou prévia, ou
-          // localhost em dev), não o callback interno do Supabase (que era o
-          // valor anterior e deixava a usuária parada numa URL do Supabase).
-          //
-          // COM BARRA NO FIM. Os padrões de Redirect URLs do Supabase são
-          // globs literais: `https://*.grimorio-de-bolso.pages.dev/**` exige
-          // a barra para casar, e `Uri.base.origin` não a tem. Sem casar, o
-          // Supabase ignora o pedido em silêncio e manda para o *Site URL* —
-          // ou seja, quem logava no staging reaparecia em PRODUÇÃO, com um
-          // código PKCE inútil (o segredo ficou no localStorage do staging).
-          // Resultado: um login que falha, um segundo que funciona, e a
-          // pessoa testando o app antigo sem perceber que trocou de site.
-          redirectTo: '${Uri.base.origin}/',
+          redirectTo: _redirectDaWeb,
         );
         // O navegador já está saindo para o Google. Devolver "sucesso" com um
         // usuário anônimo (como antes) fazia a tela sincronizar essa conta
