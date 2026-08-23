@@ -6,7 +6,6 @@ import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/widgets/magical_progress.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
-import '../../../auth/presentation/widgets/premium_blur_widget.dart';
 import '../../../learning/data/data_sources/trails_data.dart';
 import '../../../learning/data/models/trail_model.dart';
 import '../../../learning/presentation/pages/lesson_page.dart';
@@ -79,15 +78,9 @@ class ContinueTrailCard extends StatelessWidget {
     return MagicalCard.accent(
       accent: locked ? context.gc.starYellow : context.gc.mint,
       onTap: () {
-        if (locked) {
-          showModalBottomSheet(
-            context: context,
-            isScrollControlled: true,
-            backgroundColor: Colors.transparent,
-            builder: (_) => const PremiumUpgradeSheet(),
-          );
-          return;
-        }
+        // Trancada ou não, o card leva à lição: a LessonPage é o gate
+        // central e mostra a degustação para quem é free — em vez do
+        // paywall na cara, sem nunca ver o que está sendo vendido.
         Navigator.of(context).push(
           MaterialPageRoute(
             builder: (_) => LessonPage(trail: trail, lesson: nextLesson),

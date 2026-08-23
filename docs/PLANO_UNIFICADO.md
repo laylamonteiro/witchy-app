@@ -46,10 +46,12 @@ escrito para ser decidido, e é aí que ele está parado.
 
 ---
 
-## 3. Os seis conflitos — decisão pendente
+## 3. Os seis conflitos — **decididos pela dona do produto em 23/08/2026**
 
-Cada um destes tem os dois relatórios dizendo coisas opostas sobre o mesmo
-código. Nenhum foi resolvido por conta própria.
+Cada um destes tinha os dois relatórios dizendo coisas opostas sobre o
+mesmo código. Nenhum foi resolvido por conta própria: as seis decisões
+abaixo foram tomadas pela dona do produto, no chat, em 23/08 — e não
+reabrem.
 
 ### 3.1 Congelar preço vs. publicar preço novo
 
@@ -64,9 +66,9 @@ código. Nenhum foi resolvido por conta própria.
   *mudar* o preço; "bloqueio de release" é sobre a tela *mentir* sobre o
   preço que já existe. Dá para fazer os dois: corrigir a exibição para
   bater com a loja **e** não mexer no valor.
-- **Recomendação:** fazer os dois. Não é conflito real, é ambiguidade de
-  redação — mas precisa da sua confirmação de que "congelar" significa
-  congelar o valor, não congelar a correção.
+- **DECIDIDO (23/08): os dois.** "Congelar" significa congelar o VALOR até
+  o funil estar medido; a correção da exibição fica. Nada a fazer — a
+  exibição já bate com a loja.
 
 ### 3.2 Destravar a degustação da lição
 
@@ -77,9 +79,14 @@ código. Nenhum foi resolvido por conta própria.
   interceptadores antes dela: `trail_page.dart:59` e `lesson_page.dart:86`.
   **O relatório técnico está factualmente errado sobre o estado** — ele
   descreve um teaser que não existe; ele existe e está atrás de porta.
-- **Consequência:** o "não mexer" foi dado sobre uma premissa errada.
-  Precisa ser reafirmado ou revogado com o estado real na mesa.
-- **Custo de destravar:** duas condições nos interceptadores. Baixo.
+- **DECIDIDO (23/08): destravar** — com o estado real na mesa, o "não
+  mexer" foi revogado. **Feito nesta branch:** os dois interceptadores
+  (`trail_page.dart` e `continue_trail_card.dart`, o card do Seu Dia)
+  navegam para a `LessonPage`, cujo gate central mostra a degustação — o
+  primeiro parágrafo real, o véu e o convite — e agora registra a
+  exposição no motor de ofertas, o que o paywall-na-cara nunca fazia.
+  Testes em `test/degustacao_da_licao_test.dart` (free vê a degustação; a
+  1ª lição continua inteira; Premium continua sem véu).
 
 ### 3.3 Rito do dia filtrado por plano
 
@@ -87,7 +94,7 @@ código. Nenhum foi resolvido por conta própria.
 - **Técnico:** o rito do dia é benefício Premium; mantém.
 - **Feito:** implementado o caminho técnico — o rito continua aparecendo,
   com selo dourado, como vitrine deliberada em vez de porta fechada.
-- **Fica assim** salvo decisão contrária.
+- **DECIDIDO (23/08): vitrine confirmada.** Fica assim.
 
 ### 3.4 Inverter o paywall da enciclopédia
 
@@ -101,8 +108,8 @@ código. Nenhum foi resolvido por conta própria.
   e o app é Flutter web, que o buscador lê mal de qualquer jeito. Antes de
   trocar receita por SEO, vale medir se a busca orgânica é sequer possível
   na arquitetura atual.
-- **Recomendação:** manter trancado até existir página estática de
-  conteúdo. Aí a discussão muda de natureza.
+- **DECIDIDO (23/08): mantém trancada** até existir página estática de
+  conteúdo indexável. Aí a troca receita×SEO vira discussão com dado.
 
 ### 3.5 Free consegue fechar o dia
 
@@ -112,8 +119,9 @@ código. Nenhum foi resolvido por conta própria.
 - **Estado:** o convite redesenhado (`convite_do_plano.dart`) já mostra o
   limite antes de a pessoa esbarrar nele, o que ataca o sintoma. Se o
   fechamento do dia é possível hoje dentro dos limites, ninguém mediu.
-- **Falta:** contar, com dados, quantas contas gratuitas fecham um dia.
-  Depende de analytics (decisão 6), que depende de consentimento (3.6).
+- **DECIDIDO (23/08): medir primeiro.** Nenhum limite muda sem dado;
+  contar quantas contas gratuitas fecham um dia entra assim que o
+  analytics existir (que depende de consentimento, 3.6).
 
 ### 3.6 Analytics vs. consentimento
 
@@ -124,8 +132,9 @@ código. Nenhum foi resolvido por conta própria.
 - **Conflito interno ao relatório 2:** ligar processador terceiro sobre um
   toggle que mente é pior do que não ter toggle — ainda mais num app onde
   a pessoa escreve sobre crença e sofrimento.
-- **Ordem obrigatória:** honrar o toggle → pedir consentimento versionado →
-  só então instrumentar. Nunca na ordem inversa.
+- **DECIDIDO (23/08): a ordem obrigatória está confirmada** — honrar o
+  toggle → pedir consentimento versionado → só então instrumentar. Nunca
+  na ordem inversa. É o próximo bloco grande de código.
 - **Preparado:** `supabase/marcar_contas_de_teste.sql` marca as contas de
   equipe para o funil nascer limpo. Não aplicado (é painel).
 
@@ -184,6 +193,8 @@ equipe e ~20 testadoras, quase um terço da base não é usuária.
   (`convite_do_plano.dart`, `cartao_do_convite.dart`,
   `vislumbres_do_premium.dart`, `pagina_de_descoberta.dart`)
 - oferta falando a mesma língua do convite
+- degustação da lição destravada (decisão 3.2): lição Premium navega para
+  a `LessonPage`, que mostra o teaser em vez de paywall na cara
 
 **Web e login**
 - o voltar seguro na volta do Google (`guarda_de_voltar_web.dart`,
@@ -272,11 +283,12 @@ ligar isso algum dia, se um dia valer a pena.
 
 1. ~~Tombstone~~ — feito (seção 5); o `.sql` dele entrou na lista do
    painel.
-2. **Decidir os seis conflitos** (seção 3). Metade do relatório de produto
-   está parada atrás deles.
+2. ~~Decidir os seis conflitos~~ — decididos em 23/08 (seção 3); a
+   degustação, única que mudava código agora, já foi destravada.
 3. **Painel**: ligar leaked passwords, rodar os `.sql` (agora três),
    resolver a impressão digital do Google.
-4. **Consentimento → analytics**, nesta ordem.
+4. **Consentimento → analytics**, nesta ordem (confirmada em 3.6). É o
+   próximo bloco grande de código.
 5. Segurança restante (`search_path`, `handle_new_user`).
 6. Cobertura e `dart format`.
 
@@ -327,13 +339,10 @@ descobertas de novo.
 
 ---
 
-## 11. Perguntas em aberto para a dona do produto
+## 11. Perguntas à dona do produto — **todas respondidas em 23/08/2026**
 
-1. **Os seis conflitos da seção 3.** Metade do relatório de produto está
-   parada atrás deles.
-2. **"Congelar preço" (decisão 12) significa congelar o valor, não congelar
-   a correção da exibição** — confirmar. Ver 3.1.
-3. **Os e-mails pessoais em `marcar_contas_de_teste.sql` e os números de
-   negócio em `AUDITORIA_PRODUTO_AGO2026.md` devem seguir versionados?** O
-   `.sql` não funciona sem os e-mails, mas dá para editar a lista antes de
-   rodar e reverter o arquivo depois.
+1. ~~Os seis conflitos da seção 3~~ — decididos, item a item, na seção 3.
+2. ~~"Congelar preço" significa congelar o valor?~~ — **sim**: valor
+   congelado, correção da exibição mantida (3.1).
+3. ~~E-mails e números de negócio seguem versionados?~~ — **sim, seguem
+   versionados** (repositório privado; o `.sql` fica pronto para rodar).
