@@ -56,11 +56,12 @@ abstract final class CycleReadingSections {
     seal,
   ];
 
-  /// A Leitura da Semana: mais direta (4 seções). O que fica de fora é o que
-  /// só a lunação inteira sustenta — o balanço da prática, a previsão do
-  /// próximo ciclo, os rituais para ele e o selo — e é essa diferença
-  /// visível que justifica a diferença de preço.
-  static const weekly = [portrait, threads, sky, affirmation];
+  /// A Leitura da Semana: mais direta (5 seções). A previsão entra AQUI
+  /// TAMBÉM (decisão da dona, 23/08: "é pra isso que o usuário vai pagar").
+  /// O que fica de fora é o que só a lunação inteira sustenta — o balanço
+  /// da prática, os rituais e o selo — e é essa diferença visível que
+  /// justifica a diferença de preço.
+  static const weekly = [portrait, threads, sky, forecast, affirmation];
 
   /// As seções de um [CycleReadingPeriodType].
   static List<String> forPeriod(String periodType) =>

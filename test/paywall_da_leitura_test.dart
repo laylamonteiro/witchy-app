@@ -10,8 +10,9 @@ import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 ///
 /// Estes testes provam as três promessas da folha: a lunação lista as 8
 /// seções (sem upsell — quem já vai levar o produto completo não precisa de
-/// convite), a semana lista as 4 e convida honestamente para a lunação, e o
-/// CTA fecha a folha antes de avisar quem paga.
+/// convite), a semana lista as 5 (a previsão entra nas duas janelas) e
+/// convida honestamente para a lunação, e o CTA fecha a folha antes de
+/// avisar quem paga.
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -94,7 +95,7 @@ void main() {
     expect(find.text(r'R$ 14,90'), findsOneWidget);
   });
 
-  testWidgets('a folha da semana tece 4 seções e convida para a lunação',
+  testWidgets('a folha da semana tece 5 seções e convida para a lunação',
       (tester) async {
     await abrirFolha(
       tester,
@@ -106,13 +107,13 @@ void main() {
       l10n.cycleReadingSectionPortrait,
       l10n.cycleReadingSectionThreads,
       l10n.cycleReadingSectionSky,
+      l10n.cycleReadingSectionForecast,
       l10n.cycleReadingSectionAffirmation,
     ]) {
       expect(find.text(titulo), findsOneWidget);
     }
     // O que só a lunação sustenta fica FORA da folha da semana...
     expect(find.text(l10n.cycleReadingSectionPractice), findsNothing);
-    expect(find.text(l10n.cycleReadingSectionForecast), findsNothing);
     expect(find.text(l10n.cycleReadingSectionRituals), findsNothing);
     expect(find.text(l10n.cycleReadingSectionSeal), findsNothing);
     // ...e vira o upsell honesto, dito com todas as letras.

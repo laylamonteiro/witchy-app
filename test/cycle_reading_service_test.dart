@@ -312,7 +312,7 @@ void main() {
     expect((await db.query('free_writings')).length, 1);
   });
 
-  test('leitura da SEMANA sai com 4 seções, sem prática/previsão/rituais/selo',
+  test('leitura da SEMANA sai com 5 seções, sem prática/rituais/selo',
       () async {
     final week = CycleReadingService.currentWeek();
     final credit = CycleReadingModel(
@@ -335,15 +335,17 @@ void main() {
         await service.generateForCredit(credit: credit, userId: userId);
 
     expect(asked, CycleReadingSections.weekly);
+    // A previsão ENTRA na semana (decisão da dona, 23/08: é pra isso que o
+    // usuário paga); o que fica só na lunação é prática, rituais e selo.
+    expect(asked, contains(CycleReadingSections.forecast));
     expect(asked, isNot(contains(CycleReadingSections.practice)));
-    expect(asked, isNot(contains(CycleReadingSections.forecast)));
     expect(asked, isNot(contains(CycleReadingSections.rituals)));
     expect(asked, isNot(contains(CycleReadingSections.seal)));
 
     final markdown = result.writing.content;
-    // 4 seções de IA + a seção determinística dos números, que existe nas
-    // duas janelas (é calculada pelo app, não custa chamada de IA).
-    expect(RegExp(r'^## ', multiLine: true).allMatches(markdown).length, 5);
+    // 5 seções de IA (com a previsão) + a seção determinística dos números,
+    // que existe nas duas janelas (é calculada pelo app, sem chamada de IA).
+    expect(RegExp(r'^## ', multiLine: true).allMatches(markdown).length, 6);
     // A afirmação (o cartão compartilhável) continua nas duas janelas.
     expect(result.affirmation, 'Eu confio no meu ciclo.');
     expect(result.sealKeywords, isEmpty);

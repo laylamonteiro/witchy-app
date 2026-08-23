@@ -1577,7 +1577,7 @@
   "cycleReadingSectionAffirmation": "💫 An affirmation to carry",
   "cycleReadingSectionSeal": "🌙 Cycle keywords",
   "cycleReadingPaywallTitle": "What this reading weaves",
-  "cycleReadingPaywallWeekUpsell": "The full Lunation also brings: your practice, the next cycle's forecast, rituals for it and the keywords",
+  "cycleReadingPaywallWeekUpsell": "The full Lunation also brings: your practice, rituals for the next cycle and the keywords",
   "cycleReadingSectionNumbers": "🔢 The cycle in numbers",
   "cycleNumbersRecords": "{count} records across {activeDays} of {totalDays} days",
   "cycleNumbersTopPhase": "Phase with the most records: {phase} ({count})",
