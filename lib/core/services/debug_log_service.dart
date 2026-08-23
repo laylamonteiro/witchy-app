@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -65,8 +66,26 @@ class DebugLogService {
     // Também printar no console
     debugPrint('[$tag] $message');
 
-    // Salvar
-    await _saveLogs();
+    // A gravação é ADIADA e agrupada: cada linha reescrevia as 200 do
+    // buffer inteiro no armazenamento, e na web isso acontece na mesma
+    // thread da interface — um punhado de linhas seguidas (um boot, uma
+    // sincronização) travava a tela. Erro é a exceção: grava na hora,
+    // porque é justamente o que precisa sobreviver a um app que morre.
+    if (tag == 'ERROR') {
+      _gravacaoAdiada?.cancel();
+      await _saveLogs();
+      return;
+    }
+    _agendarGravacao();
+  }
+
+  Timer? _gravacaoAdiada;
+
+  void _agendarGravacao() {
+    if (_gravacaoAdiada?.isActive ?? false) return;
+    _gravacaoAdiada = Timer(const Duration(seconds: 2), () {
+      unawaited(_saveLogs());
+    });
   }
 
   /// Salva logs no SharedPreferences

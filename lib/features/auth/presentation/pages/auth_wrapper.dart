@@ -14,6 +14,9 @@ import '../../../../core/widgets/splash_screen.dart';
 /// Widget wrapper que gerencia o fluxo de autenticação
 /// Decide se mostra a tela de boas-vindas ou a home
 class AuthWrapper extends StatelessWidget {
+  /// Último estado de sessão que virou linha de log — ver o uso abaixo.
+  static bool? _ultimoEstadoLogado;
+
   /// Se deve mostrar splash screen
   final bool showSplash;
 
@@ -26,21 +29,26 @@ class AuthWrapper extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<AuthProvider>(
       builder: (context, authProvider, child) {
-        // Aguardando inicialização
+        // Aguardando inicialização. Guardado: sem PopScope, um voltar aqui
+        // não acha ninguém que o trate, e o framework cai no
+        // `SystemNavigator.pop()` — que na web DESMONTA o histórico do
+        // motor (ouvinte de popstate desligado, guarda apagada) e deixa o
+        // voltar morto pelo resto da vida do documento.
         if (!authProvider.isInitialized) {
-          return const Scaffold(
-            body: Center(
-              child: CircularProgressIndicator(),
-            ),
-          );
+          return const GuardaDeVoltarWeb(child: _Carregando());
         }
 
         // Verificar se tem conta autenticada (email válido)
         final isAuthenticated = authProvider.currentUser.isAuthenticated;
 
-        // Log para debug (fire-and-forget)
-        debugLog('NAV',
-            'AuthWrapper: isAuthenticated=$isAuthenticated, email=${maskEmail(authProvider.currentUser.email)}');
+        // Log só quando o estado MUDA: o Consumer reconstrói a cada aviso
+        // do provider (dezenas de vezes num boot), e uma linha por build
+        // reescrevia o log inteiro no armazenamento sem dizer nada de novo.
+        if (_ultimoEstadoLogado != isAuthenticated) {
+          _ultimoEstadoLogado = isAuthenticated;
+          debugLog('NAV',
+              'AuthWrapper: isAuthenticated=$isAuthenticated, email=${maskEmail(authProvider.currentUser.email)}');
+        }
 
         // Volta do login social com a troca do código ainda em voo: a
         // sessão está a caminho do servidor. Mostrar a tela de login agora
@@ -107,6 +115,21 @@ class AuthWrapper extends StatelessWidget {
       },
     );
   }
+}
+
+/// A roda de carregar das telas de espera do fluxo de entrada.
+///
+/// Existe como widget próprio para poder ser `const` sob o guarda de
+/// voltar: toda tela da raiz precisa de alguém que trate o voltar, senão o
+/// framework o entrega ao `SystemNavigator.pop()` (ver o comentário no
+/// AuthWrapper).
+class _Carregando extends StatelessWidget {
+  const _Carregando();
+
+  @override
+  Widget build(BuildContext context) => const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
 }
 
 /// A espera pela sessão que vem do retorno OAuth.
@@ -207,9 +230,7 @@ class RequireAuth extends StatelessWidget {
     final authProvider = context.watch<AuthProvider>();
 
     if (!authProvider.isInitialized) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const GuardaDeVoltarWeb(child: _Carregando());
     }
 
     if (!authProvider.currentUser.isAuthenticated) {
@@ -266,16 +287,12 @@ class _GuestOnlyState extends State<GuestOnly> {
     // Antes de a sessão ser lida do disco não se decide nada: mostrar a tela
     // de login por meio segundo e trocar por Home é pior que esperar.
     if (!authProvider.isInitialized) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const GuardaDeVoltarWeb(child: _Carregando());
     }
 
     if (authProvider.currentUser.isAuthenticated) {
       _paraHome();
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const GuardaDeVoltarWeb(child: _Carregando());
     }
 
     return widget.child;

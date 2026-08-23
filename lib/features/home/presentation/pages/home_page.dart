@@ -14,6 +14,7 @@ import '../../../../core/providers/mascot_provider.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 
+import '../../../../core/navigation/saida_do_app.dart';
 import '../../../../core/utils/saida_por_dois_toques.dart';
 import '../../../../core/utils/um_de_cada_vez.dart';
 import '../../../../core/widgets/mascot/cat_chat_bubble.dart';
@@ -266,14 +267,27 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
 
     // 4. Seu Dia: sair só com um segundo voltar DELIBERADO — na web TAMBÉM
     // (decisão da dona, 23/08: o voltar desce até o Seu Dia e então sai,
-    // como no app). Engolir o voltar aqui para sempre fazia sentido quando
-    // o histórico podia ter o Google logo abaixo; com o login em janela
-    // própria ele nunca entra. Na web o SystemNavigator.pop entrega o
-    // voltar ao navegador — e ali isso FECHA A ABA, o que torna a defesa
-    // contra rajada obrigatória: ver [SaidaPorDoisToques].
+    // como no app).
+    //
+    // Na web, sair NÃO passa pelo `SystemNavigator.pop()`: ele cai no
+    // `exit()` do motor, que desliga o ouvinte de `popstate` e apaga a
+    // entrada-guarda antes de tentar sair — e quando o app é a primeira
+    // entrada da aba a saída não acontece, deixando o voltar morto e a aba
+    // à mercê do próximo gesto. Era a causa do "fecha a aba antes de
+    // chegar em Seu Dia". Ver `saida_do_app.dart`.
+    //
+    // E onde não há para onde voltar (aba que nasceu no app), a saída nem
+    // é oferecida: nenhuma página fecha uma aba que não abriu, e prometer
+    // isso no aviso seria mentir. O voltar simplesmente fica no Seu Dia.
+    if (kIsWeb && !podeSairDaAba()) return;
+
     final decisao = _saida.registrar(DateTime.now());
     if (decisao == DecisaoDeSaida.sair) {
-      SystemNavigator.pop();
+      if (kIsWeb) {
+        sairDaAba();
+      } else {
+        SystemNavigator.pop();
+      }
       return;
     }
     // Rajada (`ignorar`): nada acontece — nem sair, nem repetir o aviso,

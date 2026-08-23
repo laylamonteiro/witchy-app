@@ -338,12 +338,10 @@ class _GrimorioDeBolsoAppState extends State<GrimorioDeBolsoApp>
     await _triggerBackgroundSync();
   }
 
-  /// Não vale a pena sincronizar de novo antes disto: o retorno à aba
-  /// dispara o resume a cada troca de app, e na web a varredura roda na
-  /// thread da interface — sincronizar a cada volta travava a tela (visto
-  /// no preview, 23/08). O login e o botão de sincronizar não passam por
-  /// aqui e continuam imediatos.
-  static const _folgaEntreAutoSyncs = Duration(minutes: 10);
+  /// Carimbo da última TENTATIVA de sincronização automática (ver
+  /// [AppSessionPolicy.deveAutoSincronizar] para o porquê de ser tentativa,
+  /// e não sucesso).
+  static const _ultimaTentativaDeSyncKey = 'auto_sync_tentado_em';
 
   Future<void> _triggerBackgroundSync() async {
     final syncService = DataSyncService();
@@ -352,11 +350,20 @@ class _GrimorioDeBolsoAppState extends State<GrimorioDeBolsoApp>
     final syncEnabled = await syncService.cloudSyncEnabled;
     if (!syncEnabled || !syncService.isReady) return;
 
-    final ultima = await syncService.lastSuccessfulSyncTime;
-    if (ultima != null &&
-        DateTime.now().difference(ultima) < _folgaEntreAutoSyncs) {
-      return;
-    }
+    final carimbo = widget.prefs.getInt(_ultimaTentativaDeSyncKey);
+    final podeSincronizar = AppSessionPolicy.deveAutoSincronizar(
+      ultimaTentativa: carimbo == null
+          ? null
+          : DateTime.fromMillisecondsSinceEpoch(carimbo),
+      now: DateTime.now(),
+    );
+    if (!podeSincronizar) return;
+    // Carimba ANTES de sair: uma varredura que falha (ou que demora e
+    // encontra outra volta para a aba no meio) não pode reabrir a porta.
+    await widget.prefs.setInt(
+      _ultimaTentativaDeSyncKey,
+      DateTime.now().millisecondsSinceEpoch,
+    );
 
     await debugLog('SYNC', 'Auto-sync iniciado em background');
     final result = await syncService.syncAll();
