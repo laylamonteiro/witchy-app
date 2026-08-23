@@ -8,9 +8,9 @@ import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 /// (decisão da dona, 23/08: um toque só deixa a seleção pela metade, e uma
 /// leitura de 24 horas não tem ciclo para contar).
 ///
-/// As datas saem do relógio de verdade, e não de um agosto cravado: os
-/// atalhos apontam para as janelas CORRENTES do produto (esta lunação, esta
-/// semana), então um teste com mês fixo passaria hoje e quebraria amanhã.
+/// As datas saem do relógio de verdade onde o preset depende dele (a semana
+/// corrente); o preset da lunação seleciona o MÊS visível e ganha um julho
+/// fixo, determinístico em qualquer dia de execução.
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -92,12 +92,45 @@ void main() {
         reason: 'o atalho traz a semana corrente inteira, já fechada');
   });
 
-  testWidgets('o atalho da lunação também nasce pronto', (tester) async {
-    await montar(tester, tela());
+  testWidgets('o atalho da lunação seleciona o mês visível inteiro',
+      (tester) async {
+    // Datas fixas de propósito: o preset do mês não depende do relógio, e
+    // um julho passado dá o mesmo resultado em qualquer dia de execução —
+    // a janela inicial só serve para deixar julho como mês visível.
+    await tester.binding.setSurfaceSize(const Size(800, 1600));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('pt', 'BR'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: SingleChildScrollView(
+            child: CyclePeriodPickerSheet(
+              embedded: true,
+              dailyCounts: const {},
+              firstDate: DateTime(2026, 1, 1),
+              lastDate: DateTime(2026, 8, 23),
+              initialRange: (
+                start: DateTime(2026, 7, 5),
+                end: DateTime(2026, 7, 12),
+              ),
+              onConfirm: (_) {},
+            ),
+          ),
+        ),
+      ),
+    );
+
     await tester.tap(find.text(l10n.cyclePresetLunation));
     await tester.pump();
 
     expect(confirmarHabilitado(tester), isTrue);
+    // O resumo diz 31 dias — julho inteiro, do 1º ao 31.
+    expect(
+      find.textContaining(l10n.cycleReadingSelectionSummary(31, 0)),
+      findsOneWidget,
+    );
   });
 
   testWidgets('"Outro período" limpa a seleção e volta a apagar o confirmar',

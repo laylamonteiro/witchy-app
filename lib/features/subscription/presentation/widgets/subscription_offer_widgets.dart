@@ -6,8 +6,33 @@ import '../../../../core/services/payment_service.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/staggered_entrance.dart';
 
+/// Os quatro textos do herói. Nulo em [SubscriptionHero.textos] = a copy do
+/// Premium; o paywall da Leitura do Ciclo passa os dele — MESMO componente,
+/// só os textos trocam (decisão da dona, 23/08).
+class HeroTexts {
+  const HeroTexts({
+    required this.access,
+    required this.power,
+    required this.magic,
+    required this.tagline,
+  });
+
+  /// A linha de abertura, em Lora ("ACESSE").
+  final String access;
+
+  /// As duas linhas grandes em Cinzel — a primeira leva o degradê lilás.
+  final String power;
+  final String magic;
+
+  /// A linha de fecho, pequena. No Premium ela tem um trecho em lilás; com
+  /// textos próprios ela sai inteira na cor de apoio.
+  final String tagline;
+}
+
 class SubscriptionHero extends StatelessWidget {
-  const SubscriptionHero({super.key});
+  const SubscriptionHero({super.key, this.textos});
+
+  final HeroTexts? textos;
 
   @override
   Widget build(BuildContext context) {
@@ -27,21 +52,21 @@ class SubscriptionHero extends StatelessWidget {
             ),
           ),
           child: compact
-              ? const Column(
+              ? Column(
                   children: [
-                    CatHeroArt(height: 92),
-                    _HeroCopy(centered: true, compact: true),
+                    const CatHeroArt(height: 92),
+                    _HeroCopy(centered: true, compact: true, textos: textos),
                   ],
                 )
-              : const Row(
+              : Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    Expanded(
+                    const Expanded(
                       flex: 4,
                       child: CatHeroArt(height: 120),
                     ),
-                    SizedBox(width: 6),
-                    Expanded(flex: 7, child: _HeroCopy()),
+                    const SizedBox(width: 6),
+                    Expanded(flex: 7, child: _HeroCopy(textos: textos)),
                   ],
                 ),
         );
@@ -162,8 +187,9 @@ class CatHeroArt extends StatelessWidget {
 class _HeroCopy extends StatelessWidget {
   final bool centered;
   final bool compact;
+  final HeroTexts? textos;
 
-  const _HeroCopy({this.centered = false, this.compact = false});
+  const _HeroCopy({this.centered = false, this.compact = false, this.textos});
 
   @override
   Widget build(BuildContext context) {
@@ -176,7 +202,7 @@ class _HeroCopy extends StatelessWidget {
       crossAxisAlignment: alignment,
       children: [
         Text(
-          AppLocalizations.of(context).premiumHeroAccess,
+          textos?.access ?? AppLocalizations.of(context).premiumHeroAccess,
           textAlign: textAlign,
           style: GoogleFonts.lora(
             color: context.gc.textPrimary,
@@ -195,7 +221,7 @@ class _HeroCopy extends StatelessWidget {
           child: FittedBox(
             fit: BoxFit.scaleDown,
             child: Text(
-              AppLocalizations.of(context).premiumHeroPower,
+              textos?.power ?? AppLocalizations.of(context).premiumHeroPower,
               textAlign: textAlign,
               style: GoogleFonts.cinzelDecorative(
                 color: context.gc.textPrimary,
@@ -209,7 +235,7 @@ class _HeroCopy extends StatelessWidget {
         FittedBox(
           fit: BoxFit.scaleDown,
           child: Text(
-            AppLocalizations.of(context).premiumHeroMagic,
+            textos?.magic ?? AppLocalizations.of(context).premiumHeroMagic,
             textAlign: textAlign,
             style: GoogleFonts.cinzelDecorative(
               color: context.gc.textPrimary,
@@ -228,14 +254,21 @@ class _HeroCopy extends StatelessWidget {
               fontSize: compact ? 11 : 12,
               height: 1.34,
             ),
-            children: [
-              TextSpan(text: AppLocalizations.of(context).premiumHeroTagline1),
-              TextSpan(
-                text: AppLocalizations.of(context).premiumHeroTaglineHighlight,
-                style: TextStyle(color: context.gc.lilac),
-              ),
-              TextSpan(text: AppLocalizations.of(context).premiumHeroTagline2),
-            ],
+            children: textos != null
+                ? [TextSpan(text: textos!.tagline)]
+                : [
+                    TextSpan(
+                      text: AppLocalizations.of(context).premiumHeroTagline1,
+                    ),
+                    TextSpan(
+                      text: AppLocalizations.of(context)
+                          .premiumHeroTaglineHighlight,
+                      style: TextStyle(color: context.gc.lilac),
+                    ),
+                    TextSpan(
+                      text: AppLocalizations.of(context).premiumHeroTagline2,
+                    ),
+                  ],
           ),
         ),
       ],

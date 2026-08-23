@@ -75,7 +75,6 @@ void main() {
       tela(periodType: CycleReadingPeriodType.lunation),
     );
 
-    expect(find.text(l10n.cycleReadingPaywallTitle), findsOneWidget);
     expect(find.text(l10n.cycleReadingLunationTitle), findsOneWidget);
     for (final titulo in [
       l10n.cycleReadingSectionPortrait,

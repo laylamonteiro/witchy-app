@@ -17,18 +17,14 @@ import '../../data/services/cycle_reading_service.dart';
 /// leitura tece — seção por seção do produto escolhido — e só então mostra
 /// o valor e o botão de pagar. Quem chega ao preço já sabe o que ele compra.
 ///
-/// A FORMA é a do paywall oficial ([PremiumUpgradeSheet]), de propósito e
-/// por construção: mesma moldura (alça + fechar, painel de superfície com a
-/// mesma casca), o mesmo divisor, as MESMAS peças de benefício
-/// ([OfferBenefitRow]), o MESMO botão de compra
-/// ([SubscriptionPurchaseButton], só com o verbo do produto) e os mesmos
-/// selos de confiança ([GuaranteeBadges]). Dois paywalls com caras
-/// diferentes leriam como dois apps.
-///
-/// Em MEIA ESCALA, também de propósito (decisão da dona, 23/08): aqui se
-/// compra uma PEÇA de um todo maior, e a peça não pode parecer maior que o
-/// todo — herói baixo, selos de 30, menos ar. A língua é a mesma; o volume,
-/// metade.
+/// A FORMA é a do paywall oficial ([PremiumUpgradeSheet]) por construção, e
+/// no TAMANHO dele (decisão da dona, 23/08: "o mesmo exato componente,
+/// alterando apenas os textos necessários"): o MESMO herói
+/// ([SubscriptionHero], com os textos da Leitura via [HeroTexts]), o mesmo
+/// divisor, as mesmas peças de benefício ([OfferBenefitRow], em escala
+/// cheia), o preço na casca dos cards de plano, o MESMO botão de compra
+/// ([SubscriptionPurchaseButton]) e os mesmos selos ([GuaranteeBadges]).
+/// Dois paywalls com caras diferentes leriam como dois apps.
 ///
 /// A folha só APRESENTA: nenhuma lógica de compra mora aqui. Ao tocar o CTA
 /// ela se fecha e devolve a decisão pelo [onComprar] — o pop acontece ANTES
@@ -200,7 +196,7 @@ class PaywallDaLeitura extends StatelessWidget {
     final secoes = CycleReadingSections.forPeriod(periodType);
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
+      padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
       decoration: BoxDecoration(
         color: context.gc.surface,
         borderRadius: BorderRadius.circular(24),
@@ -215,28 +211,40 @@ class PaywallDaLeitura extends StatelessWidget {
       ),
       child: Column(
         children: [
-          _heroi(context, l10n),
-          const SizedBox(height: 8),
+          // O MESMO herói do paywall Premium — Salem, halo, tipografia —
+          // com os textos da Leitura nos mesmos quatro lugares.
+          SubscriptionHero(
+            textos: HeroTexts(
+              access: _isWeek
+                  ? l10n.cycleReadingWeekTitle
+                  : l10n.cycleReadingLunationTitle,
+              power: l10n.cycleHeroPower,
+              magic: l10n.cycleHeroMagic,
+              tagline: _linhaDoPeriodo(l10n),
+            ),
+          ),
+          const SizedBox(height: 10),
           const PremiumOfferDivider(),
-          const SizedBox(height: 8),
+          const SizedBox(height: 12),
           // As seções do produto nas MESMAS peças dos benefícios do paywall
           // Premium — em meia escala: 8 na lunação, 5 na semana, e a
           // diferença visível é o que justifica a diferença de preço.
           StaggeredEntrance(
             children: [
-              for (final chave in secoes)
+              for (var i = 0; i < secoes.length; i++) ...[
                 OfferBenefitRow(
-                  compacto: true,
                   benefit: OfferBenefit.emoji(
-                    separarEmoji(_tituloDaSecao(l10n, chave)).emoji,
-                    separarEmoji(_tituloDaSecao(l10n, chave)).rotulo,
-                    vislumbre: _vislumbreDaSecao(l10n, chave),
+                    separarEmoji(_tituloDaSecao(l10n, secoes[i])).emoji,
+                    separarEmoji(_tituloDaSecao(l10n, secoes[i])).rotulo,
+                    vislumbre: _vislumbreDaSecao(l10n, secoes[i]),
                   ),
                 ),
+                if (i != secoes.length - 1) const SizedBox(height: 14),
+              ],
             ],
           ),
           if (_isWeek) ...[
-            const SizedBox(height: 8),
+            const SizedBox(height: 12),
             // Upsell honesto: diz o que SÓ a lunação traz, sem esconder que
             // a semana já entrega uma leitura inteira.
             Text(
@@ -244,12 +252,12 @@ class PaywallDaLeitura extends StatelessWidget {
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: context.gc.textSecondary,
-                fontSize: 11.5,
-                height: 1.35,
+                fontSize: 12.5,
+                height: 1.4,
               ),
             ),
           ],
-          const SizedBox(height: 10),
+          const SizedBox(height: 14),
           // O preço no MESMO cartão dos planos do paywall Premium: caixa com
           // borda, valor em Lora e o rótulo do que ele é. O aviso de leitura
           // rasa NÃO mora aqui (decisão da dona, 23/08) — ele já está na
@@ -277,7 +285,7 @@ class PaywallDaLeitura extends StatelessWidget {
             textAlign: TextAlign.center,
             style: GoogleFonts.lora(
               color: context.gc.textSecondary,
-              fontSize: 11.5,
+              fontSize: 12,
             ),
           ),
           const SizedBox(height: 8),
@@ -325,97 +333,14 @@ class PaywallDaLeitura extends StatelessWidget {
     );
   }
 
-  /// O herói da folha — mesma moldura e tipografia do [SubscriptionHero]:
-  /// caixa em gradiente com a arte à esquerda (aqui, o emblema da lua que a
-  /// feature já usa) e o texto à direita, com o título no dourado-lilás em
-  /// Cinzel que assina os heróis do app.
-  Widget _heroi(BuildContext context, AppLocalizations l10n) {
+  /// A linha do período para a tagline do herói. Fim estampado = último dia
+  /// LIDO (o `end` cru é exclusivo), igual ao cartão da intro e à linha do
+  /// relatório.
+  String _linhaDoPeriodo(AppLocalizations l10n) {
     final format = DateFormat('dd/MM/yyyy');
-    // Fim estampado = último dia LIDO (o `end` cru é exclusivo), igual ao
-    // cartão da intro e à linha do relatório.
-    final periodo = _isWeek
-        ? l10n.cycleReadingWeekPeriodLine(
-            format.format(periodStart),
-            format.format(CycleReadingService.lastDayOf(periodEnd)),
-          )
-        : l10n.cycleReadingPeriodLine(
-            format.format(periodStart),
-            format.format(CycleReadingService.lastDayOf(periodEnd)),
-          );
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
-        gradient: LinearGradient(
-          colors: [context.gc.background, context.gc.surface],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          // A MESMA arte do paywall Premium — o Salem no halo lilás — em
-          // altura menor: é a assinatura que faz as duas folhas lerem como
-          // o mesmo app.
-          const SizedBox(width: 72, child: CatHeroArt(height: 72)),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                ShaderMask(
-                  shaderCallback: (bounds) => LinearGradient(
-                    colors: [
-                      Color.lerp(
-                        context.gc.lilac,
-                        context.gc.textPrimary,
-                        0.55,
-                      )!,
-                      context.gc.lilac,
-                    ],
-                  ).createShader(bounds),
-                  child: FittedBox(
-                    fit: BoxFit.scaleDown,
-                    child: Text(
-                      _isWeek
-                          ? l10n.cycleReadingWeekTitle
-                          : l10n.cycleReadingLunationTitle,
-                      style: GoogleFonts.cinzelDecorative(
-                        color: context.gc.textPrimary,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 0.4,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 3),
-                Text(
-                  periodo,
-                  style: GoogleFonts.lora(
-                    color: context.gc.textSecondary,
-                    fontSize: 11,
-                    height: 1.3,
-                  ),
-                ),
-                const SizedBox(height: 3),
-                Text(
-                  l10n.cycleReadingPaywallTitle,
-                  style: GoogleFonts.lora(
-                    color: context.gc.textPrimary,
-                    fontSize: 12.5,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
+    final fim = format.format(CycleReadingService.lastDayOf(periodEnd));
+    return _isWeek
+        ? l10n.cycleReadingWeekPeriodLine(format.format(periodStart), fim)
+        : l10n.cycleReadingPeriodLine(format.format(periodStart), fim);
   }
 }

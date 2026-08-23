@@ -180,27 +180,27 @@ class _CyclePeriodPickerSheetState extends State<CyclePeriodPickerSheet> {
     return day;
   }
 
-  /// As janelas dos atalhos são as JANELAS DO PRODUTO, não contagens de
-  /// dias (decisão da dona, 23/08: "30 dias" mentia — mês tem 28, 30 ou 31
-  /// — e misturava número com nome). A lunação corrente e a semana corrente
-  /// são exatamente o que a leitura vende, então o atalho fala a língua do
-  /// produto e o tamanho sai certo sozinho.
-  ///
-  /// As duas chegam com fim EXCLUSIVO do serviço; aqui dentro o fim é o
-  /// último dia vivido, então volta um dia.
-  ({DateTime start, DateTime end}) _doServico(
-    ({DateTime start, DateTime end}) janela,
-  ) =>
-      (
-        start: _clampDay(janela.start),
-        end: _clampDay(janela.end.subtract(const Duration(days: 1))),
+  /// "Lunação" seleciona o MÊS visível inteiro (decisão da dona, 23/08),
+  /// aparado em hoje quando o mês ainda corre. No dia 1º isso dá um dia só
+  /// e o confirmar fica apagado — a pessoa marca a mão; caso raro demais
+  /// para merecer regra própria.
+  ({DateTime start, DateTime end}) get _janelaDaLunacao => (
+        start: _clampDay(DateTime(_visibleMonth.year, _visibleMonth.month, 1)),
+        end: _clampDay(
+          DateTime(_visibleMonth.year, _visibleMonth.month + 1, 0),
+        ),
       );
 
-  ({DateTime start, DateTime end}) get _janelaDaLunacao =>
-      _doServico(CycleReadingService.currentLunation());
-
-  ({DateTime start, DateTime end}) get _janelaDaSemana =>
-      _doServico(CycleReadingService.currentWeek());
+  /// "Semana" é o giro corrente do produto (8 dias, de mesmo dia a mesmo
+  /// dia). Chega com fim EXCLUSIVO do serviço; aqui dentro o fim é o último
+  /// dia vivido, então volta um dia.
+  ({DateTime start, DateTime end}) get _janelaDaSemana {
+    final janela = CycleReadingService.currentWeek();
+    return (
+      start: _clampDay(janela.start),
+      end: _clampDay(janela.end.subtract(const Duration(days: 1))),
+    );
+  }
 
   bool _selecionou(({DateTime start, DateTime end}) janela) =>
       _start != null &&
