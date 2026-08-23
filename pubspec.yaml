@@ -2,7 +2,11 @@ name: grimorio_de_bolso
 description: Um grimório vivo, agenda mágica e companheiro de jornada para bruxas e bruxos iniciantes
 publish_to: 'none'
 
-version: 2.0.25+126
+# Baseline COSMÉTICA. Os builds publicados recebem a versão da TAG pela
+# esteira (--build-name/--build-number, Android e web); este valor só
+# aparece em build local e na tela "Sobre" das prévias/staging — que não
+# passam por tag. Atualizar ao publicar é cortesia, não requisito.
+version: 2.0.32+127
 
 environment:
   # São DOIS pisos, e vale o maior — o comentário anterior reconhecia o piso

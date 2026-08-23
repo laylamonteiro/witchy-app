@@ -558,6 +558,13 @@ jobs:
       - name: 🏗️ Build web (release)
         # ADMIN_* NÃO entra: o bundle web é público.
         env:
+          # A versão da tag TAMBÉM no web: o build Android sempre a recebeu
+          # (--build-name/--build-number) e o web não — então a tela "Sobre"
+          # do site publicado mostrava para sempre a baseline morta do
+          # pubspec (2.0.25+126), e "qual versão está no ar?" só se
+          # respondia pelo version.txt.
+          NOME: ${{ needs.preparar.outputs.version_name }}
+          CODIGO: ${{ needs.preparar.outputs.version_code }}
           SUPABASE_URL: ${{ vars.SUPABASE_URL || secrets.SUPABASE_URL }}
           SUPABASE_ANON_KEY: ${{ vars.SUPABASE_ANON_KEY || secrets.SUPABASE_ANON_KEY }}
           TURNSTILE_SITE_KEY: ${{ secrets.TURNSTILE_SITE_KEY }}
@@ -612,6 +619,8 @@ jobs:
               ;;
           esac
           flutter build web --release --no-wasm-dry-run \
+            --build-name="$NOME" \
+            --build-number="$CODIGO" \
             --dart-define=SUPABASE_URL="$SUPABASE_URL" \
             --dart-define=SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY" \
             --dart-define=TURNSTILE_SITE_KEY="$TURNSTILE_SITE_KEY" \
