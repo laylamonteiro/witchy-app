@@ -195,7 +195,13 @@ class GrimoireColors extends ThemeExtension<GrimoireColors> {
     background: Color(0xFF322D46),
     surface: Color(0xFF3E3859),
     surfaceBorder: Color(0xFF544D72),
-    lilac: Color(0xFFE3D9FF),
+    // Era `E3D9FF`: lilás a 92% de luminosidade, ou seja, branco com um
+    // sopro de cor. Contrastava bem com o fundo (8.17) e mesmo assim os
+    // títulos "não tinham cor" — porque o que separa um título colorido do
+    // texto comum não é o contraste com o FUNDO, é a distância para o
+    // texto branco ao lado (era 1.23; agora 2.16). Mesma matiz, 12 pontos
+    // menos de luz.
+    lilac: Color(0xFFB499FF),
     pink: Color(0xFFF1A7C5),
     mint: Color(0xFFA7F0D8),
     starYellow: Color(0xFFFFE8A3),
@@ -233,14 +239,24 @@ class GrimoireColors extends ThemeExtension<GrimoireColors> {
     background: Color(0xFFC7C0D2),
     surface: Color(0xFFDAD4E2),
     surfaceBorder: Color(0xFFADA5BE),
-    lilac: Color(0xFF5F4A8C),
+    // Este é o tema que mais sofria, e por um motivo só: o fundo
+    // (`C7C0D2`) é escuro para um tema claro, então tudo que é cor tinha de
+    // ser mais escuro do que era. Três valores subiam ao piso por pouco e
+    // ficavam abaixo dele — acento 4.18, texto secundário 4.46, sucesso
+    // 2.93. Todos descem de luminosidade mantendo a matiz.
+    lilac: Color(0xFF584582),
     pink: Color(0xFFC25E8E),
     mint: Color(0xFF277F66),
-    starYellow: Color(0xFFB8860B),
-    gold: Color(0xFFB8860B),
+    // Eram `B8860B` (o dourado dos temas escuros, reaproveitado sem
+    // conferir): 2.25 sobre a superfície clara — abaixo até do piso de 3.0
+    // que vale para ícone. O selo Premium, a barra de progresso do convite
+    // e as estrelas das Jornadas ficavam quase invisíveis neste tema. Este
+    // bronze mantém a matiz do ouro e passa a 4.59 na superfície.
+    starYellow: Color(0xFF7A5600),
+    gold: Color(0xFF7A5600),
     textPrimary: Color(0xFF241F30),
-    textSecondary: Color(0xFF554E66),
-    success: Color(0xFF2E8B57),
+    textSecondary: Color(0xFF4E4860),
+    success: Color(0xFF226740),
     alert: Color(0xFFD23F52),
     info: Color(0xFF3F6FD0),
     onPrimary: Color(0xFFFFFFFF),
