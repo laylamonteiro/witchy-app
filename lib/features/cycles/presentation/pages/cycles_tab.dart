@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../../../core/services/debug_log_service.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/living_emblem.dart';
+import '../../../../core/widgets/magical_button.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/widgets/staggered_entrance.dart';
 import '../../../../l10n/generated/app_localizations.dart';
@@ -55,6 +56,12 @@ class _CyclesBody extends StatefulWidget {
 }
 
 class _CyclesBodyState extends State<_CyclesBody> {
+  /// A releitura do mapa é uma só por vida desta tela: `loadBirthChart`
+  /// notifica ao terminar, o que dispara `didChangeDependencies` de novo —
+  /// sem o carimbo, quem não tem mapa entraria num pingue-pongue infinito
+  /// de releitura → aviso → releitura.
+  bool _releuOMapa = false;
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -68,7 +75,19 @@ class _CyclesBodyState extends State<_CyclesBody> {
   }
 
   void _sincronizar() {
-    final chart = context.read<AstrologyProvider>().birthChart;
+    final astro = context.read<AstrologyProvider>();
+    // Sem mapa em memória não significa sem mapa: o do login social chega
+    // pelo sync DEPOIS de o provider ter carregado (e encontrado nada) — e
+    // aí a aba dizia "falta o seu mapa astral" para quem tem mapa até
+    // alguém abrir a Astrologia. A releitura é do banco local, barata, e o
+    // provider avisa quando termina, refazendo este sync com o mapa certo.
+    // Quem NÃO preencheu continua vendo o convite: a releitura devolve
+    // nada e o estado fica LifeErasIncomplete, como deve.
+    if (!astro.hasBirthChart && !astro.isLoading && !_releuOMapa) {
+      _releuOMapa = true;
+      astro.loadBirthChart();
+    }
+    final chart = astro.birthChart;
     final userId = context.read<AuthProvider>().currentUser.id;
     // Repetições com o mesmo mapa saem cedo dentro do provider.
     context.read<LifeErasProvider>().sync(userId: userId, chart: chart);
@@ -262,11 +281,23 @@ class _SemMapa extends StatelessWidget {
                 tema.textTheme.bodySmall?.copyWith(color: context.gc.textSecondary),
           ),
           const SizedBox(height: 16),
-          ElevatedButton(
-            onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const BirthChartInputPage()),
+          // O gradiente mora num DecoratedBox porque ElevatedButton não
+          // aceita gradiente direto; fundo/sombra do botão ficam
+          // transparentes e o texto usa onPrimary, o token garantido
+          // legível sobre o acento pelos testes de contraste dos temas.
+          DecoratedBox(
+            decoration: MagicalButton.ctaDecoration(context),
+            child: ElevatedButton(
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const BirthChartInputPage()),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.transparent,
+                shadowColor: Colors.transparent,
+                foregroundColor: context.gc.onPrimary,
+              ),
+              child: Text(l10n.cyclesNoChartCta),
             ),
-            child: Text(l10n.cyclesNoChartCta),
           ),
         ],
       ),
@@ -600,12 +631,29 @@ class _CartaoDaLeituraDoCicloState extends State<_CartaoDaLeituraDoCiclo> {
           const SizedBox(height: 14),
           SizedBox(
             width: double.infinity,
-            child: ElevatedButton.icon(
-              // Enquanto a contagem não chegou, o botão espera: um rótulo
-              // que muda debaixo do dedo é pior que meio segundo de espera.
-              onPressed: _carregando ? null : _abrir,
-              icon: const Icon(Icons.auto_awesome, size: 18),
-              label: Text(rotulo),
+            // O CTA principal da aba veste o gradiente lilac→pink dos CTAs
+            // primários (ver MagicalButton.ctaDecoration): o gradiente fica
+            // no DecoratedBox porque ElevatedButton não aceita gradiente, e
+            // o texto usa onPrimary — o token garantido sobre o acento.
+            child: DecoratedBox(
+              decoration: MagicalButton.ctaDecoration(context),
+              child: ElevatedButton.icon(
+                // Enquanto a contagem não chegou, o botão espera: um rótulo
+                // que muda debaixo do dedo é pior que meio segundo de espera.
+                onPressed: _carregando ? null : _abrir,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.transparent,
+                  shadowColor: Colors.transparent,
+                  foregroundColor: context.gc.onPrimary,
+                  // Desabilitado, o Material trocaria para onSurface — que
+                  // some sobre o gradiente. Mesmo tom do texto, mais tênue.
+                  disabledBackgroundColor: Colors.transparent,
+                  disabledForegroundColor:
+                      context.gc.onPrimary.withValues(alpha: 0.55),
+                ),
+                icon: const Icon(Icons.auto_awesome, size: 18),
+                label: Text(rotulo),
+              ),
             ),
           ),
         ],

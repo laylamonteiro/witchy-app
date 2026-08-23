@@ -4,6 +4,8 @@ import '../../../../core/utils/mask.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/services/debug_log_service.dart';
 import '../providers/auth_provider.dart';
+import '../../../../core/navigation/janela_de_login.dart';
+import '../../../../core/navigation/recomeco.dart';
 import 'welcome_page.dart';
 import '../../../../features/home/presentation/pages/home_page.dart';
 import '../../../../core/widgets/guarda_de_voltar_web.dart';
@@ -53,11 +55,48 @@ class AuthWrapper extends StatelessWidget {
           return const GuardaDeVoltarWeb(child: _EsperandoASessao());
         }
 
+        // Este documento é a JANELA DE LOGIN voltando do Google (a marca
+        // no armazenamento diz — o COOP do Google apaga o `opener`). Ela
+        // NUNCA vira o app: o histórico dela está cheio de páginas do
+        // Google, e o voltar aqui reabriria o login — o defeito que a
+        // janela existe para matar. Tenta fechar-se; o COOP em geral não
+        // deixa, e aí fica a tela de "pode fechar esta aba" (o Grimório
+        // já abriu na aba original, que recolheu a sessão sozinha). O
+        // ramo é GRUDENTO de propósito: sem limpar a marca, qualquer
+        // rebuild cairia na Home e a janela viraria um segundo app.
+        if (isAuthenticated && AuthProvider.bootNaJanelaDeLogin) {
+          AuthProvider.bootCameFromOAuthReturn = false;
+          if (fecharSeJanelaDeLogin()) {
+            debugLog('NAV', 'AuthWrapper: janela de login fechada');
+            return const GuardaDeVoltarWeb(child: _EsperandoASessao());
+          }
+          return const GuardaDeVoltarWeb(child: _JanelaDeLoginConcluida());
+        }
+
+        // A volta do login social com a sessão pronta pelo caminho de
+        // página inteira (pop-up bloqueado, ou plano B). Vale o de sempre:
+        // DESCARTAR este documento e recomeçar na raiz — o Supabase
+        // atropela (replaceState) o estado que o motor usa para segurar o
+        // voltar ao limpar o ?code= da URL, e o documento novo nasce com
+        // a guarda intacta. Uma vez por login social; o boot seguinte não
+        // tem ?code= e não passa por aqui.
+        if (isAuthenticated && AuthProvider.bootCameFromOAuthReturn) {
+          AuthProvider.bootCameFromOAuthReturn = false;
+          debugLog('NAV', 'AuthWrapper: sessão do OAuth pronta → recomeço');
+          recomecarNaRaiz(); // no-op fora da web
+          return const GuardaDeVoltarWeb(child: _EsperandoASessao());
+        }
+
         // Se tem conta logada, ir para home
         if (isAuthenticated) {
           debugLog('NAV', 'AuthWrapper: → HomePage (autenticado)');
+          // O guarda cobre os 2,5s do splash: ele vive na rota raiz SEM
+          // PopScope nenhum (o da Home só nasce depois do pushReplacement),
+          // e um voltar nessa janela fazia o motor sair do documento — na
+          // web, direto para a página anterior do histórico, que depois de
+          // um login social é a do Google.
           return showSplash
-              ? const SplashScreen(child: HomePage())
+              ? const GuardaDeVoltarWeb(child: SplashScreen(child: HomePage()))
               : const HomePage();
         }
 
@@ -88,6 +127,59 @@ class _EsperandoASessao extends StatelessWidget {
             const SizedBox(height: 16),
             Text(AppLocalizations.of(context).authFinishingLogin),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// A janela de login que fez o trabalho e não conseguiu se fechar (o COOP
+/// do Google corta o direito de fechar-se): diz que o Grimório já abriu na
+/// aba original e convida a fechar esta. O "continuar nesta aba" é a saída
+/// de emergência — recomeça o documento limpo (sem o Google no histórico
+/// desta rota de recomeço... o histórico da ABA continua com o Google, mas
+/// quem escolheu ficar sabe onde está).
+class _JanelaDeLoginConcluida extends StatelessWidget {
+  const _JanelaDeLoginConcluida();
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final tema = Theme.of(context);
+    return Scaffold(
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.check_circle_outline,
+                size: 56,
+                color: tema.colorScheme.primary,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                l10n.authPopupDoneTitle,
+                textAlign: TextAlign.center,
+                style: tema.textTheme.titleLarge,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                l10n.authPopupDoneBody,
+                textAlign: TextAlign.center,
+                style: tema.textTheme.bodyMedium,
+              ),
+              const SizedBox(height: 24),
+              TextButton(
+                onPressed: () {
+                  AuthProvider.bootNaJanelaDeLogin = false;
+                  recomecarNaRaiz();
+                },
+                child: Text(l10n.authPopupContinueHere),
+              ),
+            ],
+          ),
         ),
       ),
     );

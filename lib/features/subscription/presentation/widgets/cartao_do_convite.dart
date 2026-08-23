@@ -46,18 +46,40 @@ class CartaoDoConvite extends StatelessWidget {
       onTap: () => PaginaDeDescoberta.abrir(context),
       borderRadius: BorderRadius.circular(16),
       child: Container(
-        padding: EdgeInsets.all(noLimite ? 20 : 16),
+        padding: EdgeInsets.all(noLimite ? 20 : 18),
         decoration: BoxDecoration(
-          color: context.gc.surface,
+          // O convite não é mais um cartão igual aos outros da tela.
+          //
+          // Ele era: fundo `surface` chapado e borda a 10% — a mesma casca
+          // do Idioma e do Tema, logo abaixo. Um convite que se veste de
+          // item de configuração é lido como item de configuração, e o
+          // olho passa direto. Agora ele tem cor própria (um banho de
+          // lilás sobre a superfície), borda que se enxerga e um halo
+          // suave: continua sóbrio, mas se apresenta como convite.
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color.lerp(context.gc.surface, context.gc.lilac,
+                  noLimite ? 0.20 : 0.13)!,
+              Color.lerp(context.gc.surface, context.gc.pink,
+                  noLimite ? 0.12 : 0.06)!,
+            ],
+          ),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            // No limite a borda acende: é o único estado em que o cartão
-            // precisa disputar o olhar com o resto da tela.
-            color: noLimite
-                ? context.gc.lilac.withValues(alpha: 0.6)
-                : context.gc.textPrimary.withValues(alpha: 0.1),
-            width: noLimite ? 1.5 : 1,
+            // No limite a borda acende mais: a hierarquia entre os três
+            // estados continua de pé — o que mudou foi o piso.
+            color: context.gc.lilac.withValues(alpha: noLimite ? 0.65 : 0.38),
+            width: noLimite ? 1.5 : 1.2,
           ),
+          boxShadow: [
+            BoxShadow(
+              color: context.gc.lilac.withValues(alpha: noLimite ? 0.22 : 0.12),
+              blurRadius: noLimite ? 18 : 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
         child: switch (momento.estado) {
           EstadoDoConvite.longe => _Longe(agora: agora),
@@ -217,12 +239,34 @@ class _Cabecalho extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Text(
-      texto,
-      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            color: context.gc.textPrimary,
-            fontWeight: FontWeight.bold,
+    return Row(
+      children: [
+        // Um emblema, e não um cadeado: cadeado diz "você não pode", que é
+        // exatamente a leitura que este cartão existe para evitar.
+        Container(
+          width: 30,
+          height: 30,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: context.gc.lilac.withValues(alpha: 0.18),
           ),
+          child: Icon(
+            Icons.auto_awesome,
+            size: 17,
+            color: context.gc.lilac,
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Text(
+            texto,
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  color: context.gc.textPrimary,
+                  fontWeight: FontWeight.bold,
+                ),
+          ),
+        ),
+      ],
     );
   }
 }

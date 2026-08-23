@@ -29,7 +29,7 @@ class SubscriptionHero extends StatelessWidget {
           child: compact
               ? const Column(
                   children: [
-                    _CatHeroArt(height: 92),
+                    CatHeroArt(height: 92),
                     _HeroCopy(centered: true, compact: true),
                   ],
                 )
@@ -38,7 +38,7 @@ class SubscriptionHero extends StatelessWidget {
                   children: [
                     Expanded(
                       flex: 4,
-                      child: _CatHeroArt(height: 120),
+                      child: CatHeroArt(height: 120),
                     ),
                     SizedBox(width: 6),
                     Expanded(flex: 7, child: _HeroCopy()),
@@ -50,10 +50,13 @@ class SubscriptionHero extends StatelessWidget {
   }
 }
 
-class _CatHeroArt extends StatelessWidget {
+/// A arte do herói — o Salem no halo lilás. Pública porque é a ASSINATURA
+/// visual dos paywalls: o herói dos avulsos ([AvulsoHero]) usa a mesma
+/// arte, em altura menor, para as folhas lerem como o mesmo app.
+class CatHeroArt extends StatelessWidget {
   final double height;
 
-  const _CatHeroArt({required this.height});
+  const CatHeroArt({super.key, required this.height});
 
   @override
   Widget build(BuildContext context) {
@@ -160,7 +163,10 @@ class _HeroCopy extends StatelessWidget {
   final bool centered;
   final bool compact;
 
-  const _HeroCopy({this.centered = false, this.compact = false});
+  const _HeroCopy({
+    this.centered = false,
+    this.compact = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -226,12 +232,17 @@ class _HeroCopy extends StatelessWidget {
               height: 1.34,
             ),
             children: [
-              TextSpan(text: AppLocalizations.of(context).premiumHeroTagline1),
               TextSpan(
-                text: AppLocalizations.of(context).premiumHeroTaglineHighlight,
+                text: AppLocalizations.of(context).premiumHeroTagline1,
+              ),
+              TextSpan(
+                text:
+                    AppLocalizations.of(context).premiumHeroTaglineHighlight,
                 style: TextStyle(color: context.gc.lilac),
               ),
-              TextSpan(text: AppLocalizations.of(context).premiumHeroTagline2),
+              TextSpan(
+                text: AppLocalizations.of(context).premiumHeroTagline2,
+              ),
             ],
           ),
         ),
@@ -286,26 +297,26 @@ class PremiumBenefitsSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final benefits = <_Benefit>[
+    final benefits = <OfferBenefit>[
       // O vislumbre de cada peça é o MESMO texto da página de descoberta,
       // de propósito: as duas telas precisam parecer a mesma ideia vista de
       // dois ângulos, e não dois times escrevendo sobre o mesmo produto.
-      _Benefit.asset(
+      OfferBenefit.asset(
         'assets/premium/icon_orb.png',
         l10n.premiumBenefitAdvisor,
         vislumbre: l10n.conviteVislumbreConselheiroLinha,
       ),
-      _Benefit.asset(
+      OfferBenefit.asset(
         'assets/premium/icon_book.png',
         l10n.premiumBenefitEncyclopedia,
         vislumbre: l10n.conviteVislumbreEnciclopediaLinha,
       ),
-      _Benefit.asset(
+      OfferBenefit.asset(
         'assets/premium/icon_moon.png',
         l10n.premiumBenefitDailyClimate,
         vislumbre: l10n.conviteVislumbreClimaLinha,
       ),
-      _Benefit.asset(
+      OfferBenefit.asset(
         'assets/premium/icon_runes.png',
         l10n.premiumBenefitUnlimitedReadings,
         vislumbre: l10n.conviteVislumbreLeiturasLinha,
@@ -316,8 +327,8 @@ class PremiumBenefitsSection extends StatelessWidget {
       // extras do Vitalício. Nada de inventar uma linha nova para preencher
       // o buraco: o substituto é o redesenho do convite.
       if (selectedPlan == SubscriptionType.lifetime) ...[
-        _Benefit.icon(Icons.auto_awesome, l10n.premiumBenefitLifetimeCycle),
-        _Benefit.icon(Icons.all_inclusive, l10n.premiumBenefitLifetimeNoRenew),
+        OfferBenefit.icon(Icons.auto_awesome, l10n.premiumBenefitLifetimeCycle),
+        OfferBenefit.icon(Icons.all_inclusive, l10n.premiumBenefitLifetimeNoRenew),
       ],
     ];
     // A cascata que o app já usa nas outras telas dá o senso de "grandioso"
@@ -327,7 +338,7 @@ class PremiumBenefitsSection extends StatelessWidget {
     return StaggeredEntrance(
       children: [
         for (var index = 0; index < benefits.length; index++) ...[
-          _PremiumBenefitRow(benefit: benefits[index]),
+          OfferBenefitRow(benefit: benefits[index]),
           if (index != benefits.length - 1) const SizedBox(height: 14),
         ],
       ],
@@ -338,8 +349,8 @@ class PremiumBenefitsSection extends StatelessWidget {
 /// Uma PEÇA da oferta: a arte, o nome e — quando há — o vislumbre do que ela
 /// entrega. As exclusivas do Vitalício não têm arte própria nem vislumbre:
 /// são fato do plano, ganham ícone do sistema e realce lilás.
-class _Benefit {
-  const _Benefit._({
+class OfferBenefit {
+  const OfferBenefit._({
     required this.label,
     this.vislumbre,
     this.assetPath,
@@ -347,11 +358,21 @@ class _Benefit {
     this.highlighted = false,
   });
 
-  factory _Benefit.asset(String assetPath, String label, {String? vislumbre}) =>
-      _Benefit._(assetPath: assetPath, label: label, vislumbre: vislumbre);
+  factory OfferBenefit.asset(String assetPath, String label, {String? vislumbre}) =>
+      OfferBenefit._(assetPath: assetPath, label: label, vislumbre: vislumbre);
 
-  factory _Benefit.icon(IconData iconData, String label) =>
-      _Benefit._(iconData: iconData, label: label, highlighted: true);
+  factory OfferBenefit.icon(
+    IconData iconData,
+    String label, {
+    bool highlighted = true,
+    String? vislumbre,
+  }) =>
+      OfferBenefit._(
+        iconData: iconData,
+        label: label,
+        highlighted: highlighted,
+        vislumbre: vislumbre,
+      );
 
   final String label;
 
@@ -364,10 +385,10 @@ class _Benefit {
   final bool highlighted;
 }
 
-class _PremiumBenefitRow extends StatelessWidget {
-  final _Benefit benefit;
+class OfferBenefitRow extends StatelessWidget {
+  final OfferBenefit benefit;
 
-  const _PremiumBenefitRow({required this.benefit});
+  const OfferBenefitRow({super.key, required this.benefit});
 
   @override
   Widget build(BuildContext context) {
@@ -404,7 +425,11 @@ class _PremiumBenefitRow extends StatelessWidget {
                     fit: BoxFit.contain,
                     filterQuality: FilterQuality.high,
                   )
-                : Icon(benefit.iconData, size: 22, color: context.gc.lilac),
+                : Icon(
+                    benefit.iconData,
+                    size: 22,
+                    color: context.gc.lilac,
+                  ),
           ),
           const SizedBox(width: 10),
           Expanded(
@@ -489,6 +514,7 @@ class PremiumOfferPanel extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final compact = constraints.maxWidth < 380;
+        final l10n = AppLocalizations.of(context);
 
         return Container(
           key: const ValueKey('premium_offer_panel'),
@@ -533,6 +559,26 @@ class PremiumOfferPanel extends StatelessWidget {
                 lifetimeEnabled: lifetimeEnabled,
                 economiaAnual: economiaAnual,
               ),
+              // A Leitura da Lunação como nota do PAINEL, não do card (a dona
+              // vetou o texto dentro do card, que é pequeno demais para uma
+              // frase). Só com o Vitalício em foco: a Leitura do Ciclo é
+              // produto avulso, fora do Premium, e a única verdade vendável
+              // aqui é que o lifetime a inclui (regra em
+              // `CycleReadingOrigin.lifetime`) — nos outros planos a mesma
+              // linha faria a tela mentir.
+              if (selectedPlan == SubscriptionType.lifetime) ...[
+                const SizedBox(height: 10),
+                Text(
+                  l10n.paywallLifetimeCycleReading,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: context.gc.gold,
+                    fontSize: 12,
+                    height: 1.35,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
               const SizedBox(height: 12),
               SubscriptionPurchaseButton(
                 loading: purchaseLoading,
@@ -890,7 +936,11 @@ class SubscriptionPurchaseButton extends StatelessWidget {
               backgroundColor: Colors.transparent,
               disabledBackgroundColor: Colors.transparent,
               shadowColor: Colors.transparent,
-              foregroundColor: context.gc.textPrimary,
+              // O fundo de verdade é o gradiente lilás do DecoratedBox de
+              // fora: o texto usa onPrimary, o token que os testes de
+              // contraste garantem sobre o acento — textPrimary sumia nos
+              // temas de lilás claro.
+              foregroundColor: context.gc.onPrimary,
               shape: const StadiumBorder(),
             ),
             child: loading
@@ -899,7 +949,7 @@ class SubscriptionPurchaseButton extends StatelessWidget {
                     height: 22,
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
-                      color: context.gc.textPrimary,
+                      color: context.gc.onPrimary,
                     ),
                   )
                 : Text(
@@ -930,11 +980,6 @@ class SubscriptionGuarantees extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final guarantees = [
-      ('assets/premium/icon_shield.png', l10n.premiumSecurePayment),
-      ('assets/premium/icon_lock.png', l10n.premiumDataProtected),
-    ];
-
     return Column(
       children: [
         Text(
@@ -947,15 +992,31 @@ class SubscriptionGuarantees extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 8),
-        Wrap(
-          alignment: WrapAlignment.center,
-          spacing: 16,
-          runSpacing: 8,
-          children: [
-            for (final guarantee in guarantees)
-              _GuaranteeItem(assetPath: guarantee.$1, label: guarantee.$2),
-          ],
-        ),
+        const GuaranteeBadges(),
+      ],
+    );
+  }
+}
+
+/// Os dois selos de confiança do paywall (pagamento seguro, dados
+/// protegidos).
+class GuaranteeBadges extends StatelessWidget {
+  const GuaranteeBadges({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final guarantees = [
+      ('assets/premium/icon_shield.png', l10n.premiumSecurePayment),
+      ('assets/premium/icon_lock.png', l10n.premiumDataProtected),
+    ];
+    return Wrap(
+      alignment: WrapAlignment.center,
+      spacing: 16,
+      runSpacing: 8,
+      children: [
+        for (final guarantee in guarantees)
+          _GuaranteeItem(assetPath: guarantee.$1, label: guarantee.$2),
       ],
     );
   }

@@ -12,6 +12,7 @@ import '../../../../core/providers/notification_provider.dart';
 import '../../../../core/providers/language_provider.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
+import '../../../../core/widgets/magical_button.dart';
 import '../../../../core/diagnostic/diagnostic_page.dart';
 import '../../../../core/services/payment_service.dart';
 import '../../../lunar/presentation/providers/lunar_provider.dart';
@@ -400,27 +401,42 @@ class SettingsPage extends StatelessWidget {
             const SizedBox(height: 16),
             SizedBox(
               width: double.infinity,
-              child: ElevatedButton(
-                key: const ValueKey('settings_upgrade_button'),
-                onPressed: () => _showUpgradeSheet(context),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: context.gc.lilac,
-                  foregroundColor: context.gc.textPrimary,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(25),
-                  ),
+              // Gradiente lilac→pink dos CTAs primários (ver
+              // MagicalButton.ctaDecoration) num DecoratedBox, porque
+              // ElevatedButton não aceita gradiente. O texto era
+              // textPrimary — quase branco sobre o lilás claro em vários
+              // temas; onPrimary é o token que os testes de contraste
+              // garantem legível sobre o acento.
+              child: DecoratedBox(
+                decoration: MagicalButton.ctaDecoration(
+                  context,
+                  // Espelha o borderRadius do shape logo abaixo: se
+                  // divergirem, o gradiente vaza fora do ink.
+                  borderRadius: BorderRadius.circular(25),
                 ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.auto_awesome, size: 18),
-                    SizedBox(width: 8),
-                    Text(
-                      AppLocalizations.of(context).profileUpgrade,
-                      style: TextStyle(fontWeight: FontWeight.bold),
+                child: ElevatedButton(
+                  key: const ValueKey('settings_upgrade_button'),
+                  onPressed: () => _showUpgradeSheet(context),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.transparent,
+                    shadowColor: Colors.transparent,
+                    foregroundColor: context.gc.onPrimary,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(25),
                     ),
-                  ],
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.auto_awesome, size: 18),
+                      SizedBox(width: 8),
+                      Text(
+                        AppLocalizations.of(context).profileUpgrade,
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -1104,7 +1120,10 @@ class SettingsPage extends StatelessWidget {
               ),
               child: Text(
                 AppLocalizations.of(context).commonSave,
-                style: TextStyle(color: context.gc.textPrimary),
+                // textPrimary é quase branco nos temas escuros e sumia
+                // sobre o lilás claro; onPrimary é o token feito para
+                // texto sobre o acento.
+                style: TextStyle(color: context.gc.onPrimary),
               ),
             ),
           ],

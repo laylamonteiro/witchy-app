@@ -9,6 +9,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/services/payment_service.dart';
 import '../../../subscription/subscription.dart';
+import '../widgets/premium_blur_widget.dart' show showPremiumUpgradePaywall;
 import '../../../journeys/journeys.dart';
 import '../../data/models/user_model.dart';
 import '../providers/auth_provider.dart';
@@ -642,7 +643,9 @@ class ProfilePage extends StatelessWidget {
   }
 
   void _showUpgradeSheet(BuildContext context) {
-    openSubscriptionPage(context);
+    // Convite de upgrade vai DIRETO ao paywall (decisão de 23/08); a página
+    // de Assinatura fica para gestão — o "Gerenciar Assinatura" logo abaixo.
+    showPremiumUpgradePaywall(context);
   }
 
   List<Color> _getRoleColors(UserRole role) {

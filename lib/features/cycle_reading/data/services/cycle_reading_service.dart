@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:intl/intl.dart';
 
 import '../../../../core/ai/ai_service.dart';
@@ -5,6 +6,8 @@ import '../../../../core/content/content_locale.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../diary/data/models/free_writing_model.dart';
 import '../../../diary/data/repositories/free_writing_repository.dart';
+import '../../../grimoire/data/models/spell_model.dart'
+    show MoonPhaseExtension;
 import '../../../lunar/presentation/providers/lunar_provider.dart';
 import '../models/cycle_reading_model.dart';
 import '../repositories/cycle_reading_repository.dart';
@@ -28,22 +31,58 @@ abstract final class CycleReadingSections {
   static const affirmation = 'affirmation';
   static const seal = 'seal';
 
-  /// A Leitura da Lunação: o produto completo, as 7 seções.
+  /// "O ciclo em números": a seção DETERMINÍSTICA do relatório, calculada
+  /// em Dart e montada por código. NÃO entra em [ordered] nem em [weekly]
+  /// de propósito — essas listas guiam as CHAMADAS DE IA, e esta seção
+  /// nunca vai à IA: ela recebe os mesmos números prontos no bloco
+  /// "numbers" do material, só para citá-los sem recalcular.
+  static const numbers = 'numbers';
+
+  /// "O que se anuncia": a previsão do próximo ciclo. A IA a escreve, mas
+  /// SÓ do campo skyAhead do material — fases, trânsitos, aspectos e
+  /// sabbats da janela seguinte, todos calculados no aparelho — amarrados
+  /// aos fios do período e à simbologia da bruxaria. Convite e preparo,
+  /// nunca destino (a instrução da seção repete a regra).
+  static const forecast = 'forecast';
+
+  /// As três áreas da vida (decisão da dona, 23/08): o amor e os laços, o
+  /// trabalho e as criações, a família e o lar. Cada uma lê o que o
+  /// período conta daquela área — e diz com honestidade quando os
+  /// registros silenciam sobre ela.
+  static const love = 'love';
+  static const work = 'work';
+  static const family = 'family';
+
+  /// A Leitura da Lunação: o produto completo, as 11 seções de IA.
   static const ordered = [
     portrait,
     threads,
     sky,
     practice,
+    love,
+    work,
+    family,
+    forecast,
     rituals,
     affirmation,
     seal,
   ];
 
-  /// A Leitura da Semana: mais direta (4 seções). O que fica de fora é o que
-  /// só a lunação inteira sustenta — o balanço da prática, os rituais do
-  /// próximo ciclo e o selo — e é essa diferença visível que justifica a
-  /// diferença de preço.
-  static const weekly = [portrait, threads, sky, affirmation];
+  /// A Leitura da Semana: mais direta (8 seções). A previsão e as três
+  /// áreas da vida entram AQUI TAMBÉM (decisões da dona, 23/08). O que
+  /// fica de fora é o que só a lunação inteira sustenta — o balanço da
+  /// prática, os rituais e o selo — e é essa diferença visível que
+  /// justifica a diferença de preço.
+  static const weekly = [
+    portrait,
+    threads,
+    sky,
+    love,
+    work,
+    family,
+    forecast,
+    affirmation,
+  ];
 
   /// As seções de um [CycleReadingPeriodType].
   static List<String> forPeriod(String periodType) =>
@@ -106,14 +145,16 @@ class CycleReadingService {
     );
   }
 
-  /// A semana corrente: os últimos 7 dias, hoje incluído. O fim é a meia-
-  /// noite de amanhã para o dia de hoje entrar inteiro (as consultas usam
-  /// `>= start AND < end`).
+  /// A semana corrente: o giro completo, de um dia da semana ao MESMO dia
+  /// na semana seguinte — segunda a segunda, hoje incluído. São 8 dias
+  /// vividos (decisão da dona, 23/08: o ciclo semanal fecha no dia em que
+  /// começou, não na véspera). O fim é a meia-noite de amanhã para o dia
+  /// de hoje entrar inteiro (as consultas usam `>= start AND < end`).
   static ({DateTime start, DateTime end}) currentWeek({DateTime? now}) {
     final reference = now ?? DateTime.now();
     final today = DateTime(reference.year, reference.month, reference.day);
     return (
-      start: today.subtract(const Duration(days: 6)),
+      start: today.subtract(const Duration(days: 7)),
       end: today.add(const Duration(days: 1)),
     );
   }
@@ -138,6 +179,16 @@ class CycleReadingService {
   static int spanInDays(DateTime start, DateTime end) =>
       end.difference(start).inDays;
 
+  /// O último dia VIVIDO de uma janela com fim exclusivo — o que as telas
+  /// mostram. O `end` cru é a meia-noite do dia SEGUINTE ao último lido:
+  /// estampá-lo dizia à pessoa que a leitura cobre um dia que não cobre.
+  static DateTime lastDayOf(DateTime end) {
+    final midnight = DateTime(end.year, end.month, end.day);
+    return midnight == end
+        ? midnight.subtract(const Duration(days: 1))
+        : midnight;
+  }
+
   /// Quando convidar de volta depois de uma leitura: uma semana ou uma
   /// lunação depois dela.
   ///
@@ -146,13 +197,14 @@ class CycleReadingService {
   /// nasce do tamanho do ciclo lido.
   static Duration inviteBackAfter(String periodType) =>
       periodType == CycleReadingPeriodType.week
-          ? const Duration(days: 7)
+          ? const Duration(days: 8)
           : const Duration(days: 30);
 
-  /// Classifica um período escolhido a dedo: até 7 dias é produto SEMANAL;
-  /// de 8 a 31, MENSAL (lunação). Quem chama já validou o teto de 31.
+  /// Classifica um período escolhido a dedo: até 8 dias (o giro de segunda
+  /// a segunda) é produto SEMANAL; de 9 a 31, MENSAL (lunação). Quem chama
+  /// já validou o teto de 31.
   static String periodTypeForSpan(DateTime start, DateTime end) =>
-      spanInDays(start, end) <= 7
+      spanInDays(start, end) <= 8
           ? CycleReadingPeriodType.week
           : CycleReadingPeriodType.lunation;
 
@@ -270,6 +322,7 @@ class CycleReadingService {
     required String userId,
     CycleReadingSourceOptions options = const CycleReadingSourceOptions(),
     bool regenerate = false,
+    String? userName,
   }) async {
     if (regenerate && !credit.canRegenerate) {
       throw StateError('cycle reading: regeneration limit reached');
@@ -281,6 +334,7 @@ class CycleReadingService {
       end: credit.periodEnd,
       periodType: credit.periodType,
       options: options,
+      userName: userName,
     );
     final generate = _generateSection ?? _defaultGenerate;
 
@@ -325,6 +379,7 @@ class CycleReadingService {
       sections: sections,
       affirmation: affirmation,
       sealKeywords: sealKeywords,
+      numeros: material.numbers,
     );
     final title = reportTitle(
       credit.periodStart,
@@ -388,7 +443,7 @@ class CycleReadingService {
   }) {
     final format = DateFormat('dd/MM');
     return '${periodTitle(periodType)} — '
-        '${format.format(start)}–${format.format(end)}';
+        '${format.format(start)}–${format.format(lastDayOf(end))}';
   }
 
   /// Nome do produto conforme a janela ("Leitura da Semana"/"da Lunação").
@@ -402,17 +457,21 @@ class CycleReadingService {
     required Map<String, String> sections,
     required String affirmation,
     required List<String> sealKeywords,
+    NumerosDoCiclo? numeros,
   }) {
     final l10n = _l10n;
     final format = DateFormat('dd/MM/yyyy');
+    // O fim estampado é o último dia LIDO (ver [lastDayOf]) — o `end` cru é
+    // exclusivo e apontaria um dia fora da leitura.
+    final fim = format.format(lastDayOf(credit.periodEnd));
     final periodLine = credit.isWeekly
         ? l10n.cycleReadingWeekPeriodLine(
             format.format(credit.periodStart),
-            format.format(credit.periodEnd),
+            fim,
           )
         : l10n.cycleReadingPeriodLine(
             format.format(credit.periodStart),
-            format.format(credit.periodEnd),
+            fim,
           );
     final buffer = StringBuffer()
       ..writeln('# ${periodTitle(credit.periodType)}')
@@ -431,12 +490,31 @@ class CycleReadingService {
 
     section(l10n.cycleReadingSectionPortrait,
         sections[CycleReadingSections.portrait] ?? '');
+    // Logo após o retrato: os números reais do período. É a âncora factual
+    // do relatório — a pessoa lê a narrativa e, em seguida, o chão dela.
+    // Montada por CÓDIGO, nunca por IA (ver [numbersSectionBody]).
+    if (numeros != null) {
+      section(l10n.cycleReadingSectionNumbers, numbersSectionBody(numeros));
+    }
     section(l10n.cycleReadingSectionThreads,
         sections[CycleReadingSections.threads] ?? '');
     section(
         l10n.cycleReadingSectionSky, sections[CycleReadingSections.sky] ?? '');
     section(l10n.cycleReadingSectionPractice,
         sections[CycleReadingSections.practice] ?? '');
+    // As três áreas da vida (decisão da dona, 23/08), entre o balanço e a
+    // previsão: primeiro o que o período conta de cada área, depois o que
+    // o céu que vem anuncia.
+    section(l10n.cycleReadingSectionLove,
+        sections[CycleReadingSections.love] ?? '');
+    section(l10n.cycleReadingSectionWork,
+        sections[CycleReadingSections.work] ?? '');
+    section(l10n.cycleReadingSectionFamily,
+        sections[CycleReadingSections.family] ?? '');
+    // A previsão vem ANTES dos rituais de propósito: primeiro o que o céu
+    // que vem anuncia, depois a prática que responde a ele.
+    section(l10n.cycleReadingSectionForecast,
+        sections[CycleReadingSections.forecast] ?? '');
     section(l10n.cycleReadingSectionRituals,
         sections[CycleReadingSections.rituals] ?? '');
     section(l10n.cycleReadingSectionAffirmation,
@@ -449,20 +527,88 @@ class CycleReadingService {
     return buffer.toString().trimRight();
   }
 
-  /// Recupera a afirmação de um relatório já salvo (linha de citação `>`)
-  /// — para reabrir os cartões compartilháveis sem regerar nada.
+  /// O corpo da seção "O ciclo em números" — montado por CÓDIGO, nunca por
+  /// IA: são contagens reais, e número real não se pede a um modelo de
+  /// linguagem. Linhas sem dado (período vazio → sem fase top, sem fonte,
+  /// sem sequência) simplesmente não entram; o total e o período anterior
+  /// ficam sempre, porque zero ali é informação verdadeira.
+  static String numbersSectionBody(NumerosDoCiclo numeros) {
+    final l10n = _l10n;
+    final linhas = <String>[
+      l10n.cycleNumbersRecords(
+        numeros.totalRecords,
+        numeros.activeDays,
+        numeros.periodDays,
+      ),
+      if (numeros.topPhase != null)
+        l10n.cycleNumbersTopPhase(
+          numeros.topPhase!.displayName,
+          numeros.topPhaseCount,
+        ),
+      if (numeros.topSource != null)
+        l10n.cycleNumbersTopSource(
+          _nomeDaFonte(numeros.topSource!),
+          numeros.topSourceCount,
+        ),
+      if (numeros.longestStreak > 0)
+        l10n.cycleNumbersStreak(numeros.longestStreak),
+      l10n.cycleNumbersPrevious(numeros.previousPeriodRecords),
+    ];
+    // Lista Markdown: cada número em sua linha, com o marcador que o
+    // renderizador das leituras já estiliza.
+    return linhas.map((linha) => '- $linha').join('\n');
+  }
+
+  /// O nome de cada fonte é um SUBSTANTIVO próprio para frase ("Sonhos"),
+  /// não o rótulo do desligamento da intro ("Usar meus sonhos") — reusar o
+  /// rótulo deixava a linha torta: "Fonte mais presente: Usar meus sonhos".
+  /// As famílias são as mesmas quatro dos desligamentos, só o nome muda.
+  static String _nomeDaFonte(String source) {
+    final l10n = _l10n;
+    return switch (source) {
+      NumerosDoCiclo.sourceDreams => l10n.cycleSourceDreams,
+      NumerosDoCiclo.sourceJournals => l10n.cycleSourceJournals,
+      NumerosDoCiclo.sourceDivination => l10n.cycleSourceDivination,
+      _ => l10n.cycleSourcePractice,
+    };
+  }
+
+  /// O título da seção da afirmação como ele pode estar GRAVADO — a leitura
+  /// foi escrita no idioma da geração, e a tela relê no idioma de agora.
+  static final Set<String> _titulosDaAfirmacaoSalvos = {
+    for (final locale in AppLocalizations.supportedLocales)
+      lookupAppLocalizations(locale).cycleReadingSectionAffirmation,
+  };
+
+  /// Recupera a afirmação de um relatório já salvo — para reabrir os
+  /// cartões compartilháveis sem regerar nada.
+  ///
+  /// A afirmação é a citação DA SEÇÃO da afirmação, não a primeira citação
+  /// do relatório: a leitura ABRE com um gancho em citação, e era ele que
+  /// saía no cartão de compartilhar enquanto a tela mostrava a afirmação
+  /// certa (visto no preview, 23/08). A primeira citação fica como plano B
+  /// para leituras cujo título de seção não é reconhecível.
   static String? affirmationFromMarkdown(String markdown) {
+    var naSecaoDaAfirmacao = false;
+    String? primeiraCitacao;
     for (final line in markdown.split('\n')) {
       final trimmed = line.trim();
+      if (trimmed.startsWith('## ')) {
+        naSecaoDaAfirmacao =
+            _titulosDaAfirmacaoSalvos.any(trimmed.contains);
+        continue;
+      }
       if (trimmed.startsWith('> ')) {
         // Leituras já salvas trazem o realce dentro da citação; aqui a
         // afirmação sai como frase, para o cartão e para o texto do
         // compartilhamento.
         final text = semRealce(trimmed.substring(2)).trim();
-        if (text.isNotEmpty) return text;
+        if (text.isEmpty) continue;
+        if (naSecaoDaAfirmacao) return text;
+        primeiraCitacao ??= text;
       }
     }
-    return null;
+    return primeiraCitacao;
   }
 
   /// Recupera as palavras-chave do selo de um relatório já salvo: a linha
@@ -480,14 +626,31 @@ class CycleReadingService {
         .toList();
   }
 
-  /// A afirmação vem "crua" do modelo: remove aspas e fica com a primeira
-  /// linha não vazia.
+  /// Palavra imediatamente repetida ("me me permito") — gagueira de
+  /// geração, vista numa afirmação real (23/08). Em texto formal de PT/EN/ES
+  /// a repetição imediata da MESMA palavra nunca é intencional; colapsa
+  /// para uma só, preservando a grafia da primeira.
+  static final RegExp _palavraDuplicada = RegExp(
+    r'\b(\p{L}+)(?:\s+\1)+\b',
+    unicode: true,
+    caseSensitive: false,
+  );
+
+  @visibleForTesting
+  static String semPalavraDuplicada(String texto) =>
+      texto.replaceAllMapped(_palavraDuplicada, (m) => m.group(1)!);
+
+  /// A afirmação vem "crua" do modelo: remove aspas, fica com a primeira
+  /// linha não vazia e colapsa palavra duplicada — ela vira imagem de
+  /// compartilhar, e "me me permito" ali é defeito à vista de todo mundo.
   static String _cleanAffirmation(String raw) {
     final line = raw
         .split('\n')
         .map((l) => l.trim())
         .firstWhere((l) => l.isNotEmpty, orElse: () => '');
-    return semRealce(line.replaceAll(RegExp('["“”«»]'), '')).trim();
+    return semPalavraDuplicada(
+      semRealce(line.replaceAll(RegExp('["“”«»]'), '')).trim(),
+    );
   }
 
   /// Tira a marcação de realce (`**assim**`) de um texto que vai sair do

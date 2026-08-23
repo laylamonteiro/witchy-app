@@ -691,7 +691,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
             ),
             child: Text(
               AppLocalizations.of(context).editChangeAction,
-              style: GoogleFonts.nunito(color: context.gc.textPrimary),
+              // textPrimary é quase branco nos temas escuros e sumia sobre
+              // o fundo lilás; onPrimary é o token para texto sobre o acento.
+              style: GoogleFonts.nunito(color: context.gc.onPrimary),
             ),
           ),
         ],
@@ -725,8 +727,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
             style: ElevatedButton.styleFrom(
               backgroundColor: context.gc.lilac,
             ),
+            // textPrimary sumia sobre o fundo lilás nos temas escuros;
+            // onPrimary é o token para texto sobre o acento.
             child: Text(AppLocalizations.of(context).editExportAction,
-                style: GoogleFonts.nunito(color: context.gc.textPrimary)),
+                style: GoogleFonts.nunito(color: context.gc.onPrimary)),
           ),
         ],
       ),

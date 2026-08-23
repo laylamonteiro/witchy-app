@@ -138,7 +138,9 @@ class CustomerCenterWidget extends StatelessWidget {
             onPressed: () => paymentService.presentCustomerCenter(),
             style: ElevatedButton.styleFrom(
               backgroundColor: context.gc.lilac,
-              foregroundColor: context.gc.textPrimary,
+              // Sobre o acento, onPrimary — textPrimary sumia no lilás
+              // claro de vários temas.
+              foregroundColor: context.gc.onPrimary,
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
             ),
             child: const Text('Abrir Central'),

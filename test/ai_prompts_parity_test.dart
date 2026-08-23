@@ -125,6 +125,14 @@ void main() {
           p.cycleReadingSectionInstruction('sky'),
       'cycleReadingSectionInstruction (practice)': (p, g) =>
           p.cycleReadingSectionInstruction('practice'),
+      'cycleReadingSectionInstruction (forecast)': (p, g) =>
+          p.cycleReadingSectionInstruction('forecast'),
+      'cycleReadingSectionInstruction (love)': (p, g) =>
+          p.cycleReadingSectionInstruction('love'),
+      'cycleReadingSectionInstruction (work)': (p, g) =>
+          p.cycleReadingSectionInstruction('work'),
+      'cycleReadingSectionInstruction (family)': (p, g) =>
+          p.cycleReadingSectionInstruction('family'),
       'cycleReadingSectionInstruction (rituals)': (p, g) =>
           p.cycleReadingSectionInstruction('rituals'),
       'cycleReadingSectionInstruction (affirmation)': (p, g) =>
@@ -327,6 +335,10 @@ void main() {
         'threads',
         'sky',
         'practice',
+        'love',
+        'work',
+        'family',
+        'forecast',
         'rituals',
         'affirmation',
         'seal',

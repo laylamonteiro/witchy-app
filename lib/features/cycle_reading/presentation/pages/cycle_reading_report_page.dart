@@ -558,8 +558,11 @@ class CycleReadingReportPage extends StatelessWidget {
     List<String> keywords,
   ) {
     final format = DateFormat('dd/MM');
+    // Último dia VIVIDO no cartão, como nas demais telas — o fim cru é
+    // exclusivo e apontaria um dia fora da leitura.
     final periodLine = periodStart != null && periodEnd != null
-        ? '${format.format(periodStart!)}–${format.format(periodEnd!)}'
+        ? '${format.format(periodStart!)}–'
+            '${format.format(CycleReadingService.lastDayOf(periodEnd!))}'
         : null;
     showShareCardSheet(
       context,
@@ -612,6 +615,7 @@ class _CartaoDeRitual extends StatefulWidget {
 class _CartaoDeRitualState extends State<_CartaoDeRitual> {
   bool _salvo = false;
   bool _salvando = false;
+  bool _conferiuSalvo = false;
 
   /// O feitiço recém-salvo, para o atalho "ver" logo ali.
   SpellModel? _feitico;
@@ -621,6 +625,40 @@ class _CartaoDeRitualState extends State<_CartaoDeRitual> {
   /// ficha. Na leitura, ao contrário, a marcação é lida pelo Markdown.
   static String _textoPuro(String texto) =>
       CycleReadingService.semRealce(texto).replaceAll('*', '').trim();
+
+  /// O nome que o feitiço deste ritual recebe no Grimório — a MESMA conta
+  /// no salvar e no reconhecer, senão o reconhecimento não reconhece nada.
+  String _nomeDoFeitico(AppLocalizations l10n) => _textoPuro(
+        widget.nome.isEmpty ? l10n.cycleReadingSectionRituals : widget.nome,
+      );
+
+  /// O feitiço deste ritual, se JÁ mora no Grimório (mesmo nome, categoria
+  /// de sugerido). É o que impede a compra dupla de trabalho: reabrir a
+  /// leitura zerava o estado do botão, e "Salvar" de novo gastava outra
+  /// chamada de IA para criar um feitiço repetido (visto no preview,
+  /// 23/08).
+  SpellModel? _jaSalvo(AppLocalizations l10n) {
+    final nome = _nomeDoFeitico(l10n);
+    for (final feitico in context.read<SpellProvider>().spells) {
+      if (feitico.category == SpellCategory.suggested &&
+          feitico.name == nome) {
+        return feitico;
+      }
+    }
+    return null;
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_conferiuSalvo) return;
+    _conferiuSalvo = true;
+    final existente = _jaSalvo(AppLocalizations.of(context));
+    if (existente != null) {
+      _feitico = existente;
+      _salvo = true;
+    }
+  }
 
   /// Guarda o ritual como feitiço — completo, como os outros do Grimório.
   ///
@@ -636,13 +674,23 @@ class _CartaoDeRitualState extends State<_CartaoDeRitual> {
   /// o que ela pediu foi guardar o ritual, e isso nunca pode falhar.
   Future<void> _salvar() async {
     if (_salvando || _salvo) return;
-    setState(() => _salvando = true);
     final l10n = AppLocalizations.of(context);
+
+    // Última conferência antes de gastar IA: o feitiço pode já existir (a
+    // lista do provider pode ter chegado depois do primeiro build).
+    final existente = _jaSalvo(l10n);
+    if (existente != null) {
+      setState(() {
+        _feitico = existente;
+        _salvo = true;
+      });
+      return;
+    }
+
+    setState(() => _salvando = true);
     final provider = context.read<SpellProvider>();
 
-    final nome = _textoPuro(
-      widget.nome.isEmpty ? l10n.cycleReadingSectionRituals : widget.nome,
-    );
+    final nome = _nomeDoFeitico(l10n);
     final corpo = _textoPuro(widget.corpo);
     final ingredientes = widget.ingredientes
         .map(_textoPuro)
@@ -719,12 +767,21 @@ class _CartaoDeRitualState extends State<_CartaoDeRitual> {
     }
   }
 
-  void _abrirFeitico() {
+  Future<void> _abrirFeitico() async {
     final feitico = _feitico;
     if (feitico == null) return;
-    Navigator.of(context).push(
+    await Navigator.of(context).push(
       MaterialPageRoute(builder: (_) => SpellDetailPage(spell: feitico)),
     );
+    if (!mounted) return;
+    // A ficha tem o excluir: se o feitiço saiu do Grimório lá dentro, este
+    // cartão não pode continuar dizendo "salvo" — o botão de salvar volta
+    // (visto no preview, 23/08). A conferência é a mesma do montar.
+    final aindaSalvo = _jaSalvo(AppLocalizations.of(context));
+    setState(() {
+      _feitico = aindaSalvo;
+      _salvo = aindaSalvo != null;
+    });
   }
 
   @override

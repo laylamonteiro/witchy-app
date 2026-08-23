@@ -917,7 +917,10 @@ class _DiagnosticPageState extends State<DiagnosticPage>
                     label: const Text('Copiar diagnóstico'),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: context.gc.lilac,
-                      foregroundColor: context.gc.textPrimary,
+                      // textPrimary é quase branco nos temas escuros e sumia
+                      // sobre o lilás claro; onPrimary é o token para texto
+                      // sobre o acento.
+                      foregroundColor: context.gc.onPrimary,
                     ),
                   ),
                 ],
@@ -1560,7 +1563,9 @@ class _DiagnosticPageState extends State<DiagnosticPage>
             label: const Text('Copiar Diagnóstico Completo'),
             style: ElevatedButton.styleFrom(
               backgroundColor: context.gc.lilac,
-              foregroundColor: context.gc.textPrimary,
+              // textPrimary é quase branco nos temas escuros e sumia sobre
+              // o lilás claro; onPrimary é o token para texto sobre o acento.
+              foregroundColor: context.gc.onPrimary,
               padding: const EdgeInsets.symmetric(vertical: 16),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
@@ -1844,7 +1849,10 @@ class _DiagnosticPageState extends State<DiagnosticPage>
                 label: const Text('Copiar Logs de Login Social'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: context.gc.lilac,
-                  foregroundColor: context.gc.textPrimary,
+                  // textPrimary é quase branco nos temas escuros e sumia
+                  // sobre o lilás claro; onPrimary é o token para texto
+                  // sobre o acento.
+                  foregroundColor: context.gc.onPrimary,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
