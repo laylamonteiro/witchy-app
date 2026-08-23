@@ -12,6 +12,8 @@ import '../../../../core/navigation/app_deep_link.dart';
 import '../../../../core/navigation/section_reset_notifier.dart';
 import '../../../../core/providers/mascot_provider.dart';
 import '../../../../core/theme/grimoire_colors.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
+
 import '../../../../core/utils/saida_por_dois_toques.dart';
 import '../../../../core/utils/um_de_cada_vez.dart';
 import '../../../../core/widgets/mascot/cat_chat_bubble.dart';
@@ -32,15 +34,24 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   /// inteira, voltando para cá).
   int _selectedIndex = 0;
 
-  /// A regra do "voltar de novo para sair", com defesa contra rajada: sair
-  /// é destrutivo (na web a ABA se fecha), então tem de ser decisão, nunca
-  /// embalo do dedo. Ver [SaidaPorDoisToques].
-  final _saida = SaidaPorDoisToques();
+  /// A regra do "voltar de novo para sair".
+  ///
+  /// Os prazos mudam com a plataforma porque SAIR significa coisas
+  /// diferentes: no celular é ir para segundo plano — reversível, um toque
+  /// traz de volta — e o toque duplo rápido de sempre é o esperado; na web
+  /// é FECHAR A ABA, destrutivo, então exige um segundo voltar deliberado
+  /// (o piso contra rajada). Ver [SaidaPorDoisToques].
+  final _saida = SaidaPorDoisToques(
+    janela: kIsWeb ? const Duration(seconds: 4) : const Duration(seconds: 2),
+    intervaloDeliberado:
+        kIsWeb ? const Duration(milliseconds: 800) : Duration.zero,
+  );
 
-  /// Quanto tempo o aviso "toque de novo para sair" fica na tela. Vive
-  /// junto da janela da regra: um aviso que some antes de a janela fechar
-  /// deixaria a saída armada com a tela já limpa.
-  static const Duration _avisoDeSaida = Duration(seconds: 3);
+  /// Quanto tempo o aviso "toque de novo para sair" fica na tela. Acompanha
+  /// a janela da regra: um aviso que some antes de a janela fechar deixaria
+  /// a saída armada com a tela já limpa.
+  static final Duration _avisoDeSaida =
+      kIsWeb ? const Duration(seconds: 3) : const Duration(seconds: 2);
 
   /// Um voltar por vez.
   ///

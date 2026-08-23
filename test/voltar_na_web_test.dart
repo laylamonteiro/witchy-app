@@ -209,6 +209,21 @@ void main() {
       );
     });
 
+    test('no celular (sem piso) o toque duplo rápido continua saindo', () {
+      // Sair no celular é ir para segundo plano — reversível. Ali o padrão
+      // de sempre (dois toques rápidos) tem de continuar valendo; o piso
+      // contra rajada é da WEB, onde sair fecha a aba.
+      final saida = SaidaPorDoisToques(
+        janela: const Duration(seconds: 2),
+        intervaloDeliberado: Duration.zero,
+      );
+      expect(saida.registrar(t0), DecisaoDeSaida.avisar);
+      expect(
+        saida.registrar(t0.add(const Duration(milliseconds: 300))),
+        DecisaoDeSaida.sair,
+      );
+    });
+
     test('caminhar (desempilhar, trocar de aba) esquece o aviso', () {
       // Sem isto, um aviso dado no Seu Dia continuaria valendo depois de a
       // pessoa navegar, e o voltar seguinte sairia de dentro de outra tela.
