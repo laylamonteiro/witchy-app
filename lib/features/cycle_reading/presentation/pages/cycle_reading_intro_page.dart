@@ -704,10 +704,15 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
                 ),
           ),
           const SizedBox(height: 12),
-          OutlinedButton.icon(
-            onPressed: _completarNascimento,
-            icon: const Icon(Icons.auto_awesome, size: 18),
-            label: Text(l10n.cycleReadingChartCta),
+          // Centralizado como os demais botões de ação desta tela: dentro de
+          // uma coluna alinhada à esquerda, um botão que encolhe até o texto
+          // fica encostado na borda e parece desalinhado dos outros.
+          Center(
+            child: OutlinedButton.icon(
+              onPressed: _completarNascimento,
+              icon: const Icon(Icons.auto_awesome, size: 18),
+              label: Text(l10n.cycleReadingChartCta),
+            ),
           ),
         ],
       ),
@@ -1134,7 +1139,7 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
     // Crédito pendente: a compra já aconteceu — gerar sem nova cobrança.
     if (existing != null && existing.isPending) {
       return Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Text(
             l10n.cycleReadingPendingCredit,
@@ -1156,7 +1161,7 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
       final remaining =
           CycleReadingModel.maxRegenerations - existing.regenerationsUsed;
       return Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           ElevatedButton.icon(
             onPressed: () => _abrirRelatorio(existing),
@@ -1186,10 +1191,12 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
     // frase explicando o benefício — a etiqueta "Incluída" no cabeçalho já
     // diz o necessário, e repetir a cada leitura vira ruído.
     if (_lifetimeCoversThisWindow) {
-      return ElevatedButton.icon(
-        onPressed: _claimLifetime,
-        icon: const Icon(Icons.auto_awesome, size: 18),
-        label: Text(l10n.cycleReadingGenerate),
+      return Center(
+        child: ElevatedButton.icon(
+          onPressed: _claimLifetime,
+          icon: const Icon(Icons.auto_awesome, size: 18),
+          label: Text(l10n.cycleReadingGenerate),
+        ),
       );
     }
 
@@ -1212,19 +1219,21 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
     // por seção o que a leitura entrega ANTES de cobrar. O toque a mais é
     // proposital — quem chega ao valor já sabe o que ele compra.
     final period = _period;
-    return ElevatedButton.icon(
-      onPressed: () => mostrarPaywallDaLeitura(
-        context,
-        periodType: _periodType,
-        periodStart: period.start,
-        periodEnd: period.end,
-        price: price,
-        recordCount: _recordCount,
-        minRecords: CycleReadingComposer.minRecordsFor(_periodType),
-        onComprar: _buy,
+    return Center(
+      child: ElevatedButton.icon(
+        onPressed: () => mostrarPaywallDaLeitura(
+          context,
+          periodType: _periodType,
+          periodStart: period.start,
+          periodEnd: period.end,
+          price: price,
+          recordCount: _recordCount,
+          minRecords: CycleReadingComposer.minRecordsFor(_periodType),
+          onComprar: _buy,
+        ),
+        icon: const Icon(Icons.auto_awesome, size: 18),
+        label: Text(l10n.cycleReadingWantFull),
       ),
-      icon: const Icon(Icons.auto_awesome, size: 18),
-      label: Text(l10n.cycleReadingWantFull),
     );
   }
 }

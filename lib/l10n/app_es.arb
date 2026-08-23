@@ -1626,6 +1626,7 @@
   "cyclePreset30Days": "30 días",
   "cyclePreset7Days": "7 días",
   "cyclePresetOther": "Otro período",
+  "cycleReadingPickEndDay": "Toca el día final: la lectura necesita más de un día",
   "cycleReadingSelectionSummary": "{days, plural, one{1 día} other{{days} días}} · {records, plural, =0{ningún registro} one{1 registro} other{{records} registros}}",
   "@cycleReadingSelectionSummary": {
     "placeholders": {

@@ -150,7 +150,12 @@ class _CyclePeriodPickerSheetState extends State<CyclePeriodPickerSheet> {
 
   bool get _tooLong => _selectedDays > CycleReadingService.maxCustomPeriodDays;
 
-  bool get _canConfirm => _start != null && !_tooLong;
+  /// A janela precisa estar FECHADA e ter mais de um dia: um toque só deixa
+  /// a seleção pela metade, e uma leitura de 24 horas não tem ciclo para
+  /// contar. Enquanto isso não estiver de pé, o confirmar fica apagado e o
+  /// resumo diz o que falta.
+  bool get _canConfirm =>
+      _start != null && _end != null && _selectedDays > 1 && !_tooLong;
 
   void _tapDay(DateTime day) {
     setState(() {
@@ -510,6 +515,17 @@ class _CyclePeriodPickerSheetState extends State<CyclePeriodPickerSheet> {
         textAlign: TextAlign.center,
         style: Theme.of(context).textTheme.bodySmall?.copyWith(
               color: context.gc.alert,
+            ),
+      );
+    }
+    // Janela pela metade (um toque só): diz o que falta em vez de deixar a
+    // pessoa encarando um botão apagado sem motivo aparente.
+    if (_end == null || _selectedDays <= 1) {
+      return Text(
+        l10n.cycleReadingPickEndDay,
+        textAlign: TextAlign.center,
+        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: context.gc.textSecondary,
             ),
       );
     }
