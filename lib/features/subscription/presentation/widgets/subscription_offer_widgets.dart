@@ -30,12 +30,40 @@ class HeroTexts {
 }
 
 class SubscriptionHero extends StatelessWidget {
-  const SubscriptionHero({super.key, this.textos});
+  const SubscriptionHero({super.key, this.textos, this.meiaEscala = false});
 
   final HeroTexts? textos;
 
+  /// Metade do tamanho — a medida dos paywalls de produto AVULSO (decisão
+  /// da dona, 23/08): mesmo Salem, mesmo halo, mesma tipografia, tudo pela
+  /// metade, para a peça não parecer maior que a assinatura.
+  final bool meiaEscala;
+
   @override
   Widget build(BuildContext context) {
+    if (meiaEscala) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.fromLTRB(8, 6, 10, 6),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(20),
+          gradient: LinearGradient(
+            colors: [context.gc.background, context.gc.surface],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            const SizedBox(width: 72, child: CatHeroArt(height: 64)),
+            const SizedBox(width: 10),
+            Expanded(child: _HeroCopy(textos: textos, meia: true)),
+          ],
+        ),
+      );
+    }
+
     return LayoutBuilder(
       builder: (context, constraints) {
         final compact = constraints.maxWidth < 300;
@@ -187,9 +215,15 @@ class CatHeroArt extends StatelessWidget {
 class _HeroCopy extends StatelessWidget {
   final bool centered;
   final bool compact;
+  final bool meia;
   final HeroTexts? textos;
 
-  const _HeroCopy({this.centered = false, this.compact = false, this.textos});
+  const _HeroCopy({
+    this.centered = false,
+    this.compact = false,
+    this.meia = false,
+    this.textos,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -206,11 +240,11 @@ class _HeroCopy extends StatelessWidget {
           textAlign: textAlign,
           style: GoogleFonts.lora(
             color: context.gc.textPrimary,
-            fontSize: compact ? 18 : 20,
+            fontSize: meia ? 12 : (compact ? 18 : 20),
             fontWeight: FontWeight.w600,
           ),
         ),
-        const SizedBox(height: 3),
+        SizedBox(height: meia ? 1 : 3),
         ShaderMask(
           shaderCallback: (bounds) => LinearGradient(
             colors: [
@@ -225,7 +259,7 @@ class _HeroCopy extends StatelessWidget {
               textAlign: textAlign,
               style: GoogleFonts.cinzelDecorative(
                 color: context.gc.textPrimary,
-                fontSize: compact ? 20 : 23,
+                fontSize: meia ? 14 : (compact ? 20 : 23),
                 fontWeight: FontWeight.w700,
                 letterSpacing: 0.4,
               ),
@@ -239,19 +273,19 @@ class _HeroCopy extends StatelessWidget {
             textAlign: textAlign,
             style: GoogleFonts.cinzelDecorative(
               color: context.gc.textPrimary,
-              fontSize: compact ? 19 : 22,
+              fontSize: meia ? 13 : (compact ? 19 : 22),
               fontWeight: FontWeight.w600,
               letterSpacing: 0.4,
             ),
           ),
         ),
-        const SizedBox(height: 8),
+        SizedBox(height: meia ? 3 : 8),
         Text.rich(
           textAlign: textAlign,
           TextSpan(
             style: GoogleFonts.lora(
               color: context.gc.textSecondary,
-              fontSize: compact ? 11 : 12,
+              fontSize: meia ? 10.5 : (compact ? 11 : 12),
               height: 1.34,
             ),
             children: textos != null
@@ -512,7 +546,7 @@ class OfferBenefitRow extends StatelessWidget {
                     benefit.vislumbre!,
                     style: TextStyle(
                       color: context.gc.textSecondary,
-                      fontSize: 12.5,
+                      fontSize: compacto ? 11.5 : 12.5,
                       height: 1.4,
                     ),
                   ),
@@ -958,12 +992,17 @@ class SubscriptionPurchaseButton extends StatelessWidget {
   /// gradiente, a mesma forma — com o verbo do produto dele.
   final String? label;
 
+  /// Meia altura (40) e fonte menor — o par do herói em [SubscriptionHero]
+  /// nos paywalls de produto avulso.
+  final bool compacto;
+
   const SubscriptionPurchaseButton({
     super.key,
     required this.loading,
     required this.enabled,
     required this.onPressed,
     this.label,
+    this.compacto = false,
   });
 
   @override
@@ -973,7 +1012,7 @@ class SubscriptionPurchaseButton extends StatelessWidget {
       opacity: enabled ? 1 : 0.45,
       child: SizedBox(
       width: double.infinity,
-      height: 50,
+      height: compacto ? 40 : 50,
         child: DecoratedBox(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(28),
@@ -1017,7 +1056,7 @@ class SubscriptionPurchaseButton extends StatelessWidget {
                 : Text(
                     label ?? AppLocalizations.of(context).premiumStartNow,
                     style: GoogleFonts.lora(
-                      fontSize: 16,
+                      fontSize: compacto ? 14 : 16,
                       fontWeight: FontWeight.w700,
                     ),
                   ),

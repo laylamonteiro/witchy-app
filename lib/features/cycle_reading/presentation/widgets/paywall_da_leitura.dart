@@ -17,14 +17,15 @@ import '../../data/services/cycle_reading_service.dart';
 /// leitura tece — seção por seção do produto escolhido — e só então mostra
 /// o valor e o botão de pagar. Quem chega ao preço já sabe o que ele compra.
 ///
-/// A FORMA é a do paywall oficial ([PremiumUpgradeSheet]) por construção, e
-/// no TAMANHO dele (decisão da dona, 23/08: "o mesmo exato componente,
-/// alterando apenas os textos necessários"): o MESMO herói
-/// ([SubscriptionHero], com os textos da Leitura via [HeroTexts]), o mesmo
-/// divisor, as mesmas peças de benefício ([OfferBenefitRow], em escala
-/// cheia), o preço na casca dos cards de plano, o MESMO botão de compra
-/// ([SubscriptionPurchaseButton]) e os mesmos selos ([GuaranteeBadges]).
-/// Dois paywalls com caras diferentes leriam como dois apps.
+/// A FORMA é a do paywall oficial ([PremiumUpgradeSheet]) por construção
+/// ("o mesmo exato componente, alterando apenas os textos necessários"),
+/// em MEIA ESCALA (as duas, decisão da dona, 23/08): produto avulso tem
+/// metade do tamanho do paywall de assinatura. São os MESMOS componentes
+/// nos modos compactos deles — [SubscriptionHero] com [HeroTexts] e
+/// `meiaEscala`, [OfferBenefitRow] `compacto`, o preço na casca dos cards
+/// de plano e o [SubscriptionPurchaseButton] `compacto`. E SEM o rodapé de
+/// mensagens ("cancele quando quiser", selos): isso é conversa de
+/// assinatura, e aqui se compra uma leitura, uma vez.
 ///
 /// A folha só APRESENTA: nenhuma lógica de compra mora aqui. Ao tocar o CTA
 /// ela se fecha e devolve a decisão pelo [onComprar] — o pop acontece ANTES
@@ -196,7 +197,7 @@ class PaywallDaLeitura extends StatelessWidget {
     final secoes = CycleReadingSections.forPeriod(periodType);
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
+      padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
       decoration: BoxDecoration(
         color: context.gc.surface,
         borderRadius: BorderRadius.circular(24),
@@ -214,6 +215,7 @@ class PaywallDaLeitura extends StatelessWidget {
           // O MESMO herói do paywall Premium — Salem, halo, tipografia —
           // com os textos da Leitura nos mesmos quatro lugares.
           SubscriptionHero(
+            meiaEscala: true,
             textos: HeroTexts(
               access: _isWeek
                   ? l10n.cycleReadingWeekTitle
@@ -223,9 +225,9 @@ class PaywallDaLeitura extends StatelessWidget {
               tagline: _linhaDoPeriodo(l10n),
             ),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 6),
           const PremiumOfferDivider(),
-          const SizedBox(height: 12),
+          const SizedBox(height: 8),
           // As seções do produto nas MESMAS peças dos benefícios do paywall
           // Premium — em meia escala: 8 na lunação, 5 na semana, e a
           // diferença visível é o que justifica a diferença de preço.
@@ -233,18 +235,19 @@ class PaywallDaLeitura extends StatelessWidget {
             children: [
               for (var i = 0; i < secoes.length; i++) ...[
                 OfferBenefitRow(
+                  compacto: true,
                   benefit: OfferBenefit.emoji(
                     separarEmoji(_tituloDaSecao(l10n, secoes[i])).emoji,
                     separarEmoji(_tituloDaSecao(l10n, secoes[i])).rotulo,
                     vislumbre: _vislumbreDaSecao(l10n, secoes[i]),
                   ),
                 ),
-                if (i != secoes.length - 1) const SizedBox(height: 14),
+                if (i != secoes.length - 1) const SizedBox(height: 6),
               ],
             ],
           ),
           if (_isWeek) ...[
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
             // Upsell honesto: diz o que SÓ a lunação traz, sem esconder que
             // a semana já entrega uma leitura inteira.
             Text(
@@ -252,44 +255,34 @@ class PaywallDaLeitura extends StatelessWidget {
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: context.gc.textSecondary,
-                fontSize: 12.5,
-                height: 1.4,
+                fontSize: 11.5,
+                height: 1.35,
               ),
             ),
           ],
-          const SizedBox(height: 14),
+          const SizedBox(height: 10),
           // O preço no MESMO cartão dos planos do paywall Premium: caixa com
           // borda, valor em Lora e o rótulo do que ele é. O aviso de leitura
           // rasa NÃO mora aqui (decisão da dona, 23/08) — ele já está na
           // tela de onde esta folha nasceu, e repetir vira alarme.
           _cartaoDoPreco(context, l10n),
-          const SizedBox(height: 10),
+          const SizedBox(height: 8),
           // O MESMO botão do paywall Premium, com o verbo do produto. Fecha
           // ANTES de avisar: o fluxo de compra é assíncrono e não pode
           // depender do context desta folha.
+          // O CTA fecha a folha: sem rodapé de mensagens depois dele
+          // (decisão da dona, 23/08) — "cancele quando quiser" e selos são
+          // conversa de assinatura, e aqui se compra uma leitura, uma vez.
           SubscriptionPurchaseButton(
             loading: false,
             enabled: true,
+            compacto: true,
             label: l10n.cycleReadingWantFull,
             onPressed: () {
               Navigator.pop(context);
               onComprar();
             },
           ),
-          const SizedBox(height: 6),
-          // O lugar do "cancele quando quiser" do paywall Premium: aqui não
-          // há assinatura para cancelar, e o que tranquiliza é a leitura
-          // ficar guardada.
-          Text(
-            l10n.cycleReadingSavedToArchive,
-            textAlign: TextAlign.center,
-            style: GoogleFonts.lora(
-              color: context.gc.textSecondary,
-              fontSize: 12,
-            ),
-          ),
-          const SizedBox(height: 8),
-          const GuaranteeBadges(),
         ],
       ),
     );
@@ -298,15 +291,15 @@ class PaywallDaLeitura extends StatelessWidget {
   /// O preço no formato dos cards de plano do paywall Premium.
   Widget _cartaoDoPreco(BuildContext context, AppLocalizations l10n) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
       decoration: BoxDecoration(
         color: Color.lerp(context.gc.surface, context.gc.lilac, 0.16)!,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: context.gc.lilac, width: 2.5),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: context.gc.lilac, width: 2),
         boxShadow: [
           BoxShadow(
             color: context.gc.lilac.withValues(alpha: 0.17),
-            blurRadius: 16,
+            blurRadius: 12,
           ),
         ],
       ),
@@ -317,7 +310,7 @@ class PaywallDaLeitura extends StatelessWidget {
             price,
             style: GoogleFonts.lora(
               color: context.gc.textPrimary,
-              fontSize: 23,
+              fontSize: 18,
               fontWeight: FontWeight.w700,
             ),
           ),
@@ -325,7 +318,7 @@ class PaywallDaLeitura extends StatelessWidget {
             l10n.cycleReadingOneTime,
             style: GoogleFonts.lora(
               color: context.gc.textSecondary,
-              fontSize: 13,
+              fontSize: 11,
             ),
           ),
         ],
