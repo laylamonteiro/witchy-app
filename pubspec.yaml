@@ -2,7 +2,12 @@ name: grimorio_de_bolso
 description: Um grimório vivo, agenda mágica e companheiro de jornada para bruxas e bruxos iniciantes
 publish_to: 'none'
 
-version: 2.0.25+126
+# Baseline só de build LOCAL. Todo build da esteira recebe a versão de
+# verdade por fora: release (Android e web) pela tag publicada, e
+# prévia/staging por "última tag + commit" (branch-validate → passo
+# "Versão coerente com produção"). Este número aparece apenas rodando
+# flutter à mão na máquina.
+version: 2.0.32+127
 
 environment:
   # São DOIS pisos, e vale o maior — o comentário anterior reconhecia o piso

@@ -323,6 +323,26 @@ jobs:
     steps:
       - name: 📥 Checkout repository
         uses: actions/checkout@v4
+        with:
+          # Histórico completo por causa das TAGS: a versão que a tela
+          # "Sobre" mostra na prévia/staging é derivada da última tag de
+          # release (abaixo), não digitada à mão.
+          fetch-depth: 0
+
+      - name: 🔢 Versão coerente com produção (última tag + commit)
+        # A prévia compila o pubspec, cuja versão é baseline morta — o
+        # "Sobre" dizia 2.0.25 para sempre e parecia deploy quebrado. Aqui a
+        # versão nasce da MESMA fonte da produção (a tag): produção em
+        # v2.0.31 → prévia mostra "2.0.31-dev.<commit>". Sobe sozinha a cada
+        # release, sem ninguém lembrar de editar arquivo nenhum.
+        id: versao
+        run: |
+          TAG="$(git tag --list 'v*' --sort=-v:refname | head -1)"
+          NOME="${TAG#v}"
+          NOME="${NOME%%+*}"
+          [ -z "$NOME" ] && NOME="0.0.0"
+          echo "nome=${NOME}-dev.${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+          echo "Prévia identificada como ${NOME}-dev.${GITHUB_SHA::7}"
 
       - name: 🔑 Conferir secrets do Cloudflare
         # Falha cedo e com mensagem clara: sem isto o erro só apareceria lá
@@ -392,6 +412,7 @@ jobs:
           # resultado sem esperar um mês. O release.yml, que é quem publica
           # em produção, tem o build dele e NÃO passa este define.
           flutter build web --release --no-wasm-dry-run \
+            --build-name="${{ steps.versao.outputs.nome }}" \
             --dart-define=SUPABASE_URL="$SUPABASE_URL" \
             --dart-define=SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY" \
             --dart-define=TURNSTILE_SITE_KEY="$TURNSTILE_SITE_KEY" \
