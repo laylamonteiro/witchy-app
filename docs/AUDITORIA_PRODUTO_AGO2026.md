@@ -19,6 +19,42 @@
 
 ---
 
+## ⚠️ Nota da dona do produto, 23/08/2026 — quem são as 116 contas
+
+O relatório lê a base sem saber a composição dela. A dona esclareceu depois:
+
+| | |
+|---|---|
+| Contas totais | 116 |
+| Testadores com código vitalício | **20 — pessoas recrutadas por ela** |
+| Contas de teste dela própria | **~6** |
+| Pagantes reais na Play | 4 |
+| Sobra de contas orgânicas | **~86** |
+
+**O que isso corrige no relatório.** Ele conclui que *"o produto segura quem
+entra"* a partir de 15 pessoas com dado no servidor — 6,4 dias de check-in em
+média, 13 das 15 ativas em 7 dias. Mas a sincronização era exclusiva do
+Premium, e o Premium no banco **são os 20 códigos vitalícios**. Logo, 12 das
+15 dessa amostra são testadores convidados, que abrem o app porque foram
+pedidos. A amostra de retenção **orgânica** é perto de zero.
+
+A conclusão pode continuar valendo; a evidência dela é bem mais fraca do que
+parece. E a outra metade — *"o gargalo é aquisição"* — fica **mais** forte:
+cerca de 30 das 116 contas são dela ou de gente que ela chamou.
+
+**Duas consequências que viram requisito:**
+
+1. **Decisão 2 (webhook do RevenueCat).** O relatório já avisa que ela pode
+   rebaixar os 20 códigos beta. Sabendo que são testadoras convidadas, isso
+   deixa de ser bug de banco e vira quebra de promessa. O `source:
+   beta | play | web` precisa existir **antes** do webhook, e o webhook nunca
+   toca em `source='beta'`.
+2. **Decisão 6 (analytics).** As ~6 contas dela são **5% da base** e entram no
+   funil como usuárias. Marcar antes é barato; descobrir depois que a taxa de
+   conversão estava suja é caro.
+
+---
+
 Auditoria do Grimório de Bolso
 Auditoria de produto · agosto de 2026 · revisão 2
 O que está escrito e não está ligado
