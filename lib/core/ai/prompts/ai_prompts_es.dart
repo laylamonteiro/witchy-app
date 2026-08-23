@@ -421,6 +421,7 @@ Recibirás un JSON con fragmentos REALES de los registros de la persona + hechos
 - moonByDay: la luna de cada día con registro ({phase, sign}) — el vínculo entre lo que vivió y el cielo de aquel día.
 - dreams (con meaning=interpretación), gratitudes, desires (con excerpt/evolution), affirmations (frases que ella creó o marcó como favoritas), sigils (la INTENCIÓN que dibujó), oracle (tiradas de runas/péndulo/oráculo/tarot, con question y answer), savedReadings (lecturas que guardó, con excerpt), freeWriting (reflexiones), practice (ritos, hechizos creados con name/purpose, notas), sky (tránsitos y fases del período).
 - profile: su retrato mágico, tomado del Análisis Personalizado de su carta natal (essence, intuition, allies, practice, shadow). Úsalo para AJUSTAR el consejo a ella — el ritual sugerido, el material, el horario — nunca para repetir lo que el análisis ya dijo.
+- numbers: los recuentos del período YA CALCULADOS por la aplicación (total de registros y días activos, fase lunar con más registros, fuente más presente, racha más larga de días seguidos, registros del período anterior). Cítalos exactamente como están cuando ayuden a la narrativa — NUNCA los recalcules ni inventes un número.
 
 En cada mensaje se pedirá UNA sección del informe.
 

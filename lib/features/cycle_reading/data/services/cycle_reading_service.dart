@@ -5,6 +5,8 @@ import '../../../../core/content/content_locale.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../diary/data/models/free_writing_model.dart';
 import '../../../diary/data/repositories/free_writing_repository.dart';
+import '../../../grimoire/data/models/spell_model.dart'
+    show MoonPhaseExtension;
 import '../../../lunar/presentation/providers/lunar_provider.dart';
 import '../models/cycle_reading_model.dart';
 import '../repositories/cycle_reading_repository.dart';
@@ -27,6 +29,13 @@ abstract final class CycleReadingSections {
   static const rituals = 'rituals';
   static const affirmation = 'affirmation';
   static const seal = 'seal';
+
+  /// "O ciclo em números": a seção DETERMINÍSTICA do relatório, calculada
+  /// em Dart e montada por código. NÃO entra em [ordered] nem em [weekly]
+  /// de propósito — essas listas guiam as CHAMADAS DE IA, e esta seção
+  /// nunca vai à IA: ela recebe os mesmos números prontos no bloco
+  /// "numbers" do material, só para citá-los sem recalcular.
+  static const numbers = 'numbers';
 
   /// A Leitura da Lunação: o produto completo, as 7 seções.
   static const ordered = [
@@ -325,6 +334,7 @@ class CycleReadingService {
       sections: sections,
       affirmation: affirmation,
       sealKeywords: sealKeywords,
+      numeros: material.numbers,
     );
     final title = reportTitle(
       credit.periodStart,
@@ -402,6 +412,7 @@ class CycleReadingService {
     required Map<String, String> sections,
     required String affirmation,
     required List<String> sealKeywords,
+    NumerosDoCiclo? numeros,
   }) {
     final l10n = _l10n;
     final format = DateFormat('dd/MM/yyyy');
@@ -431,6 +442,12 @@ class CycleReadingService {
 
     section(l10n.cycleReadingSectionPortrait,
         sections[CycleReadingSections.portrait] ?? '');
+    // Logo após o retrato: os números reais do período. É a âncora factual
+    // do relatório — a pessoa lê a narrativa e, em seguida, o chão dela.
+    // Montada por CÓDIGO, nunca por IA (ver [numbersSectionBody]).
+    if (numeros != null) {
+      section(l10n.cycleReadingSectionNumbers, numbersSectionBody(numeros));
+    }
     section(l10n.cycleReadingSectionThreads,
         sections[CycleReadingSections.threads] ?? '');
     section(
@@ -447,6 +464,52 @@ class CycleReadingService {
     );
 
     return buffer.toString().trimRight();
+  }
+
+  /// O corpo da seção "O ciclo em números" — montado por CÓDIGO, nunca por
+  /// IA: são contagens reais, e número real não se pede a um modelo de
+  /// linguagem. Linhas sem dado (período vazio → sem fase top, sem fonte,
+  /// sem sequência) simplesmente não entram; o total e o período anterior
+  /// ficam sempre, porque zero ali é informação verdadeira.
+  static String numbersSectionBody(NumerosDoCiclo numeros) {
+    final l10n = _l10n;
+    final linhas = <String>[
+      l10n.cycleNumbersRecords(
+        numeros.totalRecords,
+        numeros.activeDays,
+        numeros.periodDays,
+      ),
+      if (numeros.topPhase != null)
+        l10n.cycleNumbersTopPhase(
+          numeros.topPhase!.displayName,
+          numeros.topPhaseCount,
+        ),
+      if (numeros.topSource != null)
+        l10n.cycleNumbersTopSource(
+          _nomeDaFonte(numeros.topSource!),
+          numeros.topSourceCount,
+        ),
+      if (numeros.longestStreak > 0)
+        l10n.cycleNumbersStreak(numeros.longestStreak),
+      l10n.cycleNumbersPrevious(numeros.previousPeriodRecords),
+    ];
+    // Lista Markdown: cada número em sua linha, com o marcador que o
+    // renderizador das leituras já estiliza.
+    return linhas.map((linha) => '- $linha').join('\n');
+  }
+
+  /// O nome de cada fonte é um SUBSTANTIVO próprio para frase ("Sonhos"),
+  /// não o rótulo do desligamento da intro ("Usar meus sonhos") — reusar o
+  /// rótulo deixava a linha torta: "Fonte mais presente: Usar meus sonhos".
+  /// As famílias são as mesmas quatro dos desligamentos, só o nome muda.
+  static String _nomeDaFonte(String source) {
+    final l10n = _l10n;
+    return switch (source) {
+      NumerosDoCiclo.sourceDreams => l10n.cycleSourceDreams,
+      NumerosDoCiclo.sourceJournals => l10n.cycleSourceJournals,
+      NumerosDoCiclo.sourceDivination => l10n.cycleSourceDivination,
+      _ => l10n.cycleSourcePractice,
+    };
   }
 
   /// Recupera a afirmação de um relatório já salvo (linha de citação `>`)

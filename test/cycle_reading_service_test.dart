@@ -77,10 +77,11 @@ void main() {
         await CycleReadingRepository().findForPeriod(userId, periodStart);
     expect(stored!.isGenerated, isTrue);
 
-    // …e o relatório contém as 7 seções na ordem + os compartilháveis.
+    // …e o relatório contém as 7 seções de IA + a seção determinística
+    // "O ciclo em números" (montada por código) + os compartilháveis.
     final markdown = result.writing.content;
     final headings = RegExp(r'^## ', multiLine: true).allMatches(markdown);
-    expect(headings.length, 7);
+    expect(headings.length, 8);
     expect(markdown, contains('> Eu confio no meu ciclo.'));
     expect(markdown, contains('**raiz**'));
     expect(
@@ -333,7 +334,9 @@ void main() {
     expect(asked, isNot(contains(CycleReadingSections.seal)));
 
     final markdown = result.writing.content;
-    expect(RegExp(r'^## ', multiLine: true).allMatches(markdown).length, 4);
+    // 4 seções de IA + a seção determinística dos números, que existe nas
+    // duas janelas (é calculada pelo app, não custa chamada de IA).
+    expect(RegExp(r'^## ', multiLine: true).allMatches(markdown).length, 5);
     // A afirmação (o cartão compartilhável) continua nas duas janelas.
     expect(result.affirmation, 'Eu confio no meu ciclo.');
     expect(result.sealKeywords, isEmpty);

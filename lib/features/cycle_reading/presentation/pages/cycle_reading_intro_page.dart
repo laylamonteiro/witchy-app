@@ -25,6 +25,7 @@ import '../../data/models/cycle_reading_model.dart';
 import '../../data/services/cycle_reading_composer.dart';
 import '../../data/services/cycle_reading_service.dart';
 import '../widgets/cycle_period_picker_sheet.dart';
+import '../widgets/paywall_da_leitura.dart';
 import 'cycle_reading_report_page.dart';
 
 /// Tela de compra/geração da Leitura do Ciclo (semana ou lunação).
@@ -194,8 +195,10 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
     });
   }
 
-  /// Preços das duas janelas — carregados juntos para o seletor já nascer
-  /// com os dois valores à vista (a escolha é de preço, não só de janela).
+  /// Preços das duas janelas — carregados na abertura para o paywall da
+  /// leitura já nascer com o valor certo. A tela em si não estampa preço
+  /// nenhum (decisão da dona, 23/08): ele aparece só na folha, depois de
+  /// ela explicar o que a leitura entrega.
   Future<void> _loadPrices() async {
     // A loja precisa estar configurada para haver preço. Contas que entram
     // sem passar pelo login de servidor (admin local, simulação de plano)
@@ -644,9 +647,10 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
             dailyCounts: densidade,
             firstDate: primeiroDia,
             lastDate: ultimoDia,
-            weekPrice: _prices[RevenueCatConfig.cycleReadingWeekProductId],
-            lunationPrice:
-                _prices[RevenueCatConfig.cycleReadingMonthProductId],
+            // Sem weekPrice/lunationPrice de propósito: o preço saiu da
+            // tela (decisão da dona, 23/08) e passou a morar no paywall da
+            // leitura — o resumo do calendário mostra só o produto. Nulos,
+            // o seletor omite o valor sozinho.
             lifetimeIncluded: _hasLifetime,
           ),
           if (_customRejection != null)
@@ -986,15 +990,16 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
         _ => l10n.cycleReadingSectionSeal,
       };
 
-  /// O cartão da leitura: o que a janela escolhida virou, o que ela tem
-  /// dentro — e, só quando pedido, quanto custa.
+  /// O cartão da leitura: o que a janela escolhida virou e o que ela tem
+  /// dentro. O preço NÃO mora mais aqui (decisão da dona, 23/08): ele
+  /// aparece pela primeira vez no paywall da leitura, depois dos bullets do
+  /// que ela entrega. O cabeçalho só conserva a etiqueta do Vitalício —
+  /// "incluída" não é preço, é o aviso de que não haverá cobrança.
   Widget _buildOfferCard(AppLocalizations l10n) {
     final format = DateFormat('dd/MM/yyyy');
     final period = _period;
     final isWeek = _periodType == CycleReadingPeriodType.week;
     final incluida = _lifetimeCoversThisWindow;
-    final preco =
-        incluida ? l10n.cycleReadingLifetimeTag : _prices[_productId];
     final titulo =
         isWeek ? l10n.cycleReadingWeekTitle : l10n.cycleReadingLunationTitle;
 
@@ -1035,9 +1040,9 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
                   ],
                 ),
               ),
-              if (preco != null)
+              if (incluida)
                 Text(
-                  preco,
+                  l10n.cycleReadingLifetimeTag,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         color: context.gc.starYellow,
                         fontWeight: FontWeight.bold,
@@ -1200,12 +1205,22 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
             ),
       );
     }
-    // Um toque só: o valor já está no cabeçalho do cartão e no resumo do
-    // calendário, então o botão leva direto para o pagamento. Pedir um
-    // toque para revelar o preço e outro para pagar era um degrau a troco
-    // de nada.
+    // O botão abre o paywall da leitura, não o pagamento (decisão da dona,
+    // 23/08): o preço saiu desta tela e mora na folha, que explica seção
+    // por seção o que a leitura entrega ANTES de cobrar. O toque a mais é
+    // proposital — quem chega ao valor já sabe o que ele compra.
+    final period = _period;
     return ElevatedButton.icon(
-      onPressed: _buy,
+      onPressed: () => mostrarPaywallDaLeitura(
+        context,
+        periodType: _periodType,
+        periodStart: period.start,
+        periodEnd: period.end,
+        price: price,
+        recordCount: _recordCount,
+        minRecords: CycleReadingComposer.minRecordsFor(_periodType),
+        onComprar: _buy,
+      ),
       icon: const Icon(Icons.auto_awesome, size: 18),
       label: Text(l10n.cycleReadingWantFull),
     );
