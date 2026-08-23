@@ -6,6 +6,7 @@ import '../../../../core/services/payment_service.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/magical_card.dart';
+import '../../../../core/widgets/staggered_entrance.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../auth/data/models/user_model.dart';
 import '../../../auth/presentation/widgets/premium_blur_widget.dart';
@@ -71,7 +72,26 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
           onPressed: () => Navigator.of(context).pop(),
         ),
       ),
-      body: Consumer<AuthProvider>(
+      // Um halo de luz no topo, atrás de tudo: a tela era fundo chapado
+      // com cartões do mesmo tom empilhados, sem nenhuma profundidade.
+      //
+      // Aqui NÃO entra o céu estrelado das outras telas, e o motivo é
+      // técnico: o starfield anima em laço eterno, e cinco testes desta
+      // página usam `pumpAndSettle`, que espera os quadros pararem — ele os
+      // travaria para sempre. O gradiente dá a profundidade sem animar; o
+      // movimento desta tela vem da cascata dos benefícios, que é finita.
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: RadialGradient(
+            center: const Alignment(0, -1.1),
+            radius: 1.3,
+            colors: [
+              Color.lerp(context.gc.background, context.gc.lilac, 0.14)!,
+              context.gc.background,
+            ],
+          ),
+        ),
+        child: Consumer<AuthProvider>(
         builder: (context, authProvider, _) {
           return ListenableBuilder(
             listenable: _paymentService,
@@ -130,6 +150,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
             },
           );
         },
+        ),
       ),
     );
   }
@@ -359,18 +380,27 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
                 ),
               ),
               const SizedBox(height: 12),
-              _buildFeatureItem(
-                  Icons.auto_awesome, _l10n.subsBenefitUnlimitedForecasts),
-              _buildFeatureItem(
-                  Icons.book, _l10n.subsBenefitFullGrimoireAccess),
-              _buildFeatureItem(Icons.psychology, _l10n.subsBenefitAdvisor),
-              _buildFeatureItem(
-                  Icons.account_circle, _l10n.subsBenefitProfile),
-              _buildFeatureItem(Icons.stars, _l10n.subsBenefitTransits),
-              _buildFeatureItem(
-                  Icons.wb_sunny, _l10n.subsBenefitDailyWeather),
-              _buildFeatureItem(
-                  Icons.calendar_today, _l10n.subsBenefitLunarCalendar),
+              // Os benefícios entram em cascata, um atrás do outro, em vez
+              // de a lista inteira aparecer pronta: é o olho sendo levado
+              // item a item — e é a mesma entrada do Seu Dia.
+              StaggeredEntrance(
+                maxAnimated: 7,
+                children: [
+                  _buildFeatureItem(
+                      Icons.auto_awesome, _l10n.subsBenefitUnlimitedForecasts),
+                  _buildFeatureItem(
+                      Icons.book, _l10n.subsBenefitFullGrimoireAccess),
+                  _buildFeatureItem(
+                      Icons.psychology, _l10n.subsBenefitAdvisor),
+                  _buildFeatureItem(
+                      Icons.account_circle, _l10n.subsBenefitProfile),
+                  _buildFeatureItem(Icons.stars, _l10n.subsBenefitTransits),
+                  _buildFeatureItem(
+                      Icons.wb_sunny, _l10n.subsBenefitDailyWeather),
+                  _buildFeatureItem(
+                      Icons.calendar_today, _l10n.subsBenefitLunarCalendar),
+                ],
+              ),
             ],
           ),
         ),

@@ -31,14 +31,18 @@ void main() {
 
   testWidgets('o Desbloquear Premium da descoberta abre o paywall',
       (tester) async {
+    // Sem `pumpAndSettle` nesta tela: o céu estrelado e o véu vivo animam
+    // em laço, e settle espera os quadros PARAREM — esperaria para sempre.
+    // Quadros contados na mão, que é o que as telas com starfield já fazem.
     await tester.pumpWidget(tela());
-    await tester.pumpAndSettle();
+    await tester.pump(const Duration(milliseconds: 600));
 
     final cta = find.text('Desbloquear Premium').first;
     await tester.ensureVisible(cta);
-    await tester.pumpAndSettle();
+    await tester.pump(const Duration(milliseconds: 300));
     await tester.tap(cta);
-    await tester.pumpAndSettle();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 600));
 
     expect(find.byType(PremiumUpgradeSheet), findsOneWidget,
         reason: 'quem tocou já viu o que quer — o preço vem sem desvio');

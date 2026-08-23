@@ -4,6 +4,9 @@ import '../../../../core/theme/app_theme.dart' show ResponsiveAppBarTitle;
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/paged_reading.dart';
 import '../../../../core/widgets/premium_locked_preview.dart';
+import '../../../../core/widgets/staggered_entrance.dart';
+import '../../../../core/widgets/starfield_background.dart';
+import '../../../auth/presentation/widgets/breathing_badge.dart';
 import '../../../auth/presentation/widgets/premium_blur_widget.dart'
     show showPremiumUpgradePaywall;
 import '../../../../l10n/generated/app_localizations.dart';
@@ -47,11 +50,18 @@ class PaginaDeDescoberta extends StatelessWidget {
         elevation: 0,
         title: ResponsiveAppBarTitle(l10n.conviteDescobertaTitulo),
       ),
-      body: SafeArea(
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 540),
-            child: PagedReading(pages: _pecas(context, l10n)),
+      // Céu estrelado atrás de tudo: a tela era preto chapado com blocos
+      // cinzentos em cima, e nada nela dizia que o app é sobre céu. O
+      // mesmo widget que já dá atmosfera às telas de conteúdo.
+      body: StarfieldBackground(
+        starCount: 34,
+        intensity: 0.55,
+        child: SafeArea(
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 540),
+              child: PagedReading(pages: _pecas(context, l10n)),
+            ),
           ),
         ),
       ),
@@ -144,8 +154,10 @@ class _Peca extends StatelessWidget {
   Widget build(BuildContext context) {
     final tema = Theme.of(context);
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    // A página se monta em cascata em vez de aparecer pronta: título,
+    // linha e véu entram um atrás do outro. É a mesma entrada do Seu Dia —
+    // e ela sozinha já tira desta tela a cara de folheto parado.
+    return StaggeredEntrance(
       children: [
         Text(
           titulo,
@@ -191,6 +203,32 @@ class _Fechamento extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const SizedBox(height: 24),
+        // A página da decisão era a mais vazia das seis: três linhas e um
+        // botão num mar de preto. O emblema que respira lhe dá um centro —
+        // e é o mesmo movimento das telas de entrada.
+        Center(
+          child: BreathingBadge(
+            glowColor: context.gc.lilac,
+            haloSize: 108,
+            child: Container(
+              width: 66,
+              height: 66,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: context.gc.lilac.withValues(alpha: 0.16),
+                border: Border.all(
+                  color: context.gc.lilac.withValues(alpha: 0.45),
+                ),
+              ),
+              child: Icon(
+                Icons.auto_awesome,
+                size: 30,
+                color: context.gc.lilac,
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 26),
         Text(
           l10n.conviteFechamentoTitulo,
           style: tema.textTheme.headlineSmall?.copyWith(
