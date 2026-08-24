@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
 import '../utils/um_de_cada_vez.dart';
+import 'corrimao_de_voltar.dart';
 
 /// O porteiro do voltar: na web, o fim da linha para todo `popRoute` que o
 /// motor manda.
@@ -37,8 +38,10 @@ class PorteiroDoVoltar with WidgetsBindingObserver {
   PorteiroDoVoltar({
     required this.raiz,
     this.naWeb = kIsWeb,
+    bool Function()? veioDoCorrimao,
     void Function(String linha)? registrar,
-  }) : _registrar = registrar ?? _noConsole;
+  })  : _veioDoCorrimao = veioDoCorrimao ?? oUltimoVoltarVeioDoCorrimao,
+        _registrar = registrar ?? _noConsole;
 
   /// O Navigator raiz. Nulo enquanto ele não montou — e também quando quem
   /// está na tela é outro `MaterialApp` (a tela de erro de boot).
@@ -50,6 +53,7 @@ class PorteiroDoVoltar with WidgetsBindingObserver {
   /// `flutter_test`.
   final bool naWeb;
 
+  final bool Function() _veioDoCorrimao;
   final void Function(String) _registrar;
 
   /// Um voltar por vez. `maybePop` é assíncrono e o `PopScope` da Home chama o
@@ -87,11 +91,40 @@ class PorteiroDoVoltar with WidgetsBindingObserver {
   @override
   Future<bool> didPopRoute() async {
     if (!naWeb) return false;
+    await _entregarAoApp('popRoute');
+    // SEMPRE `true` na web, inclusive sem navegador e inclusive depois de um
+    // erro: é esta linha que torna o `exit()` do motor inalcançável. O motor
+    // ignora a resposta (`history.dart` passa `(_) {}` como callback), então
+    // isto não custa nada a ele.
+    return true;
+  }
 
+  /// O outro jeito de um voltar chegar, e o motivo de o corrimão precisar de
+  /// um lado Dart.
+  ///
+  /// Com os degraus de pé, um voltar aterrissa numa entrada `flutter` e o
+  /// motor responde com `pushRoute` em vez de `popRoute` (engine 3.47.0, ramo
+  /// `_isFlutterEntry` do `onPopState`). A resposta PADRÃO do framework a isso
+  /// é `navigator.pushNamed(...)` — ou seja, o voltar EMPILHARIA uma tela.
+  /// Aqui ele vira o que é.
+  ///
+  /// O que NÃO pode virar voltar é o endereço digitado na barra, que chega
+  /// pela mesma mensagem. Quem separa os dois é o vigia do corrimão.
+  @override
+  Future<bool> didPushRouteInformation(
+    RouteInformation routeInformation,
+  ) async {
+    if (!naWeb) return false;
+    if (!_veioDoCorrimao()) return false;
+    await _entregarAoApp('pushRoute ${routeInformation.uri}');
+    return true;
+  }
+
+  Future<void> _entregarAoApp(String origem) async {
     voltaresTratados++;
     final navegador = raiz();
     _registrar(
-      '#$voltaresTratados — navegador raiz '
+      '#$voltaresTratados ($origem) — navegador raiz '
       '${navegador == null ? 'ausente' : 'presente'}',
     );
 
@@ -113,12 +146,6 @@ class PorteiroDoVoltar with WidgetsBindingObserver {
         ));
       }
     }
-
-    // SEMPRE `true` na web, inclusive sem navegador e inclusive depois de um
-    // erro: é esta linha que torna o `exit()` do motor inalcançável. O motor
-    // ignora a resposta (`history.dart` passa `(_) {}` como callback), então
-    // isto não custa nada a ele.
-    return true;
   }
 
   /// Só o console, de propósito: `debugLog` reescreve o buffer inteiro no

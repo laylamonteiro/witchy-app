@@ -568,7 +568,7 @@ class CycleReadingReportPage extends StatelessWidget {
       context,
       card: ShareCard(
         child: AchievementShareContent(
-          emoji: '🌙',
+          emoji: '🔮',
           title: l10n.cycleReadingSectionSeal,
           highlight: keywords.join(' · '),
           extraLine: periodLine,

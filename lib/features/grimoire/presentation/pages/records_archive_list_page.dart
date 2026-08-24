@@ -163,37 +163,61 @@ class _RecordsArchiveListPageState extends State<RecordsArchiveListPage> {
                   ),
                   child: Container(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 10,
+                      horizontal: 14,
+                      vertical: 14,
                     ),
-                    // Dourada, e não lilás como o resto do acervo: a Leitura
-                    // do Ciclo é a peça rara da tela — a única que custa e a
-                    // única tecida de tudo o que ela registrou. O ouro é o
-                    // que a separa da lista de entradas ao redor.
+                    // Dourada e ACESA, não lilás como o resto do acervo: a
+                    // Leitura do Ciclo é a peça rara da tela — a única que
+                    // custa e a única tecida de tudo o que ela registrou.
+                    //
+                    // O ouro discreto de antes se perdia no meio da lista: num
+                    // fundo quase preto, 8% de opacidade é quase nada. Aqui o
+                    // card tem gradiente, borda cheia e um halo por fora, para
+                    // ser a primeira coisa que o olho encontra ao abrir a tela.
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(12),
-                      color: context.gc.gold.withValues(alpha: 0.08),
-                      border: Border.all(
-                        color: context.gc.gold.withValues(alpha: 0.55),
+                      borderRadius: BorderRadius.circular(14),
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          context.gc.gold.withValues(alpha: 0.30),
+                          context.gc.starYellow.withValues(alpha: 0.14),
+                          context.gc.gold.withValues(alpha: 0.24),
+                        ],
                       ),
+                      border: Border.all(
+                        color: context.gc.gold.withValues(alpha: 0.85),
+                        width: 1.5,
+                      ),
+                      // O halo é o que faz o card parecer ACESO em vez de
+                      // apenas colorido.
+                      boxShadow: [
+                        BoxShadow(
+                          color: context.gc.gold.withValues(alpha: 0.35),
+                          blurRadius: 16,
+                          spreadRadius: 1,
+                        ),
+                      ],
                     ),
                     child: Row(
                       children: [
-                        const Text('🌙', style: TextStyle(fontSize: 18)),
-                        const SizedBox(width: 10),
+                        const Text('🔮', style: TextStyle(fontSize: 22)),
+                        const SizedBox(width: 12),
                         Expanded(
                           child: Text(
                             l10n.cycleReadingTitle,
                             style: TextStyle(
-                              color: context.gc.gold,
-                              fontWeight: FontWeight.w600,
+                              color: context.gc.starYellow,
+                              fontWeight: FontWeight.w700,
+                              fontSize: 16,
+                              letterSpacing: 0.3,
                             ),
                           ),
                         ),
                         Icon(
                           Icons.chevron_right,
-                          size: 20,
-                          color: context.gc.gold.withValues(alpha: 0.7),
+                          size: 22,
+                          color: context.gc.starYellow,
                         ),
                       ],
                     ),

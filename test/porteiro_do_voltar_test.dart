@@ -46,10 +46,12 @@ void main() {
     WidgetTester tester,
     NavigatorState? Function() raiz, {
     bool naWeb = true,
+    bool veioDoCorrimao = true,
   }) {
     final porteiro = PorteiroDoVoltar(
       raiz: raiz,
       naWeb: naWeb,
+      veioDoCorrimao: () => veioDoCorrimao,
       registrar: (_) {},
     );
     tester.binding.addObserver(porteiro);
@@ -211,6 +213,72 @@ void main() {
 
     expect(find.text('PRIMEIRA'), findsOneWidget, reason: 'só a de cima saiu');
     expect(tester.takeException(), isNull);
+  });
+
+  /// Manda um `pushRoute`, que é o que o motor despacha quando o voltar
+  /// aterrissa num degrau do corrimão (ramo `_isFlutterEntry` do `onPopState`).
+  Future<void> pushRouteDoMotor(WidgetTester tester, String rota) async {
+    await tester.binding.defaultBinaryMessenger.handlePlatformMessage(
+      'flutter/navigation',
+      const JSONMethodCodec()
+          .encodeMethodCall(MethodCall('pushRoute', rota)),
+      (_) {},
+    );
+    await tester.pumpAndSettle();
+  }
+
+  testWidgets('CORRIMÃO: um pushRoute vindo de um degrau DESEMPILHA a tela',
+      (tester) async {
+    // Com os degraus de pé, o voltar chega como `pushRoute`. Se ninguém
+    // converter, o framework responde com `pushNamed` e o voltar EMPILHA —
+    // o defeito que este teste guarda.
+    final raiz = GlobalKey<NavigatorState>();
+    final porteiro = instalarPrimeiro(tester, () => raiz.currentState);
+    await tester.pumpWidget(
+      MaterialApp(
+        navigatorKey: raiz,
+        home: const Scaffold(body: Text('RAIZ')),
+      ),
+    );
+    raiz.currentState!.push(
+      MaterialPageRoute<void>(builder: (_) => const Text('DETALHE')),
+    );
+    await tester.pumpAndSettle();
+
+    await pushRouteDoMotor(tester, '/');
+
+    expect(find.text('DETALHE'), findsNothing, reason: 'o voltar desempilhou');
+    expect(find.text('RAIZ'), findsOneWidget);
+    expect(porteiro.voltaresTratados, 1);
+  });
+
+  testWidgets('CORRIMÃO: endereço DIGITADO na barra não vira voltar',
+      (tester) async {
+    // O motor manda `pushRoute` nos dois casos. O que veio da barra de
+    // endereço tem de seguir o caminho normal do framework — convertê-lo em
+    // voltar tiraria a Bruxa da tela que ela pediu.
+    final raiz = GlobalKey<NavigatorState>();
+    final porteiro = instalarPrimeiro(
+      tester,
+      () => raiz.currentState,
+      veioDoCorrimao: false,
+    );
+    await tester.pumpWidget(
+      MaterialApp(
+        navigatorKey: raiz,
+        home: const Scaffold(body: Text('RAIZ')),
+      ),
+    );
+    raiz.currentState!.push(
+      MaterialPageRoute<void>(builder: (_) => const Text('DETALHE')),
+    );
+    await tester.pumpAndSettle();
+
+    await pushRouteDoMotor(tester, '/outra');
+
+    expect(find.text('DETALHE'), findsOneWidget,
+        reason: 'não é voltar: o porteiro deixa passar');
+    expect(porteiro.voltaresTratados, 0);
   });
 
   testWidgets('FORA da web o porteiro é inerte — sair é ir para segundo plano',

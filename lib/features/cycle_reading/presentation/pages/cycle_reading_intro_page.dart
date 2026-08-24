@@ -771,10 +771,7 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
                 padding: const EdgeInsets.symmetric(vertical: 10),
                 child: Row(
                   children: [
-                    Text(
-                      leitura.isWeekly ? '🌤️' : '🌙',
-                      style: const TextStyle(fontSize: 20),
-                    ),
+                    const Text('🔮', style: TextStyle(fontSize: 20)),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Column(
@@ -1021,7 +1018,7 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('🌙✨', style: TextStyle(fontSize: 28)),
+              const Text('🔮✨', style: TextStyle(fontSize: 28)),
               const SizedBox(width: 10),
               Expanded(
                 child: Column(

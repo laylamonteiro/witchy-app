@@ -43,6 +43,7 @@ import 'features/lunar/presentation/providers/lunar_provider.dart';
 import 'features/wheel_of_year/presentation/providers/wheel_of_year_provider.dart';
 import 'features/astrology/presentation/providers/astrology_provider.dart';
 import 'core/navigation/janela_de_login.dart';
+import 'core/navigation/corrimao_de_voltar.dart';
 import 'core/navigation/observador_de_rotas_raiz.dart';
 import 'core/navigation/porteiro_do_voltar.dart';
 
@@ -62,6 +63,13 @@ void main() {
   // são logados em vez de derrubarem o app silenciosamente — na web eles
   // viravam um "Uncaught Error" minificado no console e tela branca.
   runZonedGuarded<void>(() async {
+    // O VIGIA DO CORRIMÃO antes de tudo: assim o ouvinte de `popstate` do app
+    // entra na fila ANTES do ouvinte do motor (que só nasce quando o Navigator
+    // raiz monta) e lê o estado do pouso antes de qualquer reação dele. Não
+    // escreve nada no histórico — quem ergue os degraus é o script de
+    // `web/index.html`, que roda antes deste código existir.
+    instalarVigiaDoCorrimao();
+
     // Precisa rodar DENTRO da zona: binding e runApp na mesma zona, senão o
     // Flutter emite aviso de "Zone mismatch" e os erros escapam da guarda.
     WidgetsFlutterBinding.ensureInitialized();
