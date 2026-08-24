@@ -202,6 +202,60 @@
       };
       window.addEventListener('pointerdown', repor, { capture: true, passive: true });
       window.addEventListener('keydown', repor, { capture: true });
+
+      // A JANELINHA DE DIAGNÓSTICO — só aparece com `?diag=1` no endereço.
+      //
+      // Existe porque a medição que faltava não é obtível de fora: o Chrome
+      // 151 no Android não tem mais o menu de pressão longa que mostrava a
+      // pilha de voltar da aba, e o `chrome://history` mostra visitas, não
+      // entradas de histórico. Sem isto, saber se os degraus existem no
+      // aparelho dela depende de adivinhação — e já foram quatro.
+      //
+      // Ela mostra, ao vivo e no momento do gesto: o tamanho do histórico, em
+      // que degrau estamos, o que o motor veria no estado atual, e quantos
+      // `popstate` este documento recebeu. Se a aba fechar com `popstates`
+      // parado, o voltar nunca chegou ao documento.
+      if (window.location.search.indexOf('diag=1') === -1) return;
+
+      var popstates = 0;
+      var ultimos = [];
+      var caixa = document.createElement('div');
+      caixa.style.cssText =
+        'position:fixed;left:0;right:0;bottom:0;z-index:2147483647;' +
+        'background:rgba(0,0,0,.85);color:#8CE99A;font:11px/1.35 monospace;' +
+        'padding:6px 8px;pointer-events:none;white-space:pre-wrap;';
+
+      function classificar(estado) {
+        if (!estado || typeof estado !== 'object') return 'DESCONHECIDO';
+        if (typeof estado[CHAVE] === 'number') return 'degrau' + estado[CHAVE];
+        if (estado.flutter === true) return 'guarda-do-motor';
+        if (estado.origin === true) return 'origem-do-motor';
+        return 'outro';
+      }
+
+      function pintar() {
+        caixa.textContent =
+          'len=' + history.length + '  nivel=' + nivel +
+          '  aqui=' + classificar(history.state) +
+          '  popstates=' + popstates +
+          '\n' + (ultimos.slice(-5).join('  |  ') || '(nenhum voltar ainda)');
+      }
+
+      window.addEventListener('popstate', function (evento) {
+        popstates++;
+        ultimos.push('#' + popstates + ' ' + classificar(evento.state));
+        pintar();
+      });
+      window.addEventListener('pointerdown', pintar, { capture: true, passive: true });
+
+      document.addEventListener('DOMContentLoaded', function () {
+        document.body.appendChild(caixa);
+        pintar();
+      });
+      // O motor reescreve o estado do topo a cada rota anunciada, então a
+      // janelinha se repinta sozinha para não mostrar número velho.
+      setInterval(pintar, 1000);
+      pintar();
     })();
   </script>
 
