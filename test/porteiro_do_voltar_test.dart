@@ -63,12 +63,20 @@ void main() {
   /// `WidgetsBinding.handlePopRoute()`. Usar o canal (e não o método, que é
   /// `@protected`) exercita a cadeia inteira, que é justamente o que está sob
   /// suspeita.
-  Future<void> voltarDoNavegador(WidgetTester tester) async {
-    await tester.binding.defaultBinaryMessenger.handlePlatformMessage(
+  /// Só ENTREGA o gesto, sem bombear. Duas destas podem estar em voo ao mesmo
+  /// tempo; duas [WidgetTester.pumpAndSettle] NÃO — `TestAsyncUtils` mantém uma
+  /// pilha de escopos guardados, e a segunda estoura com "Guarded function
+  /// conflict". Por isso o teste de rajada usa esta, e não a de baixo.
+  Future<void> enviarVoltar(WidgetTester tester) {
+    return tester.binding.defaultBinaryMessenger.handlePlatformMessage(
       'flutter/navigation',
       const JSONMethodCodec().encodeMethodCall(const MethodCall('popRoute')),
       (_) {},
     );
+  }
+
+  Future<void> voltarDoNavegador(WidgetTester tester) async {
+    await enviarVoltar(tester);
     await tester.pumpAndSettle();
   }
 
@@ -193,8 +201,10 @@ void main() {
         .push(MaterialPageRoute<void>(builder: (_) => const Text('SEGUNDA')));
     await tester.pumpAndSettle();
 
-    final a = voltarDoNavegador(tester);
-    final b = voltarDoNavegador(tester);
+    // Os dois gestos entram ANTES de qualquer bombeamento — é assim que eles
+    // ficam em voo ao mesmo tempo, que é o que o portão tem de segurar.
+    final a = enviarVoltar(tester);
+    final b = enviarVoltar(tester);
     await a;
     await b;
     await tester.pumpAndSettle();

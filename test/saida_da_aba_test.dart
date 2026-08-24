@@ -2,14 +2,20 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:grimorio_de_bolso/features/home/presentation/caminhada_do_voltar.dart';
 
-/// Os dez testes da caminhada injetam uma saída FALSA — eles provam a
-/// caminhada, não a saída. Este arquivo olha a saída DE VERDADE, e a única
-/// afirmação que interessa é esta: na web ela não existe.
+/// Os testes da caminhada injetam uma saída FALSA — eles provam a caminhada,
+/// não a saída. Este arquivo olha a [SaidaDaAbaReal], e a única afirmação que
+/// interessa é esta: na web ela não existe.
 ///
 /// Guarda o defeito de 23/08: um `history.go(-2)` autorizado por
 /// `history.length > 3`. Como o motor só usa `replaceState` depois do boot, esse
-/// número mede o que existia na aba ANTES do app — quem abrisse o Grimório por
+/// número media o que existia na aba ANTES do app — quem abrisse o Grimório por
 /// um link passava no teste, e o segundo voltar no Seu Dia a tirava de lá.
+///
+/// A decisão saiu de uma importação condicional para cá justamente por causa
+/// destes testes: a suíte roda na VM, onde o `dart.library.js_interop` escolhia
+/// sempre o stub — o arquivo da web nunca era compilado, e um teste que
+/// afirmasse "na web não sai" passaria sem nunca ter olhado o código da web.
+/// Com o `naWeb` injetável, os DOIS lados são exercitados de verdade.
 void main() {
   test('na web o app nunca entrega a aba', () {
     expect(const SaidaDaAbaReal(naWeb: true).podeSair(), isFalse);

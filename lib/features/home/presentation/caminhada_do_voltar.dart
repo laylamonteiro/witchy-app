@@ -2,7 +2,6 @@ import 'package:flutter/foundation.dart' show kIsWeb, visibleForTesting;
 import 'package:flutter/services.dart' show SystemNavigator;
 import 'package:flutter/widgets.dart' show NavigatorState;
 
-import '../../../core/navigation/saida_do_app.dart';
 import '../../../core/utils/saida_por_dois_toques.dart';
 
 /// Como o app SAI — a borda que separa o que a caminhada decide do que a
@@ -11,14 +10,45 @@ import '../../../core/utils/saida_por_dois_toques.dart';
 abstract class SaidaDaAba {
   const SaidaDaAba();
 
-  /// Há para onde ir ao sair? Na web, uma aba que nasceu no app não tem
-  /// nada antes dele — e nenhuma página fecha uma aba que não abriu.
+  /// Há para onde ir ao sair? Na web nunca: ver [SaidaDaAbaReal].
   bool podeSair();
 
   void sair();
 }
 
 /// A saída de verdade: segundo plano no celular, e NADA na web.
+///
+/// NA WEB O VOLTAR NÃO SAI DO APP. Ponto. Isto já morou atrás de uma
+/// importação condicional (`saida_do_app.dart` + stub + web), onde havia um
+/// `history.go(-2)` autorizado por `history.length > 3`. A pergunta que essa
+/// conta tentava responder — "existe uma página real antes do app nesta aba?"
+/// — é INDECIDÍVEL de dentro da página, e a conta respondia outra coisa:
+///
+///  * `SingleEntryBrowserHistory.setRouteName` sempre chama
+///    `_setupFlutterEntry(replace: true)`, ou seja, `replaceState` (engine
+///    3.47.0, `web_ui/.../navigation/history.dart`). O histórico do app NUNCA
+///    cresce: as duas entradas do motor são as mesmas do primeiro quadro até o
+///    último. Logo `length` media exclusivamente o que já existia na aba ANTES
+///    do app;
+///  * e media mal: numa aba nova o Chrome ainda conta a página inicial, e um
+///    retorno de login social soma entradas próprias.
+///
+/// O resultado era uma moeda ao ar. Quem abrisse o app por um link — uma
+/// busca, o WhatsApp, o Instagram — passava no teste, e então o segundo voltar
+/// deliberado no Seu Dia executava o `go(-2)` e a tirava do Grimório: "sai
+/// depois de 2 voltares" é o relato de 23/08 inteiro, com o aviso de "toque de
+/// novo para sair" possivelmente escondido atrás da barra de baixo.
+///
+/// E o outro caminho é pior: `SystemNavigator.pop()` na web cai no `exit()` do
+/// motor, que ANTES de tentar sair faz `tearDown()` — desliga o ouvinte de
+/// `popstate` para sempre e apaga a entrada-guarda, deixando o voltar morto
+/// pelo resto do documento. É contra ele que existe o `PorteiroDoVoltar`.
+///
+/// Nenhuma página fecha uma aba que ela não abriu, e "sair" de um app que É a
+/// própria aba não é serviço nenhum: quem quer sair fecha a aba. Por isso a
+/// regra aqui é uma linha só, e não uma importação condicional — que, além de
+/// cerimônia (os dois lados devolviam o mesmo), tornava esta decisão
+/// inalcançável pela suíte, que roda na VM e sempre pegava o stub.
 class SaidaDaAbaReal extends SaidaDaAba {
   const SaidaDaAbaReal({this.naWeb = kIsWeb});
 
@@ -28,19 +58,13 @@ class SaidaDaAbaReal extends SaidaDaAba {
   final bool naWeb;
 
   @override
-  bool podeSair() => naWeb ? podeSairDaAba() : true;
+  bool podeSair() => !naWeb;
 
   @override
   void sair() {
-    if (naWeb) {
-      // NUNCA `SystemNavigator.pop()` aqui: na web ele cai no `exit()` do
-      // motor, que desliga o ouvinte de `popstate` e apaga a entrada-guarda —
-      // deixando o voltar morto e a aba à mercê do próximo gesto. E
-      // `sairDaAba()` hoje é no-op de propósito: na web o app não entrega a
-      // aba a ninguém. Ver `core/navigation/saida_do_app.dart`.
-      sairDaAba();
-      return;
-    }
+    // Na web não há saída: quem chega aqui já foi barrado por [podeSair], e
+    // mesmo que não fosse, não há nada seguro a fazer.
+    if (naWeb) return;
     SystemNavigator.pop();
   }
 }
@@ -138,7 +162,7 @@ class CaminhadaDoVoltar {
     // 4. Seu Dia, raiz — o fim da caminhada.
     if (!saida.podeSair()) {
       // Na web é SEMPRE aqui que ela termina: o app não fecha a aba que não
-      // abriu (ver `saida_do_app.dart`). Silêncio neste ponto é indistinguível
+      // abriu (ver [SaidaDaAbaReal]). Silêncio neste ponto é indistinguível
       // de "o app travou", então ele diz onde está.
       mostrarFimDaCaminhada();
       return;

@@ -204,7 +204,7 @@ void main() {
 
   testWidgets('7. sem para onde ir, o voltar fica no Seu Dia e DIZ isso',
       (tester) async {
-    // O caso da web, agora sempre: `podeSairDaAba()` é `false`. Nenhuma página
+    // O caso da web, agora sempre: `podeSair()` é `false`. Nenhuma página
     // fecha uma aba que não abriu, e prometer "toque de novo para sair" ali
     // seria mentir — mas ficar MUDO é indistinguível de "o app travou", então
     // a caminhada anuncia onde terminou.

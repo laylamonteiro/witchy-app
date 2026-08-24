@@ -108,7 +108,7 @@ class PorteiroDoVoltar with WidgetsBindingObserver {
         FlutterError.reportError(FlutterErrorDetails(
           exception: erro,
           stack: pilha,
-          library: 'grimório de bolso',
+          library: 'grimorio de bolso',
           context: ErrorDescription('ao tratar um voltar do navegador'),
         ));
       }

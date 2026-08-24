@@ -36,8 +36,8 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   /// A regra do "voltar de novo para sair".
   ///
   /// NA WEB ELA NÃO É MAIS CONSULTADA: o passo 4 da caminhada termina antes,
-  /// porque `podeSairDaAba()` é `false` — o app não fecha a aba que não abriu
-  /// (ver `core/navigation/saida_do_app.dart`). Fica valendo no celular, onde
+  /// porque `SaidaDaAbaReal.podeSair()` é `false` na web — o app não fecha a
+  /// aba que não abriu (ver [SaidaDaAbaReal]). Fica valendo no celular, onde
   /// sair é ir para segundo plano: reversível, um toque traz de volta, e o
   /// toque duplo rápido de sempre é o esperado.
   ///
