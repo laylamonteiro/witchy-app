@@ -33,6 +33,7 @@ void main() {
         GlobalKey<NavigatorState> aba,
         List<int> abasPedidas,
         int Function() avisos,
+        int Function() finsDeCaminhada,
         void Function(Duration) avancar,
       })> montar(
     WidgetTester tester, {
@@ -44,6 +45,7 @@ void main() {
     final aba = GlobalKey<NavigatorState>();
     final abasPedidas = <int>[];
     var avisos = 0;
+    var finsDeCaminhada = 0;
     var abaAtual = abaInicial;
     var relogio = DateTime(2026, 8, 23, 18, 0);
 
@@ -72,6 +74,7 @@ void main() {
           abaAtual = indice;
         },
         mostrarAviso: () => avisos++,
+        mostrarFimDaCaminhada: () => finsDeCaminhada++,
         regra: regra ??
             SaidaPorDoisToques(
               janela: const Duration(seconds: 4),
@@ -86,6 +89,7 @@ void main() {
       aba: aba,
       abasPedidas: abasPedidas,
       avisos: () => avisos,
+      finsDeCaminhada: () => finsDeCaminhada,
       avancar: (d) => relogio = relogio.add(d),
     );
   }
@@ -198,10 +202,12 @@ void main() {
     expect(palco.avisos(), 1, reason: 'o aviso não vira spam');
   });
 
-  testWidgets('7. sem para onde ir, o voltar fica no Seu Dia e não avisa',
+  testWidgets('7. sem para onde ir, o voltar fica no Seu Dia e DIZ isso',
       (tester) async {
-    // Aba que nasceu no app: nenhuma página fecha uma aba que não abriu, e
-    // prometer "toque de novo para sair" ali seria mentir.
+    // O caso da web, agora sempre: `podeSairDaAba()` é `false`. Nenhuma página
+    // fecha uma aba que não abriu, e prometer "toque de novo para sair" ali
+    // seria mentir — mas ficar MUDO é indistinguível de "o app travou", então
+    // a caminhada anuncia onde terminou.
     final palco = await montar(tester, saida: _SaidaFalsa(pode: false));
 
     await palco.caminhada.resolver();
@@ -210,7 +216,26 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(palco.saida.saidas, 0);
-    expect(palco.avisos(), 0);
+    expect(palco.avisos(), 0, reason: 'nunca prometer uma saída que não existe');
+    expect(palco.finsDeCaminhada(), 2, reason: 'os dois voltares chegaram');
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('11. na web, uma rajada inteira no Seu Dia nunca sai',
+      (tester) async {
+    // A regressão da dona, encenada com a saída que a web tem de verdade
+    // (`podeSair` falso): 20 deslizadas seguidas não podem fechar a aba nem
+    // uma vez, e cada uma tem de chegar ao app.
+    final palco = await montar(tester, saida: _SaidaFalsa(pode: false));
+
+    for (var i = 0; i < 20; i++) {
+      palco.avancar(const Duration(milliseconds: 150));
+      await palco.caminhada.resolver();
+    }
+    await tester.pumpAndSettle();
+
+    expect(palco.saida.saidas, 0, reason: 'a aba nunca fecha pelo app');
+    expect(palco.finsDeCaminhada(), 20, reason: 'todo voltar é respondido');
     expect(tester.takeException(), isNull);
   });
 

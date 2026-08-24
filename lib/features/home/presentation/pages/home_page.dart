@@ -11,8 +11,6 @@ import '../../../../core/navigation/app_deep_link.dart';
 import '../../../../core/navigation/section_reset_notifier.dart';
 import '../../../../core/providers/mascot_provider.dart';
 import '../../../../core/theme/grimoire_colors.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
-
 import '../../../../core/navigation/observador_de_rotas_raiz.dart';
 import '../../../../core/utils/saida_por_dois_toques.dart';
 import '../caminhada_do_voltar.dart';
@@ -37,15 +35,20 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
 
   /// A regra do "voltar de novo para sair".
   ///
-  /// Os prazos mudam com a plataforma porque SAIR significa coisas
-  /// diferentes: no celular é ir para segundo plano — reversível, um toque
-  /// traz de volta — e o toque duplo rápido de sempre é o esperado; na web
-  /// é FECHAR A ABA, destrutivo, então exige um segundo voltar deliberado
-  /// (o piso contra rajada). Ver [SaidaPorDoisToques].
+  /// NA WEB ELA NÃO É MAIS CONSULTADA: o passo 4 da caminhada termina antes,
+  /// porque `podeSairDaAba()` é `false` — o app não fecha a aba que não abriu
+  /// (ver `core/navigation/saida_do_app.dart`). Fica valendo no celular, onde
+  /// sair é ir para segundo plano: reversível, um toque traz de volta, e o
+  /// toque duplo rápido de sempre é o esperado.
+  ///
+  /// O piso de 800ms que existia aqui para a web foi embora junto. Ele nasceu
+  /// da teoria de que uma rajada de deslizadas atropelava a guarda do motor, e
+  /// o fonte desmente isso: o re-empurrão da guarda é SÍNCRONO, a primeira
+  /// instrução do tratador de `popstate` (engine 3.47.0). Na prática o piso só
+  /// descartava um segundo voltar DELIBERADO. Ver [SaidaPorDoisToques].
   final _saida = SaidaPorDoisToques(
-    janela: kIsWeb ? const Duration(seconds: 4) : const Duration(seconds: 2),
-    intervaloDeliberado:
-        kIsWeb ? const Duration(milliseconds: 800) : Duration.zero,
+    janela: const Duration(seconds: 2),
+    intervaloDeliberado: Duration.zero,
   );
 
   /// A caminhada do voltar, fora do widget para poder ser testada — ver
@@ -57,6 +60,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     abaAtual: () => _selectedIndex,
     irParaAba: (indice) => setState(() => _selectedIndex = indice),
     mostrarAviso: _avisarQueOProximoSai,
+    mostrarFimDaCaminhada: _avisarQueJaEstaNoSeuDia,
     regra: _saida,
     vivo: () => mounted,
   );
@@ -258,6 +262,24 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
         duration: _saida.janela,
       ),
     );
+  }
+
+  /// "Você já está no Seu Dia" — o fim da caminhada na web, onde o voltar não
+  /// sai do app.
+  ///
+  /// Sem fila de propósito (`removeCurrentSnackBar` antes): numa sequência de
+  /// voltares a mensagem é sempre a mesma, e cinco delas enfileiradas ficariam
+  /// dez segundos na tela depois de a Bruxa ter parado de deslizar.
+  void _avisarQueJaEstaNoSeuDia() {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+      ..removeCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(AppLocalizations.of(context).commonAlreadyAtYourDay),
+          duration: const Duration(seconds: 2),
+        ),
+      );
   }
 
   Widget _buildTabNavigator(int index) {

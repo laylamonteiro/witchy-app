@@ -18,20 +18,26 @@ abstract class SaidaDaAba {
   void sair();
 }
 
-/// A saída de verdade: navegador na web, segundo plano no celular.
+/// A saída de verdade: segundo plano no celular, e NADA na web.
 class SaidaDaAbaReal extends SaidaDaAba {
-  const SaidaDaAbaReal();
+  const SaidaDaAbaReal({this.naWeb = kIsWeb});
+
+  /// Só o teste passa este valor. Ele existe para que os DOIS lados da regra
+  /// sejam exercitados: a suíte roda na VM, onde `kIsWeb` é sempre `false`, e
+  /// sem esta troca o lado da web seria inalcançável em `flutter_test`.
+  final bool naWeb;
 
   @override
-  bool podeSair() => kIsWeb ? podeSairDaAba() : true;
+  bool podeSair() => naWeb ? podeSairDaAba() : true;
 
   @override
   void sair() {
-    if (kIsWeb) {
+    if (naWeb) {
       // NUNCA `SystemNavigator.pop()` aqui: na web ele cai no `exit()` do
-      // motor, que desliga o ouvinte de `popstate` e apaga a
-      // entrada-guarda — deixando o voltar morto e a aba à mercê do
-      // próximo gesto. Ver `core/navigation/saida_do_app.dart`.
+      // motor, que desliga o ouvinte de `popstate` e apaga a entrada-guarda —
+      // deixando o voltar morto e a aba à mercê do próximo gesto. E
+      // `sairDaAba()` hoje é no-op de propósito: na web o app não entrega a
+      // aba a ninguém. Ver `core/navigation/saida_do_app.dart`.
       sairDaAba();
       return;
     }
@@ -56,6 +62,7 @@ class CaminhadaDoVoltar {
     required this.abaAtual,
     required this.irParaAba,
     required this.mostrarAviso,
+    required this.mostrarFimDaCaminhada,
     required this.regra,
     required this.vivo,
     this.saida = const SaidaDaAbaReal(),
@@ -71,8 +78,17 @@ class CaminhadaDoVoltar {
   final int Function() abaAtual;
   final void Function(int) irParaAba;
 
-  /// Mostra o "toque de novo para sair".
+  /// Mostra o "toque de novo para sair" — só o celular chega aqui hoje.
   final void Function() mostrarAviso;
+
+  /// Diz que a caminhada acabou e não há para onde ir: o fim da linha na web.
+  ///
+  /// Serve para duas coisas. A primeira é não deixar o voltar MUDO no Seu Dia,
+  /// que é indistinguível de "o app travou". A segunda é ser a única prova, no
+  /// aparelho da Bruxa, de que o voltar chegou ao app: se a aba fechar sem esta
+  /// mensagem ter aparecido, quem fechou foi o navegador, e a investigação sai
+  /// do Dart de vez.
+  final void Function() mostrarFimDaCaminhada;
 
   final SaidaPorDoisToques regra;
 
@@ -119,14 +135,14 @@ class CaminhadaDoVoltar {
       return;
     }
 
-    // 4. Seu Dia, raiz. Onde não há para onde ir, a saída nem é oferecida:
-    // o voltar simplesmente fica aqui.
-    //
-    // Dupla conferência: além do `if` acima, verifica de novo que a aba
-    // é a 0 (Seu Dia) NESTE MOMENTO. Race condition improvável (o setState
-    // é síncrono), mas melhor prevenir.
-    if (abaAtual() != 0) return;
-    if (!saida.podeSair()) return;
+    // 4. Seu Dia, raiz — o fim da caminhada.
+    if (!saida.podeSair()) {
+      // Na web é SEMPRE aqui que ela termina: o app não fecha a aba que não
+      // abriu (ver `saida_do_app.dart`). Silêncio neste ponto é indistinguível
+      // de "o app travou", então ele diz onde está.
+      mostrarFimDaCaminhada();
+      return;
+    }
 
     final decisao = regra.registrar(agora());
     if (decisao == DecisaoDeSaida.sair) {

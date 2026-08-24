@@ -1,29 +1,26 @@
-/// Sair do app pelo VOLTAR, na web (e o no-op fora dela).
+/// Sair do app pelo VOLTAR: no celular sim, na WEB nunca.
 ///
-/// Por que isto existe em vez de `SystemNavigator.pop()`: na web esse
-/// atalho cai no `exit()` do motor do Flutter, e o `exit()` faz duas coisas
-/// irreversíveis ANTES de tentar sair (fonte: engine 3.47.0,
-/// `web_ui/.../navigation/history.dart`):
+/// Na web só existem dois jeitos de entregar a aba ao navegador, e os dois são
+/// armadilhas:
 ///
-/// 1. `tearDown()` chama `dispose()`, que DESLIGA o ouvinte de `popstate` —
-///    para sempre, porque o motor nunca recria o histórico;
-/// 2. `tearDown()` faz `go(-1)`, apagando a entrada-guarda que o motor
-///    empurrou no boot; só então o `exit()` faz o segundo `go(-1)`.
+/// 1. `SystemNavigator.pop()` — cai no `exit()` do motor, que ANTES de tentar
+///    sair faz `tearDown()`: desliga o ouvinte de `popstate` (para sempre, o
+///    motor nunca recria o histórico) e apaga a entrada-guarda. Dali em diante
+///    o app segue na tela, mas cego, e o voltar seguinte fecha a aba a partir
+///    de qualquer tela. E o framework chama esse atalho SOZINHO quando nenhum
+///    observador do binding trata o `popRoute` (binding.dart:1116-1132) — é
+///    por isso que existe o `PorteiroDoVoltar`, instalado antes do `runApp`.
 ///
-/// E `history.go(-1)` chamado por script NUNCA fecha uma aba: quando o app
-/// é a primeira entrada da aba, o segundo `go(-1)` não faz nada. O
-/// resultado é o pior dos mundos — o app continua na tela, mas sem guarda e
-/// sem ouvinte: dali em diante QUALQUER gesto de voltar vai direto para o
-/// navegador, que não tem para onde ir e FECHA A ABA, de qualquer tela do
-/// app. Foi exatamente o relato de 23/08 ("fecha a aba antes de chegar em
-/// Seu Dia"): a saída tinha sido acionada uma vez, e o voltar do app estava
-/// morto desde então.
+/// 2. `history.go(-2)` — o que este arquivo fazia. Dependia de `history.length`
+///    para adivinhar se havia página antes do app, e esse número não responde
+///    a pergunta: o motor só usa `replaceState` depois do boot, então o
+///    histórico do app nunca cresce e `length` fala do que veio ANTES dele.
+///    Quando a adivinhação dava certo, o app ia embora no segundo voltar — o
+///    relato de 23/08. Ver `saida_do_app_web.dart`.
 ///
-/// Aqui a saída é honesta: pedimos ao NAVEGADOR para voltar para além do
-/// app (a entrada-guarda e a entrada de origem), sem desmontar nada. Se
-/// havia uma página antes do app naquela aba, é para lá que se vai — é o
-/// "sair do app" possível na web. Se o app é a primeira entrada, não há
-/// para onde ir: nenhuma página pode fechar uma aba que ela não abriu, e
-/// [podeSairDaAba] responde isso ANTES de armar a saída.
+/// Fora da web nada disso vale: lá o `SystemNavigator.pop()` manda o app para
+/// segundo plano, que é reversível e esperado. Por isso a decisão mora aqui, na
+/// fronteira: [podeSairDaAba] devolve `false` na web, e o passo 4 da
+/// `CaminhadaDoVoltar` termina em "você já está no Seu Dia".
 export 'saida_do_app_stub.dart'
     if (dart.library.js_interop) 'saida_do_app_web.dart';

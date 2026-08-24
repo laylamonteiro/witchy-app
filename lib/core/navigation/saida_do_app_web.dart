@@ -1,46 +1,31 @@
-import 'package:web/web.dart' as web;
-
-/// Existe alguma página ANTES do app nesta aba?
+/// NA WEB O VOLTAR NÃO SAI DO APP. Ponto.
 ///
-/// O motor mantém exatamente duas entradas suas — a de origem e a guarda
-/// (`SingleEntryBrowserHistory`) —, então uma aba que nasceu no app tem
-/// comprimento 2. Mais que isso significa que há para onde voltar, e só
-/// nesse caso o "voltar de novo para sair" tem o que cumprir.
+/// Havia aqui um `history.go(-2)` autorizado por `history.length > 3`. A
+/// pergunta que essa conta tentava responder — "existe uma página real antes do
+/// app nesta aba?" — é INDECIDÍVEL de dentro da página, e a conta respondia
+/// outra coisa:
 ///
-/// Conservador: só permite sair se há CLARAMENTE história antes — isto é,
-/// muito mais que apenas a origem e a guarda. Isto evita edge cases onde
-/// a contagem está imprecisa.
-bool podeSairDaAba() {
-  final length = _entradasDaAba();
-  // Conservador: exigir muito mais que a mínima para sair. Com 3 entradas
-  // é ambíguo (pode ser que o motor não empurrou a guarda, ou o navegador
-  // tem comportamento inesperado). Exigir >= 4 garante que há página real
-  // anterior e evita saídas prematuras em edge cases.
-  return length > 3;
-}
-
-/// As duas entradas que o motor mantém (origem + guarda).
-const int _entradasDoMotor = 2;
-
-int _entradasDaAba() => web.window.history.length;
-
-/// Volta para além do app: as duas entradas do motor de uma vez.
+///  * `SingleEntryBrowserHistory.setRouteName` sempre chama
+///    `_setupFlutterEntry(replace: true)`, ou seja, `replaceState` (engine
+///    3.47.0, `web_ui/.../navigation/history.dart`). O histórico do app NUNCA
+///    cresce: as duas entradas do motor são as mesmas do primeiro quadro até o
+///    último. Logo `length` mede exclusivamente o que já existia na aba ANTES
+///    do app;
+///  * e mede isso mal: numa aba nova o Chrome ainda conta a página inicial, e
+///    um retorno de login social soma entradas próprias.
 ///
-/// Um `go(-2)` cru, sem `SystemNavigator.pop()` — o `exit()` do motor
-/// desligaria o ouvinte de `popstate` e apagaria a guarda, deixando o
-/// voltar morto e a aba à mercê do próximo gesto (ver `saida_do_app.dart`).
-/// Fora de alcance, o navegador simplesmente ignora, e o app segue de pé.
-void sairDaAba() {
-  // Conferido de novo aqui, e não só por quem chama: um `go` fora de
-  // alcance é ignorado em silêncio, e a pessoa ficaria com o aviso
-  // consumido e nada acontecendo na tela.
-  if (!podeSairDaAba()) return;
+/// O resultado era uma moeda ao ar. Quem abrisse o app por um link — uma busca,
+/// o WhatsApp, o Instagram — ou numa aba nova com página inicial passava no
+/// teste, e então o segundo voltar deliberado no Seu Dia executava o `go(-2)` e
+/// a tirava do Grimório. "Sai depois de 2 voltares" é o relato inteiro, com o
+/// aviso de "toque de novo para sair" possivelmente escondido atrás da barra de
+/// baixo.
+///
+/// Nenhuma página fecha uma aba que ela não abriu, e "sair" de um app que É a
+/// própria aba não é serviço nenhum: quem quer sair fecha a aba. O que o voltar
+/// deve fazer na web é caminhar até o Seu Dia e ficar lá.
+bool podeSairDaAba() => false;
 
-  // Dupla conferência do comprimento do histórico: se por algum motivo a
-  // contagem mudou entre a chamada de podeSairDaAba() e agora, não sair.
-  // Cenário improvável, mas melhor ser redundante que deixar uma falha de
-  // edge case fechar a aba sem aviso.
-  if (_entradasDaAba() <= _entradasDoMotor) return;
-
-  web.window.history.go(-_entradasDoMotor);
-}
+/// Sem efeito, e de propósito: porta fechada e documentada, para que quem
+/// pensar em reabri-la leia antes por que ela fechou.
+void sairDaAba() {}
