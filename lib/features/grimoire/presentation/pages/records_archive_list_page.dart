@@ -166,10 +166,15 @@ class _RecordsArchiveListPageState extends State<RecordsArchiveListPage> {
                       horizontal: 12,
                       vertical: 10,
                     ),
+                    // Dourada, e não lilás como o resto do acervo: a Leitura
+                    // do Ciclo é a peça rara da tela — a única que custa e a
+                    // única tecida de tudo o que ela registrou. O ouro é o
+                    // que a separa da lista de entradas ao redor.
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(12),
+                      color: context.gc.gold.withValues(alpha: 0.08),
                       border: Border.all(
-                        color: context.gc.lilac.withValues(alpha: 0.3),
+                        color: context.gc.gold.withValues(alpha: 0.55),
                       ),
                     ),
                     child: Row(
@@ -180,7 +185,7 @@ class _RecordsArchiveListPageState extends State<RecordsArchiveListPage> {
                           child: Text(
                             l10n.cycleReadingTitle,
                             style: TextStyle(
-                              color: context.gc.lilac,
+                              color: context.gc.gold,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -188,7 +193,7 @@ class _RecordsArchiveListPageState extends State<RecordsArchiveListPage> {
                         Icon(
                           Icons.chevron_right,
                           size: 20,
-                          color: context.gc.textSecondary,
+                          color: context.gc.gold.withValues(alpha: 0.7),
                         ),
                       ],
                     ),

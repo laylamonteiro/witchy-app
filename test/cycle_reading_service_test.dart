@@ -330,8 +330,10 @@ Texto do retrato.
     );
   });
 
-  test('regeneração substitui o mesmo relatório e respeita o teto de 2×',
-      () async {
+  test('regeneração substitui o mesmo relatório, SEM teto', () async {
+    // O teto de 2 saiu (decisão da dona, 24/08): quem já pagou pela janela
+    // gera quantas vezes quiser. O que continua valendo é a substituição —
+    // a MESMA janela nunca vira uma segunda entrada no acervo.
     final credit = await insertCredit();
     var generated = (await service().generateForCredit(
       credit: credit,
@@ -339,28 +341,20 @@ Texto do retrato.
     ))
         .reading;
 
-    // 1ª e 2ª regenerações: mesmo id de relatório, contador avança.
-    for (var expected = 1; expected <= 2; expected++) {
+    // Cinco regenerações: mesmo id de relatório, contador avança, nenhuma
+    // bloqueada — antes a terceira estourava um StateError.
+    for (var esperado = 1; esperado <= 5; esperado++) {
       final result = await service().generateForCredit(
         credit: generated,
         userId: userId,
         regenerate: true,
       );
-      expect(result.reading.regenerationsUsed, expected);
+      expect(result.reading.regenerationsUsed, esperado);
       expect(result.writing.id, generated.writingId);
+      expect(result.reading.canRegenerate, isTrue,
+          reason: 'nunca mais existe "acabaram suas chances"');
       generated = result.reading;
     }
-
-    // 3ª: bloqueada.
-    expect(generated.canRegenerate, isFalse);
-    await expectLater(
-      service().generateForCredit(
-        credit: generated,
-        userId: userId,
-        regenerate: true,
-      ),
-      throwsA(isA<StateError>()),
-    );
 
     // O acervo tem UMA entrada só (regeneração nunca duplica).
     final db = await DatabaseHelper.instance.database;
@@ -720,16 +714,32 @@ void _guardaDoAfrouxamento() {
       expect(TestBuildConfig.unlimitedCycleReadings, isFalse);
     });
 
-    test('com ele desligado, o teto de regerações é o de produção', () {
-      final noTeto = CycleReadingModel(
+    test('regerar não depende mais dele — nem de contador nenhum', () {
+      // O teto de 2 saiu do produto (24/08), então a flag deixou de governar
+      // isto: mesmo com ela DESLIGADA, uma janela já gerada muitas vezes
+      // continua podendo ser gerada de novo.
+      final muitoRegerada = CycleReadingModel(
         userId: 'u',
         periodType: CycleReadingPeriodType.week,
         periodStart: DateTime(2026, 8, 1),
         periodEnd: DateTime(2026, 8, 8),
         status: CycleReadingStatus.generated,
-        regenerationsUsed: CycleReadingModel.maxRegenerations,
+        regenerationsUsed: 99,
       );
-      expect(noTeto.canRegenerate, isFalse);
+      expect(muitoRegerada.canRegenerate, isTrue);
+    });
+
+    test('mas uma janela AINDA NÃO gerada não é "regerável"', () {
+      // `canRegenerate` continua significando alguma coisa: só existe texto
+      // para substituir depois que a primeira geração aconteceu.
+      final pendente = CycleReadingModel(
+        userId: 'u',
+        periodType: CycleReadingPeriodType.week,
+        periodStart: DateTime(2026, 8, 1),
+        periodEnd: DateTime(2026, 8, 8),
+        status: CycleReadingStatus.pending,
+      );
+      expect(pendente.canRegenerate, isFalse);
     });
   });
 }

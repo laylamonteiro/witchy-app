@@ -1169,10 +1169,16 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
       );
     }
 
-    // Leitura desta janela já gerada: abrir (e regenerar, se ainda der).
+    // Leitura desta janela já gerada: só abrir.
+    //
+    // O botão "Gerar de novo (N restantes)" saiu daqui (decisão da dona,
+    // 24/08). Contar tentativas na cara de quem já pagou é mesquinho, e o
+    // contador ainda vazava para negativo — "-1 restante(s)" na tela. Quem
+    // quiser um texto novo para ESTA janela gera de novo pelo caminho normal
+    // (o botão de gerar, logo abaixo, para quem tem o Vitalício), e a geração
+    // substitui o relatório que já existe. Quem escolher OUTRO período ganha
+    // uma leitura nova, sem substituir nada.
     if (existing != null && existing.isGenerated) {
-      final remaining =
-          CycleReadingModel.maxRegenerations - existing.regenerationsUsed;
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -1181,21 +1187,14 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
             icon: const Icon(Icons.menu_book, size: 18),
             label: Text(l10n.cycleReadingOpenReport),
           ),
-          const SizedBox(height: 8),
-          if (existing.canRegenerate)
+          if (_lifetimeCoversThisWindow) ...[
+            const SizedBox(height: 8),
             OutlinedButton.icon(
               onPressed: () => _generate(existing, regenerate: true),
-              icon: const Icon(Icons.refresh, size: 18),
-              label: Text(l10n.cycleReadingRegenerate(remaining)),
-            )
-          else
-            Text(
-              l10n.cycleReadingRegenerateLimit,
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: context.gc.textSecondary,
-                  ),
+              icon: const Icon(Icons.auto_awesome, size: 18),
+              label: Text(l10n.cycleReadingGenerate),
             ),
+          ],
         ],
       );
     }

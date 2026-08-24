@@ -1,5 +1,4 @@
 import 'package:uuid/uuid.dart';
-import '../../../../core/config/test_build_config.dart';
 
 /// Estado de uma Leitura do Ciclo (persistido em `cycle_readings.status`).
 abstract final class CycleReadingStatus {
@@ -69,15 +68,16 @@ class CycleReadingModel {
   /// Id da entrada em `free_writings` com o relatório (após gerado).
   final String? writingId;
 
-  /// Regenerações da MESMA janela já usadas (teto: 2).
+  /// Quantas vezes esta janela já foi gerada de novo.
+  ///
+  /// Continua sendo contado porque a coluna existe no banco e no Supabase, e
+  /// porque é bom saber — mas NÃO limita mais nada (decisão da dona, 24/08).
+  /// Ver [canRegenerate].
   final int regenerationsUsed;
 
   final DateTime createdAt;
   final DateTime updatedAt;
   final bool synced;
-
-  /// Teto de regenerações da mesma janela.
-  static const int maxRegenerations = 2;
 
   CycleReadingModel({
     String? id,
@@ -100,11 +100,15 @@ class CycleReadingModel {
   bool get isPending => status == CycleReadingStatus.pending;
   bool get isGenerated => status == CycleReadingStatus.generated;
   bool get isWeekly => periodType == CycleReadingPeriodType.week;
-  bool get canRegenerate =>
-      isGenerated &&
-      // Build de teste: regera à vontade (ver TestBuildConfig).
-      (TestBuildConfig.unlimitedCycleReadings ||
-          regenerationsUsed < maxRegenerations);
+  /// Esta janela pode ser gerada de novo?
+  ///
+  /// Basta já existir uma leitura: SEM TETO (decisão da dona, 24/08). O teto
+  /// de 2 saiu junto com o botão "Gerar de novo (N restantes)" — contar
+  /// tentativas na cara de quem já pagou é mesquinho, e o contador ainda por
+  /// cima vazava para negativo na tela. Gerar de novo para a MESMA janela
+  /// substitui o relatório que já existe; outra janela nasce como leitura
+  /// nova.
+  bool get canRegenerate => isGenerated;
 
   Map<String, dynamic> toMap() {
     return {

@@ -13,8 +13,8 @@
   "navGrimoire": "Ferramentas",
   "navDiaries": "Diários",
   "grimoirePageTitle": "Ferramentas",
-  "grimoireTabAstrology": "Astrologia Mística",
-  "grimoireTabTools": "Ferramentas Mágicas",
+  "grimoireTabAstrology": "Astrologia",
+  "grimoireTabTools": "Magia",
   "grimoireTabMyGrimoire": "Meu Grimório",
   "encyMyGrimoireIntro": "Seus feitiços, reunidos por intenção — crie, guarde e revisite a sua magia",
   "diaryPageTitle": "Diários",
@@ -2389,15 +2389,6 @@
   "cycleReadingGenerate": "Gerar minha leitura",
   "cycleReadingGenerating": "Tecendo sua leitura… o oráculo está relendo o seu grimório.",
   "cycleReadingOpenReport": "Abrir minha leitura",
-  "cycleReadingRegenerate": "Gerar de novo ({remaining} restante(s))",
-  "@cycleReadingRegenerate": {
-    "placeholders": {
-      "remaining": {
-        "type": "int"
-      }
-    }
-  },
-  "cycleReadingRegenerateLimit": "Limite de regenerações desta janela atingido.",
   "cycleReadingGenerationFailed": "Não foi possível gerar agora. Sua compra continua valendo — tente de novo em instantes, sem nova cobrança.",
   "cycleReadingUnavailable": "Compra indisponível no momento. Tente mais tarde.",
   "cycleReadingShareAffirmation": "Compartilhar afirmação",
