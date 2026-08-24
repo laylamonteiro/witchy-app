@@ -267,6 +267,13 @@ void main() {
       MaterialApp(
         navigatorKey: raiz,
         home: const Scaffold(body: Text('RAIZ')),
+        // A rota tem de existir: quem trata este `pushRoute` é o framework, e
+        // ele NAVEGA para ela. Sem gerador, o `pushNamed` do
+        // `_WidgetsAppState` estoura — e é justamente esse estouro que prova
+        // que o porteiro deixou passar.
+        routes: {
+          '/outra': (_) => const Scaffold(body: Text('OUTRA')),
+        },
       ),
     );
     raiz.currentState!.push(
@@ -276,9 +283,11 @@ void main() {
 
     await pushRouteDoMotor(tester, '/outra');
 
-    expect(find.text('DETALHE'), findsOneWidget,
-        reason: 'não é voltar: o porteiro deixa passar');
-    expect(porteiro.voltaresTratados, 0);
+    expect(find.text('OUTRA'), findsOneWidget,
+        reason: 'endereço digitado navega, não desempilha');
+    expect(porteiro.voltaresTratados, 0,
+        reason: 'o porteiro não tratou: deixou o framework navegar');
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('FORA da web o porteiro é inerte — sair é ir para segundo plano',
