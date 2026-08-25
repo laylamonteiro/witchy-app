@@ -135,13 +135,20 @@ void main() {
       'profileLegacyRewriteBody': 'sola = uma única',
     };
 
+    // Borda de palavra escrita à mão, e não `\b`: o `\w` do Dart é ASCII, então
+    // `\bguardiã\b` casa DENTRO de "Guardião" — o "o" logo depois do "ã" conta
+    // como início de palavra. Foi a primeira coisa que esta catraca pegou, e
+    // era ela mesma.
+    const borda = r'(?<![A-Za-zÀ-ÿ])';
+    const fim = r'(?![A-Za-zÀ-ÿ])';
+
     const marcas = <String, String>{
       'app_pt_BR.arb':
-          r'\b(bem-?vinda|bruxa|grata|sozinha|iniciada|adepta|mestra|guardiã)\b',
+          'bem-?vinda|bruxa|grata|sozinha|iniciada|adepta|mestra|guardiã',
       'app_pt.arb':
-          r'\b(bem-?vinda|bruxa|grata|sozinha|iniciada|adepta|mestra|guardiã)\b',
+          'bem-?vinda|bruxa|grata|sozinha|iniciada|adepta|mestra|guardiã',
       'app_es.arb':
-          r'\b(bienvenida|bruja|agradecida|sola|iniciada|adepta|maestra|guardiana)\b',
+          'bienvenida|bruja|agradecida|sola|iniciada|adepta|maestra|guardiana',
     };
 
     for (final entrada in marcas.entries) {
@@ -149,7 +156,8 @@ void main() {
         final arb = jsonDecode(
           File('lib/l10n/${entrada.key}').readAsStringSync(),
         ) as Map<String, dynamic>;
-        final marca = RegExp(entrada.value, caseSensitive: false);
+        final marca = RegExp('$borda(${entrada.value})$fim',
+            caseSensitive: false);
 
         final presas = <String>[];
         arb.forEach((chave, valor) {
