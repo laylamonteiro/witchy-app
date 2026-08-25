@@ -223,6 +223,34 @@
       window.addEventListener('pointerdown', repor, { capture: true, passive: true });
       window.addEventListener('keydown', repor, { capture: true });
 
+      // A GUARDA DE SAÍDA — a aba não vai embora em silêncio.
+      //
+      // Medido no aparelho da dona (25/08, com `?diag=1`): o app trata os
+      // voltares que recebe (`dart` acompanha `popstates`, e a tela desempilha
+      // certo), mas do TERCEIRO gesto em diante o Chrome Android para de
+      // entregar `popstate` e fecha a aba — com sete degraus ainda embaixo,
+      // criados sob toque. A regra não é da página: um documento só, com
+      // entradas sintéticas de mesma URL, é uma página só para o navegador, e
+      // ele limita quantos voltares gasta ali. Nenhum JavaScript vence isso.
+      //
+      // O que ainda dá para fazer é tirar o SILÊNCIO: em vez de a aba sumir no
+      // meio de uma lição, o navegador pergunta. Perder a aba sem querer deixa
+      // de ser possível; o preço é o diálogo do Chrome nessa hora, e ele só
+      // aparece se a pessoa já tiver interagido com a página.
+      //
+      // O conserto de verdade é dar endereço próprio a cada tela (URLs de
+      // caminho e navegação de verdade, em vez de tudo empilhado dentro de um
+      // documento). Isto aqui é o curativo até lá — e é reversível: apagar
+      // este bloco devolve o comportamento anterior.
+      window.addEventListener('beforeunload', function (evento) {
+        // Saída que o PRÓPRIO app pediu (recarga do bfcache, troca de service
+        // worker, recomeço na raiz depois do login social) não é acidente:
+        // perguntar ali seria transformar um conserto nosso em susto dela.
+        if (window.__gdbSaidaAutorizada) return;
+        evento.preventDefault();
+        evento.returnValue = '';
+      });
+
       // A JANELINHA DE DIAGNÓSTICO — só aparece com `?diag=1` no endereço.
       //
       // Existe porque a medição que faltava não é obtível de fora: o Chrome
@@ -327,7 +355,12 @@
     // navegar ENTRE documentos (login social, link externo), então isto
     // não toca a navegação normal dentro do app, que é de documento único.
     window.addEventListener('pageshow', function (e) {
-      if (e.persisted) { window.location.reload(); }
+      // Recarga NOSSA: libera a guarda de saída antes, senão o conserto do
+      // bfcache viraria um diálogo "Sair do site?" na cara dela.
+      if (e.persisted) {
+        window.__gdbSaidaAutorizada = true;
+        window.location.reload();
+      }
     });
   </script>
 </head>
@@ -407,6 +440,8 @@
         }
 
         recarregou = true;
+        // Idem: a troca de service worker é decisão do app, não da pessoa.
+        window.__gdbSaidaAutorizada = true;
         url.reload();
       });
     })();
