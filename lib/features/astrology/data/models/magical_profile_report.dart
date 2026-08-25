@@ -83,6 +83,16 @@ final _subtitulo = RegExp(r'^###[ \t]+(.+?)[ \t]*$');
 /// descartado, porque um card que abre vazio é pior que um card a menos.
 List<ProfileSection> parseMagicalProfile(String markdown) {
   final linhas = markdown.split('\n');
+
+  // Primeira passada: este texto está no formato novo?
+  //
+  // Sem esta pergunta, um `##` que a IA escrevesse por conta própria dentro de
+  // uma seção virava um cabeçalho "de formato antigo", e a tela inteira
+  // desviava para a leitura corrida — sumindo com a grade de dez cards e com
+  // todo botão de tecer de novo. O prompt pede o formato; nada garante que a
+  // resposta obedeça.
+  final formatoNovo = linhas.any(_cabecalhoComChave.hasMatch);
+
   final secoes = <ProfileSection>[];
 
   String? chaveAtual;
@@ -113,6 +123,13 @@ List<ProfileSection> parseMagicalProfile(String markdown) {
     }
     final escrito = _cabecalhoEscrito.firstMatch(linha);
     if (escrito != null) {
+      if (formatoNovo) {
+        // Rebaixado a subtítulo em vez de quebrar o documento: o texto
+        // continua na seção a que pertence e vira mais uma página dela, com
+        // o destaque que tinha. Nada se perde.
+        corpo.add('### ${escrito.group(1)}');
+        continue;
+      }
       fechar();
       tituloAtual = escrito.group(1);
       continue;

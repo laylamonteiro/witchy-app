@@ -18,6 +18,10 @@ class WelcomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Quando a espera do retorno OAuth vence sem sessão, é aqui que a pessoa
+    // cai — ainda com o Google como página anterior do histórico. Sem o
+    // guarda, o voltar a tirava do app na única tela em que ela ainda nem
+    // entrou.
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(

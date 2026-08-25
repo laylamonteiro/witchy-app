@@ -21,6 +21,27 @@ void main() {
     }
   });
 
+  test('o pai desce e sobe antes do filho', () {
+    // As duas chaves estrangeiras do app — ritual_logs → daily_rituals e
+    // magical_profiles → birth_charts — são conferidas DE VERDADE no
+    // Postgres (supabase/restore_database.sql). Quem garante a ordem é a
+    // declaração de SyncEntity: syncAll, fullUpload e fullDownload varrem
+    // `SyncEntity.values`. Reordenar o enum sem ler isto derruba o upload de
+    // quem acabou de montar o mapa astral.
+    final ordem = SyncEntity.values;
+
+    expect(
+      ordem.indexOf(SyncEntity.dailyRituals),
+      lessThan(ordem.indexOf(SyncEntity.ritualLogs)),
+      reason: 'o registro de ritual referencia o ritual',
+    );
+    expect(
+      ordem.indexOf(SyncEntity.birthCharts),
+      lessThan(ordem.indexOf(SyncEntity.magicalProfiles)),
+      reason: 'o perfil mágico referencia o mapa astral',
+    );
+  });
+
   test('as tiragens de tarô sincronizam como as outras', () {
     final service = DataSyncService();
     expect(

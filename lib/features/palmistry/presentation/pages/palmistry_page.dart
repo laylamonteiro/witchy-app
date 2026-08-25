@@ -179,11 +179,20 @@ class _PalmistryPageState extends State<PalmistryPage> {
       // A tela é a mesma para todo mundo: quem não tem Premium lê como
       // fotografar a mão, escolhe a foto e vê o SUMÁRIO do que a leitura
       // diria, ponto a ponto, sob véu. A foto nem chega a ser enviada.
-      body: _buildFlow(authProvider.remainingPalmistryReadings),
+      // O saldo do dia só vai para a tela de quem PODE ler. Para o Free, "3
+      // leituras restantes hoje" era uma promessa que a tela não cumpre: a
+      // leitura de mãos é exclusiva do Premium, e ele vê o sumário sob véu.
+      body: _buildFlow(
+        authProvider
+                .checkFeatureAccess(AppFeature.aiPalmistry)
+                .hasFullAccess
+            ? authProvider.remainingPalmistryReadings
+            : null,
+      ),
     );
   }
 
-  Widget _buildFlow(int remainingReadings) {
+  Widget _buildFlow(int? remainingReadings) {
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(vertical: 12),
       child: Column(
@@ -243,8 +252,9 @@ class _PalmistryPageState extends State<PalmistryPage> {
               ],
             ),
           ),
-          // Saldo de leituras do dia (oculto para admin/ilimitado).
-          if (remainingReadings >= 0)
+          // Saldo de leituras do dia. Oculto para admin/ilimitado (-1) e para
+          // quem não tem acesso à leitura (null).
+          if (remainingReadings != null && remainingReadings >= 0)
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
               child: Text(

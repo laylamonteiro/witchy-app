@@ -1,8 +1,9 @@
 import 'dart:convert';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show kIsWeb, visibleForTesting;
 import '../../features/grimoire/data/models/spell_model.dart';
+import '../services/data_sync_service.dart';
 
 class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._init();
@@ -28,9 +29,37 @@ class DatabaseHelper {
       path = join(dbPath, filePath);
     }
 
+    // SEM `PRAGMA foreign_keys = ON`, e é decisão, não esquecimento.
+    //
+    // O SQLite ignora declaração de chave estrangeira a menos que o pragma
+    // esteja ligado — por CONEXÃO, não por banco. As duas que existem aqui
+    // (ritual_logs → daily_rituals e magical_profiles → birth_charts, ambas
+    // com ON DELETE CASCADE) não conferem nada e não cascateiam nada. Elas
+    // ficam porque documentam o parentesco e porque no POSTGRES, onde o
+    // sync grava, são conferidas de verdade (supabase/restore_database.sql).
+    //
+    // Ligar o pragma num banco que já existe teria três efeitos, e o
+    // primeiro é o que decidiu:
+    //
+    // 1. `saveBirthChart` grava com `ConflictAlgorithm.replace`, e no SQLite
+    //    REPLACE numa linha existente é DELETE + INSERT. Com o pragma ligado
+    //    esse DELETE dispara o CASCADE — ou seja, regravar o mapa sob o
+    //    mesmo id APAGARIA a Análise Personalizada, as dez seções que
+    //    custaram dez chamadas de IA. Hoje é inofensivo justamente porque a
+    //    chave é decorativa.
+    // 2. Download de sync que hoje aterrissa como órfão (um registro de
+    //    ritual cujo ritual não veio junto) passaria a ser RECUSADO.
+    // 3. Bancos já instalados guardam órfãos. O pragma não valida o que já
+    //    está lá, mas todo UPDATE naquelas linhas passaria a falhar.
+    //
+    // Para ligar um dia, nesta ordem: trocar o REPLACE de `birth_charts` por
+    // update-ou-insert explícito; migração varrendo os órfãos existentes;
+    // `PRAGMA defer_foreign_keys = ON` dentro da transação do fullDownload;
+    // e só então o pragma em `onConfigure` (dentro de onCreate/onUpgrade ele
+    // é no-op — o sqflite envolve os dois numa transação).
     return await openDatabase(
       path,
-      version: 22,
+      version: 23,
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
     );
@@ -374,6 +403,9 @@ class DatabaseHelper {
     await db.execute(_createTarotReadingsSql);
     await db.execute(
         'CREATE INDEX idx_tarot_readings_user_id ON tarot_readings(user_id)');
+
+    // Lápides da sincronização (ver _createSyncTombstonesSql)
+    await db.execute(_createSyncTombstonesSql);
 
     // Criar índices para user_id em todas as tabelas
     await db.execute('CREATE INDEX idx_spells_user_id ON spells(user_id)');
@@ -1134,6 +1166,13 @@ class DatabaseHelper {
       await db.execute(
           'CREATE INDEX IF NOT EXISTS idx_tarot_readings_user_id ON tarot_readings(user_id)');
     }
+
+    // v23: lápides da sincronização. Sem elas, o item apagado num aparelho
+    // ressuscita no download do sync seguinte — o apagar local sumia com a
+    // linha e, se o aviso à nuvem falhasse, a cópia do servidor voltava.
+    if (oldVersion < 23) {
+      await db.execute(_createSyncTombstonesSql);
+    }
   }
 
   /// SQL da tabela de tiragens de Tarô — compartilhado entre onCreate e a
@@ -1154,6 +1193,26 @@ class DatabaseHelper {
         created_at INTEGER NOT NULL,
         updated_at INTEGER NOT NULL,
         synced INTEGER NOT NULL DEFAULT 0
+      )
+    ''';
+
+  /// SQL das lápides da sincronização — compartilhado entre onCreate e a
+  /// migração v23 para nunca divergirem.
+  ///
+  /// Uma lápide registra "este item foi apagado, e quando". É ela que impede
+  /// o download da sincronização de ressuscitar o que a pessoa apagou:
+  /// `entity` é o nome do [SyncEntity] (o mesmo dos dois lados, local e
+  /// Supabase), `deleted_at` decide quem vence quando o item foi editado ou
+  /// recriado depois da exclusão, e `synced` marca se a exclusão já chegou
+  /// ao servidor.
+  static const _createSyncTombstonesSql = '''
+      CREATE TABLE IF NOT EXISTS sync_tombstones (
+        entity TEXT NOT NULL,
+        item_id TEXT NOT NULL,
+        user_id TEXT NOT NULL DEFAULT 'local_user',
+        deleted_at INTEGER NOT NULL,
+        synced INTEGER NOT NULL DEFAULT 0,
+        PRIMARY KEY (entity, item_id, user_id)
       )
     ''';
 
@@ -1246,33 +1305,35 @@ class DatabaseHelper {
     }
   }
 
+  /// As tabelas que a adoção de dados anônimos precisa varrer.
+  ///
+  /// Derivada de [SyncEntity], e não escrita à mão: a lista que existia aqui
+  /// já tinha perdido `tarot_readings` — uma tiragem feita antes do login
+  /// continuava presa a 'local_user', sumia da tela ao entrar na conta e
+  /// nunca subia para a nuvem. Mesma família do que aconteceu com a exclusão
+  /// de conta. Derivando do enum, entidade nova nasce adotada.
+  ///
+  /// `spells` sai da lista porque é tratada à parte: os feitiços
+  /// pré-carregados do app não pertencem a ninguém e não podem ser adotados.
+  @visibleForTesting
+  static Set<String> tabelasDaAdocaoAnonima() => <String>{
+        for (final entity in SyncEntity.values)
+          DataSyncService.localTableFor(entity),
+        // Não sincroniza, mas também nasce anônima e precisa ser adotada.
+        'guided_ritual_logs',
+        // As lápides também: o que foi apagado antes de entrar na conta
+        // precisa ser purgado da nuvem depois do login, senão o download
+        // seguinte ressuscita o item sob a conta nova.
+        'sync_tombstones',
+      }..remove('spells');
+
   /// Associa dados anônimos/legados à primeira conta autenticada que os abrir.
   /// Registros já pertencentes a UUIDs reais nunca são alterados.
   Future<void> claimLegacyData(String userId) async {
     if (userId == 'local_user' || userId == 'current_user') return;
 
     final db = await database;
-    const tables = [
-      'dreams',
-      'desires',
-      'gratitudes',
-      'affirmations',
-      'free_writings',
-      'daily_rituals',
-      'ritual_logs',
-      'sigils',
-      'birth_charts',
-      'magical_profiles',
-      'rune_readings',
-      'pendulum_consultations',
-      'oracle_readings',
-      'daily_magical_weather',
-      'daily_checkins',
-      'learning_progress',
-      'guided_ritual_logs',
-      'user_encyclopedia_entries',
-      'cycle_readings',
-    ];
+    final tables = tabelasDaAdocaoAnonima();
 
     await db.transaction((txn) async {
       await txn.update(

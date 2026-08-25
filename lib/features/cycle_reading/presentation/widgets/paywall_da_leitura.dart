@@ -1,0 +1,368 @@
+import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
+import 'package:intl/intl.dart';
+
+import '../../../../core/theme/grimoire_colors.dart';
+import '../../../../core/widgets/staggered_entrance.dart';
+import '../../../subscription/presentation/widgets/avulso_offer_widgets.dart';
+import '../../data/models/cycle_reading_model.dart';
+import '../../data/services/cycle_reading_service.dart';
+
+/// O paywall próprio da Leitura do Ciclo (decisão da dona, 23/08) — e SÓ
+/// do webapp: no aplicativo, a folha da própria loja faz este papel.
+///
+/// O preço saiu da tela de intro: esta folha explica primeiro O QUE a
+/// leitura tece — seção por seção do produto escolhido — e só então mostra
+/// o valor e o botão de pagar. Quem chega ao preço já sabe o que ele compra.
+///
+/// A FORMA é a do paywall oficial, com as peças PRÓPRIAS dos avulsos
+/// (decisão da dona, 23/08: componente específico, copiado do oficial, em
+/// vez de ficar adequando o existente) — [AvulsoHero], [AvulsoBeneficioRow],
+/// [AvulsoBotaoComprar] — no MESMO corpo tipográfico do oficial: a "metade"
+/// do avulso é a QUANTIDADE de conteúdo (3 bullets e um preço), nunca letra
+/// e foto menores (decisão da dona, 23/08). E SEM o rodapé de mensagens
+/// ("cancele quando quiser", selos): isso é conversa de assinatura, e aqui
+/// se compra uma leitura, uma vez.
+///
+/// A folha ABRAÇA o conteúdo: nada de altura fixa — meia oferta numa folha
+/// de tela inteira flutuava num vazio (visto no preview, 23/08), e o
+/// conteúdo maior que a tela rola por dentro, com o CTA sempre alcançável.
+///
+/// A folha só APRESENTA: nenhuma lógica de compra mora aqui. Ao tocar o CTA
+/// ela se fecha e devolve a decisão pelo [onComprar] — o pop acontece ANTES
+/// do callback, então nenhum context desta folha sobrevive a um await do
+/// fluxo de pagamento.
+Future<void> mostrarPaywallDaLeitura(
+  BuildContext context, {
+  required String periodType,
+  required DateTime periodStart,
+  required DateTime periodEnd,
+  required String price,
+  required VoidCallback onComprar,
+}) {
+  return showModalBottomSheet<void>(
+    context: context,
+    useSafeArea: true,
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent,
+    builder: (_) => PaywallDaLeitura(
+      periodType: periodType,
+      periodStart: periodStart,
+      periodEnd: periodEnd,
+      price: price,
+      onComprar: onComprar,
+    ),
+  );
+}
+
+/// A folha em si — pública para os testes montarem direto.
+class PaywallDaLeitura extends StatelessWidget {
+  /// [CycleReadingPeriodType]: decide título, seções e o upsell da semana.
+  final String periodType;
+
+  /// Janela lida, com fim EXCLUSIVO (padrão da feature).
+  final DateTime periodStart;
+  final DateTime periodEnd;
+
+  /// Preço já formatado pela loja — a folha é o ÚNICO lugar do fluxo em que
+  /// ele aparece.
+  final String price;
+
+  /// Chamado depois que a folha se fecha, quando a pessoa toca em pagar.
+  final VoidCallback onComprar;
+
+  const PaywallDaLeitura({
+    super.key,
+    required this.periodType,
+    required this.periodStart,
+    required this.periodEnd,
+    required this.price,
+    required this.onComprar,
+  });
+
+  bool get _isWeek => periodType == CycleReadingPeriodType.week;
+
+  /// Só os DESTAQUES viram bullet — exatamente 3, SEM o Retrato do momento
+  /// (decisão da dona, 23/08). A lista completa mora na tela anterior, no
+  /// "O que vem na leitura"; a folha fecha a venda com o essencial — e a
+  /// linha "+ N seções" diz que há mais sem listar.
+  List<String> get _destaques => _isWeek
+      ? const [
+          CycleReadingSections.threads,
+          CycleReadingSections.sky,
+          CycleReadingSections.forecast,
+        ]
+      : const [
+          CycleReadingSections.sky,
+          CycleReadingSections.forecast,
+          CycleReadingSections.rituals,
+        ];
+
+  /// O título de cada seção, no idioma da tela — mesmo mapeamento da intro
+  /// (as chaves são invariantes; os títulos, não).
+  String _tituloDaSecao(AppLocalizations l10n, String chave) =>
+      switch (chave) {
+        CycleReadingSections.portrait => l10n.cycleReadingSectionPortrait,
+        CycleReadingSections.threads => l10n.cycleReadingSectionThreads,
+        CycleReadingSections.sky => l10n.cycleReadingSectionSky,
+        CycleReadingSections.practice => l10n.cycleReadingSectionPractice,
+        CycleReadingSections.forecast => l10n.cycleReadingSectionForecast,
+        CycleReadingSections.love => l10n.cycleReadingSectionLove,
+        CycleReadingSections.work => l10n.cycleReadingSectionWork,
+        CycleReadingSections.family => l10n.cycleReadingSectionFamily,
+        CycleReadingSections.rituals => l10n.cycleReadingSectionRituals,
+        CycleReadingSections.affirmation => l10n.cycleReadingSectionAffirmation,
+        _ => l10n.cycleReadingSectionSeal,
+      };
+
+  /// O que cada seção entrega, em uma linha — a MESMA anatomia das peças do
+  /// paywall Premium, onde todo benefício tem título e vislumbre. Sem esta
+  /// linha as seções liam como índice de livro, não como o que se compra.
+  String _vislumbreDaSecao(AppLocalizations l10n, String chave) =>
+      switch (chave) {
+        CycleReadingSections.portrait => l10n.cycleSectionHintPortrait,
+        CycleReadingSections.threads => l10n.cycleSectionHintThreads,
+        CycleReadingSections.sky => l10n.cycleSectionHintSky,
+        CycleReadingSections.practice => l10n.cycleSectionHintPractice,
+        CycleReadingSections.forecast => l10n.cycleSectionHintForecast,
+        CycleReadingSections.love => l10n.cycleSectionHintLove,
+        CycleReadingSections.work => l10n.cycleSectionHintWork,
+        CycleReadingSections.family => l10n.cycleSectionHintFamily,
+        CycleReadingSections.rituals => l10n.cycleSectionHintRituals,
+        CycleReadingSections.affirmation => l10n.cycleSectionHintAffirmation,
+        _ => l10n.cycleSectionHintSeal,
+      };
+
+  /// Divide o título da seção em (emoji, rótulo): o emoji vai para DENTRO
+  /// do selo circular — o papel das artes pintadas dos benefícios Premium —
+  /// e o rótulo fica limpo ao lado, sem o emoji duplicado.
+  @visibleForTesting
+  static ({String emoji, String rotulo}) separarEmoji(String titulo) {
+    final corte = titulo.indexOf(' ');
+    if (corte <= 0) return (emoji: '✦', rotulo: titulo);
+    return (
+      emoji: titulo.substring(0, corte),
+      rotulo: titulo.substring(corte + 1),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final bottomPadding = MediaQuery.viewPaddingOf(context).bottom;
+
+    // Moldura do paywall oficial (alça + fechar, teto de largura), mas a
+    // folha ABRAÇA o conteúdo: o Center que vivia FORA da rolagem esticava
+    // para a altura toda e a meia oferta flutuava numa folha de tela
+    // inteira, com o CTA cortado na dobra (visto no preview, 23/08).
+    // Dentro da rolagem, o Center só centraliza na largura — a altura é a
+    // do conteúdo, e o que passar do teto rola com o CTA alcançável.
+    return Material(
+      color: Colors.transparent,
+      child: Container(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.sizeOf(context).height * 0.92,
+        ),
+        padding: EdgeInsets.fromLTRB(10, 10, 10, 10 + bottomPadding),
+        decoration: BoxDecoration(
+          color: context.gc.background,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(26)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              children: [
+                const Spacer(),
+                Container(
+                  width: 42,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: context.gc.textSecondary,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                Expanded(
+                  child: Align(
+                    alignment: Alignment.centerRight,
+                    child: IconButton(
+                      tooltip: l10n.commonClose,
+                      onPressed: () => Navigator.pop(context),
+                      icon: Icon(Icons.close, color: context.gc.textSecondary),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            Flexible(
+              child: SingleChildScrollView(
+                physics: const ClampingScrollPhysics(),
+                padding: const EdgeInsets.fromLTRB(4, 0, 4, 8),
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 720),
+                    child: _painel(context, l10n),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// O painel da oferta — a mesma casca do [PremiumOfferPanel].
+  Widget _painel(BuildContext context, AppLocalizations l10n) {
+    final secoes = _destaques;
+    final restantes =
+        CycleReadingSections.forPeriod(periodType).length - secoes.length;
+
+    return Container(
+      // O mesmo respiro do painel da assinatura: a folha do avulso tem
+      // MENOS conteúdo, nunca conteúdo menor (decisão da dona, 23/08).
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: context.gc.surface,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: context.gc.surfaceBorder),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x33000000),
+            blurRadius: 24,
+            offset: Offset(0, 12),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          // O herói dos avulsos — o desenho e as medidas do herói Premium
+          // (Salem, halo, tipografia), com os textos da Leitura nos mesmos
+          // quatro lugares.
+          AvulsoHero(
+            access: _isWeek
+                ? l10n.cycleReadingWeekTitle
+                : l10n.cycleReadingLunationTitle,
+            power: l10n.cycleHeroPower,
+            magic: l10n.cycleHeroMagic,
+            tagline: _linhaDoPeriodo(l10n),
+          ),
+          const SizedBox(height: 10),
+          const AvulsoDivider(),
+          const SizedBox(height: 12),
+          // Só os destaques, nas peças próprias dos avulsos — a anatomia e
+          // o tamanho dos benefícios Premium.
+          StaggeredEntrance(
+            children: [
+              for (var i = 0; i < secoes.length; i++) ...[
+                AvulsoBeneficioRow(
+                  emoji: separarEmoji(_tituloDaSecao(l10n, secoes[i])).emoji,
+                  rotulo: separarEmoji(_tituloDaSecao(l10n, secoes[i])).rotulo,
+                  vislumbre: _vislumbreDaSecao(l10n, secoes[i]),
+                ),
+                if (i != secoes.length - 1) const SizedBox(height: 10),
+              ],
+            ],
+          ),
+          const SizedBox(height: 8),
+          // As seções que não viraram bullet continuam contadas: a folha
+          // vende o produto inteiro, só não o lista inteiro.
+          Text(
+            l10n.cyclePaywallMoreSections(restantes),
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: context.gc.textSecondary,
+              fontSize: 12,
+            ),
+          ),
+          if (_isWeek) ...[
+            const SizedBox(height: 8),
+            // Upsell honesto: diz o que SÓ a lunação traz, sem esconder que
+            // a semana já entrega uma leitura inteira.
+            Text(
+              l10n.cycleReadingPaywallWeekUpsell,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: context.gc.textSecondary,
+                fontSize: 12,
+                height: 1.35,
+              ),
+            ),
+          ],
+          const SizedBox(height: 12),
+          // O preço no MESMO cartão dos planos do paywall Premium: caixa com
+          // borda, valor em Lora e o rótulo do que ele é. O aviso de leitura
+          // rasa NÃO mora aqui (decisão da dona, 23/08) — ele já está na
+          // tela de onde esta folha nasceu, e repetir vira alarme.
+          _cartaoDoPreco(context, l10n),
+          const SizedBox(height: 12),
+          // O botão dos avulsos — o gradiente e a forma do botão Premium,
+          // com o verbo do produto. Fecha ANTES de avisar: o fluxo de
+          // compra é assíncrono e não pode depender do context desta folha.
+          // Sem rodapé de mensagens depois dele (decisão da dona, 23/08) —
+          // "cancele quando quiser" e selos são conversa de assinatura, e
+          // aqui se compra uma leitura, uma vez.
+          AvulsoBotaoComprar(
+            label: l10n.cycleReadingWantFull,
+            onPressed: () {
+              Navigator.pop(context);
+              onComprar();
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// O preço no formato — e no CORPO — dos cards de plano do paywall
+  /// Premium (lá o valor sai em Lora 21-23; encolher aqui fazia o preço do
+  /// avulso parecer letra miúda).
+  Widget _cartaoDoPreco(BuildContext context, AppLocalizations l10n) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+      decoration: BoxDecoration(
+        color: Color.lerp(context.gc.surface, context.gc.lilac, 0.16)!,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: context.gc.lilac, width: 2),
+        boxShadow: [
+          BoxShadow(
+            color: context.gc.lilac.withValues(alpha: 0.17),
+            blurRadius: 12,
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            price,
+            style: GoogleFonts.lora(
+              color: context.gc.textPrimary,
+              fontSize: 22,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          Text(
+            l10n.cycleReadingOneTime,
+            style: GoogleFonts.lora(
+              color: context.gc.textSecondary,
+              fontSize: 12,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// A linha do período para a tagline do herói. Fim estampado = último dia
+  /// LIDO (o `end` cru é exclusivo), igual ao cartão da intro e à linha do
+  /// relatório.
+  String _linhaDoPeriodo(AppLocalizations l10n) {
+    final format = DateFormat('dd/MM/yyyy');
+    final fim = format.format(CycleReadingService.lastDayOf(periodEnd));
+    return _isWeek
+        ? l10n.cycleReadingWeekPeriodLine(format.format(periodStart), fim)
+        : l10n.cycleReadingPeriodLine(format.format(periodStart), fim);
+  }
+}

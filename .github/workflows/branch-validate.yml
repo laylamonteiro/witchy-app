@@ -58,10 +58,26 @@ jobs:
           # HEAD^ disponível para detectar mudanças em android/pubspec.
           fetch-depth: 2
 
-      - name: 🔎 Mudou código nativo? (android/ ou pubspec)
+      - name: 🔎 Mudou o ANDROID? (android/ ou pubspec)
         # Decide se o build de fumaça Android (job à parte, ~8 min) precisa
         # rodar: ele só detecta problemas de Gradle/NDK/manifest, e analyze +
         # testes já cobrem o Dart. O resultado sai como output do job.
+        #
+        # O nome dizia "código nativo" e olhava só para `android/`. Agora
+        # diz a verdade: o iOS NÃO é compilado por job nenhum desta esteira,
+        # e não vai ser.
+        #
+        # DECISÃO DA DONA DO PRODUTO: não haverá app iOS nativo. Com isso
+        # caem, de uma vez, o runner macOS no CI, o GoogleService-Info.plist,
+        # o GIDClientID e o identificador de TESTE do AdMob em
+        # ios/Runner/Info.plist — a auditoria listava os quatro, e os quatro
+        # só existiriam para um app que não vai à App Store.
+        #
+        # ATENÇÃO ao que NÃO cai junto: o app WEB aberto no iPhone continua
+        # existindo, é Safari, e é lá que vale a regra dos 7 dias da Apple
+        # que apaga o armazenamento gravável por script. Foi por causa dela
+        # que a sincronização foi aberta para o plano gratuito. Quando a
+        # auditoria fala de "iOS" no achado crítico, é deste que ela fala.
         id: native
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
@@ -80,15 +96,71 @@ jobs:
       - name: 🛠️ Setup Flutter (pinado)
         uses: ./.github/actions/setup-flutter
 
-      - name: 🔍 Check formatting
-        run: dart format --output=none --set-exit-if-changed lib test
+      - name: 🔍 Check formatting (informativo — ainda NÃO bloqueia)
+        # O `--set-exit-if-changed` existe para falhar, e o
+        # `continue-on-error` logo abaixo anulava esse efeito: o passo
+        # anunciava verificação, não verificava nada e ainda saía verde. Pior
+        # que não existir, porque ensina a ignorar check verde.
+        #
+        # Agora ele pelo menos DIZ o tamanho do problema — antes nem a lista
+        # saía, porque `--output=none` sem `--show` só emite resumo.
+        #
+        # Para virar gate faltam dois passos, nesta ordem, e o primeiro exige
+        # uma máquina com o Flutter 3.47.0 (o mesmo pin de
+        # .github/actions/setup-flutter): (1) um commit ISOLADO com
+        # `dart format lib test` — isolado porque um diff de centenas de
+        # arquivos misturado com lógica é irrevisável e envenena todo `git
+        # blame` seguinte; (2) apagar o `continue-on-error` daqui.
+        #
+        # Formatar com outra versão do dart_style reescreve o repositório num
+        # terceiro estilo e quebra o gate no primeiro PR — por isso o pin
+        # importa.
+        run: |
+          dart format --output=none --show=changed lib test | tee /tmp/fmt.txt
+          echo "::warning::arquivos fora de formato: $(grep -c '^Changed' /tmp/fmt.txt || true)"
+          dart format --output=none --set-exit-if-changed lib test
         continue-on-error: true
 
       - name: 🧭 Analyze (bloqueante em erros/warnings)
         # --no-fatal-infos: falha só em erros e warnings (problemas reais
         # introduzidos), não na dívida de lint info pré-existente
         # (withOpacity depreciado, prefer_const etc.).
-        run: flutter analyze --no-fatal-infos
+        #
+        # A saída é guardada porque o passo seguinte precisa dela: entre as
+        # centenas de infos que este `--no-fatal-infos` perdoa existe uma
+        # regra que NÃO é cosmética, e ela estava escondida no meio do
+        # resto. `set -o pipefail` para o `tee` não engolir a falha.
+        run: |
+          set -o pipefail
+          flutter analyze --no-fatal-infos 2>&1 | tee /tmp/analyze.txt
+
+      - name: 🔒 Contexto usado depois do await (catraca, não pode crescer)
+        # `use_build_context_synchronously` é info, então
+        # `--no-fatal-infos` a perdoa junto com o `withOpacity` depreciado —
+        # e ela não é cosmética: usar um BuildContext depois de um `await`
+        # dá exceção em tempo de execução quando a tela saiu no meio, que é
+        # exatamente o caso que ninguém testa (rede lenta, pessoa voltando).
+        #
+        # CATRACA, e não trava: escalar a regra para warning derrubaria o
+        # build hoje, com dezenas de ocorrências antigas e ninguém para
+        # consertá-las no mesmo passo. Aqui o número só pode CAIR. Quem
+        # introduzir uma nova é barrado; quem consertar uma antiga vê o
+        # aviso pedindo para baixar o teto.
+        #
+        # O teto veio da auditoria (26) e nunca foi conferido com o Dart
+        # rodando — a primeira execução deste passo diz o número real. Se
+        # ele vier menor, baixe o TETO aqui no mesmo commit.
+        run: |
+          TETO=26
+          atual=$(grep -c 'use_build_context_synchronously' /tmp/analyze.txt || true)
+          echo "use_build_context_synchronously: $atual (teto $TETO)"
+          if [ "$atual" -gt "$TETO" ]; then
+            echo "::error::$atual usos de contexto depois do await — o teto é $TETO. Uma ocorrência nova entrou: guarde o contexto antes do await, ou confira \`mounted\` depois dele."
+            exit 1
+          fi
+          if [ "$atual" -lt "$TETO" ]; then
+            echo "::warning::$atual usos (teto $TETO): baixe TETO para $atual em .github/workflows/branch-validate.yml, senão a catraca afrouxa sozinha."
+          fi
 
       - name: 🧪 Testes de i18n/conteúdo (bloqueante)
         # Paridade pt/en/es da camada de conteúdo + localização de feitiços:
@@ -124,6 +196,14 @@ jobs:
 
       - name: 🔤 ARB key parity
         run: bash scripts/check_arb_sync.sh
+
+      - name: 🧹 Chaves ARB órfãs
+        # A paridade acima compara ARB com ARB e nunca abre um .dart, então
+        # chave que nenhuma tela usa passava batido. Cinquenta apodreciam
+        # assim — e no meio delas estava `appTitle`, que existia traduzida
+        # nos quatro idiomas enquanto a tela mostrava o nome em português
+        # cravado para todo mundo.
+        run: bash scripts/check_arb_orfas.sh
 
       - name: 🔧 Garantir ripgrep (o scanner de i18n depende dele)
         # Sem o rg, o scanner buscava vazio e o gate passava sem verificar
@@ -224,7 +304,7 @@ jobs:
   #                               Google. Sem ele o login social segue pelo
   #                               redirecionamento de página inteira.
   #   (SUPABASE_URL, SUPABASE_ANON_KEY, TURNSTILE_SITE_KEY, GROQ_API_KEY,
-  #    GEMINI_API_KEY e PROKERALA_* já são usados pelo workflow de release)
+  #    GEMINI_API_KEY já são usados pelo workflow de release)
   #
   # ADMIN_EMAIL/ADMIN_PASSWORD NÃO entram aqui de propósito: o bundle web é
   # público e qualquer visitante conseguiria lê-los no main.dart.js.
@@ -243,6 +323,26 @@ jobs:
     steps:
       - name: 📥 Checkout repository
         uses: actions/checkout@v4
+        with:
+          # Histórico completo por causa das TAGS: a versão que a tela
+          # "Sobre" mostra na prévia/staging é derivada da última tag de
+          # release (abaixo), não digitada à mão.
+          fetch-depth: 0
+
+      - name: 🔢 Versão coerente com produção (última tag + commit)
+        # A prévia compila o pubspec, cuja versão é baseline morta — o
+        # "Sobre" dizia 2.0.25 para sempre e parecia deploy quebrado. Aqui a
+        # versão nasce da MESMA fonte da produção (a tag): produção em
+        # v2.0.31 → prévia mostra "2.0.31-dev.<commit>". Sobe sozinha a cada
+        # release, sem ninguém lembrar de editar arquivo nenhum.
+        id: versao
+        run: |
+          TAG="$(git tag --list 'v*' --sort=-v:refname | head -1)"
+          NOME="${TAG#v}"
+          NOME="${NOME%%+*}"
+          [ -z "$NOME" ] && NOME="0.0.0"
+          echo "nome=${NOME}-dev.${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+          echo "Prévia identificada como ${NOME}-dev.${GITHUB_SHA::7}"
 
       - name: 🔑 Conferir secrets do Cloudflare
         # Falha cedo e com mensagem clara: sem isto o erro só apareceria lá
@@ -265,8 +365,6 @@ jobs:
         with:
           groq-api-key: ${{ secrets.GROQ_API_KEY }}
           gemini-api-key: ${{ secrets.GEMINI_API_KEY }}
-          prokerala-client-id: ${{ secrets.PROKERALA_CLIENT_ID }}
-          prokerala-client-secret: ${{ secrets.PROKERALA_CLIENT_SECRET }}
 
       - name: 🛠️ Setup Flutter (pinado)
         uses: ./.github/actions/setup-flutter
@@ -291,6 +389,16 @@ jobs:
           # continua no redirecionamento de sempre — não é obrigatório.
           GOOGLE_WEB_CLIENT_ID: ${{ secrets.GOOGLE_WEB_CLIENT_ID }}
         run: |
+          # Aviso, não trava: o captcha está EXIGIDO no servidor (Supabase →
+          # Authentication → Attack Protection), e o staging fala com o
+          # MESMO projeto. Sem a site key compilada, a prévia sobe mas
+          # ninguém consegue entrar nem cadastrar por e-mail — e quem for
+          # testar vai achar que quebrou o login. Aqui só avisa (prévia não
+          # publica nada); no release.yml a mesma falta PARA o build.
+          if [ -z "$TURNSTILE_SITE_KEY" ]; then
+            echo "::warning::TURNSTILE_SITE_KEY vazio. Esta prévia sobe sem captcha e o Supabase vai recusar cadastro e entrada por e-mail — teste só o que não depende de login."
+          fi
+
           # Trava: no staging a chave web PRECISA ser sandbox. Se veio uma
           # que não começa com rcb_sb_ (ex.: a de produção por engano), para
           # aqui em vez de aceitar pagamento real numa prévia.
@@ -304,6 +412,7 @@ jobs:
           # resultado sem esperar um mês. O release.yml, que é quem publica
           # em produção, tem o build dele e NÃO passa este define.
           flutter build web --release --no-wasm-dry-run \
+            --build-name="${{ steps.versao.outputs.nome }}" \
             --dart-define=SUPABASE_URL="$SUPABASE_URL" \
             --dart-define=SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY" \
             --dart-define=TURNSTILE_SITE_KEY="$TURNSTILE_SITE_KEY" \
@@ -520,8 +629,6 @@ jobs:
         with:
           groq-api-key: ${{ secrets.GROQ_API_KEY }}
           gemini-api-key: ${{ secrets.GEMINI_API_KEY }}
-          prokerala-client-id: ${{ secrets.PROKERALA_CLIENT_ID }}
-          prokerala-client-secret: ${{ secrets.PROKERALA_CLIENT_SECRET }}
           google-services-json: ${{ secrets.GOOGLE_SERVICES_JSON }}
 
       - name: 🛠️ Setup Flutter (pinado)
@@ -570,9 +677,13 @@ jobs:
           if [ -n "$ADMOB_ANDROID_INTERSTITIAL_ID" ]; then
             ADMOB_FLAG="--dart-define=ADMOB_ANDROID_INTERSTITIAL_ID=$ADMOB_ANDROID_INTERSTITIAL_ID"
           fi
+          # Mesmo aviso do build web: com o captcha exigido no servidor,
+          # um APK sem a site key não cadastra nem entra ninguém.
           CAPTCHA_FLAG=""
           if [ -n "$TURNSTILE_SITE_KEY" ]; then
             CAPTCHA_FLAG="--dart-define=TURNSTILE_SITE_KEY=$TURNSTILE_SITE_KEY"
+          else
+            echo "::warning::TURNSTILE_SITE_KEY vazio. Este APK de prévia não consegue cadastrar nem entrar por e-mail — o Supabase exige o token do captcha."
           fi
           flutter build apk --release \
             --build-name="${{ steps.versao.outputs.nome }}" \

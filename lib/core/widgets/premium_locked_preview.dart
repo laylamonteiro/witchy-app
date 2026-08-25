@@ -1,10 +1,9 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 
 import '../../features/auth/presentation/widgets/premium_blur_widget.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../theme/grimoire_colors.dart';
+import 'veu_vivo.dart';
 
 /// O que uma leitura Premium teria dito — os TÍTULOS à vista, o conteúdo sob
 /// véu, e o convite embaixo.
@@ -61,12 +60,23 @@ class PremiumLockedPreview extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(
-                Icons.lock,
-                size: 15,
-                color: context.gc.textSecondary.withValues(alpha: 0.6),
+              // O cadeado continua (a falta é que move — ver o topo), mas
+              // dentro de um selo lilás em vez de solto e cinza: o mesmo
+              // ícone deixa de parecer "erro" e passa a parecer lacre.
+              Container(
+                width: 24,
+                height: 24,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: context.gc.lilac.withValues(alpha: 0.15),
+                ),
+                child: Icon(
+                  Icons.lock,
+                  size: 13,
+                  color: context.gc.lilac.withValues(alpha: 0.85),
+                ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 10),
               Expanded(
                 child: Text(
                   titles[i],
@@ -105,6 +115,10 @@ class PremiumLockedPreview extends StatelessWidget {
 
 /// As linhas embaçadas que ocupam o lugar do texto — placeholder, nunca o
 /// conteúdo real (ver a nota de fail-closed no topo do arquivo).
+///
+/// O embaçado quem faz é o [VeuVivo]: ele respira, tem um brilho que
+/// atravessa e reage ao toque. O que está por baixo continua sendo enfeite,
+/// e espiar mostra luz, nunca palavra.
 class _CorpoSobVeu extends StatelessWidget {
   const _CorpoSobVeu({required this.linhas});
 
@@ -112,21 +126,15 @@ class _CorpoSobVeu extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ExcludeSemantics(
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(4),
-        child: ImageFiltered(
-          imageFilter: ImageFilter.blur(sigmaX: 6, sigmaY: 6),
-          child: Text(
-            kPremiumPlaceholderText,
-            maxLines: linhas,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              color: context.gc.softWhite,
-              height: 1.55,
-              fontSize: 15,
-            ),
-          ),
+    return VeuVivo(
+      child: Text(
+        kPremiumPlaceholderText,
+        maxLines: linhas,
+        overflow: TextOverflow.ellipsis,
+        style: TextStyle(
+          color: context.gc.softWhite,
+          height: 1.55,
+          fontSize: 15,
         ),
       ),
     );

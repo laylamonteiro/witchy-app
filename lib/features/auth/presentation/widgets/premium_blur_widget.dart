@@ -296,12 +296,17 @@ class PremiumBlurText extends StatelessWidget {
   }
 }
 
-/// Sobe o paywall ([PremiumUpgradeSheet]) direto sobre a tela anterior e,
-/// quando a pessoa dispensa, fecha a tela atual — evitando telas
-/// intermediárias de "Seja Premium" nas funcionalidades 100% Premium.
+/// Sobe o paywall ([PremiumUpgradeSheet]) sobre a tela anterior e, quando a
+/// pessoa dispensa, fecha a tela atual.
 ///
-/// Uso: numa página exclusiva Premium, chame no primeiro frame quando o
-/// acesso for negado. O corpo pode ficar vazio enquanto o paywall sobe.
+/// SEM CHAMADORES, de propósito. Este é o padrão de "porta fechada": a pessoa
+/// toca em algo, a tela abre e só serve para empurrá-la de volta. Ele foi
+/// abolido da Quiromancia, do Guia da Natureza e, por último, dos Rituais
+/// Guiados — o conteúdo fica visível e o bloqueio aparece como cadeado no
+/// lugar certo, junto do que é pago.
+///
+/// Fica aqui como registro do que NÃO fazer. Antes de chamá-lo em qualquer
+/// tela nova, veja [PremiumContentSection]: é ela que resolve o caso.
 Future<void> showPaywallThenPop(BuildContext context) async {
   await showModalBottomSheet<void>(
     context: context,
@@ -333,12 +338,12 @@ class _PremiumUpgradeSheetState extends State<PremiumUpgradeSheet> {
   }
 
   Future<void> _initializeProducts() async {
-    if (_paymentService.isInitialized) {
-      _selectAvailablePlan();
-      return;
-    }
+    // Sem a saída antecipada por `isInitialized`: ela pulava exatamente o
+    // caso ruim. Um boot com rede ruim marca inicializado e deixa o catálogo
+    // vazio — e a tela mostrava "planos indisponíveis" com o botão de compra
+    // morto pela sessão inteira, porque ninguém tentava de novo.
     setState(() => _isInitializing = true);
-    await _paymentService.initialize();
+    await _paymentService.garantirCatalogo();
     if (!mounted) return;
     setState(() {
       _isInitializing = false;
@@ -448,15 +453,24 @@ class _PremiumUpgradeSheetState extends State<PremiumUpgradeSheet> {
                                   SubscriptionType.yearly,
                                   'R\$ 119,90',
                                 ),
+                                // O Vitalício ganhou valor de reserva como
+                                // os outros dois. Antes era string vazia: a
+                                // loja calada deixava o card sem preço
+                                // nenhum, e o R$ 249,90 não existia em lugar
+                                // nenhum do repositório.
                                 lifetimePrice: lifetimeAvailable
                                     ? _priceFor(
                                         SubscriptionType.lifetime,
-                                        '',
+                                        'R\$ 249,90',
                                       )
                                     : null,
                                 monthlyEnabled: monthlyAvailable,
                                 yearlyEnabled: yearlyAvailable,
                                 lifetimeEnabled: lifetimeAvailable,
+                                // Calculado dos preços reais da loja; null
+                                // esconde o selo em vez de mentir.
+                                economiaAnual:
+                                    _paymentService.economiaAnualEmPorcento,
                                 purchaseLoading: _isPurchasing ||
                                     _paymentService.status ==
                                         PurchaseStatus.loading,
@@ -502,16 +516,20 @@ class _PremiumUpgradeSheetState extends State<PremiumUpgradeSheet> {
         messenger.showSnackBar(
           SnackBar(
             content: Text(AppLocalizations.of(context).premiumActivated),
-            backgroundColor: Colors.green,
+            backgroundColor: context.gc.success,
           ),
         );
-      } else if (result.errorMessage != 'Compra cancelada') {
+      } else if (!result.foiCancelada) {
+        // Pelo campo, não pelo texto: comparar com o literal 'Compra
+        // cancelada' passava a acusar erro num cancelamento normal assim que
+        // a mensagem fosse traduzida.
         messenger.showSnackBar(
           SnackBar(
             content: Text(
-              result.errorMessage ?? AppLocalizations.of(context).premiumPurchaseFailed,
+              result.errorMessage ??
+                  AppLocalizations.of(context).premiumPurchaseFailed,
             ),
-            backgroundColor: Colors.red,
+            backgroundColor: context.gc.alert,
           ),
         );
       }

@@ -18,6 +18,14 @@ const int kTotalNakshatras = 27;
 
 /// Versão do algoritmo. Subir este número invalida os caches gravados por
 /// versões anteriores, forçando o recálculo.
+///
+/// O carimbo do cache é só das ENTRADAS (longitude da Lua, instante do
+/// nascimento, esta versão): mudar o CÁLCULO sem subir daqui deixa cache
+/// velho na máquina de quem já abriu a tela, e ele nunca cai sozinho.
+///
+/// Quem cobra isso é test/life_eras_calculator_test.dart, no caso de
+/// referência: os valores congelados lá são o contrato do algoritmo, e o
+/// teste prende esta constante a eles. Não é boa memória — é trava.
 const int kLifeErasAlgoVersion = 1;
 
 /// Converte anos fracionários em [Duration].

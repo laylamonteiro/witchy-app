@@ -35,10 +35,19 @@ class PurchaseResult {
   final String? errorMessage;
   final CustomerInfo? customerInfo;
 
+  /// Desistir não é defeito.
+  ///
+  /// Existe como CAMPO porque duas telas distinguiam o cancelamento
+  /// comparando `errorMessage` com o literal 'Compra cancelada'. Traduzir a
+  /// mensagem — que é o que tem de acontecer, ela chega à tela em inglês e
+  /// espanhol hoje — faria as duas acusarem erro num cancelamento normal.
+  final bool foiCancelada;
+
   PurchaseResult({
     required this.success,
     this.errorMessage,
     this.customerInfo,
+    this.foiCancelada = false,
   });
 
   factory PurchaseResult.success(CustomerInfo info) {
@@ -50,7 +59,11 @@ class PurchaseResult {
   }
 
   factory PurchaseResult.cancelled() {
-    return PurchaseResult(success: false, errorMessage: 'Compra cancelada');
+    return PurchaseResult(
+      success: false,
+      foiCancelada: true,
+      errorMessage: _l10n.paymentErrCancelled,
+    );
   }
 }
 
@@ -86,6 +99,14 @@ class PaymentService extends ChangeNotifier {
   PaymentService._internal();
 
   bool _isInitialized = false;
+
+  /// O `Purchases.configure` rodou de verdade?
+  ///
+  /// Separado de [_isInitialized], que vira true até nos caminhos de erro
+  /// ("continuar sem pagamentos"). Sem esta distinção não havia como saber se
+  /// o SDK está de pé — e o `logIn` conferia só a presença da chave, que na
+  /// web existe (a `rcb_`) mesmo com o SDK nunca configurado.
+  bool _sdkConfigurado = false;
   bool _isPro = false;
   PurchaseStatus _status = PurchaseStatus.idle;
   List<ProductInfo> _products = [];
@@ -107,7 +128,12 @@ class PaymentService extends ChangeNotifier {
   ///
   /// Deve ser chamado no início do app, preferencialmente em main.dart
   Future<void> initialize() async {
-    if (_isInitialized) {
+    // Sai cedo só quando não há mais nada a tentar: SDK de pé, ou sem chave
+    // para esta plataforma. Um boot que falhou no configure (rede ruim) pode
+    // ser retomado por qualquer chamador depois — antes, `_isInitialized`
+    // virava true no erro e trancava a sessão inteira sem pagamentos.
+    if (_isInitialized &&
+        (_sdkConfigurado || !RevenueCatConfig.isConfigured)) {
       debugPrint('ℹ️  RevenueCat já inicializado');
       return;
     }
@@ -143,6 +169,7 @@ class PaymentService extends ChangeNotifier {
       final configuration = PurchasesConfiguration(RevenueCatConfig.apiKey);
 
       await Purchases.configure(configuration);
+      _sdkConfigurado = true;
       debugPrint('✅ SDK configurado');
 
       // Habilitar logs em debug
@@ -208,25 +235,58 @@ class PaymentService extends ChangeNotifier {
     }
   }
 
-  /// Atualiza status Pro baseado no entitlement
-  void _updateProStatus() {
-    if (_customerInfo == null) {
-      _isPro = false;
-      return;
+  /// Um entitlement concedido por ESTE produto vale como Premium?
+  ///
+  /// Vale dinheiro, e a resposta é sempre não para os avulsos da Leitura do
+  /// Ciclo: eles são consumíveis e não devem estar ligados a entitlement
+  /// nenhum no painel — o crédito vive na tabela `cycle_readings`. Um
+  /// consumível ligado por engano concede o Pro SEM data de expiração, e uma
+  /// leitura de R$ 4,99 vira Premium vitalício — a de R$ 249,90, de graça.
+  ///
+  /// Estática e exposta porque é a regra que o teste tranca: se
+  /// `cycleReadingProductIds` esvaziar, a guarda para de guardar em silêncio.
+  @visibleForTesting
+  static bool entitlementValeComoPro(String productIdentifier) =>
+      !RevenueCatConfig.cycleReadingProductIds.contains(productIdentifier);
+
+  /// O entitlement Pro ativo, reduzido ao que o app precisa — ou null quando
+  /// não há, e TAMBÉM quando quem o concedeu foi um consumível.
+  ///
+  /// Ponto único de leitura do entitlement no serviço. Antes, `isLifetime`
+  /// documentava o risco do consumível e se defendia sozinho, enquanto
+  /// `_updateProStatus` era só um `containsKey` — e é o `isPro` que alimenta
+  /// o app inteiro e faz o auth_provider gravar role=premium e persistir.
+  /// O guarda estreito valia; o largo não. Agora é um só, e vale para os dois.
+  ({String productIdentifier, String? expirationDate})? get _proAtivo {
+    final info = _customerInfo;
+    if (info == null) return null;
+
+    final pro = info.entitlements.active[RevenueCatConfig.proEntitlementId];
+    if (pro == null) return null;
+
+    if (!entitlementValeComoPro(pro.productIdentifier)) {
+      debugPrint(
+        '⚠️ Entitlement Pro concedido por ${pro.productIdentifier}: um '
+        'consumível da Leitura do Ciclo NÃO deveria ter entitlement no '
+        'painel do RevenueCat. Ignorando.',
+      );
+      return null;
     }
 
-    // Verificar entitlement "Grimorio de Bolso Pro"
-    _isPro = _customerInfo!.entitlements.active
-        .containsKey(RevenueCatConfig.proEntitlementId);
+    return (
+      productIdentifier: pro.productIdentifier,
+      expirationDate: pro.expirationDate,
+    );
+  }
 
+  /// Atualiza status Pro baseado no entitlement
+  void _updateProStatus() {
+    _isPro = _proAtivo != null;
     debugPrint('Status Pro atualizado: $_isPro');
   }
 
   /// Verifica se o usuário tem o entitlement Pro ativo
-  bool hasPro() {
-    return _customerInfo?.entitlements.active
-        .containsKey(RevenueCatConfig.proEntitlementId) ?? false;
-  }
+  bool hasPro() => _proAtivo != null;
 
   /// Carrega ofertas disponíveis
   Future<void> _loadOfferings() async {
@@ -303,6 +363,24 @@ class PaymentService extends ChangeNotifier {
   /// Recarrega ofertas
   Future<void> refreshOfferings() async {
     await _loadOfferings();
+  }
+
+  /// Garante que há catálogo, tentando de novo quando ele faltou.
+  ///
+  /// O catálogo era carregado UMA vez, no boot, e a falha morria num
+  /// debugPrint. O `refreshOfferings`, que existiria para tentar de novo, não
+  /// tinha nenhum chamador. E as telas que achavam estar garantindo o
+  /// catálogo chamavam `initialize()`, que saía na primeira linha porque
+  /// `_isInitialized` vira true até no erro. Resultado: um boot com rede ruim
+  /// deixava "planos indisponíveis" e o botão de compra desligado pela sessão
+  /// inteira, sem retry em lugar nenhum.
+  Future<void> garantirCatalogo() async {
+    await initialize();
+    if (_offerings != null || !_sdkConfigurado) return;
+
+    debugPrint('🔁 Catálogo vazio — tentando carregar de novo');
+    await _loadOfferings();
+    notifyListeners();
   }
 
   // ============================================================
@@ -522,7 +600,9 @@ class PaymentService extends ChangeNotifier {
       debugPrint('❌ Erro inesperado na compra: $e');
       debugPrint('Stack trace: ${StackTrace.current}');
       _setStatus(PurchaseStatus.error);
-      return PurchaseResult.error('Erro inesperado: $e');
+      // O texto da exceção fica no log, não na tela: ele não diz à pessoa o
+      // que houve nem o que fazer, e vaza detalhe de SDK.
+      return PurchaseResult.error(_l10n.paymentErrUnexpected);
     }
   }
 
@@ -663,18 +743,50 @@ class PaymentService extends ChangeNotifier {
       if (_isPro) {
         _setStatus(PurchaseStatus.success);
         return PurchaseResult.success(customerInfo);
-      } else {
-        _setStatus(PurchaseStatus.idle);
-        return PurchaseResult.error('Nenhuma compra encontrada para restaurar');
       }
+
+      // Sem assinatura, ainda pode haver compra avulsa: a Leitura do Ciclo é
+      // consumível e nunca aparece em `entitlements`. Dizer "nenhuma compra
+      // encontrada" a quem pagou uma leitura era mentira — e era o único
+      // lugar do app onde ela poderia descobrir que a loja tem registro.
+      if (comprasAvulsasNaLoja.isNotEmpty) {
+        _setStatus(PurchaseStatus.success);
+        return PurchaseResult.success(customerInfo);
+      }
+
+      _setStatus(PurchaseStatus.idle);
+      return PurchaseResult.error(_l10n.paymentErrNothingToRestore);
     } on PlatformException catch (e) {
       final errorCode = PurchasesErrorHelper.getErrorCode(e);
       _setStatus(PurchaseStatus.error);
       return PurchaseResult.error(_getErrorMessage(errorCode));
     } catch (e) {
+      // O texto cru da exceção não vai para a tela: ele carrega URL de
+      // provedor e detalhe de SDK, e não diz à pessoa o que fazer.
+      debugPrint('Erro ao restaurar: $e');
       _setStatus(PurchaseStatus.error);
-      return PurchaseResult.error('Erro ao restaurar: $e');
+      return PurchaseResult.error(_l10n.paymentErrRestore);
     }
+  }
+
+  /// Os avulsos que a loja tem registrados para esta pessoa.
+  ///
+  /// `nonSubscriptionTransactions` é onde o RevenueCat guarda consumível, e
+  /// não aparecia em lugar nenhum do app — por isso "paguei e o app não sabe"
+  /// não tinha nem como ser diagnosticado. Aqui ele vira sinal.
+  ///
+  /// ATENÇÃO: é histórico de compra, não saldo. Uma leitura já usada continua
+  /// listada. Serve para saber que a loja cobrou, nunca para conceder
+  /// crédito — quem devolve crédito é o registro de compra pendente da tela
+  /// da Leitura do Ciclo, que sabe QUAL janela foi paga.
+  List<String> get comprasAvulsasNaLoja {
+    final info = _customerInfo;
+    if (info == null) return const [];
+
+    return info.nonSubscriptionTransactions
+        .map((t) => t.productIdentifier)
+        .where(RevenueCatConfig.cycleReadingProductIds.contains)
+        .toList(growable: false);
   }
 
   // ============================================================
@@ -696,6 +808,20 @@ class PaymentService extends ChangeNotifier {
     _consumablePackages.clear();
 
     if (!RevenueCatConfig.isConfigured) return;
+
+    // `isConfigured` diz que EXISTE chave, não que o SDK subiu. Era essa a
+    // confusão que quebrava a web: a chave `rcb_` existe, o
+    // `Purchases.configure` nunca tinha rodado (o boot pulava a
+    // inicialização na web), o `logIn` estourava e o catch abaixo engolia.
+    // A compra ficava num usuário anônimo do RevenueCat, sem ligação com a
+    // conta do Supabase — e `logIn` é o único ponto de associação do app.
+    if (!_sdkConfigurado) {
+      await initialize();
+      if (!_sdkConfigurado) {
+        debugPrint('⚠️  RevenueCat não configurado: logIn adiado');
+        return;
+      }
+    }
 
     try {
       final result = await Purchases.logIn(userId);
@@ -773,6 +899,50 @@ class PaymentService extends ChangeNotifier {
       (p) => p?.type == type,
       orElse: () => null,
     );
+  }
+
+  /// Quanto o plano anual economiza em relação a doze mensais, em porcento.
+  ///
+  /// Null quando NÃO dá para calcular — e aí o selo simplesmente não aparece.
+  /// Era texto fixo num ARB ("Economize 50%"), o que é uma conta com dois
+  /// números que o app não tinha na mão: se a loja devolver outro preço, se a
+  /// pessoa estiver fora do Brasil, ou se o catálogo não carregou, o selo
+  /// mentia. Um número inventado numa tela de venda custa mais confiança do
+  /// que a ausência do selo.
+  int? get economiaAnualEmPorcento {
+    final mensal = getProduct(SubscriptionType.monthly);
+    final anual = getProduct(SubscriptionType.yearly);
+    if (mensal == null || anual == null) return null;
+
+    return economiaEntre(
+      mensal: mensal.price,
+      anual: anual.price,
+      moedaMensal: mensal.currencyCode,
+      moedaAnual: anual.currencyCode,
+    );
+  }
+
+  /// A conta do selo, isolada para teste.
+  ///
+  /// Devolve null em tudo que não dá para afirmar: moedas diferentes (o
+  /// catálogo às vezes vem meio resolvido), preço zerado, ou anual que não
+  /// economiza nada. Melhor sem selo do que com número errado.
+  @visibleForTesting
+  static int? economiaEntre({
+    required double mensal,
+    required double anual,
+    required String moedaMensal,
+    required String moedaAnual,
+  }) {
+    if (moedaMensal != moedaAnual) return null;
+    if (mensal <= 0 || anual <= 0) return null;
+
+    final dozeMeses = mensal * 12;
+    if (anual >= dozeMeses) return null;
+
+    final porcento = ((1 - anual / dozeMeses) * 100).round();
+    // Abaixo de 1% não há o que comemorar, e 100% seria de graça.
+    return (porcento < 1 || porcento >= 100) ? null : porcento;
   }
 
   /// Deduz o tipo de assinatura de um pacote.
@@ -875,13 +1045,7 @@ class PaymentService extends ChangeNotifier {
 
   /// Data de expiração da assinatura (se houver)
   DateTime? get subscriptionExpirationDate {
-    if (_customerInfo == null) return null;
-
-    final pro = _customerInfo!.entitlements.active[
-        RevenueCatConfig.proEntitlementId];
-    if (pro == null) return null;
-
-    final expirationDate = pro.expirationDate;
+    final expirationDate = _proAtivo?.expirationDate;
     if (expirationDate == null) return null;
 
     return DateTime.tryParse(expirationDate);
@@ -890,27 +1054,11 @@ class PaymentService extends ChangeNotifier {
   /// Verifica se a assinatura é vitalícia.
   ///
   /// Vale dinheiro: é este getter que libera a Leitura da Lunação sem
-  /// cobrança. Por isso ele não confia só na ausência de data de expiração —
-  /// um CONSUMÍVEL ligado a um entitlement por engano no painel também
-  /// concederia o Pro sem expirar, e uma leitura de R$ 4,90 viraria Premium
-  /// vitalício mais leituras de graça para sempre. Se quem concedeu o
-  /// entitlement foi um avulso da Leitura do Ciclo, não é vitalício.
+  /// cobrança. A defesa contra o consumível que virou entitlement mora em
+  /// [_proAtivo], junto com a do `isPro` — aqui sobra só a regra do vitalício.
   bool get isLifetime {
-    if (_customerInfo == null) return false;
-
-    final pro = _customerInfo!.entitlements.active[
-        RevenueCatConfig.proEntitlementId];
+    final pro = _proAtivo;
     if (pro == null) return false;
-
-    if (RevenueCatConfig.cycleReadingProductIds
-        .contains(pro.productIdentifier)) {
-      debugPrint(
-        '⚠️ Entitlement Pro concedido por ${pro.productIdentifier}: um '
-        'consumível da Leitura do Ciclo NÃO deveria ter entitlement no '
-        'painel do RevenueCat. Ignorando como vitalício.',
-      );
-      return false;
-    }
 
     // Lifetime não tem data de expiração
     return pro.expirationDate == null;

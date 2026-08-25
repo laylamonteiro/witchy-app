@@ -106,7 +106,7 @@ class _CycleReadingOfferCardState extends State<CycleReadingOfferCard> {
       onTap: _open,
       child: Row(
         children: [
-          const Text('🌙', style: TextStyle(fontSize: 30)),
+          const Text('🔮', style: TextStyle(fontSize: 30)),
           const SizedBox(width: 12),
           Expanded(
             child: Column(

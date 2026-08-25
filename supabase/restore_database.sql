@@ -21,6 +21,11 @@
 --   6. Trigger de criação automática de profile no signup
 --   7. Tabela beta_codes + RLS anônimo + RPC atômica redeem_beta_code
 --   8. Funções de reset de contadores (agendar via cron do Supabase)
+--
+-- DEPOIS DESTE ARQUIVO, rode supabase/profiles_lockdown_migration.sql. Ele
+-- fecha `profiles` por coluna (role/plan/contadores fora do alcance do
+-- cliente) e endurece as funções SECURITY DEFINER. Sem ele o projeto nasce
+-- com escalada de privilégio: qualquer conta logada se promove a admin.
 -- ============================================================================
 
 -- ----------------------------------------------------------------------------
@@ -317,12 +322,26 @@ ALTER TABLE daily_magical_weather  ENABLE ROW LEVEL SECURITY;
 ALTER TABLE daily_checkins         ENABLE ROW LEVEL SECURITY;
 
 -- Políticas de profiles (id = auth.uid())
+--
+-- ATENÇÃO: só a política NÃO fecha esta tabela. A política decide QUAL LINHA
+-- a pessoa alcança; ela não decide QUAIS COLUNAS. Enquanto `authenticated`
+-- tiver grant de UPDATE na tabela inteira, a dona da linha reescreve `role` e
+-- `plan` — e vira admin com um PATCH. O corte por coluna está em
+-- supabase/profiles_lockdown_migration.sql, e ele é OBRIGATÓRIO: rode-o logo
+-- depois deste arquivo, senão o projeto nasce aberto.
+--
+-- O UPDATE leva WITH CHECK além do USING: sem ele o Postgres confere só a
+-- linha ANTIGA e nunca a resultante.
 DROP POLICY IF EXISTS "Users can view own profile"   ON profiles;
 DROP POLICY IF EXISTS "Users can update own profile" ON profiles;
 DROP POLICY IF EXISTS "Users can insert own profile" ON profiles;
+DROP POLICY IF EXISTS "Users can delete own profile" ON profiles;
 CREATE POLICY "Users can view own profile"   ON profiles FOR SELECT USING (auth.uid() = id);
-CREATE POLICY "Users can update own profile" ON profiles FOR UPDATE USING (auth.uid() = id);
+CREATE POLICY "Users can update own profile" ON profiles FOR UPDATE USING (auth.uid() = id) WITH CHECK (auth.uid() = id);
 CREATE POLICY "Users can insert own profile" ON profiles FOR INSERT WITH CHECK (auth.uid() = id);
+-- Sem esta, a exclusão de conta do app não apaga o perfil: o DELETE volta
+-- "sucesso" tendo apagado zero linhas, e e-mail e data de nascimento ficam.
+CREATE POLICY "Users can delete own profile" ON profiles FOR DELETE USING (auth.uid() = id);
 
 -- Função utilitária: cria as 4 políticas padrão (user_id = auth.uid())
 -- de forma idempotente para uma tabela de dados.

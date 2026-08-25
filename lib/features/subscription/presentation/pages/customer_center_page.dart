@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/services/payment_service.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 
 /// Página de Customer Center do RevenueCat
 ///
@@ -76,7 +77,7 @@ class _CustomerCenterPageState extends State<CustomerCenterPage> {
             TextButton(
               onPressed: _openNativeCustomerCenter,
               child: Text(
-                'Tentar Novamente',
+                AppLocalizations.of(context).commonTryAgain,
                 style: TextStyle(
                   color: context.gc.lilac,
                 ),
@@ -137,7 +138,9 @@ class CustomerCenterWidget extends StatelessWidget {
             onPressed: () => paymentService.presentCustomerCenter(),
             style: ElevatedButton.styleFrom(
               backgroundColor: context.gc.lilac,
-              foregroundColor: context.gc.textPrimary,
+              // Sobre o acento, onPrimary — textPrimary sumia no lilás
+              // claro de vários temas.
+              foregroundColor: context.gc.onPrimary,
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
             ),
             child: const Text('Abrir Central'),

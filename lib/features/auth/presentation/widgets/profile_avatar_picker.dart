@@ -312,11 +312,12 @@ class _ProfileAvatarPickerState extends State<ProfileAvatarPicker> {
         setState(() => _isLoading = false);
       }
     } catch (e) {
+      debugPrint('Foto de perfil: falha ao selecionar: $e');
       setState(() => _isLoading = false);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Erro ao selecionar foto: $e'),
+            content: Text(AppLocalizations.of(context).profileErrPickPhoto),
             backgroundColor: context.gc.alert,
           ),
         );
@@ -355,11 +356,12 @@ class _ProfileAvatarPickerState extends State<ProfileAvatarPicker> {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('profile_photo_path', reference);
     } catch (e) {
+      debugPrint('Foto de perfil: falha ao enviar: $e');
       if (!mounted) return;
       setState(() => _isLoading = false);
       messenger.showSnackBar(
         SnackBar(
-          content: Text('Erro ao enviar foto: $e'),
+          content: Text(AppLocalizations.of(context).profileErrUploadPhoto),
           backgroundColor: context.gc.alert,
         ),
       );

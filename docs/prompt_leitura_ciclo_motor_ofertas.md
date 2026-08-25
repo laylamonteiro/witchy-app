@@ -203,6 +203,8 @@ Implementado na branch `claude/cycle-reading-offers-engine-vme4yp`:
   ~12,4 lunações), perpétuo contra um pagamento único — e até 3× isso se a
   pessoa usar as 2 regerações. Incluir também a semanal levaria a ~295/ano,
   motivo pelo qual ela ficou de fora.
+> **Preço:** os valores abaixo são de quando este documento foi escrito e NÃO são a fonte da verdade. O preço vigente vem sempre da RevenueCat em tempo de execução; os valores de RESERVA (usados só quando a loja não responde) ficam em `lib/features/auth/presentation/widgets/premium_blur_widget.dart`. Documento que repete preço apodrece no próximo reajuste.
+
 - Preço: com a lunação a R$ 9,90, o Vitalício entrega ~R$ 123/ano de valor.
   Ele precisa estar bem acima da anual (R$ 89,90) para fechar.
 

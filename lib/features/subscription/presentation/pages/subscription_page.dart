@@ -6,10 +6,11 @@ import '../../../../core/services/payment_service.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/magical_card.dart';
+import '../../../../core/widgets/staggered_entrance.dart';
+import '../../../../core/widgets/starfield_background.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../auth/data/models/user_model.dart';
 import '../../../auth/presentation/widgets/premium_blur_widget.dart';
-import '../../../cycle_reading/presentation/pages/cycle_reading_intro_page.dart';
 
 /// Página de gerenciamento de assinatura
 ///
@@ -43,11 +44,14 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
   }
 
   Future<void> _initializePaymentService() async {
-    if (!_paymentService.isInitialized) {
-      setState(() => _isLoading = true);
-      await _paymentService.initialize();
-      setState(() => _isLoading = false);
-    }
+    // Sempre passa por `garantirCatalogo`: a conferência de `isInitialized`
+    // que existia aqui saía cedo justamente no caso ruim — boot com rede
+    // ruim marca inicializado, o catálogo fica vazio e a tela dizia "planos
+    // indisponíveis" até a pessoa fechar e reabrir o app.
+    setState(() => _isLoading = true);
+    await _paymentService.garantirCatalogo();
+    if (!mounted) return;
+    setState(() => _isLoading = false);
   }
 
   @override
@@ -69,7 +73,29 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
           onPressed: () => Navigator.of(context).pop(),
         ),
       ),
-      body: Consumer<AuthProvider>(
+      // Um halo de luz no topo e, por cima dele, o mesmo céu estrelado das
+      // outras telas: a tela era fundo chapado com cartões do mesmo tom
+      // empilhados, sem nenhuma profundidade.
+      //
+      // O starfield anima em laço eterno, mas para sozinho quando o
+      // MediaQuery pede menos movimento — os testes desta página, que usam
+      // `pumpAndSettle`, montam a árvore com `disableAnimations: true` e o
+      // céu fica parado em vez de travá-los para sempre.
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: RadialGradient(
+            center: const Alignment(0, -1.1),
+            radius: 1.3,
+            colors: [
+              Color.lerp(context.gc.background, context.gc.lilac, 0.14)!,
+              context.gc.background,
+            ],
+          ),
+        ),
+        child: StarfieldBackground(
+          starCount: 30,
+          intensity: 0.5,
+          child: Consumer<AuthProvider>(
         builder: (context, authProvider, _) {
           return ListenableBuilder(
             listenable: _paymentService,
@@ -111,12 +137,12 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
 
                         const SizedBox(height: 24),
 
-                        // A Leitura do Ciclo é compra avulsa: não entra na
-                        // assinatura, nem para quem já é Pro. Por isso ela
-                        // aparece nos DOIS ramos — é aqui que a pessoa está
-                        // decidindo gastar, e antes ela não era citada.
-                        _buildCycleReadingCard(),
-                        const SizedBox(height: 24),
+                        // A porta da Leitura do Ciclo SAIU daqui, por
+                        // decisão da dona do produto — o plano original já
+                        // mandava remover, e ficou pendente até agora. Esta
+                        // tela decide assinatura; a leitura avulsa se
+                        // descobre onde ela é usada, não na tabela de
+                        // preços. A porta das Configurações já tinha saído.
 
                         // Restaurar compras
                         _buildRestoreButton(),
@@ -128,6 +154,8 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
             },
           );
         },
+          ),
+        ),
       ),
     );
   }
@@ -155,7 +183,10 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
     Color labelColor;
 
     if (!isPro) {
-      subscriptionLabel = _l10n.subsUnlockAll;
+      // Frase de ESTADO, a mesma do card de plano das Configurações: este
+      // card descreve onde a pessoa está — a venda mora no botão
+      // "Desbloquear Premium" logo abaixo, não aqui.
+      subscriptionLabel = _l10n.profileFreePlanDesc;
       labelColor = context.gc.textSecondary;
     } else if (hasRevenueCat) {
       // Premium via RevenueCat
@@ -211,11 +242,25 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
       ),
       child: Column(
         children: [
-          // Ícone de status
-          Icon(
-            isPro ? Icons.star : Icons.star_border,
-            size: 48,
-            color: isPro ? context.gc.starYellow : context.gc.textSecondary,
+          // Emblema de status: a estrela vazada cinza dizia "falta algo".
+          // O selo circular suave é a mesma linguagem do cartão do convite —
+          // a faísca lilás para quem é Free, a estrela cheia num selo
+          // dourado para quem já é Premium.
+          Container(
+            width: 64,
+            height: 64,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: isPro
+                  ? context.gc.gold.withValues(alpha: 0.15)
+                  : context.gc.lilac.withValues(alpha: 0.15),
+            ),
+            child: Icon(
+              isPro ? Icons.star : Icons.auto_awesome,
+              size: 30,
+              color: isPro ? context.gc.gold : context.gc.lilac,
+            ),
           ),
           const SizedBox(height: 12),
 
@@ -262,16 +307,19 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
             ),
           ),
           const SizedBox(height: 12),
+          // As MESMAS cinco peças que o convite e a página de descoberta
+          // vendem, com os mesmos nomes: quem comprou precisa reconhecer
+          // aqui exatamente o que lhe foi prometido lá — duas listas
+          // diferentes pareceriam dois produtos. Só o suporte prioritário é
+          // desta tela: é benefício de quem JÁ assina, não isca de venda.
           _buildFeatureItem(
-              Icons.auto_awesome, _l10n.subsBenefitUnlimitedForecasts),
-          _buildFeatureItem(Icons.book, _l10n.subsBenefitFullGrimoire),
-          _buildFeatureItem(Icons.psychology, _l10n.subsBenefitAdvisor),
-          _buildFeatureItem(Icons.account_circle, _l10n.subsBenefitProfile),
-          _buildFeatureItem(Icons.stars, _l10n.subsBenefitTransits),
-          _buildFeatureItem(Icons.wb_sunny, _l10n.subsBenefitDailyWeather),
+              Icons.auto_awesome, _l10n.conviteVislumbrePerfilTitulo),
           _buildFeatureItem(
-              Icons.calendar_today, _l10n.subsBenefitLunarCalendar),
-          _buildFeatureItem(Icons.sync, _l10n.premiumBenefitCloudSync),
+              Icons.psychology, _l10n.conviteVislumbreConselheiroTitulo),
+          _buildFeatureItem(Icons.wb_sunny, _l10n.conviteVislumbreClimaTitulo),
+          _buildFeatureItem(
+              Icons.menu_book, _l10n.conviteVislumbreEnciclopediaTitulo),
+          _buildFeatureItem(Icons.style, _l10n.conviteVislumbreLeiturasTitulo),
           _buildFeatureItem(Icons.support_agent, _l10n.subsBenefitSupport),
         ],
       ),
@@ -309,9 +357,13 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
             key: const ValueKey('open_premium_paywall_button'),
             onPressed: _showPaywall,
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(
-                  0xFF9C27B0), // Cor consistente com outros botões Premium
-              foregroundColor: context.gc.textPrimary,
+              // Era `Color(0xFF9C27B0)` cravado, com o comentário "cor
+              // consistente com outros botões Premium" — e não era: os
+              // outros usam o acento do tema, então este roxo era o único
+              // que ficava igual nos seis temas enquanto tudo em volta
+              // mudava.
+              backgroundColor: context.gc.lilac,
+              foregroundColor: context.gc.onPrimary,
               padding: const EdgeInsets.symmetric(vertical: 16),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
@@ -354,19 +406,29 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
                 ),
               ),
               const SizedBox(height: 12),
-              _buildFeatureItem(
-                  Icons.auto_awesome, _l10n.subsBenefitUnlimitedForecasts),
-              _buildFeatureItem(
-                  Icons.book, _l10n.subsBenefitFullGrimoireAccess),
-              _buildFeatureItem(Icons.psychology, _l10n.subsBenefitAdvisor),
-              _buildFeatureItem(
-                  Icons.account_circle, _l10n.subsBenefitProfile),
-              _buildFeatureItem(Icons.stars, _l10n.subsBenefitTransits),
-              _buildFeatureItem(
-                  Icons.wb_sunny, _l10n.subsBenefitDailyWeather),
-              _buildFeatureItem(
-                  Icons.calendar_today, _l10n.subsBenefitLunarCalendar),
-              _buildFeatureItem(Icons.sync, _l10n.premiumBenefitCloudSync),
+              // Os benefícios entram em cascata, um atrás do outro, em vez
+              // de a lista inteira aparecer pronta: é o olho sendo levado
+              // item a item — e é a mesma entrada do Seu Dia.
+              //
+              // E são as MESMAS cinco peças, com os mesmos nomes, do convite
+              // e da página de descoberta: as telas de venda precisam
+              // parecer a mesma ideia vista de ângulos diferentes, não dois
+              // times escrevendo sobre o mesmo produto.
+              StaggeredEntrance(
+                maxAnimated: 5,
+                children: [
+                  _buildFeatureItem(
+                      Icons.auto_awesome, _l10n.conviteVislumbrePerfilTitulo),
+                  _buildFeatureItem(Icons.psychology,
+                      _l10n.conviteVislumbreConselheiroTitulo),
+                  _buildFeatureItem(
+                      Icons.wb_sunny, _l10n.conviteVislumbreClimaTitulo),
+                  _buildFeatureItem(Icons.menu_book,
+                      _l10n.conviteVislumbreEnciclopediaTitulo),
+                  _buildFeatureItem(
+                      Icons.style, _l10n.conviteVislumbreLeiturasTitulo),
+                ],
+              ),
             ],
           ),
         ),
@@ -540,54 +602,6 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
     );
   }
 
-  Widget _buildCycleReadingCard() {
-    return SizedBox(
-      width: double.infinity,
-      child: MagicalCard(
-        margin: EdgeInsets.zero,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(12),
-          onTap: () => Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => const CycleReadingIntroPage()),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  const Text('🌙', style: TextStyle(fontSize: 24)),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      _l10n.cycleReadingTitle,
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: context.gc.lilac,
-                      ),
-                    ),
-                  ),
-                  Icon(
-                    Icons.chevron_right,
-                    color: context.gc.softWhite.withValues(alpha: 0.5),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Text(
-                _l10n.cycleReadingIntroTagline,
-                style: TextStyle(
-                  color: context.gc.softWhite.withValues(alpha: 0.7),
-                  fontSize: 14,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
   Widget _buildBetaCodeCard(AuthProvider authProvider) {
     final TextEditingController codeController = TextEditingController();
 
@@ -600,9 +614,13 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
           children: [
             Row(
               children: [
-                const Text(
-                  '🎟️',
-                  style: TextStyle(fontSize: 24),
+                // O emoji de ticket era o único vermelho da tela — e
+                // vermelho aqui é cor de erro. O código é um presente:
+                // ganha o dourado, que já é a cor do que é Premium.
+                Icon(
+                  Icons.confirmation_number,
+                  size: 24,
+                  color: context.gc.gold,
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -611,7 +629,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: context.gc.lilac,
+                      color: context.gc.gold,
                     ),
                   ),
                 ),
@@ -701,7 +719,9 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: context.gc.lilac,
-                    foregroundColor: context.gc.textPrimary,
+                    // Sobre o acento, o token garantido legível é onPrimary
+                    // — textPrimary é quase branco e sumia no lilás claro.
+                    foregroundColor: context.gc.onPrimary,
                     padding: const EdgeInsets.symmetric(
                       horizontal: 20,
                       vertical: 16,
@@ -777,7 +797,8 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
               ? _l10n.subsRestored
               : result.errorMessage ?? _l10n.subsNoPurchases,
         ),
-        backgroundColor: result.success ? Colors.green : Colors.orange,
+        backgroundColor:
+            result.success ? context.gc.success : context.gc.alert,
       ),
     );
   }

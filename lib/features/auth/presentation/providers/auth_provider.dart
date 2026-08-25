@@ -16,6 +16,7 @@ import '../../data/models/user_model.dart';
 import '../../data/models/feature_access.dart';
 import '../../data/repositories/beta_code_repository.dart';
 import '../../data/repositories/supabase_auth_repository.dart';
+import '../../../cycles/data/repositories/life_eras_repository.dart';
 
 AppLocalizations get _l10n =>
     lookupAppLocalizations(ContentLocale.instance.locale);
@@ -48,6 +49,12 @@ class AuthProvider extends ChangeNotifier {
   /// Marcado no main() quando o boot veio da volta de um login social
   /// (?code= na URL) — ANTES do Supabase.initialize, que limpa a URL.
   static bool bootCameFromOAuthReturn = false;
+
+  /// Marcado no main() quando o boot é a JANELA DE LOGIN voltando do
+  /// Google (a marca no armazenamento diz; o COOP do Google apaga o
+  /// `opener`). O AuthWrapper mostra o "pode fechar esta aba" em vez de
+  /// transformar a janela num segundo app.
+  static bool bootNaJanelaDeLogin = false;
 
   /// Enquanto true, a troca do código OAuth pode estar em voo: o AuthWrapper
   /// mostra "entrando..." em vez da tela de login. Sem isso, quem terminava
@@ -669,10 +676,15 @@ class AuthProvider extends ChangeNotifier {
   }
 
   /// Dispara uma sincronização completa (upload+download) logo após o login,
-  /// se o usuário for Premium e a sincronização estiver habilitada.
+  /// se a sincronização estiver habilitada.
+  ///
+  /// A trava de Premium saiu daqui junto com o paywall do sync — e esta era a
+  /// porta mais importante das duas: é ela que faz a DESCIDA. Sem ela o dado
+  /// subiria e não voltaria, e quem perdesse o banco local (o iOS apaga o
+  /// armazenamento da web em 7 dias de ociosidade) reabriria o app num
+  /// grimório vazio, com tudo intacto no servidor.
   Future<void> _autoSyncAfterLogin() async {
     try {
-      if (!PremiumAccess.instance.isPremium) return;
       final sync = DataSyncService();
       final syncEnabled = await sync.cloudSyncEnabled;
       if (!syncEnabled || !sync.isReady) return;
@@ -720,9 +732,10 @@ class AuthProvider extends ChangeNotifier {
 
     // Para assinaturas monthly/yearly, verificar com PaymentService
     final paymentService = PaymentService();
-    if (!paymentService.isInitialized) {
-      await paymentService.initialize();
-    }
+    // Sem a conferência de `isInitialized`: ela virava true até nos caminhos
+    // de erro do boot, e então travava a segunda tentativa. O `initialize`
+    // hoje se guarda sozinho — sai na primeira linha quando o SDK está de pé.
+    await paymentService.initialize();
 
     // Se PaymentService diz que não é Pro, fazer downgrade
     if (!paymentService.isPro && _currentUser.role == UserRole.premium) {
@@ -746,9 +759,8 @@ class AuthProvider extends ChangeNotifier {
 
     final paymentService = PaymentService();
 
-    if (!paymentService.isInitialized) {
-      await paymentService.initialize();
-    }
+    // Idem: `initialize` é idempotente e retoma o que ficou pela metade.
+    await paymentService.initialize();
 
     if (paymentService.isPro) {
       // Usuário tem assinatura ativa
@@ -825,9 +837,14 @@ class AuthProvider extends ChangeNotifier {
 
     final prefs = await SharedPreferences.getInstance();
 
-    // Verificar se o usuário tem sincronização na nuvem
-    // Usuários com cloud sync = autenticados (email != null) E premium
-    final hasCloudSync = _currentUser.email != null && _currentUser.isPremium;
+    // Tem cópia na nuvem quem tem CONTA. O `&& isPremium` saiu junto com o
+    // paywall do sync: mantê-lo apagaria o banco local de quem é Free no
+    // logout, alegando "sem cloud sync" — o que passou a ser falso.
+    //
+    // Só a conta é conferida, e não a preferência de sync: quem desligou a
+    // sincronização tem no aparelho a ÚNICA cópia do grimório, e apagá-la no
+    // logout seria perda definitiva. Nos dois casos a resposta é manter.
+    final hasCloudSync = _currentUser.email != null;
     final isAnonymous = _currentUser.id == 'local_user';
 
     await debugLog('AUTH',
@@ -861,6 +878,19 @@ class AuthProvider extends ChangeNotifier {
         await debugLog('AUTH', 'Database cleared successfully');
       } catch (e) {
         await debugLog('AUTH', 'Error clearing database: $e');
+      }
+
+      // O cache das Eras mora no SharedPreferences, fora do banco: o
+      // clearAllTables não o alcança. `LifeErasRepository.clear()` existia,
+      // tinha teste e NENHUM chamador — então o instante do nascimento e a
+      // longitude da Lua, de onde a linha do tempo é derivada, sobreviviam à
+      // saída da conta no aparelho. Precisa acontecer aqui, antes de
+      // `_currentUser` virar o usuário padrão lá embaixo: a chave do cache é
+      // o id, e depois daquela linha ele já não existe.
+      try {
+        await LifeErasRepository().clear(_currentUser.id);
+      } catch (e) {
+        await debugLog('AUTH', 'Falha ao limpar o cache das Eras: $e');
       }
     } else {
       await debugLog('AUTH', 'Keeping database - user has cloud sync enabled');

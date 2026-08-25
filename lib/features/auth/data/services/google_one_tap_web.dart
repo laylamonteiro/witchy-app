@@ -8,13 +8,18 @@ import 'dart:js_interop_unsafe';
 
 import 'package:web/web.dart' as web;
 
+import '../../../../core/config/google_signin_config.dart';
+
 /// Pede ao Google, DENTRO da própria página, a credencial de quem já está
 /// logado no navegador (Google Identity Services).
 ///
-/// Devolve o ID token, ou `null` quando o Google não mostrou nada — cookies
-/// de terceiros bloqueados, a pessoa dispensou a janelinha antes, ou o
-/// script nem carregou. Nulo aqui não é erro: quem chama cai no
-/// redirecionamento de sempre.
+/// Devolve o ID token, ou `null` quando o Google não deu credencial —
+/// origem fora da lista autorizada, script não carregado, cookies de
+/// terceiros bloqueados, a janelinha dispensada. Nulo aqui não é erro: quem
+/// chama cai no redirecionamento de sempre.
+///
+/// O prazo é a última linha de defesa, não o caminho normal: quando o
+/// Google avisa que não vai mostrar nada, a espera acaba na hora.
 ///
 /// O [nonceHash] vai para o Google e volta DENTRO do token; o Supabase
 /// compara com o nonce cru que recebe à parte. É o que impede que um token
@@ -24,7 +29,7 @@ Future<String?> pedirIdTokenDoGoogle({
   required String nonceHash,
   required Duration limite,
 }) async {
-  if (_enderecoEfemero || !_scriptCarregado) return null;
+  if (!_origemAutorizada || !_scriptCarregado) return null;
 
   final resposta = Completer<String?>();
 
@@ -32,6 +37,26 @@ Future<String?> pedirIdTokenDoGoogle({
     final token = credencial.credential;
     if (!resposta.isCompleted) {
       resposta.complete(token.isEmpty ? null : token);
+    }
+  }
+
+  // O Google avisa, por este ouvinte, quando NÃO vai mostrar nada. Sem
+  // escutá-lo, o app ficava os seis segundos inteiros parado num caso que
+  // já estava decidido no primeiro — e o botão parecia travado.
+  void aoMudarOMomento(_PromptMomentNotification momento) {
+    if (resposta.isCompleted) return;
+    try {
+      if (momento.isDismissedMoment()) {
+        // "Dispensada" inclui o desfecho BOM: a credencial saiu e a
+        // janelinha fechou. Esse caso chega pelo callback acima — desistir
+        // aqui jogaria fora o token que acabou de ser emitido.
+        if (!_desistencias.contains(momento.getDismissedReason())) return;
+      } else if (!momento.isNotDisplayed() && !momento.isSkippedMoment()) {
+        return;
+      }
+      resposta.complete(null);
+    } catch (_) {
+      // Navegador que não expõe estes campos: sem sinal, vale o prazo.
     }
   }
 
@@ -47,7 +72,7 @@ Future<String?> pedirIdTokenDoGoogle({
         cancel_on_tap_outside: true,
       ),
     );
-    _prompt();
+    _promptComOuvinte(aoMudarOMomento.toJS);
   } catch (_) {
     return null;
   }
@@ -74,20 +99,31 @@ bool get _scriptCarregado {
   return accounts?.getProperty<JSObject?>('id'.toJS) != null;
 }
 
-/// A Cloudflare publica cada deploy também num endereço próprio
-/// (`47a8ec37.grimorio-de-bolso.pages.dev`), que muda a cada publicação. O
-/// Google não aceita curinga na lista de origens autorizadas, então um
-/// endereço desses NUNCA poderá estar lá: tentar por ele dá uma tela cheia
-/// de "Access blocked: origin_mismatch" no meio do login. Aqui a gente nem
-/// tenta — cai no redirecionamento, que funciona em qualquer origem.
-bool get _enderecoEfemero =>
-    RegExp(r'^[0-9a-f]{8}\.').hasMatch(web.window.location.hostname);
+/// O Google não aceita curinga na lista de origens autorizadas: uma origem
+/// que não esteja lá dá uma tela cheia de "Access blocked: origin_mismatch"
+/// no meio do login. Aqui a gente nem tenta — cai no redirecionamento, que
+/// funciona em qualquer origem.
+///
+/// A regra mora em [GoogleSignInConfig.origensAutorizadas], que espelha o
+/// painel. Perguntar pela lista, e não pelo formato do endereço, é o
+/// conserto: a conferência anterior só reconhecia o endereço de deploy da
+/// Cloudflare (`47a8ec37.`) e deixava passar toda prévia com nome de branch.
+bool get _origemAutorizada =>
+    GoogleSignInConfig.origemAutorizada(web.window.location.hostname);
 
 @JS('google.accounts.id.initialize')
 external void _initialize(_IdConfiguration config);
 
+/// O `prompt` aceita um ouvinte de momento. Declaração separada, e não um
+/// parâmetro opcional, para não mexer na assinatura que já existia.
 @JS('google.accounts.id.prompt')
-external void _prompt();
+external void _promptComOuvinte(JSFunction aoMudarOMomento);
+
+/// Os motivos de dispensa que significam "não vai sair credencial daqui".
+///
+/// `credential_returned` (o desfecho bom) e `flow_restarted` ficam de fora
+/// de propósito: nos dois a história continua.
+const _desistencias = {'user_cancel', 'tap_outside', 'issuing_failed'};
 
 @JS('google.accounts.id.cancel')
 external void _cancel();
@@ -105,4 +141,19 @@ extension type _IdConfiguration._(JSObject _) implements JSObject {
 
 extension type _CredentialResponse._(JSObject _) implements JSObject {
   external String get credential;
+}
+
+/// O aviso de momento do Google.
+///
+/// Com FedCM (o padrão no Chrome atual) só `isDismissedMoment` e
+/// `getDismissedReason` carregam informação — os outros dois existem e
+/// devolvem sempre falso. Eles ficam porque ainda respondem nos navegadores
+/// sem FedCM, que são exatamente aqueles em que o caminho novo mais
+/// tropeça. Tudo isto é lido dentro de um `try`: um navegador que não
+/// exponha algum destes campos volta a valer o prazo, e não quebra o login.
+extension type _PromptMomentNotification._(JSObject _) implements JSObject {
+  external bool isNotDisplayed();
+  external bool isSkippedMoment();
+  external bool isDismissedMoment();
+  external String getDismissedReason();
 }

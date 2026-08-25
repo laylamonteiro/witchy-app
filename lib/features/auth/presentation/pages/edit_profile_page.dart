@@ -12,7 +12,6 @@ import '../../../../core/database/database_helper.dart';
 import '../../../../core/config/supabase_config.dart';
 import '../providers/auth_provider.dart';
 import '../../data/repositories/supabase_auth_repository.dart';
-import '../../../subscription/presentation/pages/subscription_page.dart';
 
 /// Página de edição de perfil com todas as configurações de privacidade
 class EditProfilePage extends StatefulWidget {
@@ -47,11 +46,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
   Future<void> _loadSettings() async {
     final authProvider = context.read<AuthProvider>();
     final prefs = await SharedPreferences.getInstance();
-    final isPremium = authProvider.isPremiumEffective;
-    final cloudSyncEnabled = await DataSyncService.ensureCloudSyncPreference(
-      prefs,
-      isPremium: isPremium,
-    );
+    final cloudSyncEnabled =
+        await DataSyncService.ensureCloudSyncPreference(prefs);
 
     if (!mounted) return;
     setState(() {
@@ -245,34 +241,24 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
                   // Seção: Sincronização e Backup
                   _buildSectionHeader(AppLocalizations.of(context).editSyncBackup),
-                  Consumer<AuthProvider>(
-                    builder: (context, authProvider, _) {
-                      final isPremium = authProvider.isPremiumEffective;
-                      return _buildSettingsCard([
-                        _buildSwitchTile(
-                          icon: Icons.sync,
-                          title: AppLocalizations.of(context).editSyncBackupCloud,
-                          subtitle: isPremium
-                              ? AppLocalizations.of(context).editSyncBackupOn
-                              : AppLocalizations.of(context).editSyncPremiumOnly,
-                          value: isPremium && _cloudSyncEnabled,
-                          onChanged: (value) {
-                            // Free não altera o toggle: qualquer toque abre
-                            // o convite Premium.
-                            if (!isPremium) {
-                              _showUpgradeDialog();
-                              return;
-                            }
-                            setState(() => _cloudSyncEnabled = value);
-                            _saveSetting(
-                              DataSyncService.cloudSyncPreferenceKey,
-                              value,
-                            );
-                          },
-                        ),
-                      ]);
-                    },
-                  ),
+                  // O MESMO interruptor da tela de Sincronização, duplicado
+                  // aqui. Sem paywall nos dois lugares: um cadeado sobrando
+                  // num deles reintroduziria o Free sem cópia na nuvem.
+                  _buildSettingsCard([
+                    _buildSwitchTile(
+                      icon: Icons.sync,
+                      title: AppLocalizations.of(context).editSyncBackupCloud,
+                      subtitle: AppLocalizations.of(context).editSyncBackupOn,
+                      value: _cloudSyncEnabled,
+                      onChanged: (value) {
+                        setState(() => _cloudSyncEnabled = value);
+                        _saveSetting(
+                          DataSyncService.cloudSyncPreferenceKey,
+                          value,
+                        );
+                      },
+                    ),
+                  ]),
 
                   const SizedBox(height: 24),
 
@@ -705,7 +691,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
             ),
             child: Text(
               AppLocalizations.of(context).editChangeAction,
-              style: GoogleFonts.nunito(color: context.gc.textPrimary),
+              // textPrimary é quase branco nos temas escuros e sumia sobre
+              // o fundo lilás; onPrimary é o token para texto sobre o acento.
+              style: GoogleFonts.nunito(color: context.gc.onPrimary),
             ),
           ),
         ],
@@ -739,8 +727,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
             style: ElevatedButton.styleFrom(
               backgroundColor: context.gc.lilac,
             ),
+            // textPrimary sumia sobre o fundo lilás nos temas escuros;
+            // onPrimary é o token para texto sobre o acento.
             child: Text(AppLocalizations.of(context).editExportAction,
-                style: GoogleFonts.nunito(color: context.gc.textPrimary)),
+                style: GoogleFonts.nunito(color: context.gc.onPrimary)),
           ),
         ],
       ),
@@ -981,50 +971,5 @@ class _EditProfilePageState extends State<EditProfilePage> {
         );
       }
     }
-  }
-
-  void _showUpgradeDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: context.gc.surface,
-        title: Row(
-          children: [
-            const Icon(Icons.workspace_premium, color: Color(0xFFFFD700)),
-            const SizedBox(width: 8),
-            Text(
-              AppLocalizations.of(context).editPremiumFeature,
-              style: GoogleFonts.nunito(color: context.gc.textPrimary),
-            ),
-          ],
-        ),
-        content: Text(
-          AppLocalizations.of(context).editSyncPremiumPitch,
-          style: GoogleFonts.nunito(color: context.gc.textSecondary, height: 1.5),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(
-              AppLocalizations.of(context).editNotNow,
-              style: GoogleFonts.nunito(color: context.gc.textSecondary),
-            ),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              openSubscriptionPage(this.context);
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF9C27B0),
-            ),
-            child: Text(
-              AppLocalizations.of(context).profileUpgrade,
-              style: GoogleFonts.nunito(color: context.gc.textPrimary),
-            ),
-          ),
-        ],
-      ),
-    );
   }
 }

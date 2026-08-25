@@ -7,6 +7,67 @@ import 'package:grimorio_de_bolso/features/astrology/data/models/magical_profile
 /// antes do formato de chaves não podem parar de abrir.
 void main() {
   group('parseMagicalProfile', () {
+    test('um ## solto da IA não derruba a grade de dez cards', () {
+      // O parser distinguia formato novo de antigo pela presença de
+      // `## [chave]`. Bastava a IA escrever um `##` por conta própria dentro
+      // de uma seção para nascer uma seção sem chave — e a tela inteira
+      // desviava para o modo "perfil antigo", sumindo com a grade de dez
+      // cards e com todo botão de tecer de novo. O prompt pede o formato;
+      // nada garante que a resposta obedeça.
+      final markdown = [
+        '${MagicalProfileSections.header(MagicalProfileSections.essence)}\n',
+        '### O Sol na Casa 10\n',
+        'Corpo do primeiro bloco.\n',
+        '## Uma digressão que ninguém pediu\n',
+        'Texto da digressão.\n',
+        '\n${MagicalProfileSections.header(MagicalProfileSections.shadow)}\n',
+        '### A ferida\n',
+        'Corpo da sombra.\n',
+      ].join();
+
+      final secoes = parseMagicalProfile(markdown);
+
+      // Duas seções, as duas COM chave: nenhuma órfã para desviar a tela.
+      expect(secoes, hasLength(2));
+      expect(secoes.every((s) => s.key != null), isTrue);
+      expect(secoes.first.key, MagicalProfileSections.essence);
+      expect(secoes.last.key, MagicalProfileSections.shadow);
+    });
+
+    test('o texto do ## solto continua na tela, como mais uma página', () {
+      // Rebaixar não pode virar descartar: a pessoa pagou pela geração.
+      final markdown = [
+        '${MagicalProfileSections.header(MagicalProfileSections.essence)}\n',
+        '### O Sol na Casa 10\n',
+        'Corpo do primeiro bloco.\n',
+        '## Uma digressão que ninguém pediu\n',
+        'Texto da digressão.\n',
+      ].join();
+
+      final secoes = parseMagicalProfile(markdown);
+
+      expect(secoes, hasLength(1));
+      expect(secoes.first.slides, hasLength(2));
+      expect(secoes.first.slides.last.title, 'Uma digressão que ninguém pediu');
+      expect(secoes.first.slides.last.body, 'Texto da digressão.');
+    });
+
+    test('sem nenhuma chave, o formato antigo continua valendo', () {
+      // A defesa não pode custar os perfis que já existem: sem `## [chave]`
+      // em lugar nenhum, `##` volta a ser título de seção.
+      const markdown = '## Sua Essência\n'
+          'Corpo da essência.\n'
+          '## Sua Sombra\n'
+          'Corpo da sombra.\n';
+
+      final secoes = parseMagicalProfile(markdown);
+
+      expect(secoes, hasLength(2));
+      expect(secoes.first.key, isNull);
+      expect(secoes.first.legacyTitle, 'Sua Essência');
+      expect(secoes.last.legacyTitle, 'Sua Sombra');
+    });
+
     test('lê o formato de chaves e fatia cada seção em páginas', () {
       final markdown = [
         '${MagicalProfileSections.header(MagicalProfileSections.essence)}\n',

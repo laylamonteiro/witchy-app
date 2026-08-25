@@ -1,7 +1,10 @@
 import 'dart:io';
 
+import 'package:flutter/material.dart' show Locale;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:grimorio_de_bolso/core/database/database_helper.dart';
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart'
+    show lookupAppLocalizations;
 import 'package:grimorio_de_bolso/features/cycle_reading/data/models/cycle_reading_model.dart';
 import 'package:grimorio_de_bolso/features/cycle_reading/data/repositories/cycle_reading_repository.dart';
 import 'package:grimorio_de_bolso/features/cycle_reading/data/services/cycle_reading_composer.dart';
@@ -77,10 +80,18 @@ void main() {
         await CycleReadingRepository().findForPeriod(userId, periodStart);
     expect(stored!.isGenerated, isTrue);
 
-    // …e o relatório contém as 7 seções na ordem + os compartilháveis.
+    // …e o relatório contém as 11 seções de IA (previsão + as três áreas
+    // da vida: amor, trabalho e família — decisão da dona, 23/08) + a seção
+    // determinística "O ciclo em números" (montada por código) + os
+    // compartilháveis.
     final markdown = result.writing.content;
     final headings = RegExp(r'^## ', multiLine: true).allMatches(markdown);
-    expect(headings.length, 7);
+    expect(headings.length, 12);
+    // A previsão fica entre a prática e os rituais: primeiro o que o céu
+    // que vem anuncia, depois a prática que responde a ele.
+    final previsao = markdown.indexOf('Texto da secao forecast.');
+    expect(previsao, greaterThan(markdown.indexOf('Texto da secao practice.')));
+    expect(previsao, lessThan(markdown.indexOf('Texto da secao rituals.')));
     expect(markdown, contains('> Eu confio no meu ciclo.'));
     expect(markdown, contains('**raiz**'));
     expect(
@@ -120,6 +131,57 @@ void main() {
         '> Eu **honro minhas conquistas** e sigo.',
       ),
       'Eu honro minhas conquistas e sigo.',
+    );
+  });
+
+  test('palavra imediatamente duplicada colapsa na afirmação', () {
+    // "me me permito" — gagueira de geração vista numa afirmação real
+    // (23/08). Repetição imediata da MESMA palavra nunca é intencional.
+    expect(
+      CycleReadingService.semPalavraDuplicada(
+        'Eu confio no meu saber, libero o controle e me me permito encantar.',
+      ),
+      'Eu confio no meu saber, libero o controle e me permito encantar.',
+    );
+    // Palavras DIFERENTES em sequência ficam como estão.
+    expect(
+      CycleReadingService.semPalavraDuplicada('dia a dia, passo a passo'),
+      'dia a dia, passo a passo',
+    );
+    // Colapsa mesmo variando a caixa, preservando a primeira grafia.
+    expect(
+      CycleReadingService.semPalavraDuplicada('Que que floresça'),
+      'Que floresça',
+    );
+  });
+
+  test('reabrir do acervo recorta a afirmação da SEÇÃO dela, não o gancho',
+      () {
+    // A leitura ABRE com um gancho em citação; era ele que saía no cartão
+    // de compartilhar enquanto a tela mostrava a afirmação certa (visto no
+    // preview, 23/08). O título da seção é o do idioma da geração.
+    final titulo = lookupAppLocalizations(const Locale('pt', 'BR'))
+        .cycleReadingSectionAffirmation;
+    final markdown = '''
+# Leitura da Lunação
+
+## 🕯️ Retrato do momento
+
+> Da tempestade interna ao nascimento das suas criações.
+
+Texto do retrato.
+
+## $titulo
+
+> Eu confio na minha criação.
+
+## 🔮 Selo do ciclo
+
+**raiz** · **agua**
+''';
+    expect(
+      CycleReadingService.affirmationFromMarkdown(markdown),
+      'Eu confio na minha criação.',
     );
   });
 
@@ -268,8 +330,10 @@ void main() {
     );
   });
 
-  test('regeneração substitui o mesmo relatório e respeita o teto de 2×',
-      () async {
+  test('regeneração substitui o mesmo relatório, SEM teto', () async {
+    // O teto de 2 saiu (decisão da dona, 24/08): quem já pagou pela janela
+    // gera quantas vezes quiser. O que continua valendo é a substituição —
+    // a MESMA janela nunca vira uma segunda entrada no acervo.
     final credit = await insertCredit();
     var generated = (await service().generateForCredit(
       credit: credit,
@@ -277,35 +341,27 @@ void main() {
     ))
         .reading;
 
-    // 1ª e 2ª regenerações: mesmo id de relatório, contador avança.
-    for (var expected = 1; expected <= 2; expected++) {
+    // Cinco regenerações: mesmo id de relatório, contador avança, nenhuma
+    // bloqueada — antes a terceira estourava um StateError.
+    for (var esperado = 1; esperado <= 5; esperado++) {
       final result = await service().generateForCredit(
         credit: generated,
         userId: userId,
         regenerate: true,
       );
-      expect(result.reading.regenerationsUsed, expected);
+      expect(result.reading.regenerationsUsed, esperado);
       expect(result.writing.id, generated.writingId);
+      expect(result.reading.canRegenerate, isTrue,
+          reason: 'nunca mais existe "acabaram suas chances"');
       generated = result.reading;
     }
-
-    // 3ª: bloqueada.
-    expect(generated.canRegenerate, isFalse);
-    await expectLater(
-      service().generateForCredit(
-        credit: generated,
-        userId: userId,
-        regenerate: true,
-      ),
-      throwsA(isA<StateError>()),
-    );
 
     // O acervo tem UMA entrada só (regeneração nunca duplica).
     final db = await DatabaseHelper.instance.database;
     expect((await db.query('free_writings')).length, 1);
   });
 
-  test('leitura da SEMANA sai com 4 seções, sem prática/rituais/selo',
+  test('leitura da SEMANA sai com 8 seções, sem prática/rituais/selo',
       () async {
     final week = CycleReadingService.currentWeek();
     final credit = CycleReadingModel(
@@ -328,12 +384,18 @@ void main() {
         await service.generateForCredit(credit: credit, userId: userId);
 
     expect(asked, CycleReadingSections.weekly);
+    // A previsão ENTRA na semana (decisão da dona, 23/08: é pra isso que o
+    // usuário paga); o que fica só na lunação é prática, rituais e selo.
+    expect(asked, contains(CycleReadingSections.forecast));
     expect(asked, isNot(contains(CycleReadingSections.practice)));
     expect(asked, isNot(contains(CycleReadingSections.rituals)));
     expect(asked, isNot(contains(CycleReadingSections.seal)));
 
     final markdown = result.writing.content;
-    expect(RegExp(r'^## ', multiLine: true).allMatches(markdown).length, 4);
+    // 8 seções de IA (previsão + amor/trabalho/família) + a seção
+    // determinística dos números, que existe nas duas janelas (é calculada
+    // pelo app, sem chamada de IA).
+    expect(RegExp(r'^## ', multiLine: true).allMatches(markdown).length, 9);
     // A afirmação (o cartão compartilhável) continua nas duas janelas.
     expect(result.affirmation, 'Eu confio no meu ciclo.');
     expect(result.sealKeywords, isEmpty);
@@ -369,7 +431,7 @@ void main() {
     test('uma semana para a semanal, uma lunação para a mensal', () {
       expect(
         CycleReadingService.inviteBackAfter(CycleReadingPeriodType.week),
-        const Duration(days: 7),
+        const Duration(days: 8),
       );
       expect(
         CycleReadingService.inviteBackAfter(CycleReadingPeriodType.lunation),
@@ -379,10 +441,10 @@ void main() {
   });
 
   group('período escolhido a dedo vira semana ou lunação pelo tamanho', () {
-    test('até 7 dias é leitura da semana', () {
+    test('até 8 dias (o giro de segunda a segunda) é leitura da semana', () {
       expect(
         CycleReadingService.periodTypeForSpan(
-            DateTime(2026, 8, 1), DateTime(2026, 8, 8)),
+            DateTime(2026, 8, 1), DateTime(2026, 8, 9)),
         CycleReadingPeriodType.week,
       );
       expect(
@@ -392,10 +454,10 @@ void main() {
       );
     });
 
-    test('de 8 a 31 dias é leitura da lunação', () {
+    test('de 9 a 31 dias é leitura da lunação', () {
       expect(
         CycleReadingService.periodTypeForSpan(
-            DateTime(2026, 8, 1), DateTime(2026, 8, 9)),
+            DateTime(2026, 8, 1), DateTime(2026, 8, 10)),
         CycleReadingPeriodType.lunation,
       );
       expect(
@@ -554,12 +616,37 @@ void main() {
     });
   });
 
-  test('semana corrente cobre 7 dias e inclui hoje', () {
+  test('semana corrente é o giro completo: 8 dias, hoje incluído', () {
+    // Decisão da dona (23/08): o ciclo semanal fecha no MESMO dia da semana
+    // em que começou (segunda a segunda) — 8 dias vividos, não 7.
     final now = DateTime(2026, 8, 19, 15);
     final week = CycleReadingService.currentWeek(now: now);
-    expect(week.start, DateTime(2026, 8, 13));
+    expect(week.start, DateTime(2026, 8, 12));
     expect(week.end, DateTime(2026, 8, 20));
-    expect(week.end.difference(week.start).inDays, 7);
+    expect(week.end.difference(week.start).inDays, 8);
+    // Mesmo dia da semana nas duas pontas vividas (12 e 19: quartas).
+    expect(week.start.weekday, DateTime(2026, 8, 19).weekday);
+  });
+
+  test('as telas estampam o último dia VIVIDO, nunca o fim exclusivo', () {
+    // O `end` guardado é a meia-noite do dia seguinte ao último lido;
+    // estampá-lo cru dizia que a leitura cobre um dia que não cobre.
+    expect(
+      CycleReadingService.lastDayOf(DateTime(2026, 8, 30)),
+      DateTime(2026, 8, 29),
+    );
+    // Fim fora da meia-noite: o próprio dia já foi vivido em parte.
+    expect(
+      CycleReadingService.lastDayOf(DateTime(2026, 8, 30, 12)),
+      DateTime(2026, 8, 30),
+    );
+    expect(
+      CycleReadingService.reportTitle(
+        DateTime(2026, 8, 1),
+        DateTime(2026, 8, 30),
+      ),
+      contains('01/08–29/08'),
+    );
   });
 
   group('o Vitalício cobre as duas janelas', () {
@@ -627,16 +714,32 @@ void _guardaDoAfrouxamento() {
       expect(TestBuildConfig.unlimitedCycleReadings, isFalse);
     });
 
-    test('com ele desligado, o teto de regerações é o de produção', () {
-      final noTeto = CycleReadingModel(
+    test('regerar não depende mais dele — nem de contador nenhum', () {
+      // O teto de 2 saiu do produto (24/08), então a flag deixou de governar
+      // isto: mesmo com ela DESLIGADA, uma janela já gerada muitas vezes
+      // continua podendo ser gerada de novo.
+      final muitoRegerada = CycleReadingModel(
         userId: 'u',
         periodType: CycleReadingPeriodType.week,
         periodStart: DateTime(2026, 8, 1),
         periodEnd: DateTime(2026, 8, 8),
         status: CycleReadingStatus.generated,
-        regenerationsUsed: CycleReadingModel.maxRegenerations,
+        regenerationsUsed: 99,
       );
-      expect(noTeto.canRegenerate, isFalse);
+      expect(muitoRegerada.canRegenerate, isTrue);
+    });
+
+    test('mas uma janela AINDA NÃO gerada não é "regerável"', () {
+      // `canRegenerate` continua significando alguma coisa: só existe texto
+      // para substituir depois que a primeira geração aconteceu.
+      final pendente = CycleReadingModel(
+        userId: 'u',
+        periodType: CycleReadingPeriodType.week,
+        periodStart: DateTime(2026, 8, 1),
+        periodEnd: DateTime(2026, 8, 8),
+        status: CycleReadingStatus.pending,
+      );
+      expect(pendente.canRegenerate, isFalse);
     });
   });
 }

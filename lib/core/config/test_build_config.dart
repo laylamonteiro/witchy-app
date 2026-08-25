@@ -15,14 +15,17 @@
 abstract final class TestBuildConfig {
   const TestBuildConfig._();
 
-  /// Derruba o intervalo entre Leituras do Ciclo e o teto de regerações.
+  /// HOJE NÃO GOVERNA NADA — e isso é bom.
   ///
-  /// Existe para quem testa o app não precisar esperar 7 ou 30 dias entre
-  /// uma leitura e outra. NÃO libera a compra: o crédito continua sendo
-  /// exigido, porque quem testa usa conta Vitalícia ou de admin.
+  /// Nasceu para derrubar duas travas da Leitura do Ciclo em build de teste: a
+  /// espera de 7/30 dias entre uma leitura e outra, e o teto de 2 regerações
+  /// da mesma janela. As duas deixaram de existir para todo mundo — a espera
+  /// primeiro (ver `CycleReadingService.inviteBackAfter`, que hoje é só o
+  /// ritmo do lembrete), o teto em 24/08 (ver `CycleReadingModel.canRegenerate`).
   ///
-  /// O APK candidato do `branch-validate.yml` passa este define; o
-  /// `release.yml` nunca passa.
+  /// Fica de pé porque o `branch-validate.yml` ainda passa o define nos dois
+  /// builds, e porque é o lugar pronto para o próximo afrouxamento que
+  /// alguém precisar. Não apague sem tirar o `--dart-define` de lá junto.
   static const bool unlimitedCycleReadings =
       bool.fromEnvironment('UNLIMITED_CYCLE_READINGS');
 }

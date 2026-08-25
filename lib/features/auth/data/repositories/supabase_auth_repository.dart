@@ -7,15 +7,19 @@ import 'dart:math';
 
 import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart'
-    show defaultTargetPlatform, kIsWeb, TargetPlatform;
+    show defaultTargetPlatform, kIsWeb, TargetPlatform, visibleForTesting;
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/user_model.dart';
 import 'auth_repository.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 import '../../../../core/config/captcha_config.dart';
 import '../../../../core/config/google_signin_config.dart';
 import '../../../../core/config/supabase_config.dart';
+import '../../../../core/navigation/janela_de_login.dart';
 import '../../../../core/services/debug_log_service.dart';
+import '../../../../core/services/data_sync_service.dart';
 import '../services/google_one_tap.dart';
 
 AppLocalizations get _l10n =>
@@ -83,7 +87,7 @@ class SupabaseAuthRepository implements AuthRepository {
         final user = await _userFromSupabaseUser(response.user!);
         return AuthResult.success(user);
       }
-      return AuthResult.error('Erro ao fazer login');
+      return AuthResult.error(_l10n.authErrLogin);
     } on AuthException catch (e) {
       return _handleAuthException(e);
     } catch (e) {
@@ -116,7 +120,7 @@ class SupabaseAuthRepository implements AuthRepository {
         final user = await _userFromSupabaseUser(response.user!);
         return AuthResult.success(user);
       }
-      return AuthResult.error('Erro ao criar conta');
+      return AuthResult.error(_l10n.authErrCreateAccount);
     } on AuthException catch (e) {
       return _handleAuthException(e);
     } catch (e) {
@@ -178,30 +182,49 @@ class SupabaseAuthRepository implements AuthRepository {
   /// para outra origem. Aqui a credencial é pedida ao Google na própria
   /// página e trocada por sessão no Supabase: o navegador nunca sai.
   ///
-  /// Devolve `null` quando não deu — sem chave configurada, script não
-  /// carregado, janelinha não exibida, credencial recusada. Nulo não é
-  /// erro: quem chama segue para o redirecionamento de sempre, que continua
-  /// sendo o caminho garantido.
+  /// Devolve `null` quando o GOOGLE não deu credencial — sem chave no build,
+  /// script não carregado, origem fora da lista, janelinha não exibida ou
+  /// dispensada. Nulo não é erro: quem chama segue para o redirecionamento
+  /// de sempre, que continua sendo o caminho garantido.
+  ///
+  /// Devolve um resultado de ERRO quando o Google deu a credencial e o
+  /// SUPABASE a recusou. São coisas diferentes e o desfecho tem de ser
+  /// diferente: nesse ponto a pessoa já escolheu a conta, e mandá-la ao
+  /// redirecionamento a faz escolher de novo enquanto esconde uma falha de
+  /// configuração que não se conserta sozinha.
   Future<AuthResult?> _entrarSemSairDaAba(String? captchaToken) async {
     if (!GoogleSignInConfig.isConfigured) return null;
 
-    try {
-      // O nonce vai CRU para o Supabase e PICADO para o Google, que o
-      // devolve dentro do token. É o que amarra o token a esta tentativa:
-      // um token interceptado não serve em outra.
-      final nonceCru = _nonceAleatorio();
-      final nonceHash = sha256.convert(utf8.encode(nonceCru)).toString();
+    // O nonce vai CRU para o Supabase e PICADO para o Google, que o devolve
+    // dentro do token. É o que amarra o token a esta tentativa: um token
+    // interceptado não serve em outra.
+    final nonceCru = _nonceAleatorio();
+    final nonceHash = sha256.convert(utf8.encode(nonceCru)).toString();
 
-      final idToken = await pedirIdTokenDoGoogle(
+    // PRIMEIRA METADE — falar com o Google. Aqui não dar certo é normal, e
+    // silêncio é a resposta certa: cookies de terceiros bloqueados, script
+    // não carregado, origem fora da lista, a pessoa fechando a janelinha.
+    // Nenhum desses é erro DELA, e o redirecionamento resolve todos.
+    String? idToken;
+    try {
+      idToken = await pedirIdTokenDoGoogle(
         clientId: GoogleSignInConfig.webClientId,
         nonceHash: nonceHash,
         limite: GoogleSignInConfig.limite,
       );
-      if (idToken == null) {
-        await debugLog('AUTH', 'Google na página: sem credencial — redirecionando');
-        return null;
-      }
+    } catch (e) {
+      await debugLog('AUTH', 'Google na página tropeçou ($e) — redirecionando');
+      return null;
+    }
+    if (idToken == null) {
+      await debugLog('AUTH', 'Google na página: sem credencial — redirecionando');
+      return null;
+    }
 
+    // SEGUNDA METADE — o Google já disse sim. Daqui para a frente a pessoa
+    // JÁ escolheu a conta, e cair no redirecionamento a faz escolher de
+    // novo, do zero, sem explicação.
+    try {
       final response = await _supabase.auth.signInWithIdToken(
         provider: OAuthProvider.google,
         idToken: idToken,
@@ -209,7 +232,12 @@ class SupabaseAuthRepository implements AuthRepository {
         captchaToken: captchaToken,
       );
       final supabaseUser = response.user;
-      if (supabaseUser == null) return null;
+      if (supabaseUser == null) {
+        // Sem erro e sem usuário: não há o que dizer à pessoa, e o
+        // redirecionamento ainda pode salvar a entrada.
+        await debugLog('AUTH', 'Google na página: sessão vazia — redirecionando');
+        return null;
+      }
 
       await debugLog('AUTH', 'Google na página: sessão criada sem sair da aba');
       await _createProfile(
@@ -217,9 +245,20 @@ class SupabaseAuthRepository implements AuthRepository {
         supabaseUser.userMetadata?['name']?.toString(),
       );
       return AuthResult.success(await _userFromSupabaseUser(supabaseUser));
+    } on AuthException catch (e) {
+      // O SERVIDOR RECUSOU um token que o Google acabou de emitir. Isso não
+      // é intermitência: é configuração — o Web client ID fora de
+      // *Authorized Client IDs*, o nonce recusado, o provedor desligado.
+      //
+      // Engolir aqui era o pior desfecho possível: a pessoa escolhia a conta
+      // duas vezes, entrava pelo redirecionamento na segunda, e o defeito
+      // ficava invisível para sempre — inclusive para quem mantém o app,
+      // porque nada nunca falhava por completo.
+      await debugLog('AUTH', 'Google na página: Supabase recusou o token — ${e.message}');
+      return _handleAuthException(e);
     } catch (e) {
-      // Qualquer tropeço aqui volta ao caminho conhecido em vez de virar
-      // uma tela de erro: o redirecionamento funciona.
+      // Rede caindo no meio da troca: o redirecionamento é a segunda
+      // chance, e ela é melhor do que uma tela de erro.
       await debugLog('AUTH', 'Google na página falhou ($e) — redirecionando');
       return null;
     }
@@ -232,6 +271,138 @@ class SupabaseAuthRepository implements AuthRepository {
     return base64Url.encode(bytes);
   }
 
+  /// Para onde a usuária volta DEPOIS do login web — a origem do próprio
+  /// app (grimoriodebolso.app em produção, staging ou prévia, ou localhost
+  /// em dev), não o callback interno do Supabase.
+  ///
+  /// COM BARRA NO FIM. Os padrões de Redirect URLs do Supabase são globs
+  /// literais: `https://*.grimorio-de-bolso.pages.dev/**` exige a barra
+  /// para casar, e `Uri.base.origin` não a tem. Sem casar, o Supabase
+  /// ignora o pedido em silêncio e manda para o *Site URL* — quem logava
+  /// no staging reaparecia em PRODUÇÃO, com um código PKCE inútil.
+  static String get _redirectDaWeb => '${Uri.base.origin}/';
+
+  /// A chave onde o supabase_flutter PERSISTE a sessão (SharedPreferences;
+  /// na web, o localStorage compartilhado da origem). É por ela que a aba
+  /// principal enxerga a sessão que a janela de login gravou.
+  static String get _chaveDaSessao =>
+      'sb-${Uri.parse(SupabaseConfig.url).host.split('.').first}-auth-token';
+
+  /// Login do Google numa janela PRÓPRIA (só web).
+  ///
+  /// O fluxo: a URL de autorização nasce aqui (o segredo PKCE fica no
+  /// armazenamento da origem, que a janela compartilha), a janela faz a
+  /// jornada inteira do Google e volta ao app, que troca o código, GRAVA a
+  /// sessão e se fecha (ver `fecharSeJanelaDeLogin` no AuthWrapper). Esta
+  /// aba só observa o armazenamento: quando a sessão aparece, a recupera e
+  /// segue como qualquer login.
+  ///
+  /// Devolve null quando o navegador bloqueia a janela — quem chama cai no
+  /// redirecionamento de sempre, porque login funcionando vale mais que
+  /// histórico limpo. Janela fechada sem sessão = desistência (erro suave,
+  /// como o cancelar do login nativo).
+  Future<AuthResult?> _entrarPelaJanelaPropria() async {
+    final OAuthResponse resposta;
+    try {
+      resposta = await _supabase.auth.getOAuthSignInUrl(
+        provider: OAuthProvider.google,
+        redirectTo: _redirectDaWeb,
+      );
+    } catch (e) {
+      await debugLog('AUTH', 'URL do login em janela falhou ($e) — redirecionando');
+      return null;
+    }
+
+    final url = resposta.url;
+    if (url.isEmpty) return null;
+
+    final janela = abrirJanelaDeLogin(url);
+    if (janela == null) {
+      await debugLog('AUTH', 'Janela de login bloqueada — redirecionando');
+      return null;
+    }
+    await debugLog('AUTH', 'Login do Google em janela própria — aguardando a sessão');
+
+    final sessaoCrua = await _aguardarSessaoDaJanela();
+    if (sessaoCrua == null) {
+      return AuthResult.error(_l10n.authErrLoginCancelled);
+    }
+
+    try {
+      final recuperada = await _supabase.auth.recoverSession(sessaoCrua);
+      final supabaseUser = recuperada.user ?? _supabase.auth.currentUser;
+      if (supabaseUser == null) {
+        return AuthResult.error(_l10n.authErrGoogleCredentials);
+      }
+      await debugLog('AUTH', 'Sessão da janela de login recuperada');
+      await _createProfile(
+        supabaseUser,
+        supabaseUser.userMetadata?['name']?.toString(),
+      );
+      return AuthResult.success(await _userFromSupabaseUser(supabaseUser));
+    } on AuthException catch (e) {
+      return _handleAuthException(e);
+    } catch (e) {
+      await debugLog('AUTH', 'Falha ao recuperar a sessão da janela: $e');
+      return AuthResult.error(_l10n.authErrGoogleCredentials);
+    }
+  }
+
+  /// Observa o armazenamento até a janela de login gravar a sessão.
+  ///
+  /// SÓ o armazenamento, nunca a alça da janela: o COOP das páginas do
+  /// Google corta o vínculo na primeira navegação e `closed` passa a dizer
+  /// fechada com a janela aberta — o atalho "fechou = desistiu" derrubava
+  /// o login com "Sign-in cancelled" enquanto a pessoa ainda escolhia a
+  /// conta (visto no preview, 23/08). O preço é que uma desistência real
+  /// só aparece no fim do prazo; melhor uma espera honesta que um
+  /// cancelamento inventado.
+  ///
+  /// Enquanto espera, a marca de janela fica de pé: é por ela que o
+  /// documento que voltar do OAuth sabe que é a janela de login (o COOP
+  /// também apaga o `opener`) e mostra o "pode fechar esta aba" em vez de
+  /// virar um segundo app com o Google no histórico.
+  /// A sessão como está PERSISTIDA agora, onde quer que o supabase_flutter
+  /// a guarde: na web ele grava DIRETO no localStorage (js-interop) — o
+  /// SharedPreferences prefixa tudo com `flutter.` e nunca a veria (era o
+  /// login travado do preview, 23/08). A leitura via prefs fica como plano
+  /// B para versões do pacote que persistam por ali.
+  Future<String?> _sessaoPersistida(
+    SharedPreferences prefs,
+    String chave,
+  ) async {
+    final direta = lerDoLocalStorage(chave);
+    if (direta != null && direta.isNotEmpty) return direta;
+    await prefs.reload();
+    return prefs.getString(chave);
+  }
+
+  Future<String?> _aguardarSessaoDaJanela() async {
+    final prefs = await SharedPreferences.getInstance();
+    final chave = _chaveDaSessao;
+    final antes = await _sessaoPersistida(prefs, chave);
+    final limite = DateTime.now().add(const Duration(minutes: 3));
+
+    await prefs.setString(
+      chaveJanelaDeLoginEmAndamento,
+      '${DateTime.now().millisecondsSinceEpoch}',
+    );
+    try {
+      while (DateTime.now().isBefore(limite)) {
+        await Future.delayed(const Duration(milliseconds: 800));
+        final agora = await _sessaoPersistida(prefs, chave);
+        if (agora != null && agora.isNotEmpty && agora != antes) {
+          return agora;
+        }
+      }
+      await debugLog(
+          'AUTH', 'Janela de login: sessão não apareceu no prazo (3min)');
+      return null;
+    } finally {
+      await prefs.remove(chaveJanelaDeLoginEmAndamento);
+    }
+  }
+
   @override
   Future<AuthResult> signInWithGoogle({String? captchaToken}) async {
     try {
@@ -242,22 +413,19 @@ class SupabaseAuthRepository implements AuthRepository {
         final semSair = await _entrarSemSairDaAba(captchaToken);
         if (semSair != null) return semSair;
 
+        // Depois, numa JANELA PRÓPRIA: o redirecionamento na mesma aba
+        // deixava as páginas do Google no histórico DELA, e o gesto de
+        // voltar reabria a tela de login do Google — mesmo com todas as
+        // guardas de histórico (visto em produção e no preview, 23/08).
+        // Com o login em janela própria, o Google nunca ENTRA no
+        // histórico da aba do app; só o bloqueio de pop-up cai no
+        // redirecionamento de sempre.
+        final pelaJanela = await _entrarPelaJanelaPropria();
+        if (pelaJanela != null) return pelaJanela;
+
         await _supabase.auth.signInWithOAuth(
           OAuthProvider.google,
-          // Para onde a usuária volta DEPOIS do login — a origem do próprio
-          // app (grimoriodebolso.app em produção, staging ou prévia, ou
-          // localhost em dev), não o callback interno do Supabase (que era o
-          // valor anterior e deixava a usuária parada numa URL do Supabase).
-          //
-          // COM BARRA NO FIM. Os padrões de Redirect URLs do Supabase são
-          // globs literais: `https://*.grimorio-de-bolso.pages.dev/**` exige
-          // a barra para casar, e `Uri.base.origin` não a tem. Sem casar, o
-          // Supabase ignora o pedido em silêncio e manda para o *Site URL* —
-          // ou seja, quem logava no staging reaparecia em PRODUÇÃO, com um
-          // código PKCE inútil (o segredo ficou no localStorage do staging).
-          // Resultado: um login que falha, um segundo que funciona, e a
-          // pessoa testando o app antigo sem perceber que trocou de site.
-          redirectTo: '${Uri.base.origin}/',
+          redirectTo: _redirectDaWeb,
         );
         // O navegador já está saindo para o Google. Devolver "sucesso" com um
         // usuário anônimo (como antes) fazia a tela sincronizar essa conta
@@ -271,7 +439,7 @@ class SupabaseAuthRepository implements AuthRepository {
       final googleUser = await _googleSignIn!.signIn();
       if (googleUser == null) {
         await debugLog('AUTH', 'Google Sign-In cancelado pelo usuário');
-        return AuthResult.error('Login cancelado');
+        return AuthResult.error(_l10n.authErrLoginCancelled);
       }
 
       await debugLog(
@@ -305,13 +473,14 @@ class SupabaseAuthRepository implements AuthRepository {
       }
 
       await debugLog('AUTH', 'Google Sign-In: falhou - user é null');
-      return AuthResult.error('Erro ao autenticar com Google');
+      return AuthResult.error(_l10n.authErrGoogleAuth);
     } on AuthException catch (e) {
       await debugLog('AUTH', 'Google Sign-In AuthException: ${e.message}');
       return _handleAuthException(e);
     } catch (e) {
       await debugLog('AUTH', 'Google Sign-In erro: $e');
-      return AuthResult.error('Erro no login com Google: $e');
+      await debugLog('AUTH', 'Falha no login com o Google: $e');
+      return AuthResult.error(_l10n.authErrGoogleAuth);
     }
   }
 
@@ -372,26 +541,33 @@ class SupabaseAuthRepository implements AuthRepository {
     } on AuthException catch (e) {
       return _handleAuthException(e);
     } catch (e) {
-      return AuthResult.error('Erro ao enviar email: $e');
+      await debugLog('AUTH', 'Falha ao enviar e-mail: $e');
+      return AuthResult.error(_l10n.authErrSendEmail);
     }
   }
 
   @override
-  Future<AuthResult> verifyEmail() async {
-    // Supabase envia email de verificação automaticamente
-    // Este método pode ser usado para reenviar
+  Future<AuthResult> verifyEmail({String? captchaToken}) async {
+    // O Supabase manda o e-mail de confirmação sozinho no cadastro; este
+    // método é o reenvio, para quando ele se perde.
+    //
+    // O token do captcha vai junto porque o reenvio passa pela mesma
+    // proteção do cadastro. Sem ele, o Supabase responde com
+    // AuthException e nenhum e-mail sai.
     try {
       final user = _supabase.auth.currentUser;
       if (user?.email != null) {
         await _supabase.auth.resend(
           type: OtpType.signup,
           email: user!.email!,
+          captchaToken: captchaToken,
         );
         return AuthResult.success(await _userFromSupabaseUser(user));
       }
       return AuthResult.error(_l10n.authErrNoUser);
     } catch (e) {
-      return AuthResult.error('Erro ao verificar email: $e');
+      await debugLog('AUTH', 'Falha ao verificar e-mail: $e');
+      return AuthResult.error(_l10n.authErrVerifyEmail);
     }
   }
 
@@ -439,9 +615,10 @@ class SupabaseAuthRepository implements AuthRepository {
       if (updatedUser != null) {
         return AuthResult.success(updatedUser);
       }
-      return AuthResult.error('Erro ao atualizar perfil');
+      return AuthResult.error(_l10n.authErrUpdateProfile);
     } catch (e) {
-      return AuthResult.error('Erro ao atualizar perfil: $e');
+      await debugLog('AUTH', 'Falha ao atualizar o perfil: $e');
+      return AuthResult.error(_l10n.authErrUpdateProfile);
     }
   }
 
@@ -456,11 +633,12 @@ class SupabaseAuthRepository implements AuthRepository {
       if (user != null) {
         return AuthResult.success(user);
       }
-      return AuthResult.error('Erro ao atualizar senha');
+      return AuthResult.error(_l10n.authErrUpdatePassword);
     } on AuthException catch (e) {
       return _handleAuthException(e);
     } catch (e) {
-      return AuthResult.error('Erro ao atualizar senha: $e');
+      await debugLog('AUTH', 'Falha ao atualizar a senha: $e');
+      return AuthResult.error(_l10n.authErrUpdatePassword);
     }
   }
 
@@ -474,8 +652,20 @@ class SupabaseAuthRepository implements AuthRepository {
         return AuthResult.error(_l10n.authErrNoUser);
       }
 
-      // Deletar dados do usuário das tabelas
-      await _deleteUserData(user.id);
+      final naoApagadas = await _deleteUserData(user.id);
+
+      // Sair da conta com dado ainda no servidor esconderia a falha: a
+      // pessoa pediu para sumir, veria a tela de despedida e o grimório
+      // continuaria lá. Sem sessão ela também não conseguiria tentar de
+      // novo — RLS exige auth.uid(). Então a sessão só cai quando o
+      // servidor está limpo.
+      if (naoApagadas.isNotEmpty) {
+        await debugLog(
+          'AUTH',
+          'Exclusao de conta incompleta — sobrou: ${naoApagadas.join(", ")}',
+        );
+        return AuthResult.error(_l10n.authErrDeleteAccountIncomplete);
+      }
 
       // Chamar função Edge para deletar o usuário Auth
       // await _supabase.functions.invoke('delete-user');
@@ -483,37 +673,84 @@ class SupabaseAuthRepository implements AuthRepository {
       await signOut();
       return AuthResult.success(UserModel.defaultUser());
     } catch (e) {
-      return AuthResult.error('Erro ao deletar conta: $e');
+      await debugLog('AUTH', 'Erro ao excluir conta: $e');
+      return AuthResult.error(_l10n.authErrDeleteAccount);
     }
   }
 
-  Future<void> _deleteUserData(String userId) async {
-    // Deletar dados de todas as tabelas do usuário
-    final tables = [
-      SupabaseTables.spells,
-      SupabaseTables.dreams,
-      SupabaseTables.desires,
-      SupabaseTables.gratitudes,
-      SupabaseTables.affirmations,
-      SupabaseTables.dailyRituals,
-      SupabaseTables.ritualLogs,
-      SupabaseTables.sigils,
-      SupabaseTables.birthCharts,
-      SupabaseTables.magicalProfiles,
-      SupabaseTables.runeReadings,
-      SupabaseTables.pendulumConsultations,
-      SupabaseTables.oracleReadings,
-      SupabaseTables.dailyMagicalWeather,
-      SupabaseTables.profiles,
-    ];
+  /// As tabelas que a exclusão de conta precisa varrer, na ordem em que são
+  /// apagadas.
+  ///
+  /// Derivada de [SyncEntity] de propósito: a lista escrita à mão que existia
+  /// aqui cobria 15 tabelas enquanto o app sincronizava 20. Ficavam no
+  /// servidor depois de a pessoa excluir a conta a escrita livre, as leituras
+  /// de ciclo, as tiragens de tarô, os check-ins, o progresso da trilha e as
+  /// anotações da enciclopédia. Derivando do enum, entidade nova nasce
+  /// coberta.
+  ///
+  /// `profiles` vem por último e fora do laço: a chave dela é `id`, não
+  /// `user_id`, e enquanto a linha existe um erro no meio do laço ainda é
+  /// recuperável — sem ela a pessoa perde a sessão e o resto vira lixo
+  /// inalcançável.
+  @visibleForTesting
+  static List<String> tabelasDaExclusaoDeConta() => [
+        for (final entity in SyncEntity.values)
+          DataSyncService.supabaseTableFor(entity),
+        // As lápides do sync não são entidade, mas carregam rastro (quais
+        // ids existiram) e pertencem à pessoa: somem junto.
+        'sync_tombstones',
+        SupabaseTables.profiles,
+      ];
 
-    for (final table in tables) {
+  /// Apaga no servidor tudo que é da pessoa. Devolve as tabelas que falharam.
+  ///
+  /// Nada de engolir erro aqui: o que sobra é dado íntimo mantido depois de
+  /// um pedido explícito de exclusão. Quem chama precisa saber para avisar e
+  /// deixar tentar de novo.
+  Future<List<String>> _deleteUserData(String userId) async {
+    final falhas = <String>[];
+
+    for (final tabela in tabelasDaExclusaoDeConta()) {
+      // `profiles` é a única com chave `id`. A versão anterior filtrava
+      // `user_id` nela também — coluna que não existe —, a chamada falhava,
+      // o catch a ignorava e o perfil sobrevivia à exclusão com e-mail e
+      // data de nascimento dentro.
+      final coluna = tabela == SupabaseTables.profiles ? 'id' : 'user_id';
+
       try {
-        await _supabase.from(table).delete().eq('user_id', userId);
+        await _supabase.from(tabela).delete().eq(coluna, userId);
       } catch (e) {
-        // Ignorar erros - tabela pode não existir
+        await debugLog('AUTH', 'Falha ao apagar $tabela na exclusão: $e');
+        falhas.add(tabela);
+        continue;
+      }
+
+      // Conferir que sumiu mesmo, e não confiar no "deu certo" do DELETE:
+      // um DELETE barrado pelo RLS não é erro para o PostgREST — ele responde
+      // sucesso tendo apagado zero linhas. Foi por aí que `profiles`, que não
+      // tinha política de DELETE nenhuma, sobreviveu a toda exclusão de conta
+      // sem nunca acusar falha. A conferência é uma consulta por tabela, uma
+      // vez na vida da conta: barato perto de jurar que apagou sem ter
+      // apagado.
+      try {
+        final restante = await _supabase
+            .from(tabela)
+            .select(coluna)
+            .eq(coluna, userId)
+            .limit(1);
+        if (restante.isNotEmpty) {
+          await debugLog('AUTH', 'Sobrou linha em $tabela depois do DELETE');
+          falhas.add(tabela);
+        }
+      } catch (e) {
+        // Sem conseguir conferir, o honesto é tratar como falha: dizer
+        // "apagado" sem ter certeza é o defeito que estamos consertando.
+        await debugLog('AUTH', 'Falha ao conferir $tabela: $e');
+        falhas.add(tabela);
       }
     }
+
+    return falhas;
   }
 
   /// Converte usuário do Supabase para UserModel
@@ -613,11 +850,10 @@ class SupabaseAuthRepository implements AuthRepository {
           : _l10n.authErrCaptchaOutdated;
     } else if (normalizedMessage.contains('email not confirmed') ||
         normalizedMessage.contains('email is not confirmed')) {
-      message =
-          'Confirme seu email antes de entrar. Verifique sua caixa de entrada.';
+      message = _l10n.authErrEmailNotConfirmed;
     } else if (message.contains('Invalid login credentials')) {
       code = AuthErrorCode.invalidPassword;
-      message = 'Email ou senha incorretos';
+      message = _l10n.authErrInvalidCredentials;
     } else if (message.contains('User not found')) {
       code = AuthErrorCode.userNotFound;
       message = _l10n.authErrUserNotFound;
@@ -628,11 +864,11 @@ class SupabaseAuthRepository implements AuthRepository {
     } else if (message.contains('Password should be') ||
         message.contains('password')) {
       code = AuthErrorCode.weakPassword;
-      message = 'A senha deve ter pelo menos 6 caracteres';
+      message = _l10n.authErrWeakPassword;
     } else if (message.contains('rate limit') ||
         message.contains('too many')) {
       code = AuthErrorCode.tooManyRequests;
-      message = 'Muitas tentativas. Aguarde alguns minutos.';
+      message = _l10n.authErrTooManyAttempts;
     } else if (message.contains('network') || message.contains('connection')) {
       code = AuthErrorCode.networkError;
       message = _l10n.authErrNetworkCheck;

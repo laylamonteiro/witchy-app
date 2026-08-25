@@ -260,7 +260,10 @@ class _BetaCodesDebugPageState extends State<BetaCodesDebugPage> {
                     label: const Text('Diagnóstico Completo'),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: context.gc.lilac,
-                      foregroundColor: context.gc.textPrimary,
+                      // textPrimary é quase branco nos temas escuros e sumia
+                      // sobre o lilás claro; onPrimary é o token para texto
+                      // sobre o acento.
+                      foregroundColor: context.gc.onPrimary,
                       padding: const EdgeInsets.symmetric(vertical: 12),
                     ),
                   ),
@@ -273,7 +276,10 @@ class _BetaCodesDebugPageState extends State<BetaCodesDebugPage> {
                     label: const Text('Testar Criação'),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: context.gc.pink,
-                      foregroundColor: context.gc.textPrimary,
+                      // Mesmo caso do botão lilás ao lado: o pink também é
+                      // claro nos temas escuros, e o texto quase branco
+                      // desaparecia sobre ele.
+                      foregroundColor: context.gc.onPrimary,
                       padding: const EdgeInsets.symmetric(vertical: 12),
                     ),
                   ),

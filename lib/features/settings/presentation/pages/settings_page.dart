@@ -12,6 +12,7 @@ import '../../../../core/providers/notification_provider.dart';
 import '../../../../core/providers/language_provider.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
+import '../../../../core/widgets/magical_button.dart';
 import '../../../../core/diagnostic/diagnostic_page.dart';
 import '../../../../core/services/payment_service.dart';
 import '../../../lunar/presentation/providers/lunar_provider.dart';
@@ -20,6 +21,7 @@ import '../../../auth/auth.dart';
 import '../../../journeys/journeys.dart';
 import '../../../auth/presentation/pages/change_password_page.dart';
 import '../../../subscription/presentation/pages/subscription_page.dart';
+import '../../../subscription/presentation/widgets/cartao_do_convite.dart';
 import 'about_help_page.dart';
 import 'privacy_settings_page.dart';
 import 'beta_codes_management_page.dart';
@@ -59,9 +61,17 @@ class SettingsPage extends StatelessWidget {
                 _buildPlanCard(context, user, authProvider),
                 const SizedBox(height: 20),
 
-                // Estatísticas de uso (para free OU admin simulando free)
+                // O convite ao Premium (só para quem está no plano Free).
+                //
+                // Era um placar de três linhas fixas — e uma delas lia o
+                // contador ERRADO: "Conselheiro Místico" mostrava
+                // `aiConsultationsToday`, que é a cota de analisar sonho,
+                // sugerir feitiço e clima mágico. Os dois limites valem 1,
+                // então o denominador batia por coincidência e a barra
+                // errava nos dois sentidos. Agora os números saem do mesmo
+                // mapa que decide o bloqueio.
                 if (user.plan == SubscriptionPlan.free) ...[
-                  _buildUsageStats(context, user),
+                  CartaoDoConvite(user: user),
                   const SizedBox(height: 20),
                 ],
 
@@ -391,27 +401,42 @@ class SettingsPage extends StatelessWidget {
             const SizedBox(height: 16),
             SizedBox(
               width: double.infinity,
-              child: ElevatedButton(
-                key: const ValueKey('settings_upgrade_button'),
-                onPressed: () => _showUpgradeSheet(context),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: context.gc.lilac,
-                  foregroundColor: context.gc.textPrimary,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(25),
-                  ),
+              // Gradiente lilac→pink dos CTAs primários (ver
+              // MagicalButton.ctaDecoration) num DecoratedBox, porque
+              // ElevatedButton não aceita gradiente. O texto era
+              // textPrimary — quase branco sobre o lilás claro em vários
+              // temas; onPrimary é o token que os testes de contraste
+              // garantem legível sobre o acento.
+              child: DecoratedBox(
+                decoration: MagicalButton.ctaDecoration(
+                  context,
+                  // Espelha o borderRadius do shape logo abaixo: se
+                  // divergirem, o gradiente vaza fora do ink.
+                  borderRadius: BorderRadius.circular(25),
                 ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.auto_awesome, size: 18),
-                    SizedBox(width: 8),
-                    Text(
-                      AppLocalizations.of(context).profileUpgrade,
-                      style: TextStyle(fontWeight: FontWeight.bold),
+                child: ElevatedButton(
+                  key: const ValueKey('settings_upgrade_button'),
+                  onPressed: () => _showUpgradeSheet(context),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.transparent,
+                    shadowColor: Colors.transparent,
+                    foregroundColor: context.gc.onPrimary,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(25),
                     ),
-                  ],
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.auto_awesome, size: 18),
+                      SizedBox(width: 8),
+                      Text(
+                        AppLocalizations.of(context).profileUpgrade,
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -442,126 +467,6 @@ class SettingsPage extends StatelessWidget {
 
   Future<void> _manageSubscription(BuildContext context) async {
     await openSubscriptionPage(context);
-  }
-
-  Widget _buildUsageStats(BuildContext context, UserModel user) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: context.gc.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: context.gc.textPrimary.withValues(alpha: 0.1),
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            AppLocalizations.of(context).profileFreeUsage,
-            style: TextStyle(
-              color: context.gc.textPrimary,
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 16),
-          _buildUsageRow(
-            context,
-            AppLocalizations.of(context).profileSpells,
-            user.spellsCount,
-            UserModel.freeSpellsLimit,
-            Icons.auto_fix_high,
-          ),
-          const SizedBox(height: 12),
-          _buildUsageRow(
-            context,
-            AppLocalizations.of(context).profileDiaryEntries,
-            user.diaryEntriesThisMonth,
-            UserModel.freeDiaryEntriesLimit,
-            Icons.book,
-            subtitle: AppLocalizations.of(context).profileThisMonth,
-          ),
-          const SizedBox(height: 12),
-          _buildUsageRow(
-            context,
-            AppLocalizations.of(context).profileMysticAdvisor,
-            user.aiConsultationsToday,
-            UserModel.freeAiConsultationsLimit,
-            Icons.psychology,
-            subtitle: AppLocalizations.of(context).profileToday,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildUsageRow(
-    BuildContext context,
-    String label,
-    int used,
-    int limit,
-    IconData icon, {
-    String? subtitle,
-  }) {
-    final percentage = used / limit;
-    Color progressColor;
-    if (percentage < 0.5) {
-      progressColor = context.gc.success;
-    } else if (percentage < 0.8) {
-      progressColor = context.gc.gold;
-    } else {
-      progressColor = context.gc.alert;
-    }
-
-    return Row(
-      children: [
-        Icon(icon, color: context.gc.textSecondary, size: 20),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    label,
-                    style: TextStyle(
-                      color: context.gc.textPrimary,
-                      fontSize: 14,
-                    ),
-                  ),
-                  Text(
-                    '$used/$limit',
-                    style: TextStyle(
-                      color: progressColor,
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-              if (subtitle != null)
-                Text(
-                  subtitle,
-                  style: TextStyle(
-                    color: context.gc.textSecondary,
-                    fontSize: 11,
-                  ),
-                ),
-              const SizedBox(height: 4),
-              LinearProgressIndicator(
-                value: percentage.clamp(0, 1),
-                backgroundColor: context.gc.textPrimary.withValues(alpha: 0.1),
-                valueColor: AlwaysStoppedAnimation(progressColor),
-                borderRadius: BorderRadius.circular(4),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
   }
 
   Widget _buildAccountOptions(BuildContext context, AuthProvider authProvider) {
@@ -1215,7 +1120,10 @@ class SettingsPage extends StatelessWidget {
               ),
               child: Text(
                 AppLocalizations.of(context).commonSave,
-                style: TextStyle(color: context.gc.textPrimary),
+                // textPrimary é quase branco nos temas escuros e sumia
+                // sobre o lilás claro; onPrimary é o token feito para
+                // texto sobre o acento.
+                style: TextStyle(color: context.gc.onPrimary),
               ),
             ),
           ],

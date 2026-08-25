@@ -29,14 +29,23 @@ class _AstroFake extends AstrologyProvider {
   final bool limite;
   final Duration demora;
 
+  /// Quais seções falharam. Vazio com `erro` preenchido significa "todas",
+  /// para os testes que não se importam com qual é qual.
+  Set<String> secoesQueFalharam = const {};
+
   int chamadas = 0;
   final Set<String> _tecendo = {};
 
-  @override
-  String? get error => erro;
+  // A falha é por SEÇÃO, e o dublê acompanha: um erro global fazia a seção
+  // que falhava marcar falha em todas as outras abertas.
+  bool _falhou(String key) =>
+      secoesQueFalharam.isEmpty || secoesQueFalharam.contains(key);
 
   @override
-  bool get lastFailureWasRateLimit => limite;
+  String? erroDaSecao(String key) => _falhou(key) ? erro : null;
+
+  @override
+  bool falhaDeLimiteNaSecao(String key) => limite && _falhou(key);
 
   @override
   bool isWeavingSection(String key) => _tecendo.contains(key);
@@ -193,5 +202,34 @@ void main() {
 
     expect(find.text(l10n.aiVisionRateLimit), findsOneWidget);
     expect(find.textContaining('Exception'), findsNothing);
+  });
+
+  testWidgets('a falha de OUTRA seção não contamina esta', (tester) async {
+    // A trava de geração já era por seção — abrir um card enquanto outro
+    // termina é o normal de quem está explorando. O erro, porém, era um só
+    // para todas: a seção que falhasse marcava falha em TODAS as abertas,
+    // inclusive nas que estavam indo bem. A tela é a da intuição; quem
+    // falhou foi a essência.
+    final astro = _AstroFake(erro: 'Sem conexão com o oráculo')
+      ..secoesQueFalharam = {MagicalProfileSections.essence};
+
+    await tester.pumpWidget(_tela(astro));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text('Sem conexão com o oráculo'),
+      findsNothing,
+      reason: 'o motivo pertence à essência, não à intuição',
+    );
+  });
+
+  testWidgets('o limite de OUTRA seção não contamina esta', (tester) async {
+    final astro = _AstroFake(limite: true)
+      ..secoesQueFalharam = {MagicalProfileSections.essence};
+
+    await tester.pumpWidget(_tela(astro));
+    await tester.pumpAndSettle();
+
+    expect(find.text(l10n.aiVisionRateLimit), findsNothing);
   });
 }

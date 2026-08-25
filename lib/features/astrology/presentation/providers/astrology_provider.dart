@@ -8,6 +8,15 @@ import '../../data/models/magical_profile_model.dart';
 import '../../data/repositories/astrology_repository.dart';
 import '../../data/services/chart_calculator.dart';
 import '../../data/services/magical_interpreter.dart';
+import '../../../../core/content/content_locale.dart';
+import '../../../../l10n/generated/app_localizations.dart';
+
+/// O texto de falha que chega à tela sai daqui, e não de string cravada: as
+/// cinco mensagens deste provider eram português com o dump da exceção
+/// dentro. Chegavam assim em inglês e espanhol, e o scanner de hardcoded não
+/// as via porque nenhuma tinha acento.
+AppLocalizations get _l10n =>
+    lookupAppLocalizations(ContentLocale.instance.locale);
 
 class AstrologyProvider with ChangeNotifier {
   final AstrologyRepository _repository = AstrologyRepository();
@@ -19,7 +28,36 @@ class AstrologyProvider with ChangeNotifier {
   MagicalProfile? _magicalProfile;
   bool _isLoading = false;
   final Set<String> _tecendo = <String>{};
-  bool _ultimaFalhaFoiLimite = false;
+
+  /// Por que cada seção da Análise Personalizada não veio.
+  ///
+  /// Por SEÇÃO, e não uma falha só para todas. A trava de geração já era por
+  /// seção — abrir um card enquanto outro termina é o normal de quem está
+  /// explorando —, mas o erro continuava global: a seção que falhasse marcava
+  /// falha em TODAS as outras abertas, inclusive nas que estavam indo bem.
+  final Map<String, _FalhaDaSecao> _falhas = <String, _FalhaDaSecao>{};
+
+  /// Dublê do tecelão de seção, nulo em produção.
+  ///
+  /// O teste de concorrência do acúmulo precisa mandar duas seções terminarem
+  /// em ordens controladas. O risco que ele vigia mora na
+  /// leitura-depois-da-chamada e na fila de gravação — que rodam de verdade —
+  /// e não na chamada de rede da IA, que é só a borda. Mesmo racional do
+  /// ServidorDeSync no DataSyncService.
+  @visibleForTesting
+  Future<String> Function({
+    required BirthChartModel birthChart,
+    required MagicalProfile profile,
+    required String sectionKey,
+  })? tecelaoDeTeste;
+
+  /// Entrega mapa e perfil prontos ao teste, sem passar pelo cálculo do mapa.
+  @visibleForTesting
+  void adotarMapaParaTeste(BirthChartModel chart, MagicalProfile profile) {
+    _birthChart = chart;
+    _magicalProfile = profile;
+  }
+
   String? _error;
   String _currentUserId = 'local_user';
 
@@ -35,10 +73,39 @@ class AstrologyProvider with ChangeNotifier {
   bool isWeavingSection(String key) => _tecendo.contains(key);
   bool get isGeneratingAI => _tecendo.isNotEmpty;
 
-  /// A última seção falhou por limite de requisições do provedor de IA?
+  /// Uma gravação de perfil por vez.
+  ///
+  /// O acúmulo em memória já é atômico (o texto é lido DEPOIS da chamada de
+  /// IA), mas cada gravação sobe um upsert próprio. Duas seções terminando
+  /// juntas punham dois POST no ar sem alvo de conflito e sem guarda por
+  /// `updated_at`: o servidor ficava com o que chegasse por último — que
+  /// pode ser o mais VELHO. E o local ficava certo e marcado como
+  /// sincronizado, então nada corrigia depois; a seção perdida só reaparecia
+  /// quando alguém sujasse a linha de novo.
+  ///
+  /// A fila ordena as gravações DENTRO deste processo. Dois aparelhos ao
+  /// mesmo tempo continuam se atropelando — isso é guarda no servidor, e
+  /// está descrito em supabase/perfil_magico_upsert.sql.
+  Future<void> _filaDePerfil = Future<void>.value();
+
+  Future<void> _gravarPerfil(MagicalProfile perfil) {
+    final proxima =
+        _filaDePerfil.then((_) => _repository.saveMagicalProfile(perfil));
+    // A fila não pode morrer numa falha: a próxima seção ainda precisa
+    // gravar. O erro continua indo para quem chamou.
+    _filaDePerfil = proxima.catchError((_) {});
+    return proxima;
+  }
+
+  /// O motivo pelo qual ESTA seção não veio — null se ela não falhou.
+  String? erroDaSecao(String key) => _falhas[key]?.mensagem;
+
+  /// ESTA seção falhou por limite de requisições do provedor de IA?
+  ///
   /// A tela troca isso por uma frase que orienta ("aguarde e tente de novo"),
   /// em vez do nome de uma classe de exceção.
-  bool get lastFailureWasRateLimit => _ultimaFalhaFoiLimite;
+  bool falhaDeLimiteNaSecao(String key) =>
+      _falhas[key]?.foiLimiteDoProvedor ?? false;
 
   /// As seções já tecidas, na ordem em que foram guardadas.
   ///
@@ -93,7 +160,8 @@ class AstrologyProvider with ChangeNotifier {
         _magicalProfile = await _repository.getMagicalProfile(effectiveUserId);
       }
     } catch (e) {
-      _error = 'Erro ao carregar mapa natal: $e';
+      debugPrint('Mapa natal: falha ao carregar: $e');
+      _error = _l10n.errorsGeneric;
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -151,12 +219,34 @@ class AstrologyProvider with ChangeNotifier {
         unknownBirthTime: unknownBirthTime,
       );
 
+      // O mapa que existia antes desta correção, para poder limpá-lo depois.
+      final anterior = _birthChart;
+
       // Salvar no banco
       await _repository.saveBirthChart(chart);
 
       // Gerar perfil mágico
       final profile = _interpreter.interpretChart(chart);
-      await _repository.saveMagicalProfile(profile);
+      await _gravarPerfil(profile);
+
+      // O mapa anterior vira lixo apontando para nada.
+      //
+      // O perfil é carimbado pelo id do MAPA. Corrigir a data ou a hora de
+      // nascimento faz nascer um mapa com id novo, e o perfil antigo ficava
+      // pendurado no id velho: as dez seções que a pessoa mandou tecer
+      // simplesmente não estavam mais lá, e nada oferecia trazê-las de volta
+      // nem apagava o registro órfão. Some depois de o novo estar gravado —
+      // uma falha no meio não pode deixar a pessoa sem mapa nenhum.
+      if (anterior != null && anterior.id != chart.id) {
+        try {
+          await _repository.deleteMagicalProfile(anterior.id);
+          await _repository.deleteBirthChart(anterior.id);
+        } catch (e) {
+          // Lixo que sobrou não justifica falhar o recálculo, que é o que a
+          // pessoa pediu. Fica registrado para quem for olhar.
+          debugPrint('Mapa natal: falha ao limpar o mapa anterior: $e');
+        }
+      }
 
       // Atualizar estado
       _birthChart = chart;
@@ -170,11 +260,40 @@ class AstrologyProvider with ChangeNotifier {
       // chamadas de IA que quase ninguém lia inteiras.
       return chart;
     } catch (e) {
-      _error = 'Erro ao calcular mapa natal: $e';
+      debugPrint('Mapa natal: falha ao calcular: $e');
+      _error = _l10n.errorsGeneric;
       return null;
     } finally {
       _isLoading = false;
       notifyListeners();
+    }
+  }
+
+  /// Descarta a Análise Personalizada já gravada, para ela ser tecida de novo
+  /// no formato de dez cards.
+  ///
+  /// Só o texto de IA sai — o mapa e o Perfil Mágico continuam inteiros.
+  ///
+  /// A pedido da pessoa, NUNCA sozinho: quinze dos dezesseis perfis em
+  /// produção estão no formato antigo, e migrar em silêncio gastaria dez
+  /// chamadas de IA por perfil sem ninguém pedir. Quem decide é ela.
+  Future<bool> descartarAnalisePersonalizada() async {
+    final perfil = _magicalProfile;
+    if (perfil == null || perfil.aiGeneratedText == null) return false;
+
+    try {
+      final limpo = perfil.copyWith(limparTextoDeIa: true);
+      await _gravarPerfil(limpo);
+      _magicalProfile = limpo;
+      _secoes = const [];
+      _secoesDe = null;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      debugPrint('Perfil mágico: falha ao descartar a análise antiga: $e');
+      _error = _l10n.errorsGeneric;
+      notifyListeners();
+      return false;
     }
   }
 
@@ -189,7 +308,7 @@ class AstrologyProvider with ChangeNotifier {
 
       // Regenerar perfil mágico
       final profile = _interpreter.interpretChart(chart);
-      await _repository.saveMagicalProfile(profile);
+      await _gravarPerfil(profile);
 
       _birthChart = chart;
       _magicalProfile = profile;
@@ -199,7 +318,8 @@ class AstrologyProvider with ChangeNotifier {
 
       return;
     } catch (e) {
-      _error = 'Erro ao atualizar mapa natal: $e';
+      debugPrint('Mapa natal: falha ao atualizar: $e');
+      _error = _l10n.errorsGeneric;
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -219,7 +339,8 @@ class AstrologyProvider with ChangeNotifier {
       _birthChart = null;
       _magicalProfile = null;
     } catch (e) {
-      _error = 'Erro ao deletar mapa natal: $e';
+      debugPrint('Mapa natal: falha ao apagar: $e');
+      _error = _l10n.errorsGeneric;
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -236,10 +357,11 @@ class AstrologyProvider with ChangeNotifier {
 
     try {
       final profile = _interpreter.interpretChart(_birthChart!);
-      await _repository.saveMagicalProfile(profile);
+      await _gravarPerfil(profile);
       _magicalProfile = profile;
     } catch (e) {
-      _error = 'Erro ao regenerar perfil: $e';
+      debugPrint('Perfil mágico: falha ao regerar: $e');
+      _error = _l10n.errorsGeneric;
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -283,12 +405,15 @@ class AstrologyProvider with ChangeNotifier {
     if (_tecendo.contains(sectionKey)) return;
 
     _tecendo.add(sectionKey);
-    _error = null;
-    _ultimaFalhaFoiLimite = false;
+    // A falha ANTERIOR desta seção sai agora: quem manda tecer de novo não
+    // pode ver o erro da tentativa passada enquanto a nova roda.
+    _falhas.remove(sectionKey);
     notifyListeners();
 
     try {
-      final corpo = await _aiService.generateMagicalProfileSection(
+      final tecelao =
+          tecelaoDeTeste ?? _aiService.generateMagicalProfileSection;
+      final corpo = await tecelao(
         birthChart: _birthChart!,
         profile: _magicalProfile!,
         sectionKey: sectionKey,
@@ -297,6 +422,7 @@ class AstrologyProvider with ChangeNotifier {
         // Sem motivo a exibir: a tela mostra a falha genérica, que é o que
         // dá para dizer com honestidade quando a resposta volta vazia.
         debugPrint('Perfil mágico: seção $sectionKey voltou vazia');
+        _falhas[sectionKey] = const _FalhaDaSecao();
         return;
       }
 
@@ -325,15 +451,35 @@ class AstrologyProvider with ChangeNotifier {
         aiGeneratedText: texto,
         chartHash: hashAtual,
       );
-      await _repository.saveMagicalProfile(_magicalProfile!);
+      await _gravarPerfil(_magicalProfile!);
     } on AiRateLimitException {
-      _ultimaFalhaFoiLimite = true;
-      _error = null;
+      _falhas[sectionKey] = const _FalhaDaSecao(foiLimiteDoProvedor: true);
     } catch (e) {
-      _error = '$e'.replaceAll('Exception: ', '');
+      // As exceções que a camada de IA lança já vêm com texto pronto para a
+      // tela — e agora sem o detalhe do Dio dentro, que trazia a URL do
+      // provedor. O que sobra aqui é tirar o prefixo `Exception: `, que é
+      // ruído do Dart, e deixar o texto original no log.
+      debugPrint('Perfil mágico: seção $sectionKey falhou: $e');
+      _falhas[sectionKey] = _FalhaDaSecao(
+        mensagem: '$e'.replaceAll('Exception: ', ''),
+      );
     } finally {
       _tecendo.remove(sectionKey);
       notifyListeners();
     }
   }
+}
+
+/// Por que uma seção da Análise Personalizada não veio.
+///
+/// Sem mensagem, a tela mostra a falha genérica — é o que dá para dizer com
+/// honestidade quando a resposta volta vazia.
+class _FalhaDaSecao {
+  const _FalhaDaSecao({
+    this.mensagem,
+    this.foiLimiteDoProvedor = false,
+  });
+
+  final String? mensagem;
+  final bool foiLimiteDoProvedor;
 }

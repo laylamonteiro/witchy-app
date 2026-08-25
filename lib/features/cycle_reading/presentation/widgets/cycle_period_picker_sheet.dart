@@ -48,6 +48,16 @@ class CyclePeriodPickerSheet extends StatefulWidget {
   /// `Navigator.pop`.
   final ValueChanged<({DateTime start, DateTime end})>? onConfirm;
 
+  /// Avisa a cada mudança de seleção — janela pronta, ou `null` enquanto ela
+  /// está pela metade (só o primeiro dia tocado, ou longa demais).
+  ///
+  /// Quando este aviso existe, o botão de confirmar SOME: quem escuta a
+  /// seleção não precisa de um "usar este período", porque escolher no
+  /// calendário já é escolher. Foi assim que os botões de verdade — abrir a
+  /// leitura e gerar a leitura — puderam subir para o lugar dele (decisão da
+  /// dona, 24/08).
+  final ValueChanged<({DateTime start, DateTime end})?>? onSelectionChanged;
+
   const CyclePeriodPickerSheet({
     super.key,
     required this.dailyCounts,
@@ -59,6 +69,7 @@ class CyclePeriodPickerSheet extends StatefulWidget {
     this.initialRange,
     this.embedded = false,
     this.onConfirm,
+    this.onSelectionChanged,
   });
 
   @override
@@ -144,13 +155,18 @@ class _CyclePeriodPickerSheetState extends State<CyclePeriodPickerSheet> {
 
   /// O produto que a selecao vira — e o TAMANHO que decide, e mostrar isso
   /// antes da compra e o que evita a surpresa no caixa.
-  String get _periodType => _selectedDays <= 7
+  String get _periodType => _selectedDays <= 8
       ? CycleReadingPeriodType.week
       : CycleReadingPeriodType.lunation;
 
   bool get _tooLong => _selectedDays > CycleReadingService.maxCustomPeriodDays;
 
-  bool get _canConfirm => _start != null && !_tooLong;
+  /// A janela precisa estar FECHADA e ter mais de um dia: um toque só deixa
+  /// a seleção pela metade, e uma leitura de 24 horas não tem ciclo para
+  /// contar. Enquanto isso não estiver de pé, o confirmar fica apagado e o
+  /// resumo diz o que falta.
+  bool get _canConfirm =>
+      _start != null && _end != null && _selectedDays > 1 && !_tooLong;
 
   void _tapDay(DateTime day) {
     setState(() {
@@ -166,6 +182,104 @@ class _CyclePeriodPickerSheetState extends State<CyclePeriodPickerSheet> {
         _end = day;
       }
     });
+    _avisarSelecao();
+  }
+
+  /// Um dia nunca além do último escolhível (hoje) nem antes do primeiro.
+  DateTime _clampDay(DateTime day) {
+    if (day.isAfter(widget.lastDate)) return widget.lastDate;
+    if (day.isBefore(widget.firstDate)) return widget.firstDate;
+    return day;
+  }
+
+  /// "Lunação" seleciona o MÊS visível inteiro (decisão da dona, 23/08),
+  /// aparado em hoje quando o mês ainda corre. No dia 1º isso dá um dia só
+  /// e o confirmar fica apagado — a pessoa marca a mão; caso raro demais
+  /// para merecer regra própria.
+  ({DateTime start, DateTime end}) get _janelaDaLunacao => (
+        start: _clampDay(DateTime(_visibleMonth.year, _visibleMonth.month, 1)),
+        end: _clampDay(
+          DateTime(_visibleMonth.year, _visibleMonth.month + 1, 0),
+        ),
+      );
+
+  /// "Semana" é o giro corrente do produto (8 dias, de mesmo dia a mesmo
+  /// dia). Chega com fim EXCLUSIVO do serviço; aqui dentro o fim é o último
+  /// dia vivido, então volta um dia.
+  ({DateTime start, DateTime end}) get _janelaDaSemana {
+    final janela = CycleReadingService.currentWeek();
+    return (
+      start: _clampDay(janela.start),
+      end: _clampDay(janela.end.subtract(const Duration(days: 1))),
+    );
+  }
+
+  bool _selecionou(({DateTime start, DateTime end}) janela) =>
+      _start != null &&
+      _sameDay(_start!, janela.start) &&
+      _end != null &&
+      _sameDay(_end!, janela.end);
+
+  void _aplicarJanela(({DateTime start, DateTime end}) janela) {
+    setState(() {
+      _start = janela.start;
+      _end = janela.end;
+      // O calendário vai junto: escolher a lunação e continuar olhando outro
+      // mês deixaria a seleção fora da vista.
+      _visibleMonth = DateTime(janela.start.year, janela.start.month);
+    });
+    _avisarSelecao();
+  }
+
+  void _limparSelecao() {
+    setState(() {
+      _start = null;
+      _end = null;
+    });
+    _avisarSelecao();
+  }
+
+  Widget _buildPresets(AppLocalizations l10n) {
+    Widget atalho(String rotulo, bool ativo, VoidCallback aoTocar) => Expanded(
+          child: OutlinedButton(
+            onPressed: aoTocar,
+            style: OutlinedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+              visualDensity: VisualDensity.compact,
+              foregroundColor:
+                  ativo ? context.gc.onPrimary : context.gc.lilac,
+              backgroundColor: ativo
+                  ? context.gc.lilac.withValues(alpha: 0.85)
+                  : Colors.transparent,
+              side: BorderSide(
+                color: context.gc.lilac.withValues(alpha: ativo ? 1 : 0.45),
+              ),
+              textStyle: const TextStyle(
+                fontSize: 12.5,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            child: Text(rotulo, maxLines: 1, overflow: TextOverflow.ellipsis),
+          ),
+        );
+
+    return Row(
+      children: [
+        atalho(
+          l10n.cyclePresetLunation,
+          _selecionou(_janelaDaLunacao),
+          () => _aplicarJanela(_janelaDaLunacao),
+        ),
+        const SizedBox(width: 6),
+        atalho(
+          l10n.cyclePresetWeek,
+          _selecionou(_janelaDaSemana),
+          () => _aplicarJanela(_janelaDaSemana),
+        ),
+        const SizedBox(width: 6),
+        atalho(l10n.cyclePresetOther, _start == null, _limparSelecao),
+      ],
+    );
   }
 
   void _changeMonth(int delta) {
@@ -222,34 +336,57 @@ class _CyclePeriodPickerSheetState extends State<CyclePeriodPickerSheet> {
                     color: context.gc.textSecondary,
                   ),
             ),
-            const SizedBox(height: 12),
-            _buildMonthHeader(l10n),
+            const SizedBox(height: 10),
+            // Os três atalhos ANTES do calendário (decisão da dona, 23/08):
+            // quem quer o mês inteiro ou uma semana não precisa desenhar a
+            // janela dia a dia — e "Outro período" limpa tudo e devolve o
+            // calendário para a escolha a dedo.
+            _buildPresets(l10n),
             const SizedBox(height: 8),
+            _buildMonthHeader(l10n),
+            const SizedBox(height: 4),
             _buildWeekdayRow(),
             const SizedBox(height: 4),
             _buildGrid(),
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
             _buildSummary(l10n),
-            const SizedBox(height: 12),
-            ElevatedButton(
-              onPressed: _canConfirm ? _confirm : null,
-              child: Text(l10n.cycleReadingCustomPeriodConfirm),
-            ),
+            const SizedBox(height: 8),
+            // Sem "usar este periodo" quando quem chama escuta a selecao:
+            // escolher no calendario JA e escolher, e o lugar deste botao
+            // passou a ser dos botoes de verdade (abrir e gerar a leitura).
+            if (widget.onSelectionChanged == null)
+              ElevatedButton(
+                onPressed: _canConfirm ? _confirm : null,
+                child: Text(l10n.cycleReadingCustomPeriodConfirm),
+              ),
           ],
         ),
       ),
     );
   }
 
-  void _confirm() {
+  /// A janela pronta, ou `null` enquanto a selecao esta pela metade.
+  ({DateTime start, DateTime end})? get _janelaSelecionada {
+    if (!_canConfirm) return null;
     final inicio = _start!;
     final fim = _end ?? inicio;
-    final janela = (
+    return (
       start: DateTime(inicio.year, inicio.month, inicio.day),
       // Fim EXCLUSIVO: o dia escolhido e vivido por inteiro, entao a janela
       // vai ate a meia-noite seguinte.
       end: DateTime(fim.year, fim.month, fim.day).add(const Duration(days: 1)),
     );
+  }
+
+  /// Conta a quem escuta o que esta selecionado agora. Fora do `setState` de
+  /// proposito: quem escuta reconstroi a propria tela, e chamar isso durante
+  /// a construcao desta seria pedir dois `setState` aninhados.
+  void _avisarSelecao() =>
+      widget.onSelectionChanged?.call(_janelaSelecionada);
+
+  void _confirm() {
+    final janela = _janelaSelecionada;
+    if (janela == null) return;
     final aoConfirmar = widget.onConfirm;
     if (aoConfirmar != null) {
       aoConfirmar(janela);
@@ -322,8 +459,11 @@ class _CyclePeriodPickerSheetState extends State<CyclePeriodPickerSheet> {
       crossAxisCount: 7,
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      mainAxisSpacing: 4,
-      crossAxisSpacing: 4,
+      mainAxisSpacing: 3,
+      crossAxisSpacing: 3,
+      // Mais largo que alto: o calendário deixa de tomar a tela inteira
+      // (decisão da dona, 23/08) e o resto da página aparece na abertura.
+      childAspectRatio: 1.45,
       children: [
         for (var i = 0; i < vazios; i++) const SizedBox.shrink(),
         for (var dia = 1; dia <= diasNoMes; dia++)
@@ -420,6 +560,10 @@ class _CyclePeriodPickerSheetState extends State<CyclePeriodPickerSheet> {
             ),
       );
     }
+    // Janela pela metade (um toque só): o resumo some e o confirmar fica
+    // apagado. Sem frase explicando — a pessoa toca o segundo dia e
+    // descobre sozinha; instrução para um gesto óbvio é ruído.
+    if (_end == null || _selectedDays <= 1) return const SizedBox.shrink();
 
     final semana = _periodType == CycleReadingPeriodType.week;
     final produto =
@@ -428,35 +572,32 @@ class _CyclePeriodPickerSheetState extends State<CyclePeriodPickerSheet> {
         ? l10n.cycleReadingLifetimeTag
         : (semana ? widget.weekPrice : widget.lunationPrice);
 
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: context.gc.lilac.withValues(alpha: 0.10),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: context.gc.lilac.withValues(alpha: 0.35)),
-      ),
-      child: Column(
+    // Uma linha so: a caixa grande que vivia aqui parecia um botao e foi
+    // substituida pelos atalhos ACIMA do calendario (decisao da dona,
+    // 23/08). Qual produto a selecao vira continua a vista antes do
+    // confirmar — decidido pelo tamanho, sem surpresa no caixa.
+    return Text.rich(
+      TextSpan(
         children: [
-          // Qual produto e por quanto — decidido pelo tamanho da selecao,
-          // a vista ANTES de confirmar.
-          Text(
-            preco == null ? produto : '$produto - $preco',
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.titleSmall?.copyWith(
+          TextSpan(
+            text: preco == null ? produto : '$produto - $preco',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: context.gc.lilac,
                   fontWeight: FontWeight.bold,
                 ),
           ),
-          const SizedBox(height: 2),
-          Text(
-            l10n.cycleReadingSelectionSummary(_selectedDays, _selectedRecords),
-            textAlign: TextAlign.center,
+          TextSpan(
+            text: ' · ${l10n.cycleReadingSelectionSummary(
+              _selectedDays,
+              _selectedRecords,
+            )}',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: context.gc.textSecondary,
                 ),
           ),
         ],
       ),
+      textAlign: TextAlign.center,
     );
   }
 

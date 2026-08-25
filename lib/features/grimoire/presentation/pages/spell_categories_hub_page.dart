@@ -218,7 +218,10 @@ class _SpellCategoriesHubPageState extends State<SpellCategoriesHubPage> {
   }
 
   Widget _buildGroupCards(BuildContext context, SpellProvider provider) {
-    final userCount = provider.userSpells.length;
+    // O card conta o que a lista ABRE: com o chip "Todos" aceso por padrão,
+    // a contagem inclui os feitiços originais do app — um "0" com o acervo
+    // cheio de ancestrais lia como Grimório vazio (visto no preview, 23/08).
+    final spellCount = provider.spells.length;
     // Registros agora moram no acervo unificado (free_writings) — e o card
     // conta o acervo INTEIRO, que é o que a lista abre por padrão.
     final recordCount =
@@ -230,13 +233,15 @@ class _SpellCategoriesHubPageState extends State<SpellCategoriesHubPage> {
           emoji: '✨',
           title: AppLocalizations.of(context).grimoireMySpells,
           subtitle: AppLocalizations.of(context).grimoireMySpellsSub,
-          count: userCount,
+          count: spellCount,
           onTap: () => Navigator.push(
             context,
             MaterialPageRoute(
+              // Abre com o chip "Todos" aceso (decisão da dona, 23/08: é o
+              // padrão de TODO filtro de chips) — quem quer só os seus toca
+              // em "Meus" ali mesmo.
               builder: (_) => UserSpellsListPage(
                 title: AppLocalizations.of(context).grimoireMySpells,
-                initialSource: SpellSource.mine,
               ),
             ),
           ),

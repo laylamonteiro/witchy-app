@@ -36,6 +36,19 @@ import 'package:grimorio_de_bolso/features/grimoire/presentation/providers/spell
 void _ignoreSubscriptionSelection(SubscriptionType _) {}
 void _ignoreTap() {}
 
+/// Desliga as animações via MediaQuery para a árvore INTEIRA do app —
+/// inclusive rotas empilhadas no navigator raiz, como a SubscriptionPage.
+///
+/// A página ganhou o céu estrelado, que anima em laço eterno e prenderia
+/// qualquer `pumpAndSettle` para sempre; o StarfieldBackground para sozinho
+/// quando `disableAnimations` é true. `copyWith` a partir do context, e não
+/// um MediaQueryData cru: um cru zeraria o tamanho da tela e o layout
+/// inteiro viraria zero.
+Widget _semAnimacoes(BuildContext context, Widget? child) => MediaQuery(
+      data: MediaQuery.of(context).copyWith(disableAnimations: true),
+      child: child!,
+    );
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   sqfliteFfiInit();
@@ -321,12 +334,19 @@ void main() {
         l10n.premiumBenefitEncyclopedia,
         l10n.premiumBenefitDailyClimate,
         l10n.premiumBenefitUnlimitedReadings,
-        l10n.premiumBenefitCloudSync,
       ];
 
-      expect(benefits, hasLength(5));
+      // Quatro, e não cinco: a sincronização saiu da lista porque deixou de
+      // ser exclusiva do Premium. Sem substituto — vender como benefício
+      // algo que todo mundo tem é a promessa obsoleta que este teste existe
+      // para impedir.
+      expect(benefits, hasLength(4));
       expect(benefits, contains('Conselheiro Místico ilimitado'));
-      expect(benefits, contains('Sincronização entre dispositivos'));
+      expect(
+        benefits.any((text) => text.toLowerCase().contains('sincroniza')),
+        isFalse,
+        reason: 'sincronização não é mais diferencial do Premium',
+      );
       expect(benefits.any((text) => text.contains('em breve')), isFalse);
       expect(
         benefits.any((text) => text.contains('Suporte prioritário')),
@@ -355,8 +375,20 @@ void main() {
       expect(find.byType(PremiumOfferPanel), findsOneWidget);
       expect(find.byType(SubscriptionHero), findsOneWidget);
       expect(find.text('Conselheiro Místico ilimitado'), findsOneWidget);
-      expect(find.text('Sincronização entre dispositivos'), findsOneWidget);
-      expect(find.byType(Image), findsNWidgets(8));
+      // Cada benefício virou PEÇA: o nome continua, e embaixo dele entra o
+      // vislumbre do que a feature entrega — o MESMO texto da página de
+      // descoberta, para as duas telas parecerem a mesma ideia vista de
+      // dois ângulos. Uma lista de nomes é correta e esquecível.
+      expect(
+        find.text(
+            'Perguntar de novo, e de outro jeito, até a resposta fazer sentido'),
+        findsOneWidget,
+      );
+      // A sincronização saiu da lista: virou recurso de todo mundo, e
+      // vender o que não é exclusivo quebra a confiança do painel. Uma
+      // imagem a menos porque o benefício levou junto o ícone dele.
+      expect(find.text('Sincronização entre dispositivos'), findsNothing);
+      expect(find.byType(Image), findsNWidgets(7));
       expect(find.textContaining('O QUE VOCÊ DESBLOQUEIA'), findsNothing);
       expect(find.text('Cancele a qualquer momento'), findsOneWidget);
       expect(find.text('Cancele quando quiser'), findsNothing);
@@ -394,7 +426,8 @@ void main() {
               create: (_) => LanguageProvider(prefs),
             ),
           ],
-          child: MaterialApp(locale: const Locale('pt', 'BR'), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales, 
+          child: MaterialApp(locale: const Locale('pt', 'BR'), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales,
+            builder: _semAnimacoes,
             home: Navigator(
               onGenerateRoute: (_) => MaterialPageRoute<void>(
                 builder: (_) => const SettingsPage(),
@@ -414,11 +447,16 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
-    // O item "Seja Premium" morava na tela de Privacidade e migrou para a de
-    // Sincronização (commit 0054d28). O que este teste guarda é a navegação
-    // para a assinatura a partir das configurações — então ele acompanha o
-    // item, em vez de cobrar uma tela que não o tem mais.
-    testWidgets('navegação Premium da Sincronização continua funcionando',
+    // O item "Seja Premium" morava na tela de Privacidade, migrou para a de
+    // Sincronização (commit 0054d28) e agora SAIU dela: sincronizar deixou
+    // de ser exclusivo do Premium, então o cartão de upsell que ocupava o
+    // lugar do status de sincronização foi removido inteiro.
+    //
+    // O que este teste guarda mudou junto: não é mais a navegação para a
+    // assinatura a partir daqui, é a ausência do paywall. Uma tela em que a
+    // pessoa Free batia num cadeado é como o grimório dela ficava sem cópia
+    // nenhuma — e é isso que não pode voltar.
+    testWidgets('a tela de Sincronização não tem mais paywall',
         (tester) async {
       SharedPreferences.setMockInitialValues({});
       final authProvider = AuthProvider();
@@ -441,15 +479,14 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      await tester.scrollUntilVisible(
-        find.text('Seja Premium'),
-        300,
-        scrollable: find.byType(Scrollable).first,
-      );
-      await tester.tap(find.text('Seja Premium'));
-      await tester.pumpAndSettle();
 
-      expect(find.byType(SubscriptionPage), findsOneWidget);
+      // Nem convite, nem cadeado, nem selo dourado.
+      expect(find.text('Seja Premium'), findsNothing);
+      expect(find.text('Recurso exclusivo Premium'), findsNothing);
+      expect(find.text('PREMIUM'), findsNothing);
+
+      // E o interruptor de sincronização está lá, para qualquer conta.
+      expect(find.byType(Switch), findsOneWidget);
       expect(tester.takeException(), isNull);
     });
 
@@ -756,13 +793,17 @@ void main() {
     });
 
     testWidgets(
-        'assinatura mostra a porta permanente da Leitura do Ciclo',
+        'a assinatura NÃO tem porta para a Leitura do Ciclo',
         (tester) async {
-      // A Leitura do Ciclo é compra avulsa e não entra na assinatura — nem
-      // para quem já é Pro. A tela de planos é onde a pessoa está decidindo
-      // gastar, então a porta precisa existir aqui, sempre. Este teste
-      // existe porque a porta some sem barulho: nada quebra, ela apenas
-      // deixa de ser encontrável, e a venda morre em silêncio.
+      // Invertido por decisão da dona do produto. O plano original já
+      // mandava remover esta porta, e ela ficou registrada como "aguardando
+      // decisão" até agora; a decisão veio: esta tela decide ASSINATURA, e a
+      // leitura avulsa se descobre onde ela é usada, não na tabela de
+      // preços. A porta das Configurações já tinha saído antes.
+      //
+      // O teste continua existindo, e trocou de lado: uma porta que
+      // reaparecesse aqui não quebraria nada — ela só voltaria a misturar
+      // compra avulsa com assinatura, em silêncio.
       final service = PaymentService();
       addTearDown(service.clearTestProducts);
       service.setTestProducts([
@@ -792,7 +833,10 @@ void main() {
       );
       await tester.pump();
 
-      expect(find.text('Leitura do Ciclo'), findsOneWidget);
+      expect(find.text('Leitura do Ciclo'), findsNothing);
+      // A tela em si continua de pé — o que saiu foi a porta, não o resto.
+      expect(find.text('Desbloquear Premium'), findsOneWidget);
+      expect(tester.takeException(), isNull);
     });
 
     testWidgets(
@@ -835,7 +879,7 @@ void main() {
       await tester.pumpWidget(
         ChangeNotifierProvider<AuthProvider>.value(
           value: AuthProvider(),
-          child: const MaterialApp(locale: const Locale('pt', 'BR'), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales, home: SubscriptionPage()),
+          child: MaterialApp(locale: const Locale('pt', 'BR'), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales, builder: _semAnimacoes, home: const SubscriptionPage()),
         ),
       );
       await tester.pump();
@@ -890,7 +934,7 @@ void main() {
       await tester.pumpWidget(
         ChangeNotifierProvider<AuthProvider>.value(
           value: AuthProvider(),
-          child: const MaterialApp(locale: const Locale('pt', 'BR'), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales, home: SubscriptionPage()),
+          child: MaterialApp(locale: const Locale('pt', 'BR'), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales, builder: _semAnimacoes, home: const SubscriptionPage()),
         ),
       );
       await tester.pump();
@@ -906,7 +950,9 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(SubscriptionHero), findsOneWidget);
-      expect(find.byType(Image), findsNWidgets(8));
+      // Sete, e não oito: o benefício de sincronização saiu da lista (virou
+      // recurso de todo mundo) e levou o ícone dele junto.
+      expect(find.byType(Image), findsNWidgets(7));
       expect(find.text('Mensal'), findsOneWidget);
       expect(find.text('Anual'), findsOneWidget);
       expect(find.text('Começar Agora'), findsOneWidget);
@@ -941,7 +987,7 @@ void main() {
       await tester.pumpWidget(
         ChangeNotifierProvider<AuthProvider>.value(
           value: authProvider,
-          child: const MaterialApp(locale: const Locale('pt', 'BR'), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales, home: SubscriptionPage()),
+          child: MaterialApp(locale: const Locale('pt', 'BR'), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales, builder: _semAnimacoes, home: const SubscriptionPage()),
         ),
       );
       await tester.pumpAndSettle();

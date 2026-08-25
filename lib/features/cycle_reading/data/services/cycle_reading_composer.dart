@@ -12,6 +12,8 @@ import '../../../diary/data/models/free_writing_model.dart';
 import '../../../grimoire/data/models/spell_model.dart'
     show MoonPhase, MoonPhaseExtension;
 import '../../../lunar/presentation/providers/lunar_provider.dart';
+import '../../../wheel_of_year/data/models/sabbat_model.dart'
+    show SabbatType, SabbatTypeExtension;
 import '../../../your_day/data/daily_checkin_repository.dart';
 import '../models/cycle_reading_model.dart';
 
@@ -56,7 +58,16 @@ class CycleReadingMaterial {
   /// ANTES da compra que a leitura sairá rasa.
   final int recordCount;
 
-  const CycleReadingMaterial({required this.json, required this.recordCount});
+  /// Os números reais do período, calculados em Dart (ver [NumerosDoCiclo]).
+  /// Nulo só em materiais montados à mão (testes antigos): o [compose]
+  /// sempre os entrega.
+  final NumerosDoCiclo? numbers;
+
+  const CycleReadingMaterial({
+    required this.json,
+    required this.recordCount,
+    this.numbers,
+  });
 
   String get compactJson => jsonEncode(json);
 
@@ -83,23 +94,30 @@ class CycleReadingMaterial {
   /// Só as seções listadas aqui recebem material reduzido. As demais (e
   /// qualquer seção nova) recebem tudo — esquecer de cadastrar uma seção
   /// custa tokens, nunca contexto.
+  ///
+  /// O bloco "numbers" entra em TODAS: é minúsculo e traz os números já
+  /// calculados que a IA deve citar em vez de recalcular. O "person" (o
+  /// nome, para a narrativa em terceira pessoa) idem.
   static const Map<String, Set<String>> _sectionFields = {
     // "o céu sobre você": a própria instrução manda usar sky + timeline +
     // moonByDay. Os trechos longos de cada fonte não entram: a nota curta
     // de cada momento na timeline já diz o que ela registrou naquele dia.
     'sky': {
       'period',
+      'person',
       'sky',
       'moonByDay',
       'timeline',
       'recordCount',
       'practiceDays',
       'streak',
+      'numbers',
     },
     // "sua prática": fala dos ritos e feitiços dela. Sonhos, gratidões e
     // tiragens não são matéria desta seção.
     'practice': {
       'period',
+      'person',
       'practice',
       'profile',
       'timeline',
@@ -109,11 +127,13 @@ class CycleReadingMaterial {
       'recordCount',
       'practiceDays',
       'streak',
+      'numbers',
     },
     // O selo são 3 palavras que resumem o ciclo: a forma do período (a
     // timeline e as contagens) basta, e é o que ele de fato usa.
     'seal': {
       'period',
+      'person',
       'timeline',
       'moonByDay',
       'sky',
@@ -122,8 +142,184 @@ class CycleReadingMaterial {
       'divinationCount',
       'practiceDays',
       'streak',
+      'numbers',
     },
   };
+}
+
+/// Os números REAIS do ciclo, calculados em Dart a partir do material que o
+/// [CycleReadingComposer.compose] já coletou (sem nova ida ao banco, exceto
+/// a contagem leve do período anterior).
+///
+/// A regra "a IA narra, nunca calcula" continua de pé — ela existe para a
+/// IA não inventar fase de lua nem data. Quem calcula é o APP: estes números
+/// viram uma seção determinística do relatório (montada por código) e vão no
+/// bloco "numbers" do JSON para a IA citar exatamente como estão.
+class NumerosDoCiclo {
+  /// Registros do período (mesma matéria-prima do recordCount).
+  final int totalRecords;
+
+  /// Dias do período com pelo menos um registro.
+  final int activeDays;
+
+  /// Duração da janela em dias de calendário.
+  final int periodDays;
+
+  /// Fase da lua com mais registros (null quando o período está vazio).
+  final MoonPhase? topPhase;
+  final int topPhaseCount;
+
+  /// Fonte mais presente — uma chave canônica de [canonicalSources]
+  /// (null quando o período está vazio).
+  final String? topSource;
+  final int topSourceCount;
+
+  /// Maior sequência de dias SEGUIDOS com registro.
+  final int longestStreak;
+
+  /// Registros da janela imediatamente anterior, de mesma duração.
+  final int previousPeriodRecords;
+
+  const NumerosDoCiclo({
+    required this.totalRecords,
+    required this.activeDays,
+    required this.periodDays,
+    required this.topPhase,
+    required this.topPhaseCount,
+    required this.topSource,
+    required this.topSourceCount,
+    required this.longestStreak,
+    required this.previousPeriodRecords,
+  });
+
+  /// As quatro fontes que a tela de privacidade oferece desligar, nas MESMAS
+  /// chaves de sempre — e na ordem de desempate: empate na contagem fica com
+  /// a primeira daqui, de forma determinística, para o relatório (e os
+  /// testes) não flutuarem entre gerações do mesmo material.
+  static const sourceDreams = 'dreams';
+  static const sourceJournals = 'journals';
+  static const sourceDivination = 'divination';
+  static const sourcePractice = 'practice';
+  static const canonicalSources = [
+    sourceDreams,
+    sourceJournals,
+    sourceDivination,
+    sourcePractice,
+  ];
+
+  /// Calcula tudo de entradas puras (testável sem banco e sem IA).
+  ///
+  /// [countsByDay] usa chaves `yyyy-MM-dd`; [phaseByDay] traz a fase da lua
+  /// de cada dia ativo; [countsBySource] usa as chaves de
+  /// [canonicalSources].
+  factory NumerosDoCiclo.calcular({
+    required DateTime start,
+    required DateTime end,
+    required Map<String, int> countsByDay,
+    required Map<String, MoonPhase> phaseByDay,
+    required Map<String, int> countsBySource,
+    required int previousPeriodRecords,
+  }) {
+    final ativos =
+        countsByDay.entries.where((e) => e.value > 0).toList(growable: false);
+    final total = ativos.fold<int>(0, (soma, e) => soma + e.value);
+
+    // Fase com mais registros: cada dia ativo soma seus registros na fase
+    // daquele dia. Empate: a PRIMEIRA na ordem do enum (nova → minguante),
+    // porque `>` só troca a campeã quando a contagem é estritamente maior.
+    final porFase = <MoonPhase, int>{};
+    for (final e in ativos) {
+      final fase = phaseByDay[e.key];
+      if (fase == null) continue;
+      porFase[fase] = (porFase[fase] ?? 0) + e.value;
+    }
+    MoonPhase? topPhase;
+    var topPhaseCount = 0;
+    for (final fase in MoonPhase.values) {
+      final n = porFase[fase] ?? 0;
+      if (n > topPhaseCount) {
+        topPhase = fase;
+        topPhaseCount = n;
+      }
+    }
+
+    // Fonte mais presente: mesmo desempate determinístico, pela ordem
+    // canônica.
+    String? topSource;
+    var topSourceCount = 0;
+    for (final fonte in canonicalSources) {
+      final n = countsBySource[fonte] ?? 0;
+      if (n > topSourceCount) {
+        topSource = fonte;
+        topSourceCount = n;
+      }
+    }
+
+    // Maior sequência de dias seguidos: os dias viram índices UTC (imunes a
+    // horário de verão) e a sequência cresce quando o índice avança em 1.
+    final indices = ativos.map((e) => _dayIndex(e.key)).toList()..sort();
+    var maior = 0;
+    var atual = 0;
+    int? anterior;
+    for (final indice in indices) {
+      atual = (anterior != null && indice == anterior + 1) ? atual + 1 : 1;
+      if (atual > maior) maior = atual;
+      anterior = indice;
+    }
+
+    return NumerosDoCiclo(
+      totalRecords: total,
+      activeDays: ativos.length,
+      periodDays: _periodDays(start, end),
+      topPhase: topPhase,
+      topPhaseCount: topPhaseCount,
+      topSource: topSource,
+      topSourceCount: topSourceCount,
+      longestStreak: maior,
+      previousPeriodRecords: previousPeriodRecords,
+    );
+  }
+
+  /// Índice do dia de uma chave `yyyy-MM-dd`, em UTC — a aritmética de dias
+  /// nunca escorrega numa virada de horário de verão.
+  static int _dayIndex(String dayKey) {
+    final partes = dayKey.split('-');
+    return DateTime.utc(
+          int.parse(partes[0]),
+          int.parse(partes[1]),
+          int.parse(partes[2]),
+        ).millisecondsSinceEpoch ~/
+        Duration.millisecondsPerDay;
+  }
+
+  /// Dias de calendário da janela `>= start AND < end`: fim exclusivo à
+  /// meia-noite não conta o dia; qualquer hora além dela conta o dia já
+  /// começado. Calculado em UTC pelos componentes, pela mesma razão de
+  /// [_dayIndex].
+  static int _periodDays(DateTime start, DateTime end) {
+    final inicio = DateTime.utc(start.year, start.month, start.day);
+    final fimDia = DateTime.utc(end.year, end.month, end.day);
+    final inteiros = fimDia.difference(inicio).inDays;
+    final temResto =
+        end.hour != 0 || end.minute != 0 || end.second != 0 ||
+            end.millisecond != 0 || end.microsecond != 0;
+    return temResto ? inteiros + 1 : inteiros;
+  }
+
+  /// O bloco "numbers" do JSON do material — nomes de campo em inglês, como
+  /// o resto do JSON. O nome da fase vai localizado (displayName): a IA narra
+  /// no idioma do app e deve citar o nome exatamente como está aqui.
+  Map<String, dynamic> toJson() => {
+        'totalRecords': totalRecords,
+        'activeDays': activeDays,
+        'periodDays': periodDays,
+        if (topPhase != null)
+          'topPhase': {'phase': topPhase!.displayName, 'count': topPhaseCount},
+        if (topSource != null)
+          'topSource': {'source': topSource, 'count': topSourceCount},
+        if (longestStreak > 0) 'longestStreak': longestStreak,
+        'previousPeriodRecords': previousPeriodRecords,
+      };
 }
 
 /// Monta o retrato do período a partir do que a pessoa registrou no app +
@@ -216,6 +412,78 @@ class CycleReadingComposer {
         _ => '',
       };
 
+  /// A assinatura de CONTEÚDO de cada tabela: as colunas que dizem "este
+  /// registro é o mesmo que aquele".
+  ///
+  /// Serve para a contagem não somar duplicatas. Duas linhas com o mesmo
+  /// conteúdo E o mesmo instante são o mesmo registro que entrou duas vezes —
+  /// tipicamente uma cópia trazida pela sincronização, que nasce com `id`
+  /// novo e por isso escapa de qualquer contagem por chave primária. Já a
+  /// mesma gratidão escrita de novo noutro dia tem instante diferente, então
+  /// continua valendo por duas: o instante entra na assinatura de propósito.
+  static const Map<String, List<String>> _assinaturaDeConteudo = {
+    'dreams': ['title', 'content'],
+    'gratitudes': ['title', 'content'],
+    'desires': ['title', 'description'],
+    'affirmations': ['text'],
+    'free_writings': ['title', 'content'],
+    'rune_readings': ['question', 'spread_type', 'reading_data'],
+    'oracle_readings': ['spread_type', 'reading_data'],
+    'pendulum_consultations': ['question', 'answer'],
+    'tarot_readings': ['signature'],
+    'ritual_logs': ['ritual_id', 'notes'],
+    'guided_ritual_logs': ['ritual_id', 'event_date', 'notes'],
+    'spells': ['name', 'purpose'],
+    'sigils': ['intention', 'image_path'],
+  };
+
+  /// A expressão que o `COUNT(DISTINCT ...)` recebe: instante + conteúdo,
+  /// costurados. `COALESCE` porque coluna nula viraria a expressão inteira
+  /// nula, e aí o `DISTINCT` engoliria registros que só têm um campo vazio.
+  static String _chaveDeDeduplicacao(String table) {
+    final colunas = _assinaturaDeConteudo[table];
+    final tempo = _timeColumnOf(table);
+    if (colunas == null || colunas.isEmpty) return tempo;
+    final partes = [
+      "CAST($tempo AS TEXT)",
+      for (final c in colunas) "COALESCE($c, '')",
+    ];
+    return partes.join(" || '' || ");
+  }
+
+  /// O nome da entidade de sincronização de cada tabela — a chave das
+  /// lápides (`sync_tombstones.entity`, que guarda o `name` do [SyncEntity]).
+  ///
+  /// Sem lápide não há como saber que a pessoa apagou algo: a exclusão é
+  /// física nas tabelas de registro, e a lápide é o único rastro. Ela importa
+  /// aqui porque a sincronização pode trazer de volta uma linha apagada
+  /// noutro aparelho antes de a lápide ser aplicada — e nesse intervalo a
+  /// contagem somava um registro que a pessoa já tinha jogado fora.
+  ///
+  /// `guided_ritual_logs` fica de fora porque não tem entidade de sync.
+  static const Map<String, String> _entidadeDeSync = {
+    'dreams': 'dreams',
+    'gratitudes': 'gratitudes',
+    'desires': 'desires',
+    'affirmations': 'affirmations',
+    'free_writings': 'freeWritings',
+    'rune_readings': 'runeReadings',
+    'oracle_readings': 'oracleReadings',
+    'pendulum_consultations': 'pendulumConsultations',
+    'tarot_readings': 'tarotReadings',
+    'ritual_logs': 'ritualLogs',
+    'spells': 'spells',
+    'sigils': 'sigils',
+  };
+
+  /// O filtro que tira da contagem o que já tem lápide.
+  static String _filtroDeApagados(String table) {
+    final entidade = _entidadeDeSync[table];
+    if (entidade == null) return '';
+    return ' AND id NOT IN (SELECT item_id FROM sync_tombstones '
+        "WHERE user_id = ? AND entity = '$entidade')";
+  }
+
   /// Quantos registros a pessoa fez em CADA dia da janela — o mapa de calor
   /// do seletor de período.
   ///
@@ -271,15 +539,22 @@ class CycleReadingComposer {
     for (final table in _recordTables) {
       final timeColumn = _timeColumnOf(table);
       final preloadedFilter = _ownRecordsFilter(table);
+      final apagadosFilter = _filtroDeApagados(table);
       try {
         final rows = await db.rawQuery(
-          'SELECT COUNT(*) AS total FROM $table '
+          // DISTINCT sobre a assinatura de conteúdo, e não `COUNT(*)`: a
+          // contagem é o que a pessoa vê antes de comprar a leitura, e somar
+          // a mesma coisa duas vezes promete um material que não existe.
+          'SELECT COUNT(DISTINCT ${_chaveDeDeduplicacao(table)}) AS total '
+          'FROM $table '
           'WHERE user_id = ? AND $timeColumn >= ? AND $timeColumn < ?'
-          '$preloadedFilter',
+          '$preloadedFilter$apagadosFilter',
           [
             userId,
             start.millisecondsSinceEpoch,
             end.millisecondsSinceEpoch,
+            // O `user_id` do filtro de lápides, quando ele existe.
+            if (apagadosFilter.isNotEmpty) userId,
           ],
         );
         total += (rows.first['total'] as int?) ?? 0;
@@ -291,12 +566,17 @@ class CycleReadingComposer {
   }
 
   /// Monta o material completo do período.
+  ///
+  /// [userName] é o nome do perfil: com ele no material, a narrativa fala
+  /// DA pessoa em terceira pessoa, pelo nome (decisão da dona, 23/08) —
+  /// sem ele, a leitura segue falando com "você".
   Future<CycleReadingMaterial> compose({
     required String userId,
     required DateTime start,
     required DateTime end,
     String periodType = CycleReadingPeriodType.lunation,
     CycleReadingSourceOptions options = const CycleReadingSourceOptions(),
+    String? userName,
   }) async {
     final db = await _db;
     final json = <String, dynamic>{
@@ -305,6 +585,8 @@ class CycleReadingComposer {
         'end': _dayKey(end),
         'type': periodType,
       },
+      if (userName != null && userName.trim().isNotEmpty)
+        'person': {'name': userName.trim()},
     };
     var recordCount = 0;
 
@@ -385,8 +667,12 @@ class CycleReadingComposer {
     // As que ela CRIOU (is_preloaded=0) contam como registro do período e
     // são as mais reveladoras; somam-se as favoritas (mesmo pré-carregadas),
     // porque favoritar também é uma escolha que diz algo sobre ela.
+    //
+    // Declaradas fora do try porque os números do ciclo (lá embaixo) também
+    // as contam — e uma base antiga sem a tabela só deixa a lista vazia.
+    var createdAffirmations = const <Map<String, Object?>>[];
     try {
-      final createdAffirmations = await rowsOf(
+      createdAffirmations = await rowsOf(
         'affirmations',
         extraWhere: 'is_preloaded = 0',
       );
@@ -685,12 +971,109 @@ class CycleReadingComposer {
     // ===== O céu do período (calculado no aparelho; a IA só narra) =====
     json['sky'] = await _skyFacts(userId, start, end);
 
+    // ===== O céu do PRÓXIMO ciclo (idem) — a matéria da previsão =====
+    // Janela de mesma duração, começando onde a lida termina.
+    json['skyAhead'] =
+        await _skyAheadFacts(userId, end, end.add(end.difference(start)));
+
     // ===== Quem ela é, segundo a própria Análise Personalizada =====
     final perfil = await _profileFacts(userId);
     if (perfil.isNotEmpty) json['profile'] = perfil;
 
+    // ===== Os números do ciclo (calculados AQUI — a IA só os cita) =====
+    // Tudo sai das linhas que este método JÁ buscou; a única ida extra ao
+    // banco é a contagem leve do período anterior, que reusa o
+    // countPeriodRecords da tela de oferta (mesmas tabelas, mesmos filtros).
+    //
+    // As contagens ignoram os desligamentos de privacidade de propósito,
+    // como o recordCount: dizer "você fez 12 registros" não expõe nada —
+    // expor seria citar o conteúdo, e conteúdo os números não têm.
+    final countsByDay = <String, int>{};
+    void contaDia(Object? millis) {
+      if (millis is! int) return;
+      final dia = _dayKey(DateTime.fromMillisecondsSinceEpoch(millis));
+      countsByDay[dia] = (countsByDay[dia] ?? 0) + 1;
+    }
+
+    // Os mesmos campos de data que a linha do tempo usa (date ?? created_at
+    // para sonhos e gratidões; completed_at para ritos): o dia contado é o
+    // dia que a narrativa cita.
+    for (final row in dreams) {
+      contaDia(row['date'] ?? row['created_at']);
+    }
+    for (final row in gratitudes) {
+      contaDia(row['date'] ?? row['created_at']);
+    }
+    for (final row in [
+      ...desires,
+      ...createdAffirmations,
+      ...sigils,
+      ...writings,
+      ...runeReadings,
+      ...pendulumConsults,
+      ...oracleReadings,
+      ...tarotReadings,
+      ...spells,
+    ]) {
+      contaDia(row['created_at']);
+    }
+    for (final row in [...ritualLogs, ...guidedLogs]) {
+      contaDia(row['completed_at']);
+    }
+
+    // A fase da lua de cada dia ativo, calculada no aparelho — nunca pela
+    // IA (mesma matemática do moonByDay, ao meio-dia local).
+    final phaseByDay = <String, MoonPhase>{};
+    for (final dia in countsByDay.keys) {
+      final partes = dia.split('-');
+      phaseByDay[dia] = LunarProvider.phaseOn(DateTime(
+        int.parse(partes[0]),
+        int.parse(partes[1]),
+        int.parse(partes[2]),
+        12,
+      ));
+    }
+
+    // Por fonte, nas mesmas quatro famílias dos desligamentos da intro. As
+    // leituras arquivadas (savedReadings) pertencem à divinação — é o
+    // desligamento que as governa no material.
+    final countsBySource = <String, int>{
+      NumerosDoCiclo.sourceDreams: dreams.length,
+      NumerosDoCiclo.sourceJournals: gratitudes.length +
+          desires.length +
+          createdAffirmations.length +
+          sigils.length +
+          (writings.length - archivedReadings.length),
+      NumerosDoCiclo.sourceDivination: runeReadings.length +
+          pendulumConsults.length +
+          oracleReadings.length +
+          tarotReadings.length +
+          archivedReadings.length,
+      NumerosDoCiclo.sourcePractice:
+          ritualLogs.length + guidedLogs.length + spells.length,
+    };
+
+    final duracao = end.difference(start);
+    final numeros = NumerosDoCiclo.calcular(
+      start: start,
+      end: end,
+      countsByDay: countsByDay,
+      phaseByDay: phaseByDay,
+      countsBySource: countsBySource,
+      previousPeriodRecords: await countPeriodRecords(
+        userId: userId,
+        start: start.subtract(duracao),
+        end: start,
+      ),
+    );
+    json['numbers'] = numeros.toJson();
+
     json['recordCount'] = recordCount;
-    return CycleReadingMaterial(json: json, recordCount: recordCount);
+    return CycleReadingMaterial(
+      json: json,
+      recordCount: recordCount,
+      numbers: numeros,
+    );
   }
 
   /// O retrato mágico dela, tirado da Análise Personalizada que ela já leu.
@@ -806,6 +1189,80 @@ class CycleReadingComposer {
       debugPrint('CycleReadingComposer: céu indisponível ($e)');
     }
     return sky;
+  }
+
+  /// O céu do PRÓXIMO ciclo — a matéria da seção "o que se anuncia".
+  ///
+  /// Mesma regra do [_skyFacts]: tudo calculado NO APARELHO — fases e
+  /// trânsitos das efemérides, sabbats da Roda do Ano — e a IA só narra e
+  /// interpreta. Best-effort como o resto do céu: sem mapa natal (ou sem
+  /// efemérides), a previsão segue só com a lua e os sabbats.
+  Future<Map<String, dynamic>> _skyAheadFacts(
+    String userId,
+    DateTime from,
+    DateTime to,
+  ) async {
+    final ahead = <String, dynamic>{
+      'window': {'from': _dayKey(from), 'to': _dayKey(to)},
+    };
+
+    // As viradas de fase da janela que vem, com a data de cada uma.
+    final phases = <Map<String, String>>[];
+    var cursor = DateTime(from.year, from.month, from.day, 12);
+    MoonPhase? previous;
+    while (cursor.isBefore(to)) {
+      final phase = LunarProvider.phaseOn(cursor);
+      if (phase != previous) {
+        phases.add({'phase': phase.displayName, 'from': _dayKey(cursor)});
+        previous = phase;
+      }
+      cursor = cursor.add(const Duration(days: 1));
+    }
+    ahead['moonPhases'] = phases;
+
+    // Sabbats da Roda do Ano que caem na janela (datas do hemisfério sul,
+    // como toda a Roda no app): o gancho de ensinamento mais direto que a
+    // previsão tem. Os dois anos porque a janela pode cruzar a virada.
+    final inicioDia = DateTime(from.year, from.month, from.day);
+    final sabbats = <Map<String, String>>[
+      for (final year in {from.year, to.year})
+        for (final type in SabbatType.values)
+          if (!type.getDateForYear(year).isBefore(inicioDia) &&
+              type.getDateForYear(year).isBefore(to))
+            {'sabbat': type.name, 'on': _dayKey(type.getDateForYear(year))},
+    ]..sort((a, b) => a['on']!.compareTo(b['on']!));
+    if (sabbats.isNotEmpty) ahead['sabbats'] = sabbats;
+
+    try {
+      final chart = await _astrology.getBirthChart(userId);
+      if (chart == null) return ahead;
+
+      // O MEIO da janela como referência: um retrato do céu que vem, não
+      // uma efeméride dia a dia — o JSON dobraria sem mudar a narrativa.
+      // O natal não se repete aqui: já vai em sky.natal.
+      final reference = from.add(to.difference(from) ~/ 2);
+      final transits = await _transits.calculateTransits(reference);
+      ahead['transits'] = [
+        for (final transit in transits)
+          if (transit.planet != Planet.moon)
+            '${transit.planet.displayName} in ${transit.sign.displayName}'
+            '${transit.isRetrograde ? ' (retrograde)' : ''}',
+      ];
+
+      final aspects = await _transits.calculateTransitAspects(transits, chart);
+      ahead['aspects'] = [
+        for (final aspect in aspects
+            .where((a) => a.transitPlanet != Planet.moon)
+            .take(8))
+          '${aspect.transitPlanet.displayName} '
+          '${aspect.aspectType.displayName} '
+          '${aspect.natalPlanet.displayName} natal '
+          '(orb ${aspect.orb.toStringAsFixed(1)} deg)',
+      ];
+    } catch (e) {
+      debugPrint('CycleReadingComposer: céu à frente indisponível ($e)');
+    }
+    return ahead;
   }
 
   static bool _isNotBlank(Object? value) =>

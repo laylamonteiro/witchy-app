@@ -152,7 +152,29 @@ Painel do Supabase → seu projeto → **Authentication → Providers → Google
 | **Authorized Client IDs** | O **Web client ID**: `625869809120-vekqjnltlccc7llalu6adgl1js8tngob.apps.googleusercontent.com` — **corrija** o valor `com.grimoriodebolso.app` que está aí hoje |
 | **Client ID (OAuth)** | O mesmo Web client ID acima |
 | **Client Secret (OAuth)** | O secret **do Web client**, copiado do Google Cloud (formato `GOCSPX-…`). ⚠️ O valor `WqKf%M6-QuU+pDU` que você tinha **não** parece um secret Google — troque pelo correto |
-| **Skip nonce checks** | Ative se a opção existir (o fluxo nativo Android nem sempre envia nonce) |
+| **Skip nonce checks** | **Deixe DESLIGADO.** Ver o aviso abaixo — esta instrução estava invertida |
+
+> ### ⚠️ "Skip nonce checks" — esta página mandava o contrário
+>
+> A versão anterior deste documento dizia para **ativar** a opção. Estava
+> errado, e o erro é do tipo que não aparece: com ela ligada, o Supabase
+> **para de comparar o nonce** — e o nonce é justamente o que amarra um ID
+> token à tentativa de login que o pediu. Sem a comparação, um token
+> interceptado pode ser usado em outra sessão.
+>
+> A instrução nasceu do fluxo **nativo do Android**, que nem sempre manda
+> nonce. Mas a opção **não é por provedor nem por plataforma: vale para o
+> projeto inteiro** — inclusive para a entrada web dentro da página, que
+> manda o nonce corretamente (o cru para o Supabase, o `sha256` para o
+> Google; ver `_entrarSemSairDaAba`).
+>
+> **O que fazer:** abra o painel e confira. Se estiver ligada, desligue e
+> teste os dois caminhos — a entrada web e a nativa do Android. Se a nativa
+> passar a recusar, o certo é fazê-la mandar nonce, não voltar a desligar a
+> conferência do projeto todo.
+>
+> *(Conferir e mudar isso exige o painel do Supabase — não dá para fazer
+> pelo repositório.)*
 
 **Por que o Web client ID?** O app pede o token com
 `serverClientId = 625869809120-vekqjnltlccc7llalu6adgl1js8tngob…`
@@ -176,8 +198,43 @@ em *OAuth 2.0 Client IDs* clique no client **Web** (`…-vekqjnltlccc7llalu6adgl
 ## ✅ Checklist de verificação
 
 1. Merge desta branch → rodar o workflow de release.
-2. No job **📱 Build APK**, passo **"🔎 Print APK signing SHA-1"**, o valor bate
-   com `8B:D7:BB:97:…` (ou é o SHA-1 que você registrou na Etapa 2).
+2. No job **📱 Build APK**, passo de assinatura, o valor bate com o
+   `SHA1_ESPERADO` do `release.yml`.
+
+> ### ⚠️ Hoje as duas constantes do repositório se contradizem
+>
+> - `release.yml` exige que o binário esteja assinado com
+>   `54:84:54:75:7F:A8:37:1C:21:F4:B9:71:E7:B7:F8:05:25:85:FB:60` — é a chave
+>   de **upload** desta pipeline.
+> - O `android/app/google-services.json` (o único que o Gradle lê) registra
+>   um `certificate_hash` só: `8B:D7:BB:97:B9:5C:8D:5E:54:9D:55:84:A0:1F:E2:7A:EC:85:DA:98`.
+>
+> Ou seja, a digital que assina o APK **não está** no cliente OAuth. Quem
+> instalar o APK desta pipeline direto no aparelho recebe `ApiException: 10`
+> no login com o Google. Pela Play pode funcionar — lá quem assina é a chave
+> de *App Signing*, e `8B:D7:…` pode muito bem ser ela.
+>
+> **O conserto** é registrar `54:84:…` no client OAuth **Android** (Etapa 2),
+> baixar o `google-services.json` de novo e substituir o de `android/app/`.
+> Registrar a de *App integrity* junto não custa nada e cobre os dois casos —
+> um client OAuth aceita várias impressões digitais.
+>
+> O `release.yml` agora **falha** o build de APK quando a digital não está
+> registrada, e **avisa** no AAB (onde a Play re-assina e o repositório não
+> tem como conhecer a chave dela).
+
+> ### 📄 Existem DOIS `google-services.json`, e eles divergem
+>
+> | Arquivo | Lido pelo Gradle? | Clients OAuth Android |
+> |---|---|---|
+> | `android/app/google-services.json` | **Sim** | 1 (`8B:D7:…`) |
+> | `android/google-services.json` | Não | 2 (`C8:3B:65:…` e `8B:D7:…`) |
+>
+> Só o de `android/app/` chega ao aplicativo. O outro não é lido por
+> ninguém, e existe apenas para confundir quem for editar — inclusive
+> escondendo que o efetivo tem **menos** clients que o ignorado. Qual dos
+> dois reflete o painel hoje só o painel responde; depois de conferir,
+> apague o que sobrar.
 3. Supabase → Google provider: **Authorized Client IDs** = Web client ID.
 4. Instalar o **novo** APK (o desta pipeline, já assinado em release).
 5. Abrir o app → **Entrar com Google** → escolher a conta.
@@ -189,7 +246,7 @@ em *OAuth 2.0 Client IDs* clique no client **Web** (`…-vekqjnltlccc7llalu6adgl
 | Sintoma | Verifique |
 |---|---|
 | `ApiException: 10` persiste | O SHA-1 do APK realmente está no Google Cloud (Android client, package exato `com.grimoriodebolso.app`); propagação pode levar horas |
-| Login abre mas Supabase recusa | *Authorized Client IDs* = Web client ID; "Skip nonce checks" ligado |
+| Login abre mas Supabase recusa | *Authorized Client IDs* = Web client ID. **Não** ligue "Skip nonce checks" para resolver isto — ver o aviso da Etapa 3 |
 | `ApiException: 12500`/consent | Adicionar seu email em *Test users* na OAuth consent screen |
 | Funciona no APK direto mas não na Play Store | A Play Store **re-assina** o app (Play App Signing); registre também o SHA-1 de **Play Console → Test and release → App integrity** |
 

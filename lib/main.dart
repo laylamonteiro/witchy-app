@@ -23,7 +23,6 @@ import 'core/providers/sync_provider.dart';
 import 'core/providers/language_provider.dart';
 import 'core/services/ad_service.dart';
 import 'core/services/payment_service.dart';
-import 'core/services/premium_access.dart';
 import 'core/services/debug_log_service.dart';
 import 'core/services/data_sync_service.dart';
 import 'core/navigation/app_deep_link.dart';
@@ -43,18 +42,47 @@ import 'features/encyclopedia/presentation/providers/encyclopedia_provider.dart'
 import 'features/lunar/presentation/providers/lunar_provider.dart';
 import 'features/wheel_of_year/presentation/providers/wheel_of_year_provider.dart';
 import 'features/astrology/presentation/providers/astrology_provider.dart';
+import 'core/navigation/janela_de_login.dart';
+import 'core/navigation/corrimao_de_voltar.dart';
+import 'core/navigation/observador_de_rotas_raiz.dart';
+import 'core/navigation/porteiro_do_voltar.dart';
 
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();
+
+/// A chave do Navigator raiz.
+///
+/// Fora da classe de propósito: o [PorteiroDoVoltar] é instalado ANTES do
+/// `runApp` — precisa estar na fila de observadores antes do primeiro voltar, e
+/// antes até da tela de erro de boot — e precisa alcançar o navegador assim que
+/// ele existir.
+final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>();
 
 void main() {
   // Zona guardada: erros assíncronos não capturados (fora do ciclo de build)
   // são logados em vez de derrubarem o app silenciosamente — na web eles
   // viravam um "Uncaught Error" minificado no console e tela branca.
   runZonedGuarded<void>(() async {
+    // O VIGIA DO CORRIMÃO antes de tudo: assim o ouvinte de `popstate` do app
+    // entra na fila ANTES do ouvinte do motor (que só nasce quando o Navigator
+    // raiz monta) e lê o estado do pouso antes de qualquer reação dele. Não
+    // escreve nada no histórico — quem ergue os degraus é o script de
+    // `web/index.html`, que roda antes deste código existir.
+    instalarVigiaDoCorrimao();
+
     // Precisa rodar DENTRO da zona: binding e runApp na mesma zona, senão o
     // Flutter emite aviso de "Zone mismatch" e os erros escapam da guarda.
     WidgetsFlutterBinding.ensureInitialized();
+
+    // O PORTEIRO DO VOLTAR, antes de qualquer tela existir.
+    //
+    // Ele é observador do BINDING, não widget: vale no boot, na tela de erro de
+    // render, na troca de sessão e em qualquer quadro sem `PopScope` montado.
+    // Enquanto ele estiver de pé, `handlePopRoute` NUNCA chega ao
+    // `SystemNavigator.pop()` — que na web desmonta o histórico do motor e
+    // deixa o voltar morto pelo resto do documento, fazendo o gesto seguinte
+    // fechar a aba a partir de qualquer tela. Ver [PorteiroDoVoltar].
+    PorteiroDoVoltar.instalar(raiz: () => _rootNavigatorKey.currentState);
 
     // Erros do framework (build/layout) também vão para o log persistente,
     // mantendo o comportamento padrão de apresentação.
@@ -137,6 +165,21 @@ Future<SharedPreferences> _initializeApp() async {
       (Uri.base.queryParameters.containsKey('code') ||
           Uri.base.fragment.contains('access_token'));
 
+  // E se este boot é a JANELA DE LOGIN voltando do Google: a marca fica no
+  // armazenamento da origem porque o COOP do Google apaga o `opener` — sem
+  // ela, a janela viraria um segundo app, com as páginas do Google no
+  // histórico dela (o defeito do voltar, de volta pela porta dos fundos).
+  // O AuthWrapper mostra então o "pode fechar esta aba".
+  if (AuthProvider.bootCameFromOAuthReturn) {
+    final prefs = await SharedPreferences.getInstance();
+    final marca =
+        int.tryParse(prefs.getString(chaveJanelaDeLoginEmAndamento) ?? '');
+    AuthProvider.bootNaJanelaDeLogin = marca != null &&
+        DateTime.now()
+                .difference(DateTime.fromMillisecondsSinceEpoch(marca)) <
+            validadeDaMarcaDeJanela;
+  }
+
   // Initialize Supabase
   if (SupabaseConfig.isConfigured) {
     await Supabase.initialize(
@@ -150,11 +193,20 @@ Future<SharedPreferences> _initializeApp() async {
     await debugLog('SYNC', 'DataSyncService inicializado');
   }
 
-  // Initialize RevenueCat (only for mobile platforms)
-  if (!kIsWeb) {
-    await PaymentService().initialize();
-    await debugLog('SYSTEM', 'PaymentService inicializado');
-  }
+  // Initialize RevenueCat — TAMBÉM na web.
+  //
+  // Pular a web deixava o `Purchases.configure` sem rodar no navegador. Aí o
+  // `logIn`, que é o único ponto onde a compra é associada à conta do
+  // Supabase, estourava e o erro morria num debugPrint: quem comprava pelo
+  // navegador ficava num usuário anônimo do RevenueCat, sem ligação nenhuma
+  // com a própria conta. Era o único defeito de pagamento que atingia todo
+  // mundo que compra pela web.
+  //
+  // Quem decide se há pagamento é a presença da chave — na web, a `rcb_` do
+  // RevenueCat Billing. Sem chave, o `initialize` sai na primeira linha e
+  // nada quebra.
+  await PaymentService().initialize();
+  await debugLog('SYSTEM', 'PaymentService inicializado');
 
   // Initialize SharedPreferences
   final prefs = await SharedPreferences.getInstance();
@@ -216,8 +268,6 @@ class _GrimorioDeBolsoAppState extends State<GrimorioDeBolsoApp>
   static const String _lastOpenedKey = 'last_opened_timestamp';
   static const String _backgroundedAtKey = 'backgrounded_at_timestamp';
   bool _showSplash = true;
-  final GlobalKey<NavigatorState> _rootNavigatorKey =
-      GlobalKey<NavigatorState>();
 
   /// Instância única do Salem, viva pelo app inteiro: o "refresh" de sessão
   /// (30 min em background) precisa chamar show() para o gatinho escondido
@@ -314,22 +364,39 @@ class _GrimorioDeBolsoAppState extends State<GrimorioDeBolsoApp>
     await _triggerBackgroundSync();
   }
 
+  /// Carimbo da última TENTATIVA de sincronização automática (ver
+  /// [AppSessionPolicy.deveAutoSincronizar] para o porquê de ser tentativa,
+  /// e não sucesso).
+  static const _ultimaTentativaDeSyncKey = 'auto_sync_tentado_em';
+
   Future<void> _triggerBackgroundSync() async {
     final syncService = DataSyncService();
-    // Sincronização é exclusiva para usuários Premium (fonte única:
-    // RevenueCat OU premium local via Código Premium/admin) E precisa estar
-    // habilitada nas configurações de Privacidade.
+    // Sem trava de plano: sincronizar é de todo mundo. O que ainda decide é
+    // a preferência da pessoa e haver conta (`isReady`).
     final syncEnabled = await syncService.cloudSyncEnabled;
-    if (syncEnabled &&
-        syncService.isReady &&
-        PremiumAccess.instance.isPremium) {
-      await debugLog('SYNC', 'Auto-sync (Premium) iniciado em background');
-      final result = await syncService.syncAll();
-      if (result.success) {
-        await debugLog('SYNC', 'Auto-sync concluído com sucesso');
-      } else {
-        await debugLog('SYNC', 'Auto-sync falhou: ${result.detailedError}');
-      }
+    if (!syncEnabled || !syncService.isReady) return;
+
+    final carimbo = widget.prefs.getInt(_ultimaTentativaDeSyncKey);
+    final podeSincronizar = AppSessionPolicy.deveAutoSincronizar(
+      ultimaTentativa: carimbo == null
+          ? null
+          : DateTime.fromMillisecondsSinceEpoch(carimbo),
+      now: DateTime.now(),
+    );
+    if (!podeSincronizar) return;
+    // Carimba ANTES de sair: uma varredura que falha (ou que demora e
+    // encontra outra volta para a aba no meio) não pode reabrir a porta.
+    await widget.prefs.setInt(
+      _ultimaTentativaDeSyncKey,
+      DateTime.now().millisecondsSinceEpoch,
+    );
+
+    await debugLog('SYNC', 'Auto-sync iniciado em background');
+    final result = await syncService.syncAll();
+    if (result.success) {
+      await debugLog('SYNC', 'Auto-sync concluído com sucesso');
+    } else {
+      await debugLog('SYNC', 'Auto-sync falhou: ${result.detailedError}');
     }
   }
 
@@ -442,7 +509,15 @@ class _GrimorioDeBolsoAppState extends State<GrimorioDeBolsoApp>
       child: Consumer2<LanguageProvider, ThemeProvider>(
         builder: (context, languageProvider, themeProvider, child) => MaterialApp(
           navigatorKey: _rootNavigatorKey,
-          title: 'Grimório de Bolso',
+          // Avisa a Home quando uma tela cheia abre ou fecha na raiz — ela
+          // não enxerga isso sozinha (ver [mudancasDaPilhaRaiz]).
+          navigatorObservers: [ObservadorDeRotasRaiz()],
+          // `onGenerateTitle` e não `title`: o nome do app é TRADUZIDO
+          // ("Pocket Grimoire", "Grimorio de Bolsillo") e a chave `appTitle`
+          // existia nos quatro ARBs sem nenhum chamador. Cravado, o nome
+          // chegava em português para todo mundo — na aba do navegador e no
+          // alternador de tarefas do Android, que é onde ele aparece.
+          onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
           locale: languageProvider.locale,
           localizationsDelegates: const [
             AppLocalizations.delegate,

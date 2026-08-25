@@ -99,6 +99,8 @@ paga uma vez e a análise fica no acervo dela para sempre, sincronizada.
 | Janela | últimos 7 dias | ~30 dias / lunação completa |
 | Profundidade | 4 seções, mais direta | 7 seções + comparativo de ciclos |
 | Trânsitos | só os exatos no período | mapa do mês + próximos aportes |
+> **Preço:** os valores abaixo são de quando este documento foi escrito e NÃO são a fonte da verdade. O preço vigente vem sempre da RevenueCat em tempo de execução; os valores de RESERVA (usados só quando a loja não responde) ficam em `lib/features/auth/presentation/widgets/premium_blur_widget.dart`. Documento que repete preço apodrece no próximo reajuste.
+
 | Preço âncora (BR) | R$ 9,90 | R$ 19,90–24,90 |
 
 A diferença de preço se sustenta na diferença visível de profundidade (o
