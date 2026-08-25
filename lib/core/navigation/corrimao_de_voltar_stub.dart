@@ -8,3 +8,6 @@ bool oUltimoVoltarVeioDoCorrimao() => false;
 
 /// Diagnóstico: quantos `popstate` este documento viu. Fora da web, nenhum.
 int voltaresVistosPeloDocumento() => 0;
+
+/// Fora da web não há janelinha de diagnóstico para alimentar.
+void anotarVoltarTratadoPeloApp(int quantos) {}

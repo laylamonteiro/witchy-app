@@ -122,6 +122,10 @@ class PorteiroDoVoltar with WidgetsBindingObserver {
 
   Future<void> _entregarAoApp(String origem) async {
     voltaresTratados++;
+    // Para a janelinha de `?diag=1`: sem isto ela mostra o que o NAVEGADOR
+    // entregou, mas não o que o app tratou — e os dois números juntos são o
+    // que separa um defeito nosso de um do navegador.
+    anotarVoltarTratadoPeloApp(voltaresTratados);
     final navegador = raiz();
     _registrar(
       '#$voltaresTratados ($origem) — navegador raiz '

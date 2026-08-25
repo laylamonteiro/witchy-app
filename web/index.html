@@ -177,8 +177,22 @@
         // obrigatório: sem marca, um voltar que chegue nela cai no ramo
         // "estado desconhecido" do motor, que responde com `go(-1)` e SAI do
         // documento.
+        //
+        // E SÓ ISSO no carregamento: nenhum degrau é empurrado aqui.
+        //
+        // Medido no aparelho da dona (24/08, com `?diag=1`): os 8 degraus
+        // empurrados no boot compraram UM voltar. No segundo, o contador de
+        // `popstate` congelou e a aba fechou — o Chrome pulou todos de uma
+        // vez. É a intervenção de manipulação de histórico: entrada empurrada
+        // SEM gesto da pessoa nasce pulável, e depois de um voltar o navegador
+        // deixa de honrar ativação antiga.
+        //
+        // Por isso os degraus agora nascem no PRIMEIRO TOQUE (ver `repor`
+        // abaixo). Com ativação, a entrada não é marcada. O custo é a janela
+        // entre abrir o app e encostar na tela, em que não há degrau nenhum —
+        // e ela é aceitável porque para chegar a qualquer lugar de onde o
+        // voltar importa é preciso tocar na tela antes.
         history.replaceState(degrau(0), '', window.location.href);
-        subirAte(ALVO);
       } catch (e) {
         // Histórico é conforto: nunca derrubar o boot por causa dele.
       }
@@ -192,9 +206,15 @@
         }
       });
 
-      // A REPOSIÇÃO, só com gesto da pessoa. Entradas empurradas COM ativação
-      // do usuário são as que não viram "puláveis" — é a condição documentada
-      // da intervenção do Chrome. Por isso nunca repomos dentro do `popstate`.
+      // OS DEGRAUS NASCEM AQUI, no gesto — e é o gesto que os protege.
+      //
+      // Entrada empurrada durante um `pointerdown`/`keydown` tem ativação
+      // transitória do usuário, e é essa ativação que a impede de ser marcada
+      // como pulável. Nunca repomos dentro do `popstate`: ali não há ativação
+      // nenhuma, e a entrada nasceria condenada.
+      //
+      // Roda a cada toque, de graça quando já está cheio (o `subirAte` não
+      // tem o que empurrar).
       var repor = function () {
         try {
           if (nivel < ALVO) subirAte(ALVO);
@@ -238,6 +258,11 @@
           'len=' + history.length + '  nivel=' + nivel +
           '  aqui=' + classificar(history.state) +
           '  popstates=' + popstates +
+          // Quantos voltares o APP tratou (o porteiro do lado Dart escreve
+          // aqui). `popstates` maior que `dart` significa que o gesto chegou
+          // ao documento e não chegou ao app — defeito nosso, não do
+          // navegador.
+          '  dart=' + (window.__gdbVoltaresDart || 0) +
           '\n' + (ultimos.slice(-5).join('  |  ') || '(nenhum voltar ainda)');
       }
 

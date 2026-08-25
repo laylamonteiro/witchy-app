@@ -1,4 +1,5 @@
 import 'dart:js_interop';
+import 'dart:js_interop_unsafe';
 
 import 'package:web/web.dart' as web;
 
@@ -65,6 +66,18 @@ bool oUltimoVoltarVeioDoCorrimao() {
 /// este número não tiver subido, o voltar não chegou ao documento — e aí quem
 /// fechou foi o navegador.
 int voltaresVistosPeloDocumento() => _voltaresVistos;
+
+/// Conta para a janelinha de `?diag=1` quantos voltares o app TRATOU.
+///
+/// É o par que faltava: a faixa já mostrava quantos `popstate` o documento
+/// recebeu, mas não se o Dart chegou a ser chamado. Com os dois lado a lado, a
+/// leitura fica sem ambiguidade — `popstates=2 dart=0` significa que o motor
+/// recebeu o gesto e o app não, que é um defeito nosso; `popstates=1` parado
+/// com a aba fechando significa que o gesto nem chegou ao documento, que é do
+/// navegador.
+void anotarVoltarTratadoPeloApp(int quantos) {
+  globalContext['__gdbVoltaresDart'] = quantos.toJS;
+}
 
 bool _ehEntradaDoApp(Object? estado) =>
     estado is Map && (estado['flutter'] == true || estado['origin'] == true);
