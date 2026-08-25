@@ -1,5 +1,7 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import '../../../../core/i18n/gender.dart';
+
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
@@ -661,7 +663,12 @@ class _SignupPageState extends State<SignupPage> {
         // Mostrar sucesso
         showAuthSnack(
           context,
-          AppLocalizations.of(context).authSignupSuccess,
+          GenderText.select(
+            preference: TratamentoAtual.instance.preferencia,
+            feminine: AppLocalizations.of(context).authSignupSuccessFeminine,
+            masculine: AppLocalizations.of(context).authSignupSuccessMasculine,
+            neutral: AppLocalizations.of(context).authSignupSuccessNeutral,
+          ),
           type: AuthSnackType.success,
         );
 

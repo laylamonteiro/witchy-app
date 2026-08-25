@@ -1,5 +1,6 @@
 import 'package:cloudflare_turnstile/cloudflare_turnstile.dart';
 import 'package:flutter/material.dart';
+import '../../../../core/i18n/tratamento_do_contexto.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 
 import '../../../../core/config/captcha_config.dart';
@@ -81,7 +82,7 @@ class _CaptchaSheetState extends State<_CaptchaSheet> {
           ),
           const SizedBox(height: 20),
           Text(
-            l10n.authCaptchaTitle,
+            l10n.authCaptchaTitle(context.vocativo),
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   color: context.gc.lilac,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/i18n/tratamento_do_contexto.dart';
 import 'package:flutter/services.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
@@ -279,7 +280,11 @@ class _GratitudeSheetState extends State<_GratitudeSheet> {
             minLines: 1,
             textCapitalization: TextCapitalization.sentences,
             decoration: InputDecoration(
-              hintText: l10n.yourDayGratitudeHint,
+              hintText: context.porTratamento(
+                feminine: l10n.yourDayGratitudeHintFeminine,
+                masculine: l10n.yourDayGratitudeHintMasculine,
+                neutral: l10n.yourDayGratitudeHintNeutral,
+              ),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
               ),

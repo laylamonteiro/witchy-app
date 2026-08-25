@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import '../../../../core/i18n/tratamento_do_contexto.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
@@ -259,7 +261,11 @@ class _LoginPageState extends State<LoginPage> {
         ),
         const SizedBox(height: 8),
         Text(
-          AppLocalizations.of(context).authWelcomeBack,
+          context.porTratamento(
+            feminine: AppLocalizations.of(context).authWelcomeBackFeminine,
+            masculine: AppLocalizations.of(context).authWelcomeBackMasculine,
+            neutral: AppLocalizations.of(context).authWelcomeBackNeutral,
+          ),
           style: GoogleFonts.cinzelDecorative(
             fontSize: 24,
             fontWeight: FontWeight.bold,
