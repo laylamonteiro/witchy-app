@@ -107,11 +107,9 @@ class CaminhadaDoVoltar {
 
   /// Diz que a caminhada acabou e não há para onde ir: o fim da linha na web.
   ///
-  /// Serve para duas coisas. A primeira é não deixar o voltar MUDO no Seu Dia,
-  /// que é indistinguível de "o app travou". A segunda é ser a única prova, no
-  /// aparelho da Bruxa, de que o voltar chegou ao app: se a aba fechar sem esta
-  /// mensagem ter aparecido, quem fechou foi o navegador, e a investigação sai
-  /// do Dart de vez.
+  /// Existe para o voltar não ficar MUDO no Seu Dia, que é indistinguível de
+  /// "o app travou" — a Bruxa desliza, nada muda na tela, e ela não tem como
+  /// saber se chegou ao fim ou se o app parou de responder.
   final void Function() mostrarFimDaCaminhada;
 
   final SaidaPorDoisToques regra;
@@ -168,13 +166,10 @@ class CaminhadaDoVoltar {
       return;
     }
 
-    final decisao = regra.registrar(agora());
-    if (decisao == DecisaoDeSaida.sair) {
+    if (regra.registrar(agora()) == DecisaoDeSaida.sair) {
       saida.sair();
       return;
     }
-    // Rajada (`ignorar`): nada — nem sair, nem repetir o aviso que já está
-    // na tela.
-    if (decisao == DecisaoDeSaida.avisar) mostrarAviso();
+    mostrarAviso();
   }
 }

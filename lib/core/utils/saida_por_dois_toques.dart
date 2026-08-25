@@ -3,42 +3,33 @@ enum DecisaoDeSaida {
   /// Primeiro voltar: avisa que o próximo sai.
   avisar,
 
-  /// Voltar que faz parte da MESMA rajada do anterior — o dedo ainda está
-  /// deslizando. Não sai, e empurra a janela para a frente.
-  ignorar,
-
-  /// Segundo voltar, deliberado e dentro da janela: sai.
+  /// Segundo voltar dentro da janela: sai.
   sair,
 }
 
-/// A regra do "voltar duas vezes para sair", com defesa contra rajada.
+/// A regra do "voltar duas vezes para sair" — **só no celular**.
 ///
-/// O gesto de voltar do Android repete fácil: a Bruxa desliza da borda três,
-/// quatro vezes seguidas. Sem um piso de tempo entre um voltar e outro, a
-/// caminhada inteira — desempilhar as telas, descer para o Seu Dia, avisar e
-/// sair — cabia dentro de meio segundo de rajada, e a ABA FECHAVA antes de
-/// ela ver o Seu Dia (relato de 23/08 no webapp; no celular o mesmo embalo
-/// fechava o app).
+/// Na web ela não é consultada: o passo 4 da `CaminhadaDoVoltar` termina antes,
+/// porque `SaidaDaAbaReal.podeSair()` é `false` ali (nenhuma página fecha uma
+/// aba que não abriu). No celular sair é ir para segundo plano — reversível, um
+/// toque traz de volta — e o toque duplo de sempre é o esperado.
 ///
-/// Sair é destrutivo na web (a aba se fecha e o app some da tela), então a
-/// saída tem de ser uma DECISÃO, nunca o embalo do dedo:
-/// - o primeiro voltar na raiz avisa;
-/// - qualquer voltar antes de [intervaloDeliberado] é rajada: ignorado, e
-///   ainda empurra a janela para a frente — uma rajada infinita nunca sai;
-/// - um voltar entre [intervaloDeliberado] e [janela] é decisão: sai;
-/// - passada a [janela], o aviso caducou e tudo recomeça.
+/// Esta classe já teve uma defesa contra RAJADA: um piso de tempo entre um
+/// voltar e outro, para o embalo do dedo não atravessar a caminhada inteira e
+/// fechar a aba. Ela saiu em 25/08, e vale registrar por quê: a teoria era que
+/// uma deslizada repetida atropelava a entrada-guarda do motor, e o fonte
+/// desmente — o re-empurrão da guarda é SÍNCRONO, a primeira instrução do
+/// tratador de `popstate` (engine 3.47.0). Na prática o piso nunca defendeu de
+/// nada; só descartava um segundo voltar deliberado. O que de fato fecha a aba
+/// é o Chrome pulando as entradas do documento, e isso nenhuma regra de tempo
+/// alcança.
 class SaidaPorDoisToques {
-  SaidaPorDoisToques({
-    this.janela = const Duration(seconds: 4),
-    this.intervaloDeliberado = const Duration(milliseconds: 800),
-  });
+  SaidaPorDoisToques({this.janela = const Duration(seconds: 2)});
 
-  /// Quanto tempo o aviso vale. Generosa de propósito: o aviso aparece por
-  /// alguns segundos e a pessoa precisa poder ler antes de decidir.
+  /// Quanto tempo o aviso vale. O aviso aparece na tela por esta mesma duração
+  /// — "armado" e "aviso visível" são a mesma coisa, de propósito: uma saída
+  /// armada com a tela limpa é o jeito de sair sem querer.
   final Duration janela;
-
-  /// Antes disto, dois voltares são o mesmo gesto chegando duas vezes.
-  final Duration intervaloDeliberado;
 
   DateTime? _avisoEm;
 
@@ -52,19 +43,13 @@ class SaidaPorDoisToques {
       _avisoEm = agora;
       return DecisaoDeSaida.avisar;
     }
-    if (agora.difference(aviso) < intervaloDeliberado) {
-      // Rajada: o dedo ainda está deslizando. A janela anda junto para que
-      // uma sequência rápida nunca termine em saída.
-      _avisoEm = agora;
-      return DecisaoDeSaida.ignorar;
-    }
     _avisoEm = null;
     return DecisaoDeSaida.sair;
   }
 
-  /// Esquece o aviso — chamado quando o voltar fez OUTRA coisa (desempilhou
-  /// uma tela, trocou de aba). Sem isto, um aviso dado antes de a pessoa
-  /// navegar continuaria valendo e o voltar seguinte sairia do app numa tela
-  /// que não é a raiz.
+  /// Esquece o aviso — chamado quando o voltar fez OUTRA coisa (desempilhou uma
+  /// tela, trocou de aba). Sem isto, um aviso dado antes de a pessoa navegar
+  /// continuaria valendo e o voltar seguinte sairia do app numa tela que não é
+  /// a raiz.
   void esquecer() => _avisoEm = null;
 }

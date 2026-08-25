@@ -1,5 +1,4 @@
 import 'dart:js_interop';
-import 'dart:js_interop_unsafe';
 
 import 'package:web/web.dart' as web;
 
@@ -9,7 +8,6 @@ import 'package:web/web.dart' as web;
 const Duration _janelaDoRecado = Duration(seconds: 2);
 
 bool _instalado = false;
-int _voltaresVistos = 0;
 DateTime? _ultimoPousoEmEntradaDoApp;
 DateTime? _urlDigitadaEmVoo;
 
@@ -26,7 +24,6 @@ void instalarVigiaDoCorrimao() {
 }
 
 void _aoPousar(web.Event evento) {
-  _voltaresVistos++;
   final estado = web.window.history.state.dartify();
 
   // Entrada NOSSA (um degrau do corrimão) ou do motor: nos dois casos o estado
@@ -60,23 +57,6 @@ bool oUltimoVoltarVeioDoCorrimao() {
   }
   final pouso = _ultimoPousoEmEntradaDoApp;
   return pouso != null && DateTime.now().difference(pouso) < _janelaDoRecado;
-}
-
-/// Diagnóstico: quantos `popstate` este documento recebeu. Se a aba fechar e
-/// este número não tiver subido, o voltar não chegou ao documento — e aí quem
-/// fechou foi o navegador.
-int voltaresVistosPeloDocumento() => _voltaresVistos;
-
-/// Conta para a janelinha de `?diag=1` quantos voltares o app TRATOU.
-///
-/// É o par que faltava: a faixa já mostrava quantos `popstate` o documento
-/// recebeu, mas não se o Dart chegou a ser chamado. Com os dois lado a lado, a
-/// leitura fica sem ambiguidade — `popstates=2 dart=0` significa que o motor
-/// recebeu o gesto e o app não, que é um defeito nosso; `popstates=1` parado
-/// com a aba fechando significa que o gesto nem chegou ao documento, que é do
-/// navegador.
-void anotarVoltarTratadoPeloApp(int quantos) {
-  globalContext['__gdbVoltaresDart'] = quantos.toJS;
 }
 
 bool _ehEntradaDoApp(Object? estado) =>

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import '../../../../core/theme/grimoire_colors.dart';
-import '../../../../core/widgets/guarda_de_voltar_web.dart';
 import '../../../../core/widgets/staggered_entrance.dart';
 import '../../../../core/widgets/starfield_background.dart';
 import '../widgets/auth_motion.dart';
@@ -23,8 +22,7 @@ class WelcomePage extends StatelessWidget {
     // cai — ainda com o Google como página anterior do histórico. Sem o
     // guarda, o voltar a tirava do app na única tela em que ela ainda nem
     // entrou.
-    return GuardaDeVoltarWeb(
-      child: Scaffold(
+    return Scaffold(
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
@@ -110,7 +108,6 @@ class WelcomePage extends StatelessWidget {
           ),
         ),
       ),
-    ),
     ),
     ),
     );

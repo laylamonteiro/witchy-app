@@ -41,15 +41,9 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   /// sair é ir para segundo plano: reversível, um toque traz de volta, e o
   /// toque duplo rápido de sempre é o esperado.
   ///
-  /// O piso de 800ms que existia aqui para a web foi embora junto. Ele nasceu
-  /// da teoria de que uma rajada de deslizadas atropelava a guarda do motor, e
-  /// o fonte desmente isso: o re-empurrão da guarda é SÍNCRONO, a primeira
-  /// instrução do tratador de `popstate` (engine 3.47.0). Na prática o piso só
-  /// descartava um segundo voltar DELIBERADO. Ver [SaidaPorDoisToques].
-  final _saida = SaidaPorDoisToques(
-    janela: const Duration(seconds: 2),
-    intervaloDeliberado: Duration.zero,
-  );
+  /// Ver [SaidaPorDoisToques] — inclusive para o registro do piso anti-rajada
+  /// que existiu aqui e por que ele não defendia de nada.
+  final _saida = SaidaPorDoisToques();
 
   /// A caminhada do voltar, fora do widget para poder ser testada — ver
   /// [CaminhadaDoVoltar]. As bordas (navegadores, aba, aviso) são estas

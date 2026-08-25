@@ -6,9 +6,9 @@ import 'package:grimorio_de_bolso/features/home/presentation/caminhada_do_voltar
 
 /// O pedido da dona (23/08): "o voltar deve ir SEMPRE até o Seu Dia antes de
 /// sair do app/fechar a aba". Estes testes provam a caminhada inteira, passo
-/// a passo, com o relógio na mão — inclusive as duas garantias que só valem
-/// na web (rajada nunca sai; sem para onde ir, não sai) e a paridade do
-/// celular, onde sair é só ir para segundo plano.
+/// a passo, com o relógio na mão — inclusive a garantia que só vale na web
+/// (sem para onde ir, o voltar fica e DIZ isso) e a paridade do celular, onde
+/// sair é só ir para segundo plano.
 class _SaidaFalsa extends SaidaDaAba {
   _SaidaFalsa({this.pode = true});
 
@@ -75,11 +75,7 @@ void main() {
         },
         mostrarAviso: () => avisos++,
         mostrarFimDaCaminhada: () => finsDeCaminhada++,
-        regra: regra ??
-            SaidaPorDoisToques(
-              janela: const Duration(seconds: 4),
-              intervaloDeliberado: const Duration(milliseconds: 800),
-            ),
+        regra: regra ?? SaidaPorDoisToques(janela: const Duration(seconds: 4)),
         vivo: () => true,
         saida: saidaUsada,
         agora: () => relogio,
@@ -185,24 +181,7 @@ void main() {
     expect(palco.saida.saidas, 1);
   });
 
-  testWidgets('6. rajada de deslizadas NUNCA sai (a regressão da aba)',
-      (tester) async {
-    final palco = await montar(tester);
-
-    // Três segundos de deslizadas a cada 150ms, do jeito que o gesto do
-    // Android repete.
-    await palco.caminhada.resolver();
-    for (var i = 0; i < 20; i++) {
-      palco.avancar(const Duration(milliseconds: 150));
-      await palco.caminhada.resolver();
-    }
-    await tester.pumpAndSettle();
-
-    expect(palco.saida.saidas, 0, reason: 'rajada não fecha aba');
-    expect(palco.avisos(), 1, reason: 'o aviso não vira spam');
-  });
-
-  testWidgets('7. sem para onde ir, o voltar fica no Seu Dia e DIZ isso',
+  testWidgets('6. sem para onde ir, o voltar fica no Seu Dia e DIZ isso',
       (tester) async {
     // O caso da web, agora sempre: `podeSair()` é `false`. Nenhuma página
     // fecha uma aba que não abriu, e prometer "toque de novo para sair" ali
@@ -221,7 +200,7 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('11. na web, uma rajada inteira no Seu Dia nunca sai',
+  testWidgets('7. na web, uma rajada inteira no Seu Dia nunca sai',
       (tester) async {
     // A regressão da dona, encenada com a saída que a web tem de verdade
     // (`podeSair` falso): 20 deslizadas seguidas não podem fechar a aba nem
@@ -243,10 +222,7 @@ void main() {
       (tester) async {
     final palco = await montar(
       tester,
-      regra: SaidaPorDoisToques(
-        janela: const Duration(seconds: 2),
-        intervaloDeliberado: Duration.zero,
-      ),
+      regra: SaidaPorDoisToques(),
     );
 
     await palco.caminhada.resolver();
