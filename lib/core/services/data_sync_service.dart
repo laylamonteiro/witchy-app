@@ -310,8 +310,25 @@ class DataSyncService {
     );
   }
 
-  /// Sincroniza todos os dados com tratamento de conflitos
+  /// A varredura em voo (null = nenhuma). É a trava de reentrada do
+  /// [syncAll]: na web TUDO roda na thread da interface (o SQLite wasm
+  /// inclusive), e duas varreduras simultâneas — o retorno à aba disparando
+  /// uma com outra ainda rodando — disputavam o mesmo banco e travavam a
+  /// tela (visto no preview, 23/08). Quem chega com uma em voo pega carona
+  /// no resultado dela em vez de abrir outra.
+  Future<SyncResult>? _varreduraEmVoo;
+
+  /// Sincroniza todos os dados com tratamento de conflitos.
   Future<SyncResult> syncAll({
+    ConflictResolution? resolution,
+  }) {
+    return _varreduraEmVoo ??=
+        _syncAll(resolution: resolution).whenComplete(() {
+      _varreduraEmVoo = null;
+    });
+  }
+
+  Future<SyncResult> _syncAll({
     ConflictResolution? resolution,
   }) async {
     if (!isReady) {

@@ -1,7 +1,5 @@
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
-import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../cycle_reading/presentation/pages/cycle_reading_intro_page.dart';
@@ -13,6 +11,9 @@ import '../../../../core/navigation/app_deep_link.dart';
 import '../../../../core/navigation/section_reset_notifier.dart';
 import '../../../../core/providers/mascot_provider.dart';
 import '../../../../core/theme/grimoire_colors.dart';
+import '../../../../core/navigation/observador_de_rotas_raiz.dart';
+import '../../../../core/utils/saida_por_dois_toques.dart';
+import '../caminhada_do_voltar.dart';
 import '../../../../core/utils/um_de_cada_vez.dart';
 import '../../../../core/widgets/mascot/cat_chat_bubble.dart';
 import '../../../../core/widgets/mascot/draggable_cat_mascot.dart';
@@ -32,9 +33,31 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   /// inteira, voltando para cá).
   int _selectedIndex = 0;
 
-  /// Momento do último toque em "voltar" na raiz de uma aba — usado para o
-  /// padrão de sair do app apenas com dois toques seguidos.
-  DateTime? _lastBackPress;
+  /// A regra do "voltar de novo para sair".
+  ///
+  /// NA WEB ELA NÃO É MAIS CONSULTADA: o passo 4 da caminhada termina antes,
+  /// porque `SaidaDaAbaReal.podeSair()` é `false` na web — o app não fecha a
+  /// aba que não abriu (ver [SaidaDaAbaReal]). Fica valendo no celular, onde
+  /// sair é ir para segundo plano: reversível, um toque traz de volta, e o
+  /// toque duplo rápido de sempre é o esperado.
+  ///
+  /// Ver [SaidaPorDoisToques] — inclusive para o registro do piso anti-rajada
+  /// que existiu aqui e por que ele não defendia de nada.
+  final _saida = SaidaPorDoisToques();
+
+  /// A caminhada do voltar, fora do widget para poder ser testada — ver
+  /// [CaminhadaDoVoltar]. As bordas (navegadores, aba, aviso) são estas
+  /// aqui; a decisão é dela.
+  late final CaminhadaDoVoltar _caminhada = CaminhadaDoVoltar(
+    raiz: () => mounted ? Navigator.maybeOf(context) : null,
+    abaAtiva: () => _navigatorKeys[_selectedIndex].currentState,
+    abaAtual: () => _selectedIndex,
+    irParaAba: (indice) => setState(() => _selectedIndex = indice),
+    mostrarAviso: _avisarQueOProximoSai,
+    mostrarFimDaCaminhada: _avisarQueJaEstaNoSeuDia,
+    regra: _saida,
+    vivo: () => mounted,
+  );
 
   /// Um voltar por vez.
   ///
@@ -99,6 +122,10 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     DeepLinkService.instance.pending.addListener(_onDeepLink);
+    // Uma tela cheia que abre ou fecha na raiz caduca o aviso de saída: o
+    // framework a desempilha sem passar por aqui, e um aviso dado antes
+    // dela sairia do app sem nada na tela. Ver [mudancasDaPilhaRaiz].
+    mudancasDaPilhaRaiz.addListener(_esquecerASaida);
     // Link pendente de um toque em notificação que ABRIU o app.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _onDeepLink();
@@ -156,6 +183,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   @override
   void dispose() {
     DeepLinkService.instance.pending.removeListener(_onDeepLink);
+    mudancasDaPilhaRaiz.removeListener(_esquecerASaida);
     WidgetsBinding.instance.removeObserver(this);
     for (final notifier in _resetNotifiers) {
       notifier.dispose();
@@ -188,6 +216,10 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   }
 
   void _onTabTapped(int index) {
+    // Trocar de aba pela barra também caduca o aviso de saída: quem
+    // navegou mudou de ideia, e o voltar seguinte tem de recomeçar a
+    // caminhada em vez de encontrar uma saída armada.
+    _esquecerASaida();
     if (index == _selectedIndex) {
       // Re-toque na aba já selecionada: volta para a raiz da seção
       // (desempilha as páginas de detalhe e reseta a TabBar interna).
@@ -210,60 +242,38 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   ///
   /// Esta camada só faz uma coisa: garantir que a decisão aconteça UMA vez
   /// por vez. Ver [_voltar].
-  Future<void> _handleSystemBack() => _voltar.executar(_resolverOVoltar);
+  Future<void> _handleSystemBack() => _voltar.executar(_caminhada.resolver);
 
-  Future<void> _resolverOVoltar() async {
-    // 1. Rotas empilhadas no Navigator raiz (tela cheia sobre a home).
-    //
-    // O `canPop` NÃO é uma proteção contra recursão em geral — era isso que
-    // o comentário antigo dizia, e é falso. O que ele faz é evitar UM caso:
-    // com a home sozinha na pilha raiz, `maybePop` consultaria o `PopScope`
-    // desta própria página (`canPop: false`), que chamaria este método de
-    // novo, para sempre. Qualquer outro `PopScope` no Navigator raiz que
-    // devolva o voltar para cá volta a fechar o ciclo — quem impede isso é
-    // [_voltar], não esta linha.
-    final rootNavigator = Navigator.of(context);
-    if (rootNavigator.canPop()) {
-      await rootNavigator.maybePop();
-      return;
-    }
+  void _esquecerASaida() => _saida.esquecer();
 
-    // 2. Páginas de detalhe dentro da aba ativa. maybePop (e não pop)
-    // respeita o PopScope interno das páginas — ex.: o stepper da lição
-    // volta passo a passo antes de sair, e a Escrita Livre salva ao sair.
-    final tabNavigator = _navigatorKeys[_selectedIndex].currentState;
-    if (tabNavigator != null && await tabNavigator.maybePop()) {
-      return;
-    }
+  /// "Toque de novo para sair" — com a duração da PRÓPRIA janela da regra:
+  /// um aviso que some antes de a janela fechar deixaria a saída armada
+  /// com a tela já limpa, que é o jeito de sair sem querer.
+  void _avisarQueOProximoSai() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(AppLocalizations.of(context).commonBackAgainToExit),
+        duration: _saida.janela,
+      ),
+    );
+  }
+
+  /// "Você já está no Seu Dia" — o fim da caminhada na web, onde o voltar não
+  /// sai do app.
+  ///
+  /// Sem fila de propósito (`removeCurrentSnackBar` antes): numa sequência de
+  /// voltares a mensagem é sempre a mesma, e cinco delas enfileiradas ficariam
+  /// dez segundos na tela depois de a Bruxa ter parado de deslizar.
+  void _avisarQueJaEstaNoSeuDia() {
     if (!mounted) return;
-
-    // 3. Raiz de outra aba: voltar leva à tela principal (Seu Dia) — nunca
-    // fecha o app a partir daqui.
-    if (_selectedIndex != 0) {
-      setState(() => _selectedIndex = 0);
-      return;
-    }
-
-    // 4. Seu Dia. Na web não existe "sair do app": o que existe embaixo da
-    // primeira tela é a página anterior do navegador — depois de um login
-    // social, a do Google. Sair dali parece o app ter quebrado, não ter
-    // fechado. Quem quer sair fecha a aba.
-    if (kIsWeb) return;
-
-    // No celular, sair só com toque duplo.
-    final now = DateTime.now();
-    if (_lastBackPress == null ||
-        now.difference(_lastBackPress!) > const Duration(seconds: 2)) {
-      _lastBackPress = now;
-      ScaffoldMessenger.of(context).showSnackBar(
+    ScaffoldMessenger.of(context)
+      ..removeCurrentSnackBar()
+      ..showSnackBar(
         SnackBar(
-          content: Text(AppLocalizations.of(context).commonBackAgainToExit),
+          content: Text(AppLocalizations.of(context).commonAlreadyAtYourDay),
           duration: const Duration(seconds: 2),
         ),
       );
-      return;
-    }
-    SystemNavigator.pop();
   }
 
   Widget _buildTabNavigator(int index) {

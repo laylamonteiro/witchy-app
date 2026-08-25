@@ -48,6 +48,16 @@ class CyclePeriodPickerSheet extends StatefulWidget {
   /// `Navigator.pop`.
   final ValueChanged<({DateTime start, DateTime end})>? onConfirm;
 
+  /// Avisa a cada mudança de seleção — janela pronta, ou `null` enquanto ela
+  /// está pela metade (só o primeiro dia tocado, ou longa demais).
+  ///
+  /// Quando este aviso existe, o botão de confirmar SOME: quem escuta a
+  /// seleção não precisa de um "usar este período", porque escolher no
+  /// calendário já é escolher. Foi assim que os botões de verdade — abrir a
+  /// leitura e gerar a leitura — puderam subir para o lugar dele (decisão da
+  /// dona, 24/08).
+  final ValueChanged<({DateTime start, DateTime end})?>? onSelectionChanged;
+
   const CyclePeriodPickerSheet({
     super.key,
     required this.dailyCounts,
@@ -59,6 +69,7 @@ class CyclePeriodPickerSheet extends StatefulWidget {
     this.initialRange,
     this.embedded = false,
     this.onConfirm,
+    this.onSelectionChanged,
   });
 
   @override
@@ -171,6 +182,7 @@ class _CyclePeriodPickerSheetState extends State<CyclePeriodPickerSheet> {
         _end = day;
       }
     });
+    _avisarSelecao();
   }
 
   /// Um dia nunca além do último escolhível (hoje) nem antes do primeiro.
@@ -216,6 +228,7 @@ class _CyclePeriodPickerSheetState extends State<CyclePeriodPickerSheet> {
       // mês deixaria a seleção fora da vista.
       _visibleMonth = DateTime(janela.start.year, janela.start.month);
     });
+    _avisarSelecao();
   }
 
   void _limparSelecao() {
@@ -223,6 +236,7 @@ class _CyclePeriodPickerSheetState extends State<CyclePeriodPickerSheet> {
       _start = null;
       _end = null;
     });
+    _avisarSelecao();
   }
 
   Widget _buildPresets(AppLocalizations l10n) {
@@ -337,25 +351,42 @@ class _CyclePeriodPickerSheetState extends State<CyclePeriodPickerSheet> {
             const SizedBox(height: 8),
             _buildSummary(l10n),
             const SizedBox(height: 8),
-            ElevatedButton(
-              onPressed: _canConfirm ? _confirm : null,
-              child: Text(l10n.cycleReadingCustomPeriodConfirm),
-            ),
+            // Sem "usar este periodo" quando quem chama escuta a selecao:
+            // escolher no calendario JA e escolher, e o lugar deste botao
+            // passou a ser dos botoes de verdade (abrir e gerar a leitura).
+            if (widget.onSelectionChanged == null)
+              ElevatedButton(
+                onPressed: _canConfirm ? _confirm : null,
+                child: Text(l10n.cycleReadingCustomPeriodConfirm),
+              ),
           ],
         ),
       ),
     );
   }
 
-  void _confirm() {
+  /// A janela pronta, ou `null` enquanto a selecao esta pela metade.
+  ({DateTime start, DateTime end})? get _janelaSelecionada {
+    if (!_canConfirm) return null;
     final inicio = _start!;
     final fim = _end ?? inicio;
-    final janela = (
+    return (
       start: DateTime(inicio.year, inicio.month, inicio.day),
       // Fim EXCLUSIVO: o dia escolhido e vivido por inteiro, entao a janela
       // vai ate a meia-noite seguinte.
       end: DateTime(fim.year, fim.month, fim.day).add(const Duration(days: 1)),
     );
+  }
+
+  /// Conta a quem escuta o que esta selecionado agora. Fora do `setState` de
+  /// proposito: quem escuta reconstroi a propria tela, e chamar isso durante
+  /// a construcao desta seria pedir dois `setState` aninhados.
+  void _avisarSelecao() =>
+      widget.onSelectionChanged?.call(_janelaSelecionada);
+
+  void _confirm() {
+    final janela = _janelaSelecionada;
+    if (janela == null) return;
     final aoConfirmar = widget.onConfirm;
     if (aoConfirmar != null) {
       aoConfirmar(janela);

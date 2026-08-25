@@ -324,9 +324,11 @@ class CycleReadingService {
     bool regenerate = false,
     String? userName,
   }) async {
-    if (regenerate && !credit.canRegenerate) {
-      throw StateError('cycle reading: regeneration limit reached');
-    }
+    // Não há mais teto de regerações (decisão da dona, 24/08): quem já pagou
+    // pela janela gera quantas vezes quiser, e cada geração da MESMA janela
+    // substitui o relatório anterior. A trava que morava aqui estourava um
+    // StateError na cara de quem tocasse o botão — e o botão ainda oferecia
+    // "-1 restante(s)". Ver [CycleReadingModel.canRegenerate].
 
     final material = await _composer.compose(
       userId: userId,

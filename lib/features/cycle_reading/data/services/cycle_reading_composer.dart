@@ -412,6 +412,78 @@ class CycleReadingComposer {
         _ => '',
       };
 
+  /// A assinatura de CONTEÚDO de cada tabela: as colunas que dizem "este
+  /// registro é o mesmo que aquele".
+  ///
+  /// Serve para a contagem não somar duplicatas. Duas linhas com o mesmo
+  /// conteúdo E o mesmo instante são o mesmo registro que entrou duas vezes —
+  /// tipicamente uma cópia trazida pela sincronização, que nasce com `id`
+  /// novo e por isso escapa de qualquer contagem por chave primária. Já a
+  /// mesma gratidão escrita de novo noutro dia tem instante diferente, então
+  /// continua valendo por duas: o instante entra na assinatura de propósito.
+  static const Map<String, List<String>> _assinaturaDeConteudo = {
+    'dreams': ['title', 'content'],
+    'gratitudes': ['title', 'content'],
+    'desires': ['title', 'description'],
+    'affirmations': ['text'],
+    'free_writings': ['title', 'content'],
+    'rune_readings': ['question', 'spread_type', 'reading_data'],
+    'oracle_readings': ['spread_type', 'reading_data'],
+    'pendulum_consultations': ['question', 'answer'],
+    'tarot_readings': ['signature'],
+    'ritual_logs': ['ritual_id', 'notes'],
+    'guided_ritual_logs': ['ritual_id', 'event_date', 'notes'],
+    'spells': ['name', 'purpose'],
+    'sigils': ['intention', 'image_path'],
+  };
+
+  /// A expressão que o `COUNT(DISTINCT ...)` recebe: instante + conteúdo,
+  /// costurados. `COALESCE` porque coluna nula viraria a expressão inteira
+  /// nula, e aí o `DISTINCT` engoliria registros que só têm um campo vazio.
+  static String _chaveDeDeduplicacao(String table) {
+    final colunas = _assinaturaDeConteudo[table];
+    final tempo = _timeColumnOf(table);
+    if (colunas == null || colunas.isEmpty) return tempo;
+    final partes = [
+      "CAST($tempo AS TEXT)",
+      for (final c in colunas) "COALESCE($c, '')",
+    ];
+    return partes.join(" || '' || ");
+  }
+
+  /// O nome da entidade de sincronização de cada tabela — a chave das
+  /// lápides (`sync_tombstones.entity`, que guarda o `name` do [SyncEntity]).
+  ///
+  /// Sem lápide não há como saber que a pessoa apagou algo: a exclusão é
+  /// física nas tabelas de registro, e a lápide é o único rastro. Ela importa
+  /// aqui porque a sincronização pode trazer de volta uma linha apagada
+  /// noutro aparelho antes de a lápide ser aplicada — e nesse intervalo a
+  /// contagem somava um registro que a pessoa já tinha jogado fora.
+  ///
+  /// `guided_ritual_logs` fica de fora porque não tem entidade de sync.
+  static const Map<String, String> _entidadeDeSync = {
+    'dreams': 'dreams',
+    'gratitudes': 'gratitudes',
+    'desires': 'desires',
+    'affirmations': 'affirmations',
+    'free_writings': 'freeWritings',
+    'rune_readings': 'runeReadings',
+    'oracle_readings': 'oracleReadings',
+    'pendulum_consultations': 'pendulumConsultations',
+    'tarot_readings': 'tarotReadings',
+    'ritual_logs': 'ritualLogs',
+    'spells': 'spells',
+    'sigils': 'sigils',
+  };
+
+  /// O filtro que tira da contagem o que já tem lápide.
+  static String _filtroDeApagados(String table) {
+    final entidade = _entidadeDeSync[table];
+    if (entidade == null) return '';
+    return ' AND id NOT IN (SELECT item_id FROM sync_tombstones '
+        "WHERE user_id = ? AND entity = '$entidade')";
+  }
+
   /// Quantos registros a pessoa fez em CADA dia da janela — o mapa de calor
   /// do seletor de período.
   ///
@@ -467,15 +539,22 @@ class CycleReadingComposer {
     for (final table in _recordTables) {
       final timeColumn = _timeColumnOf(table);
       final preloadedFilter = _ownRecordsFilter(table);
+      final apagadosFilter = _filtroDeApagados(table);
       try {
         final rows = await db.rawQuery(
-          'SELECT COUNT(*) AS total FROM $table '
+          // DISTINCT sobre a assinatura de conteúdo, e não `COUNT(*)`: a
+          // contagem é o que a pessoa vê antes de comprar a leitura, e somar
+          // a mesma coisa duas vezes promete um material que não existe.
+          'SELECT COUNT(DISTINCT ${_chaveDeDeduplicacao(table)}) AS total '
+          'FROM $table '
           'WHERE user_id = ? AND $timeColumn >= ? AND $timeColumn < ?'
-          '$preloadedFilter',
+          '$preloadedFilter$apagadosFilter',
           [
             userId,
             start.millisecondsSinceEpoch,
             end.millisecondsSinceEpoch,
+            // O `user_id` do filtro de lápides, quando ele existe.
+            if (apagadosFilter.isNotEmpty) userId,
           ],
         );
         total += (rows.first['total'] as int?) ?? 0;

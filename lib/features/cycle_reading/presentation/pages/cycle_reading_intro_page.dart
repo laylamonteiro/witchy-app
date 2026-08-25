@@ -111,6 +111,19 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
       context.read<AuthProvider>().currentUser.plan ==
       SubscriptionPlan.lifetime;
 
+  /// A leitura já gerada para ESTA janela, casada dia a dia.
+  ///
+  /// O `_existing` vem de uma busca por início + tipo, então uma janela que
+  /// começa no mesmo dia mas termina noutro casaria — e "abrir minha leitura"
+  /// abriria um relatório de outro período. Aqui as duas pontas têm de bater.
+  CycleReadingModel? get _leituraDestaJanela {
+    final existing = _existing;
+    if (existing == null || !existing.isGenerated) return null;
+    final mesmoInicio = existing.periodStart.isAtSameMomentAs(_period.start);
+    final mesmoFim = existing.periodEnd.isAtSameMomentAs(_period.end);
+    return mesmoInicio && mesmoFim ? existing : null;
+  }
+
   bool get _lifetimeCoversThisWindow =>
       _hasLifetime && CycleReadingService.lifetimeCovers(_periodType);
 
@@ -122,6 +135,14 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
   /// restore da loja não devolve avulso, então este registro é o único
   /// caminho de volta se a gravação do crédito falhar depois da cobrança.
   final _compras = CompraPendenteStore();
+
+  /// A seleção do calendário está fechada (dois dias marcados)?
+  ///
+  /// Nasce `true` porque a tela abre com uma janela sugerida já marcada. Fica
+  /// `false` no intervalo entre o primeiro e o segundo toque no calendário —
+  /// e é só nesse intervalo que "gerar minha leitura" fica apagado, porque
+  /// gerar sem janela fechada não quer dizer nada.
+  bool _selecaoCompleta = true;
 
   bool _isLoading = true;
   bool _isWorking = false;
@@ -242,7 +263,23 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
   /// só depois disto que a oferta e o resto da tela aparecem. O serviço
   /// recusa apenas o que a leitura não consegue fazer; cruzar um período já
   /// lido volta como AVISO, não como porta fechada.
-  Future<void> _escolherPeriodo(({DateTime start, DateTime end}) janela) async {
+  /// O calendário mudou. Janela pela metade apaga o gerar; janela fechada
+  /// vira a janela em foco, sem rolar a tela — os botões estão logo abaixo do
+  /// calendário agora, então trazer a pessoa para outro lugar seria tirá-la
+  /// de onde ela acabou de decidir.
+  void _aoMudarSelecao(({DateTime start, DateTime end})? janela) {
+    if (janela == null) {
+      if (_selecaoCompleta) setState(() => _selecaoCompleta = false);
+      return;
+    }
+    setState(() => _selecaoCompleta = true);
+    _escolherPeriodo(janela, rolar: false);
+  }
+
+  Future<void> _escolherPeriodo(
+    ({DateTime start, DateTime end}) janela, {
+    bool rolar = true,
+  }) async {
     if (_isWorking) return;
     final l10n = AppLocalizations.of(context);
     final userId = context.read<AuthProvider>().currentUser.id;
@@ -267,7 +304,7 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
       _isLoading = true;
     });
     await _load();
-    _mostrarAOferta();
+    if (rolar) _mostrarAOferta();
   }
 
   /// Relê a lista de leituras — depois de gerar uma, ela mudou.
@@ -508,7 +545,7 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
         regenerate: regenerate,
         // Com o nome no material, a narrativa fala DELA em terceira pessoa
         // (decisão da dona, 23/08); sem nome no perfil, segue com "você".
-        userName: user.displayName,
+        userName: user.displayName?.split(' ').first,
       );
       if (!mounted) return;
       setState(() => _existing = result.reading);
@@ -604,10 +641,14 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
             // sobre você" e "o que se anuncia" saem pobres — pedir depois da
             // decisão de compra é pedir tarde.
             _buildConviteDoMapa(l10n),
+            // "Suas leituras" acima do cartão da lunação (decisão da dona,
+            // 24/08): quem já tem leitura vem quase sempre reler uma, e
+            // fazê-la passar por baixo da oferta toda vez é cobrar pedágio
+            // de quem já comprou.
+            _buildLeiturasRecentes(l10n),
             Container(key: _ancoraDaOferta),
             _buildOfferCard(l10n),
             _buildPrivacidade(l10n),
-            _buildLeiturasRecentes(l10n),
           ],
         ),
       ),
@@ -640,7 +681,10 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
             // antigo do calendário.
             key: ValueKey(_period),
             embedded: true,
-            onConfirm: _escolherPeriodo,
+            // Sem `onConfirm`: o botão "usar este período" saiu, e a
+            // seleção no calendário já vale como escolha (decisão da dona,
+            // 24/08). Ver [CyclePeriodPickerSheet.onSelectionChanged].
+            onSelectionChanged: _aoMudarSelecao,
             initialRange: _period,
             dailyCounts: densidade,
             firstDate: primeiroDia,
@@ -662,6 +706,12 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
                     ),
               ),
             ),
+          // Os botões de verdade, no lugar onde ficava o "usar este período"
+          // (decisão da dona, 24/08): decidir o período e agir sobre ele
+          // acontecem no mesmo lugar, sem a pessoa ter de descer a tela para
+          // encontrar o que fazer com a escolha que acabou de tomar.
+          const SizedBox(height: 12),
+          _buildActions(l10n),
         ],
       ),
     );
@@ -771,10 +821,7 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
                 padding: const EdgeInsets.symmetric(vertical: 10),
                 child: Row(
                   children: [
-                    Text(
-                      leitura.isWeekly ? '🌤️' : '🌙',
-                      style: const TextStyle(fontSize: 20),
-                    ),
+                    const Text('🔮', style: TextStyle(fontSize: 20)),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Column(
@@ -1021,7 +1068,7 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('🌙✨', style: TextStyle(fontSize: 28)),
+              const Text('🔮✨', style: TextStyle(fontSize: 28)),
               const SizedBox(width: 10),
               Expanded(
                 child: Column(
@@ -1109,7 +1156,6 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
             // com o CTA fechando o cartão.
             _sumarioDaLeitura(l10n),
             const SizedBox(height: 16),
-            _buildActions(l10n),
           ],
         ],
       ),
@@ -1161,7 +1207,7 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
           ),
           const SizedBox(height: 12),
           ElevatedButton.icon(
-            onPressed: () => _generate(existing),
+            onPressed: _selecaoCompleta ? () => _generate(existing) : null,
             icon: const Icon(Icons.auto_awesome, size: 18),
             label: Text(l10n.cycleReadingGenerate),
           ),
@@ -1169,33 +1215,38 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
       );
     }
 
-    // Leitura desta janela já gerada: abrir (e regenerar, se ainda der).
-    if (existing != null && existing.isGenerated) {
-      final remaining =
-          CycleReadingModel.maxRegenerations - existing.regenerationsUsed;
+    // Leitura desta janela já gerada: só abrir.
+    //
+    // O botão "Gerar de novo (N restantes)" saiu daqui (decisão da dona,
+    // 24/08). Contar tentativas na cara de quem já pagou é mesquinho, e o
+    // contador ainda vazava para negativo — "-1 restante(s)" na tela. Quem
+    // quiser um texto novo para ESTA janela gera de novo pelo caminho normal
+    // (o botão de gerar, logo abaixo, para quem tem o Vitalício), e a geração
+    // substitui o relatório que já existe. Quem escolher OUTRO período ganha
+    // uma leitura nova, sem substituir nada.
+    // "Abrir minha leitura" só aparece com uma leitura desta janela EXATA
+    // (decisão da dona, 24/08) — ver [_leituraDestaJanela]. Um relatório de
+    // outro período atrás deste botão seria abrir a coisa errada.
+    final destaJanela = _leituraDestaJanela;
+    if (destaJanela != null) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           ElevatedButton.icon(
-            onPressed: () => _abrirRelatorio(existing),
+            onPressed: () => _abrirRelatorio(destaJanela),
             icon: const Icon(Icons.menu_book, size: 18),
             label: Text(l10n.cycleReadingOpenReport),
           ),
-          const SizedBox(height: 8),
-          if (existing.canRegenerate)
+          if (_lifetimeCoversThisWindow) ...[
+            const SizedBox(height: 8),
             OutlinedButton.icon(
-              onPressed: () => _generate(existing, regenerate: true),
-              icon: const Icon(Icons.refresh, size: 18),
-              label: Text(l10n.cycleReadingRegenerate(remaining)),
-            )
-          else
-            Text(
-              l10n.cycleReadingRegenerateLimit,
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: context.gc.textSecondary,
-                  ),
+              onPressed: _selecaoCompleta
+                  ? () => _generate(destaJanela, regenerate: true)
+                  : null,
+              icon: const Icon(Icons.auto_awesome, size: 18),
+              label: Text(l10n.cycleReadingGenerate),
             ),
+          ],
         ],
       );
     }
@@ -1207,7 +1258,9 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
       return SizedBox(
         width: double.infinity,
         child: ElevatedButton.icon(
-          onPressed: _claimLifetime,
+          // Apagado enquanto a janela está pela metade: gerar sem as duas
+          // pontas marcadas não quer dizer nada.
+          onPressed: _selecaoCompleta ? _claimLifetime : null,
           icon: const Icon(Icons.auto_awesome, size: 18),
           label: Text(l10n.cycleReadingGenerate),
         ),

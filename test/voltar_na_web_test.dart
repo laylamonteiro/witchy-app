@@ -2,8 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:grimorio_de_bolso/core/utils/saida_por_dois_toques.dart';
 import 'package:grimorio_de_bolso/core/utils/um_de_cada_vez.dart';
-import 'package:grimorio_de_bolso/core/widgets/guarda_de_voltar_web.dart';
 
 /// O pedido que originou tudo isto foi "voltar nunca sai do app". Na web,
 /// voltar é o histórico do navegador, e depois de um login social a entrada
@@ -12,8 +12,9 @@ import 'package:grimorio_de_bolso/core/widgets/guarda_de_voltar_web.dart';
 /// A tentativa anterior (WebBackKeeper) foi revertida porque entrou em
 /// RECURSÃO com o tratador de voltar da home: um `PopScope` que recusa o pop
 /// chama o tratador, o tratador chama `maybePop`, o `maybePop` chama o
-/// `PopScope` de novo. Estes testes cobrem os dois lados do conserto — o
-/// portão que quebra o ciclo e o guarda que segura a saída.
+/// `PopScope` de novo. Estes testes guardam o portão que quebra esse ciclo, e
+/// a regra do toque duplo — que hoje só o celular alcança, porque na web o
+/// passo 4 da caminhada termina antes, em "você já está no Seu Dia".
 void main() {
   group('um de cada vez', () {
     test('a segunda chamada durante a primeira é descartada', () async {
@@ -97,53 +98,54 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  group('guarda de voltar na web', () {
-    // A pergunta é comportamental de propósito: `maybePop` devolve `true`
-    // tanto quando desempilha quanto quando o PopScope RECUSA — quem
-    // assertasse o retorno estaria testando o Flutter, e errado. O que
-    // importa é qual tela ficou na frente.
-    Future<void> montar(WidgetTester tester,
-        {required bool naWeb, required GlobalKey<NavigatorState> chave}) async {
-      await tester.pumpWidget(
-        MaterialApp(
-          navigatorKey: chave,
-          home: const Scaffold(body: Text('DE ONDE VEIO')),
-        ),
+  group('sair só com um voltar deliberado', () {
+    final t0 = DateTime(2026, 8, 23, 18, 0, 0);
+
+    test('o primeiro voltar na raiz avisa, não sai', () {
+      final saida = SaidaPorDoisToques();
+      expect(saida.registrar(t0), DecisaoDeSaida.avisar);
+      expect(saida.avisando, isTrue);
+    });
+    test('o segundo voltar deliberado sai', () {
+      final saida = SaidaPorDoisToques();
+      saida.registrar(t0);
+      expect(
+        saida.registrar(t0.add(const Duration(milliseconds: 900))),
+        DecisaoDeSaida.sair,
       );
-      unawaited(chave.currentState!.push(
-        MaterialPageRoute<void>(
-          builder: (_) => GuardaDeVoltarWeb(
-            naWeb: naWeb,
-            child: const Scaffold(body: Text('ESPERANDO')),
-          ),
-        ),
-      ));
-      await tester.pumpAndSettle();
-      expect(find.text('ESPERANDO'), findsOneWidget);
-    }
-
-    testWidgets('na web, o voltar não tira a pessoa da tela', (tester) async {
-      final chave = GlobalKey<NavigatorState>();
-      await montar(tester, naWeb: true, chave: chave);
-
-      await chave.currentState!.maybePop();
-      await tester.pumpAndSettle();
-
-      expect(find.text('ESPERANDO'), findsOneWidget);
-      expect(find.text('DE ONDE VEIO'), findsNothing);
     });
 
-    testWidgets('fora da web, o voltar volta normalmente', (tester) async {
-      // No celular o voltar na porta de entrada é como se fecha o app. Um
-      // guarda ligado aqui prenderia a pessoa sem saída nenhuma.
-      final chave = GlobalKey<NavigatorState>();
-      await montar(tester, naWeb: false, chave: chave);
+    test('depois da janela, o aviso caduca e tudo recomeça', () {
+      final saida = SaidaPorDoisToques();
+      saida.registrar(t0);
+      expect(
+        saida.registrar(t0.add(const Duration(seconds: 5))),
+        DecisaoDeSaida.avisar,
+      );
+    });
+    test('no celular o toque duplo rápido sai', () {
+      // Sair no celular é ir para segundo plano — reversível. Ali o padrão de
+      // sempre (dois toques rápidos) vale, e é o único lugar que chega aqui:
+      // na web o passo 4 termina antes, em "você já está no Seu Dia".
+      final saida = SaidaPorDoisToques();
+      expect(saida.registrar(t0), DecisaoDeSaida.avisar);
+      expect(
+        saida.registrar(t0.add(const Duration(milliseconds: 300))),
+        DecisaoDeSaida.sair,
+      );
+    });
 
-      await chave.currentState!.maybePop();
-      await tester.pumpAndSettle();
-
-      expect(find.text('DE ONDE VEIO'), findsOneWidget);
-      expect(find.text('ESPERANDO'), findsNothing);
+    test('caminhar (desempilhar, trocar de aba) esquece o aviso', () {
+      // Sem isto, um aviso dado no Seu Dia continuaria valendo depois de a
+      // pessoa navegar, e o voltar seguinte sairia de dentro de outra tela.
+      final saida = SaidaPorDoisToques();
+      saida.registrar(t0);
+      saida.esquecer();
+      expect(saida.avisando, isFalse);
+      expect(
+        saida.registrar(t0.add(const Duration(milliseconds: 900))),
+        DecisaoDeSaida.avisar,
+      );
     });
   });
 }

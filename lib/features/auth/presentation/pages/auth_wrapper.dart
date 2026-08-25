@@ -8,12 +8,14 @@ import '../../../../core/navigation/janela_de_login.dart';
 import '../../../../core/navigation/recomeco.dart';
 import 'welcome_page.dart';
 import '../../../../features/home/presentation/pages/home_page.dart';
-import '../../../../core/widgets/guarda_de_voltar_web.dart';
 import '../../../../core/widgets/splash_screen.dart';
 
 /// Widget wrapper que gerencia o fluxo de autenticação
 /// Decide se mostra a tela de boas-vindas ou a home
 class AuthWrapper extends StatelessWidget {
+  /// Último estado de sessão que virou linha de log — ver o uso abaixo.
+  static bool? _ultimoEstadoLogado;
+
   /// Se deve mostrar splash screen
   final bool showSplash;
 
@@ -26,21 +28,26 @@ class AuthWrapper extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<AuthProvider>(
       builder: (context, authProvider, child) {
-        // Aguardando inicialização
+        // Aguardando inicialização. Guardado: sem PopScope, um voltar aqui
+        // não acha ninguém que o trate, e o framework cai no
+        // `SystemNavigator.pop()` — que na web DESMONTA o histórico do
+        // motor (ouvinte de popstate desligado, guarda apagada) e deixa o
+        // voltar morto pelo resto da vida do documento.
         if (!authProvider.isInitialized) {
-          return const Scaffold(
-            body: Center(
-              child: CircularProgressIndicator(),
-            ),
-          );
+          return const _Carregando();
         }
 
         // Verificar se tem conta autenticada (email válido)
         final isAuthenticated = authProvider.currentUser.isAuthenticated;
 
-        // Log para debug (fire-and-forget)
-        debugLog('NAV',
-            'AuthWrapper: isAuthenticated=$isAuthenticated, email=${maskEmail(authProvider.currentUser.email)}');
+        // Log só quando o estado MUDA: o Consumer reconstrói a cada aviso
+        // do provider (dezenas de vezes num boot), e uma linha por build
+        // reescrevia o log inteiro no armazenamento sem dizer nada de novo.
+        if (_ultimoEstadoLogado != isAuthenticated) {
+          _ultimoEstadoLogado = isAuthenticated;
+          debugLog('NAV',
+              'AuthWrapper: isAuthenticated=$isAuthenticated, email=${maskEmail(authProvider.currentUser.email)}');
+        }
 
         // Volta do login social com a troca do código ainda em voo: a
         // sessão está a caminho do servidor. Mostrar a tela de login agora
@@ -52,7 +59,7 @@ class AuthWrapper extends StatelessWidget {
           // O guarda é o que faltava aqui: são até 15 segundos logo depois
           // de voltar do Google, e é JUSTAMENTE quando o Google é a entrada
           // anterior do histórico. Um voltar nesta janela saía do app.
-          return const GuardaDeVoltarWeb(child: _EsperandoASessao());
+          return const _EsperandoASessao();
         }
 
         // Este documento é a JANELA DE LOGIN voltando do Google (a marca
@@ -68,9 +75,9 @@ class AuthWrapper extends StatelessWidget {
           AuthProvider.bootCameFromOAuthReturn = false;
           if (fecharSeJanelaDeLogin()) {
             debugLog('NAV', 'AuthWrapper: janela de login fechada');
-            return const GuardaDeVoltarWeb(child: _EsperandoASessao());
+            return const _EsperandoASessao();
           }
-          return const GuardaDeVoltarWeb(child: _JanelaDeLoginConcluida());
+          return const _JanelaDeLoginConcluida();
         }
 
         // A volta do login social com a sessão pronta pelo caminho de
@@ -84,19 +91,18 @@ class AuthWrapper extends StatelessWidget {
           AuthProvider.bootCameFromOAuthReturn = false;
           debugLog('NAV', 'AuthWrapper: sessão do OAuth pronta → recomeço');
           recomecarNaRaiz(); // no-op fora da web
-          return const GuardaDeVoltarWeb(child: _EsperandoASessao());
+          return const _EsperandoASessao();
         }
 
         // Se tem conta logada, ir para home
         if (isAuthenticated) {
           debugLog('NAV', 'AuthWrapper: → HomePage (autenticado)');
-          // O guarda cobre os 2,5s do splash: ele vive na rota raiz SEM
-          // PopScope nenhum (o da Home só nasce depois do pushReplacement),
-          // e um voltar nessa janela fazia o motor sair do documento — na
-          // web, direto para a página anterior do histórico, que depois de
-          // um login social é a do Google.
+          // Os 2,5s do splash vivem na rota raiz SEM `PopScope` nenhum (o da
+          // Home só nasce depois do pushReplacement). Isso já exigiu um guarda
+          // aqui; hoje quem cobre a janela é o `PorteiroDoVoltar`, que é
+          // observador do BINDING e vale mesmo sem árvore montada.
           return showSplash
-              ? const GuardaDeVoltarWeb(child: SplashScreen(child: HomePage()))
+              ? const SplashScreen(child: HomePage())
               : const HomePage();
         }
 
@@ -107,6 +113,21 @@ class AuthWrapper extends StatelessWidget {
       },
     );
   }
+}
+
+/// A roda de carregar das telas de espera do fluxo de entrada.
+///
+/// Existe como widget próprio para poder ser `const` sob o guarda de
+/// voltar: toda tela da raiz precisa de alguém que trate o voltar, senão o
+/// framework o entrega ao `SystemNavigator.pop()` (ver o comentário no
+/// AuthWrapper).
+class _Carregando extends StatelessWidget {
+  const _Carregando();
+
+  @override
+  Widget build(BuildContext context) => const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
 }
 
 /// A espera pela sessão que vem do retorno OAuth.
@@ -135,10 +156,13 @@ class _EsperandoASessao extends StatelessWidget {
 
 /// A janela de login que fez o trabalho e não conseguiu se fechar (o COOP
 /// do Google corta o direito de fechar-se): diz que o Grimório já abriu na
-/// aba original e convida a fechar esta. O "continuar nesta aba" é a saída
-/// de emergência — recomeça o documento limpo (sem o Google no histórico
-/// desta rota de recomeço... o histórico da ABA continua com o Google, mas
-/// quem escolheu ficar sabe onde está).
+/// aba original e convida a fechar esta.
+///
+/// SEM botão de "continuar nesta aba", de propósito (decisão de 23/08,
+/// depois de vê-lo em uso): esta aba foi aberta por script e carrega as
+/// páginas do Google no histórico — usar o app aqui devolve o defeito do
+/// voltar E o Chrome ainda FECHA a aba ao voltar além do início. O app
+/// vive na aba original; esta se encerra.
 class _JanelaDeLoginConcluida extends StatelessWidget {
   const _JanelaDeLoginConcluida();
 
@@ -169,14 +193,6 @@ class _JanelaDeLoginConcluida extends StatelessWidget {
                 l10n.authPopupDoneBody,
                 textAlign: TextAlign.center,
                 style: tema.textTheme.bodyMedium,
-              ),
-              const SizedBox(height: 24),
-              TextButton(
-                onPressed: () {
-                  AuthProvider.bootNaJanelaDeLogin = false;
-                  recomecarNaRaiz();
-                },
-                child: Text(l10n.authPopupContinueHere),
               ),
             ],
           ),
@@ -212,9 +228,7 @@ class RequireAuth extends StatelessWidget {
     final authProvider = context.watch<AuthProvider>();
 
     if (!authProvider.isInitialized) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const _Carregando();
     }
 
     if (!authProvider.currentUser.isAuthenticated) {
@@ -271,16 +285,12 @@ class _GuestOnlyState extends State<GuestOnly> {
     // Antes de a sessão ser lida do disco não se decide nada: mostrar a tela
     // de login por meio segundo e trocar por Home é pior que esperar.
     if (!authProvider.isInitialized) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const _Carregando();
     }
 
     if (authProvider.currentUser.isAuthenticated) {
       _paraHome();
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const _Carregando();
     }
 
     return widget.child;

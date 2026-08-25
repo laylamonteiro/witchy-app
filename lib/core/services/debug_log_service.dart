@@ -65,8 +65,40 @@ class DebugLogService {
     // Também printar no console
     debugPrint('[$tag] $message');
 
-    // Salvar
-    await _saveLogs();
+    await _gravarAgrupado();
+  }
+
+  /// Gravação em voo? E chegou linha nova enquanto ela acontecia?
+  bool _gravando = false;
+  bool _sujo = false;
+
+  /// Agrupa as gravações SEM temporizador.
+  ///
+  /// Cada linha reescrevia as 200 do buffer inteiro no armazenamento, e na
+  /// web isso é na mesma thread da interface: um punhado de linhas seguidas
+  /// (um boot, uma sincronização) travava a tela. Aqui a primeira linha da
+  /// rajada abre UMA gravação; as que chegam durante ela só marcam sujo, e
+  /// ao terminar uma última gravação recolhe todas — duas idas ao
+  /// armazenamento no lugar de vinte.
+  ///
+  /// Sem `Timer` de propósito: um temporizador pendente é gravação que pode
+  /// nunca acontecer (o app fecha antes) e, nos testes de widget, é o
+  /// "A Timer is still pending even after the widget tree was disposed"
+  /// que derrubou dois deles.
+  Future<void> _gravarAgrupado() async {
+    if (_gravando) {
+      _sujo = true;
+      return;
+    }
+    _gravando = true;
+    try {
+      do {
+        _sujo = false;
+        await _saveLogs();
+      } while (_sujo);
+    } finally {
+      _gravando = false;
+    }
   }
 
   /// Salva logs no SharedPreferences
