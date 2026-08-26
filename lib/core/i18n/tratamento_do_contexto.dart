@@ -39,7 +39,8 @@ extension TratamentoDoContexto on BuildContext {
         neutral: neutral,
       );
 
-  /// O chamamento — "Bruxa" / "Bruxo" / "Alma mágica".
+  /// O chamamento — "Bruxa" / "Bruxo", e "Bruxa" também no neutro: é a
+  /// palavra da casa, e serve de nome para quem ainda não escreveu o seu.
   ///
   /// Para as frases em que o ÚNICO trecho marcado é o vocativo: elas ficam
   /// inteiras numa chave só, com um `{tratamento}` no meio, em vez de

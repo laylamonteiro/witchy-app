@@ -81,7 +81,11 @@ void main() {
     test('5. o chamamento entra na frase inteira, sem triplicá-la', () {
       expect(vocativoDe(pt, Gender.feminine), 'Bruxa');
       expect(vocativoDe(pt, Gender.masculine), 'Bruxo');
-      expect(vocativoDe(pt, Gender.neutral), 'Alma mágica');
+      // O neutro também é "Bruxa" — decisão da dona em 26/08, no lugar do
+      // "Alma mágica" que estava aqui. Sem "Anônima" em canto nenhum: quem
+      // ainda não escreveu o próprio nome é chamada pela palavra da casa.
+      expect(vocativoDe(pt, Gender.neutral), 'Bruxa');
+      expect(vocativoDe(es, Gender.neutral), 'Bruja');
 
       expect(pt.authCaptchaTitle('Bruxo'), 'Só um instante, Bruxo');
       expect(pt.salemTourStep1('Bruxo'), contains('Bruxo. Vem comigo!'));
@@ -93,7 +97,6 @@ void main() {
     test('6. português: as três variantes existem e são distintas', () {
       expect(pt.authWelcomeBackFeminine, 'Bem-vinda de volta!');
       expect(pt.authWelcomeBackMasculine, 'Bem-vindo de volta!');
-      expect(pt.profileAnonymousMasculine, 'Bruxo Anônimo');
       expect(pt.diaryGratitudeLabelMasculine, 'Pelo que você é grato hoje?');
       expect(pt.diaryGratitudeLabelFeminine, 'Pelo que você é grata hoje?',
           reason: 'o "grato(a)" de parêntese morreu aqui');
@@ -123,6 +126,21 @@ void main() {
     // feminino ("a página pronta", "a palma aberta", "uma só geração") é
     // correta e fica de fora; onde o casamento é ambíguo, a chave entra em
     // [perdoadas] com o motivo.
+    // Uma chave faz parte de uma família quando as TRÊS variantes existem —
+    // aí ela é a solução, não o problema. É o caso de `witchTreatment*` e de
+    // todo trio `...Feminine/...Masculine/...Neutral`. Conferir a família
+    // inteira (em vez de perdoar pelo sufixo) evita perdoar um `...Masculine`
+    // solto, que seria erro de verdade.
+    bool ehVariante(Map<String, dynamic> arb, String chave) {
+      const sufixos = ['Feminine', 'Masculine', 'Neutral'];
+      for (final sufixo in sufixos) {
+        if (!chave.endsWith(sufixo)) continue;
+        final raiz = chave.substring(0, chave.length - sufixo.length);
+        return sufixos.every((s) => arb.containsKey('$raiz$s'));
+      }
+      return false;
+    }
+
     const perdoadas = <String, String>{
       // "uma verificação rápida ... quase sempre passa sozinha": concorda
       // com a verificação, não com quem espera.
@@ -162,9 +180,7 @@ void main() {
         final presas = <String>[];
         arb.forEach((chave, valor) {
           if (chave.startsWith('@') || valor is! String) return;
-          // As variantes `...Feminine` SÃO o feminino, e `witchTreatment*`
-          // é o próprio chamamento: as duas famílias são a solução.
-          if (chave.endsWith('Feminine')) return;
+          if (ehVariante(arb, chave)) return;
           if (perdoadas.containsKey(chave)) return;
           final achado = marca.firstMatch(valor);
           if (achado != null) presas.add('$chave → "${achado.group(0)}"');

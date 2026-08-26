@@ -90,12 +90,7 @@ class ProfilePage extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
-              user.displayName ??
-                  context.porTratamento(
-                    feminine: AppLocalizations.of(context).profileAnonymousFeminine,
-                    masculine: AppLocalizations.of(context).profileAnonymousMasculine,
-                    neutral: AppLocalizations.of(context).profileAnonymousNeutral,
-                  ),
+              user.displayName ?? context.vocativo,
               style: TextStyle(
                 color: context.gc.textPrimary,
                 fontSize: 22,

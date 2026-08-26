@@ -188,12 +188,7 @@ class SettingsPage extends StatelessWidget {
             Flexible(
               fit: FlexFit.loose,
               child: Text(
-                user.displayName ??
-                    context.porTratamento(
-                      feminine: AppLocalizations.of(context).profileAnonymousFeminine,
-                      masculine: AppLocalizations.of(context).profileAnonymousMasculine,
-                      neutral: AppLocalizations.of(context).profileAnonymousNeutral,
-                    ),
+                user.displayName ?? context.vocativo,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.center,
