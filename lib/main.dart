@@ -29,6 +29,7 @@ import 'core/navigation/app_deep_link.dart';
 import 'core/utils/app_session_policy.dart';
 import 'features/home/presentation/pages/home_page.dart';
 import 'features/auth/auth.dart';
+import 'features/auth/presentation/pages/change_password_page.dart';
 import 'features/subscription/subscription.dart';
 import 'features/grimoire/presentation/providers/spell_provider.dart';
 import 'features/diary/presentation/providers/dream_provider.dart';
@@ -57,6 +58,39 @@ final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
 /// antes até da tela de erro de boot — e precisa alcançar o navegador assim que
 /// ele existir.
 final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>();
+
+/// Marca de recuperação de senha pendente. Persistida porque, NA WEB, o
+/// AuthWrapper descarta o documento da volta do OAuth com um
+/// `recomecarNaRaiz()` — e o retorno do link de recuperação passa por esse
+/// mesmo caminho (o fragment tem access_token): um push feito antes do
+/// recomeço morre com o documento. A marca sobrevive e o boot seguinte
+/// abre a tela. Validade curta: uma marca velha não pode abrir a troca de
+/// senha numa sessão qualquer semanas depois.
+const String _chaveRecuperacaoPendente = 'pending_password_recovery';
+const Duration _validadeRecuperacaoPendente = Duration(minutes: 15);
+
+/// Abre a troca de senha do fluxo "esqueci minha senha".
+///
+/// Na web o evento `passwordRecovery` chega DURANTE o boot — o
+/// `Supabase.initialize` troca o token da URL antes de o Navigator raiz
+/// existir — então espera-se o navegador montar, frame a frame, com um
+/// teto de tentativas para não rodar para sempre num boot que falhou.
+void _abrirTrocaDeSenhaDaRecuperacao([int tentativas = 0]) {
+  final nav = _rootNavigatorKey.currentState;
+  if (nav == null) {
+    if (tentativas > 600) return; // boot não montou o app; desiste em silêncio
+    WidgetsBinding.instance.addPostFrameCallback(
+        (_) => _abrirTrocaDeSenhaDaRecuperacao(tentativas + 1));
+    return;
+  }
+  // Consumida: aconteça o que acontecer com esta tela, o próximo boot não
+  // deve reabri-la.
+  unawaited(SharedPreferences.getInstance()
+      .then((p) => p.remove(_chaveRecuperacaoPendente)));
+  nav.push(MaterialPageRoute(
+    builder: (_) => const ChangePasswordPage(recovery: true),
+  ));
+}
 
 void main() {
   // Zona guardada: erros assíncronos não capturados (fora do ciclo de build)
@@ -191,6 +225,43 @@ Future<SharedPreferences> _initializeApp() async {
     // Initialize DataSyncService after Supabase
     DataSyncService().initialize();
     await debugLog('SYNC', 'DataSyncService inicializado');
+
+    // O retorno do link de "esqueci minha senha": o supabase_flutter troca
+    // o token da URL (web) ou do deep link (celular) por uma sessão de
+    // recuperação e emite este evento — e até aqui NINGUÉM o ouvia: a
+    // pessoa aterrissava logada sem ser convidada a trocar a senha. Abre a
+    // tela de troca em modo recuperação (sem pedir a senha atual, que é
+    // justamente o que ela não sabe).
+    Supabase.instance.client.auth.onAuthStateChange.listen((data) {
+      if (data.event == AuthChangeEvent.passwordRecovery) {
+        unawaited(debugLog('AUTH', 'Evento passwordRecovery → troca de senha'));
+        // A marca primeiro: na web este documento pode ser descartado pelo
+        // recomeço do AuthWrapper antes de a tela abrir.
+        unawaited(SharedPreferences.getInstance().then((p) => p.setInt(
+            _chaveRecuperacaoPendente,
+            DateTime.now().millisecondsSinceEpoch)));
+        _abrirTrocaDeSenhaDaRecuperacao();
+      }
+    });
+
+    // O boot pós-recomeço da web: o evento já disparou no documento
+    // anterior (descartado), sobrou a marca. Sessão viva + marca fresca =
+    // a pessoa acabou de chegar pelo link de recuperação.
+    final prefsRecuperacao = await SharedPreferences.getInstance();
+    final marcaRecuperacao =
+        prefsRecuperacao.getInt(_chaveRecuperacaoPendente);
+    if (marcaRecuperacao != null) {
+      final fresca = DateTime.now()
+              .difference(
+                  DateTime.fromMillisecondsSinceEpoch(marcaRecuperacao)) <
+          _validadeRecuperacaoPendente;
+      if (fresca && Supabase.instance.client.auth.currentSession != null) {
+        await debugLog('AUTH', 'Recuperação pendente do boot anterior');
+        _abrirTrocaDeSenhaDaRecuperacao();
+      } else {
+        await prefsRecuperacao.remove(_chaveRecuperacaoPendente);
+      }
+    }
   }
 
   // Initialize RevenueCat — TAMBÉM na web.

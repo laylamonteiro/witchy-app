@@ -378,13 +378,6 @@ Anotações de coisas decididas como "fica para depois". Nenhuma bloqueia nada.
   adotada — o passo a passo completo (ordem, Redirect URLs, confirmação em
   lote das contas antigas) está em `supabase/religar_confirm_email.sql`.
   Religar torna o item do e-mail de boas-vindas acima desnecessário.
-- [ ] **Recuperação de senha na WEB aponta para o endpoint errado.**
-  `resetPassword` usa `redirectTo = $SUPABASE_URL/auth/v1/verify` no web
-  (supabase_auth_repository.dart) — o mesmo defeito já corrigido no
-  cadastro: quem clica no link de redefinição cai numa página de erro JSON
-  e perde os tokens da sessão de recuperação. Corrigir exige também tratar
-  o retorno no app (evento passwordRecovery → tela de trocar senha), que
-  hoje não existe. Hoje o fluxo só funciona bem no celular via deep link.
 - [ ] **Dropar `profiles.birth_date/birth_time/birth_place`.** Colunas
   mortas: nenhum fluxo grava nelas (o `updateProfile` do AuthProvider é
   só local) e a fonte real do nascimento é `birth_charts`. Ao dropar,

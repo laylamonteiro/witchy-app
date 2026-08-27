@@ -546,8 +546,13 @@ class SupabaseAuthRepository implements AuthRepository {
       await _supabase.auth.resetPasswordForEmail(
         email,
         captchaToken: captchaToken,
+        // O redirect é para onde a pessoa VOLTA depois do verify — nunca o
+        // próprio endpoint verify (era o defeito: quem clicava no link caía
+        // numa página de erro JSON e os tokens da sessão de recuperação se
+        // perdiam no fragment). De volta ao app, o supabase_flutter emite
+        // o evento passwordRecovery e o main.dart abre a troca de senha.
         redirectTo: kIsWeb
-            ? '${SupabaseConfig.url}/auth/v1/verify'
+            ? SupabaseConfig.siteUrl
             : '${SupabaseConfig.deepLinkScheme}://reset-password',
       );
       return AuthResult.success(UserModel.defaultUser());
