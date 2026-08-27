@@ -1348,6 +1348,14 @@
   "authErrSendEmail": "Não consegui enviar o e-mail — tente de novo em instantes",
   "authErrUpdatePassword": "Não consegui atualizar a senha — tente de novo em instantes",
   "authErrEmailNotConfirmed": "Confirme o seu e-mail antes de entrar — o link está na sua caixa de entrada",
+  "authConfirmEmailSent": "Conta criada! Enviamos um link de confirmação para {email}. Confirme para entrar",
+  "@authConfirmEmailSent": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
   "authErrInvalidCredentials": "E-mail ou senha incorretos",
   "authErrWeakPassword": "A senha precisa de pelo menos 6 caracteres",
   "authErrTooManyAttempts": "Muitas tentativas — aguarde alguns minutos",

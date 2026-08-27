@@ -941,6 +941,7 @@
   "authErrSendEmail": "I couldn't send the email — try again in a moment",
   "authErrUpdatePassword": "I couldn't update the password — try again in a moment",
   "authErrEmailNotConfirmed": "Confirm your email before signing in — the link is in your inbox",
+  "authConfirmEmailSent": "Account created! We sent a confirmation link to {email}. Confirm it to sign in",
   "authErrInvalidCredentials": "Wrong email or password",
   "authErrWeakPassword": "The password needs at least 6 characters",
   "authErrTooManyAttempts": "Too many attempts — wait a few minutes",
