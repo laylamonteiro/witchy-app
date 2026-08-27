@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/i18n/tratamento_do_contexto.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../auth/data/models/feature_access.dart' show LimitWindow;
@@ -207,7 +208,7 @@ class _NoLimite extends StatelessWidget {
         _Cabecalho(texto: l10n.conviteTituloNoLimite),
         const SizedBox(height: 14),
         Text(
-          _oQueHavia(l10n, limite.chave),
+          _oQueHavia(context, l10n, limite.chave),
           style: tema.textTheme.bodyMedium?.copyWith(
             color: context.gc.textPrimary,
             height: 1.55,
@@ -219,9 +220,17 @@ class _NoLimite extends StatelessWidget {
     );
   }
 
-  String _oQueHavia(AppLocalizations l10n, BalcaoDoLimite balcao) =>
+  String _oQueHavia(
+    BuildContext context,
+    AppLocalizations l10n,
+    BalcaoDoLimite balcao,
+  ) =>
       switch (balcao) {
-        BalcaoDoLimite.feiticos => l10n.conviteAlemFeiticos,
+        BalcaoDoLimite.feiticos => context.porTratamento(
+            feminine: l10n.conviteAlemFeiticosFeminine,
+            masculine: l10n.conviteAlemFeiticosMasculine,
+            neutral: l10n.conviteAlemFeiticosNeutral,
+          ),
         BalcaoDoLimite.diario => l10n.conviteAlemDiario,
         BalcaoDoLimite.conselheiro => l10n.conviteAlemConselheiro,
         BalcaoDoLimite.ia => l10n.conviteAlemIa,

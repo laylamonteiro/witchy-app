@@ -1,8 +1,16 @@
 /// Preferência de tratamento gramatical para textos gerados pelo aplicativo.
 ///
-/// A preferência deve ser aplicada somente a textos do sistema ou prompts de IA.
-/// Não transforme textos escritos pelo usuário, citações, nomes próprios ou
-/// conteúdo histórico já persistido.
+/// Vale para todo texto que o app escreve para a pessoa: prompts de IA E as
+/// frases da tela que precisam concordar em gênero ("Bem-vinda de volta",
+/// "Iniciada", "Pelo que você é grata hoje?"). O que a escolha NÃO pode tocar
+/// é texto escrito pela pessoa, citação, nome próprio ou conteúdo histórico já
+/// gravado.
+///
+/// Na tela o caminho é sempre o mesmo: três chaves de ARB
+/// (`...Feminine`/`...Masculine`/`...Neutral`) escolhidas por
+/// [GenderText.select] — ou, quando o único trecho marcado é o vocativo, um
+/// `{tratamento}` no meio da frase alimentado pelas chaves `witchTreatment*`.
+/// Nunca conjugar no Dart: a frase inteira mora no ARB, um idioma de cada vez.
 enum Gender {
   feminine,
   masculine,
@@ -99,4 +107,30 @@ class GenderText {
   static String preservationInstruction() {
     return 'Não altere textos escritos pela pessoa usuária, citações, nomes próprios ou conteúdo histórico fornecido; aplique a preferência apenas ao texto novo gerado pelo sistema.';
   }
+}
+
+/// O tratamento em vigor, fora da árvore de widgets.
+///
+/// Existe pelo mesmo motivo que o `ContentLocale`: há texto de tela montado
+/// sem `BuildContext` — os títulos de nível do Grimório Vivo saem de um getter
+/// estático do `LearningProvider`, consumido de vários lugares. Quem tem
+/// contexto continua lendo do `AuthProvider` (e rebuilda quando a escolha
+/// muda); este espelho é para quem não tem.
+///
+/// É atualizado exclusivamente pelo `AuthProvider`, no mesmo ponto em que ele
+/// avisa o `AIService` — assim os dois nunca discordam.
+class TratamentoAtual {
+  TratamentoAtual._();
+
+  static final TratamentoAtual instance = TratamentoAtual._();
+
+  /// Feminino, e não [Gender.fallback], de propósito: é o padrão de
+  /// `UserModel.defaultUser()`. Quem nunca escolheu continua sendo tratada
+  /// como sempre foi — mudar isso reescreveria a voz do app para toda a base
+  /// que nunca abriu a configuração.
+  Gender _preferencia = Gender.feminine;
+
+  Gender get preferencia => _preferencia;
+
+  void definir(Gender preferencia) => _preferencia = preferencia;
 }

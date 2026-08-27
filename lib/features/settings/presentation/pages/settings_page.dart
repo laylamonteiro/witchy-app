@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/i18n/gender.dart';
+import '../../../../core/i18n/tratamento_do_contexto.dart';
 import '../../../../core/providers/mascot_provider.dart';
 import '../../../../core/providers/notification_provider.dart';
 import '../../../../core/providers/language_provider.dart';
@@ -187,7 +188,7 @@ class SettingsPage extends StatelessWidget {
             Flexible(
               fit: FlexFit.loose,
               child: Text(
-                user.displayName ?? AppLocalizations.of(context).profileAnonymous,
+                user.displayName ?? context.vocativo,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.center,
