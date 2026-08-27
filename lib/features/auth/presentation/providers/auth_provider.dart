@@ -251,6 +251,17 @@ class AuthProvider extends ChangeNotifier {
 
     _serverSessionSubscription ??= repository.authStateChanges.listen((user) {
       if (user != null) unawaited(_adoptServerSession(user));
+    }, onError: (Object e) {
+      // A sessão do retorno NÃO vai chegar (troca do código falhou — na web,
+      // tipicamente o link do e-mail aberto em outro navegador, sem o
+      // verificador PKCE). Esperar os 15s do prazo é só spinner: libera a
+      // tela de entrada agora, onde a pessoa entra com e-mail e senha.
+      unawaited(debugLog('AUTH', 'Retorno não virou sessão: $e'));
+      if (_oauthReturnPending) {
+        _oauthReturnPending = false;
+        _oauthReturnTimeout?.cancel();
+        notifyListeners();
+      }
     });
   }
 

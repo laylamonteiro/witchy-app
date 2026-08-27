@@ -56,6 +56,15 @@ class SupabaseAuthRepository implements AuthRepository {
       } else {
         _authStateController.add(null);
       }
+    }, onError: (Object e) {
+      // A recuperação da sessão a partir da URL falhou (na web, o caso
+      // comum é a troca do `?code=` sem o verificador PKCE no
+      // armazenamento — o link do e-mail foi aberto em OUTRO navegador,
+      // tipicamente o do app de e-mail). Este erro era ENGOLIDO aqui, e
+      // quem esperava a sessão ficava 15s num spinner antes de a tela de
+      // entrada aparecer. Propaga para quem espera decidir na hora.
+      unawaited(debugLog('AUTH', 'Falha no fluxo de auth: $e'));
+      _authStateController.addError(e);
     });
   }
 
@@ -122,8 +131,14 @@ class SupabaseAuthRepository implements AuthRepository {
       );
 
       if (response.user != null) {
-        // Criar perfil na tabela profiles
-        await _createProfile(response.user!, displayName);
+        // Só com sessão: sem ela o cliente é `anon`, e o lockdown de
+        // `profiles` nega a escrita (dois 401 garantidos, atrasando o
+        // cadastro à toa). Quem cria a linha nesse caso é o trigger
+        // handle_new_user, que já grava display_name e signup_platform
+        // a partir do metadata do signUp.
+        if (response.session != null) {
+          await _createProfile(response.user!, displayName);
+        }
 
         final user = await _userFromSupabaseUser(response.user!);
         // Sessão nula = o projeto exige confirmação de e-mail e ela está
@@ -915,7 +930,11 @@ class SupabaseAuthRepository implements AuthRepository {
       code = AuthErrorCode.weakPassword;
       message = _l10n.authErrWeakPassword;
     } else if (message.contains('rate limit') ||
-        message.contains('too many')) {
+        message.contains('too many') ||
+        // O 429 do reenvio de e-mail vem com esta redação, que não casa
+        // com nenhuma das duas acima e vazava o texto cru em inglês.
+        normalizedMessage.contains('security purposes') ||
+        normalizedMessage.contains('only request this after')) {
       code = AuthErrorCode.tooManyRequests;
       message = _l10n.authErrTooManyAttempts;
     } else if (message.contains('network') || message.contains('connection')) {
