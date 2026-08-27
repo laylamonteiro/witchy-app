@@ -880,6 +880,7 @@
   "betaCodeConnectionError": "Error validating the code. Check your connection",
   "betaCodeAlreadyUsed": "This code has already been used",
   "betaCodeInvalid": "Invalid code",
+  "betaCodeLoginRequired": "Sign in to your account to redeem the code",
   "betaCodeLimitReached": "This code has reached its usage limit",
   "betaCodeRedeemed": "Code redeemed! You now have lifetime Premium access 🎉",
   "paymentNotConfigured": "Payments are not configured",

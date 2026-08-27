@@ -880,6 +880,7 @@
   "betaCodeConnectionError": "Error al validar el código. Verifica tu conexión",
   "betaCodeAlreadyUsed": "Este código ya fue utilizado",
   "betaCodeInvalid": "Código inválido",
+  "betaCodeLoginRequired": "Inicia sesión en tu cuenta para canjear el código",
   "betaCodeLimitReached": "Este código ya alcanzó su límite de usos",
   "betaCodeRedeemed": "¡Código canjeado! Ahora tienes acceso Premium de por vida 🎉",
   "paymentNotConfigured": "Los pagos no están configurados",
