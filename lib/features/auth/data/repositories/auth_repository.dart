@@ -63,6 +63,12 @@ enum AuthErrorCode {
   /// O projeto exige captcha e esta versão do app não sabe enviá-lo —
   /// só acontece com quem ainda não atualizou.
   captchaRequired,
+
+  /// Conta existe mas o e-mail nunca foi confirmado (o projeto exige
+  /// confirmação). Quem recebe este código deve OFERECER O REENVIO do
+  /// link — o original expira em horas e, sem sessão, o reenvio da tela
+  /// de perfil não alcança essa pessoa.
+  emailNotConfirmed,
   unknown,
 }
 

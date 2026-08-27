@@ -559,6 +559,36 @@ class SupabaseAuthRepository implements AuthRepository {
     }
   }
 
+  /// Reenvia o link de confirmação para [email] SEM exigir sessão.
+  ///
+  /// Existe porque o público que precisa do reenvio é exatamente quem NÃO
+  /// tem sessão: com a confirmação de e-mail exigida, a conta não
+  /// confirmada é barrada no login, e o [verifyEmail] abaixo (que lê
+  /// `auth.currentUser`) nunca a alcança. A API `resend` aceita o e-mail
+  /// direto — quem recebe o link continua sendo só a dona da caixa de
+  /// entrada, então não há o que proteger com sessão aqui.
+  Future<AuthResult> resendConfirmationEmail(
+    String email, {
+    String? captchaToken,
+  }) async {
+    try {
+      await _supabase.auth.resend(
+        type: OtpType.signup,
+        email: email.trim(),
+        captchaToken: captchaToken,
+        emailRedirectTo: kIsWeb
+            ? SupabaseConfig.siteUrl
+            : '${SupabaseConfig.deepLinkScheme}://email-confirm',
+      );
+      return AuthResult.success(UserModel.defaultUser());
+    } on AuthException catch (e) {
+      return _handleAuthException(e);
+    } catch (e) {
+      await debugLog('AUTH', 'Falha ao reenviar confirmação: $e');
+      return AuthResult.error(_l10n.authErrSendEmail);
+    }
+  }
+
   @override
   Future<AuthResult> verifyEmail({String? captchaToken}) async {
     // O Supabase manda o e-mail de confirmação sozinho no cadastro; este
@@ -863,6 +893,7 @@ class SupabaseAuthRepository implements AuthRepository {
           : _l10n.authErrCaptchaOutdated;
     } else if (normalizedMessage.contains('email not confirmed') ||
         normalizedMessage.contains('email is not confirmed')) {
+      code = AuthErrorCode.emailNotConfirmed;
       message = _l10n.authErrEmailNotConfirmed;
     } else if (message.contains('Invalid login credentials')) {
       code = AuthErrorCode.invalidPassword;
