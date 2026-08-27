@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../auth/presentation/widgets/relogin_dialog.dart';
 import '../../../cycle_reading/presentation/pages/cycle_reading_intro_page.dart';
 import '../../../grimoire/presentation/pages/grimoire_page.dart';
 import '../../../your_day/presentation/pages/your_day_page.dart';
@@ -130,6 +131,10 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _onDeepLink();
       _maybeStartTour();
+      // Conta "logada" sem sessão Supabase (cadastros de 20-27/08 que a
+      // exigência de confirmação deixou sem token): pede o re-login que
+      // reativa a sincronização. Ver ReloginDialog.
+      ReloginDialog.maybeShow(context);
     });
   }
 

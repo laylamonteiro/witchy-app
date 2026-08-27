@@ -22,6 +22,12 @@ class SupabaseConfig {
   /// Schema do banco de dados
   static const String schema = 'public';
 
+  /// Onde o webapp vive. É para cá que o link de confirmação de e-mail
+  /// deve devolver a pessoa — NUNCA para `$url/auth/v1/verify`: esse é o
+  /// endpoint que PROCESSA o link, e usá-lo como redirect_to fazia quem
+  /// confirmava cair numa página de erro JSON do Supabase.
+  static const String siteUrl = 'https://grimoriodebolso.app';
+
   /// Deep link scheme para OAuth callbacks
   static const String deepLinkScheme = 'io.supabase.grimorio'; // Usado para callbacks nativos em mobile
 

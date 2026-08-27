@@ -122,6 +122,20 @@ class BetaCodeRepository {
     final supabase = _supabase;
 
     if (supabase != null) {
+      // O resgate exige sessão Supabase: o lockdown
+      // (supabase/profiles_lockdown_migration.sql) revogou o EXECUTE de
+      // `anon` na RPC. Sem esta checagem, tentar resgatar deslogada chega
+      // ao banco como "permission denied" e virava o genérico "Erro ao
+      // validar o código. Tente novamente" (bug real: webapp, 27/08).
+      if (supabase.auth.currentSession == null) {
+        await debugLog(
+            'BETA_CODE', 'Resgate sem sessão Supabase — pedindo login');
+        return {
+          'success': false,
+          'message': _l10n.betaCodeLoginRequired,
+        };
+      }
+
       // --- Caminho preferido: RPC atômica no servidor ---
       try {
         final result = await supabase.rpc('redeem_beta_code', params: {
@@ -140,6 +154,22 @@ class BetaCodeRepository {
         // Função ainda não criada no projeto → cai no caminho legado abaixo
         final missingFunction =
             e.code == 'PGRST202' || e.code == '42883' || e.code == '404';
+        // Sessão expirada/JWT inválido no meio do caminho: o PostgREST
+        // rebaixa para anon e o banco nega o EXECUTE (42501) ou o próprio
+        // PostgREST rejeita o token (PGRST301/401/403). Pedir login é a
+        // mensagem certa, não "tente novamente".
+        final sessionRejected = e.code == '42501' ||
+            e.code == 'PGRST301' ||
+            e.code == '401' ||
+            e.code == '403';
+        if (sessionRejected) {
+          await debugLog(
+              'BETA_CODE', 'Resgate rejeitado por sessão/permissão: $e');
+          return {
+            'success': false,
+            'message': _l10n.betaCodeLoginRequired,
+          };
+        }
         if (!missingFunction) {
           await debugLog('BETA_CODE', 'Erro na RPC redeem_beta_code: $e');
           return {

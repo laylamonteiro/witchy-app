@@ -107,9 +107,17 @@ class SupabaseAuthRepository implements AuthRepository {
         email: email,
         password: password,
         captchaToken: captchaToken,
-        data: {'display_name': displayName},
+        // signup_platform vai no metadata porque quem grava o perfil é o
+        // trigger handle_new_user, rodando como dono do banco. O update
+        // feito aqui do cliente (em _createProfile) só funciona COM sessão
+        // — e cadastro por e-mail com confirmação pendente não tem uma, o
+        // que deixava a coluna NULL desde o lockdown de `profiles`.
+        data: {
+          'display_name': displayName,
+          'signup_platform': _signupPlatform,
+        },
         emailRedirectTo: kIsWeb
-            ? '${SupabaseConfig.url}/auth/v1/verify'
+            ? SupabaseConfig.siteUrl
             : '${SupabaseConfig.deepLinkScheme}://email-confirm',
       );
 
@@ -118,6 +126,11 @@ class SupabaseAuthRepository implements AuthRepository {
         await _createProfile(response.user!, displayName);
 
         final user = await _userFromSupabaseUser(response.user!);
+        // Sessão nula = o projeto exige confirmação de e-mail e ela está
+        // pendente. NÃO é login: sem JWT, toda chamada sai como `anon`.
+        if (response.session == null) {
+          return AuthResult.confirmationPending(user);
+        }
         return AuthResult.success(user);
       }
       return AuthResult.error(_l10n.authErrCreateAccount);

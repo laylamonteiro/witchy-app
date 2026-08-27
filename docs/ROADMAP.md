@@ -357,4 +357,28 @@ flutter pub run flutter_launcher_icons
 
 ---
 
-*Última atualização: Novembro 2025*
+## Backlog — sem prioridade
+
+Anotações de coisas decididas como "fica para depois". Nenhuma bloqueia nada.
+
+- [ ] **E-mail de boas-vindas no cadastro.** Desde 27/08/2026 a chave
+  "Confirm email" do Supabase está DESLIGADA (decisão de produto: cadastro
+  gera sessão na hora; a exigência de confirmação travava a maioria das
+  contas novas — ver commits de claude/premium-code-redemption-error).
+  Efeito colateral: nenhum e-mail é enviado no cadastro. Se um dia quiser
+  um e-mail de boas-vindas: trigger no INSERT de `auth.users` → Edge
+  Function (via pg_net) → provedor de e-mail (ex.: Resend; o SMTP do
+  Supabase só envia e-mails de auth). Decidido em 27/08: "o molho sai mais
+  caro que o frango" — sem prioridade.
+- [ ] **Backfill de `signup_platform`.** Contas de ~19/08 a 27/08/2026
+  ficaram com NULL (cadastro por e-mail sem sessão + lockdown de profiles).
+  SQL pronto e comentado no fim de
+  `supabase/signup_platform_trigger_migration.sql` (marca como 'unknown').
+- [ ] **Dropar `profiles.birth_date/birth_time/birth_place`.** Colunas
+  mortas: nenhum fluxo grava nelas (o `updateProfile` do AuthProvider é
+  só local) e a fonte real do nascimento é `birth_charts`. Ao dropar,
+  tirar também `birth_*` dos GRANTs do lockdown e do UserModel.
+
+---
+
+*Última atualização: Agosto 2026*
