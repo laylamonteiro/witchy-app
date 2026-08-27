@@ -7,6 +7,7 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/date_input_field.dart';
 import '../../../../core/widgets/magical_card.dart';
+import '../../../astrology/data/repositories/astrology_repository.dart';
 import '../../../auth/data/models/feature_access.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../auth/presentation/widgets/premium_blur_widget.dart';
@@ -44,7 +45,23 @@ class _NumerologyProfilePageState extends State<NumerologyProfilePage> {
     // Pré-preenche com os dados do perfil quando existirem.
     _nameController.text = user.displayName ?? '';
     _birthDate = user.birthDate;
-    _loadSaved();
+    _init();
+  }
+
+  Future<void> _init() async {
+    await _loadSaved();
+    await _prefillFromBirthChart();
+  }
+
+  /// Sem cálculo salvo nem data no perfil, busca a data no Mapa Astral.
+  /// `birth_charts` é a única fonte real do nascimento no app — as colunas
+  /// birth_* de `profiles` nunca são gravadas por nenhum fluxo — então quem
+  /// já montou o mapa não precisa digitar a data de novo aqui.
+  Future<void> _prefillFromBirthChart() async {
+    if (_birthDate != null) return;
+    final chart = await AstrologyRepository().getBirthChart(_userId);
+    if (chart == null || !mounted || _birthDate != null) return;
+    setState(() => _birthDate = chart.birthDate);
   }
 
   String get _prefsBase => 'num_profile_${_userId}_';
