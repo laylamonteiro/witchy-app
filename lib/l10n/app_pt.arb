@@ -1356,6 +1356,18 @@
       }
     }
   },
+  "authReloginTitle": "Entre novamente",
+  "authReloginBody": "A sessão de {email} expirou neste aparelho e a sincronização está pausada. Digite sua senha para reativar.",
+  "@authReloginBody": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "authReloginAction": "Entrar",
+  "authReloginLater": "Agora não",
+  "authReloginDone": "Sessão reativada! Sincronização em dia",
   "authErrInvalidCredentials": "E-mail ou senha incorretos",
   "authErrWeakPassword": "A senha precisa de pelo menos 6 caracteres",
   "authErrTooManyAttempts": "Muitas tentativas — aguarde alguns minutos",
