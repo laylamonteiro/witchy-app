@@ -1,5 +1,9 @@
 # Roadmap - Grimório de Bolso
 
+> **Próximos passos (ago/2026):** a avaliação das ideias novas — voltar robusto
+> na web, push no webapp, Ciclo Menstrual, acessibilidade, haptics, influencers
+> e feed do Instagram — vive em [`PROXIMOS_PASSOS_AGO2026.md`](PROXIMOS_PASSOS_AGO2026.md).
+
 ## Visão Geral das Fases
 
 | Fase | Nome | Status |
