@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/config/captcha_config.dart';
 import '../../../../core/config/supabase_config.dart';
 import '../../../../core/services/debug_log_service.dart';
+import '../../data/repositories/auth_repository.dart';
 import '../../data/repositories/supabase_auth_repository.dart';
 import '../pages/forgot_password_page.dart';
 import '../providers/auth_provider.dart';
@@ -85,6 +86,11 @@ class _ReloginDialogBodyState extends State<_ReloginDialogBody> {
   bool _isLoading = false;
   String? _error;
 
+  /// Login barrado por e-mail não confirmado (a exigência de confirmação
+  /// está ligada e esta conta é do limbo): a senha certa não basta, e o
+  /// caminho é reenviar o link — o botão só aparece neste estado.
+  bool _naoConfirmado = false;
+
   @override
   void dispose() {
     _passwordController.dispose();
@@ -128,9 +134,31 @@ class _ReloginDialogBodyState extends State<_ReloginDialogBody> {
 
     setState(() {
       _isLoading = false;
+      _naoConfirmado = result.errorCode == AuthErrorCode.emailNotConfirmed;
       _error = result.errorMessage ??
           AppLocalizations.of(context).authErrLogin;
     });
+  }
+
+  Future<void> _reenviarConfirmacao() async {
+    final captchaToken = await CaptchaGate.resolve(context);
+    if (!mounted) return;
+    if (CaptchaConfig.isConfigured && captchaToken == null) {
+      setState(
+          () => _error = AppLocalizations.of(context).authCaptchaFailed);
+      return;
+    }
+    final result = await SupabaseAuthRepository()
+        .resendConfirmationEmail(widget.email, captchaToken: captchaToken);
+    if (!mounted) return;
+    final l10n = AppLocalizations.of(context);
+    showAuthSnack(
+      context,
+      result.success
+          ? l10n.forgotResendSuccess
+          : (result.errorMessage ?? l10n.forgotResendError),
+      type: result.success ? AuthSnackType.success : AuthSnackType.error,
+    );
   }
 
   @override
@@ -158,6 +186,14 @@ class _ReloginDialogBodyState extends State<_ReloginDialogBody> {
               ),
             ),
           ),
+          if (_naoConfirmado)
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton(
+                onPressed: _isLoading ? null : _reenviarConfirmacao,
+                child: Text(l10n.authResendConfirmAction),
+              ),
+            ),
           Align(
             alignment: Alignment.centerRight,
             child: TextButton(

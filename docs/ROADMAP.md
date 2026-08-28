@@ -374,6 +374,10 @@ Anotações de coisas decididas como "fica para depois". Nenhuma bloqueia nada.
   ficaram com NULL (cadastro por e-mail sem sessão + lockdown de profiles).
   SQL pronto e comentado no fim de
   `supabase/signup_platform_trigger_migration.sql` (marca como 'unknown').
+- [ ] **Religar o "Confirm email"** quando a versão nova do app estiver
+  adotada — o passo a passo completo (ordem, Redirect URLs, confirmação em
+  lote das contas antigas) está em `supabase/religar_confirm_email.sql`.
+  Religar torna o item do e-mail de boas-vindas acima desnecessário.
 - [ ] **Dropar `profiles.birth_date/birth_time/birth_place`.** Colunas
   mortas: nenhum fluxo grava nelas (o `updateProfile` do AuthProvider é
   só local) e a fonte real do nascimento é `birth_charts`. Ao dropar,

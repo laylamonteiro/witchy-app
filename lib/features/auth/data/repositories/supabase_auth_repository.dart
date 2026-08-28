@@ -56,6 +56,15 @@ class SupabaseAuthRepository implements AuthRepository {
       } else {
         _authStateController.add(null);
       }
+    }, onError: (Object e) {
+      // A recuperação da sessão a partir da URL falhou (na web, o caso
+      // comum é a troca do `?code=` sem o verificador PKCE no
+      // armazenamento — o link do e-mail foi aberto em OUTRO navegador,
+      // tipicamente o do app de e-mail). Este erro era ENGOLIDO aqui, e
+      // quem esperava a sessão ficava 15s num spinner antes de a tela de
+      // entrada aparecer. Propaga para quem espera decidir na hora.
+      unawaited(debugLog('AUTH', 'Falha no fluxo de auth: $e'));
+      _authStateController.addError(e);
     });
   }
 
@@ -122,8 +131,14 @@ class SupabaseAuthRepository implements AuthRepository {
       );
 
       if (response.user != null) {
-        // Criar perfil na tabela profiles
-        await _createProfile(response.user!, displayName);
+        // Só com sessão: sem ela o cliente é `anon`, e o lockdown de
+        // `profiles` nega a escrita (dois 401 garantidos, atrasando o
+        // cadastro à toa). Quem cria a linha nesse caso é o trigger
+        // handle_new_user, que já grava display_name e signup_platform
+        // a partir do metadata do signUp.
+        if (response.session != null) {
+          await _createProfile(response.user!, displayName);
+        }
 
         final user = await _userFromSupabaseUser(response.user!);
         // Sessão nula = o projeto exige confirmação de e-mail e ela está
@@ -546,8 +561,13 @@ class SupabaseAuthRepository implements AuthRepository {
       await _supabase.auth.resetPasswordForEmail(
         email,
         captchaToken: captchaToken,
+        // O redirect é para onde a pessoa VOLTA depois do verify — nunca o
+        // próprio endpoint verify (era o defeito: quem clicava no link caía
+        // numa página de erro JSON e os tokens da sessão de recuperação se
+        // perdiam no fragment). De volta ao app, o supabase_flutter emite
+        // o evento passwordRecovery e o main.dart abre a troca de senha.
         redirectTo: kIsWeb
-            ? '${SupabaseConfig.url}/auth/v1/verify'
+            ? SupabaseConfig.siteUrl
             : '${SupabaseConfig.deepLinkScheme}://reset-password',
       );
       return AuthResult.success(UserModel.defaultUser());
@@ -555,6 +575,36 @@ class SupabaseAuthRepository implements AuthRepository {
       return _handleAuthException(e);
     } catch (e) {
       await debugLog('AUTH', 'Falha ao enviar e-mail: $e');
+      return AuthResult.error(_l10n.authErrSendEmail);
+    }
+  }
+
+  /// Reenvia o link de confirmação para [email] SEM exigir sessão.
+  ///
+  /// Existe porque o público que precisa do reenvio é exatamente quem NÃO
+  /// tem sessão: com a confirmação de e-mail exigida, a conta não
+  /// confirmada é barrada no login, e o [verifyEmail] abaixo (que lê
+  /// `auth.currentUser`) nunca a alcança. A API `resend` aceita o e-mail
+  /// direto — quem recebe o link continua sendo só a dona da caixa de
+  /// entrada, então não há o que proteger com sessão aqui.
+  Future<AuthResult> resendConfirmationEmail(
+    String email, {
+    String? captchaToken,
+  }) async {
+    try {
+      await _supabase.auth.resend(
+        type: OtpType.signup,
+        email: email.trim(),
+        captchaToken: captchaToken,
+        emailRedirectTo: kIsWeb
+            ? SupabaseConfig.siteUrl
+            : '${SupabaseConfig.deepLinkScheme}://email-confirm',
+      );
+      return AuthResult.success(UserModel.defaultUser());
+    } on AuthException catch (e) {
+      return _handleAuthException(e);
+    } catch (e) {
+      await debugLog('AUTH', 'Falha ao reenviar confirmação: $e');
       return AuthResult.error(_l10n.authErrSendEmail);
     }
   }
@@ -863,6 +913,7 @@ class SupabaseAuthRepository implements AuthRepository {
           : _l10n.authErrCaptchaOutdated;
     } else if (normalizedMessage.contains('email not confirmed') ||
         normalizedMessage.contains('email is not confirmed')) {
+      code = AuthErrorCode.emailNotConfirmed;
       message = _l10n.authErrEmailNotConfirmed;
     } else if (message.contains('Invalid login credentials')) {
       code = AuthErrorCode.invalidPassword;
@@ -879,7 +930,11 @@ class SupabaseAuthRepository implements AuthRepository {
       code = AuthErrorCode.weakPassword;
       message = _l10n.authErrWeakPassword;
     } else if (message.contains('rate limit') ||
-        message.contains('too many')) {
+        message.contains('too many') ||
+        // O 429 do reenvio de e-mail vem com esta redação, que não casa
+        // com nenhuma das duas acima e vazava o texto cru em inglês.
+        normalizedMessage.contains('security purposes') ||
+        normalizedMessage.contains('only request this after')) {
       code = AuthErrorCode.tooManyRequests;
       message = _l10n.authErrTooManyAttempts;
     } else if (message.contains('network') || message.contains('connection')) {

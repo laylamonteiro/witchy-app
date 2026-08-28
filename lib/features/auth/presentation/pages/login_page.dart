@@ -15,6 +15,7 @@ import '../widgets/auth_motion.dart';
 import '../widgets/auth_feedback.dart';
 import '../../../../core/config/supabase_config.dart';
 import '../../../../core/config/admin_config.dart';
+import '../../data/repositories/auth_repository.dart';
 import '../../data/repositories/supabase_auth_repository.dart';
 import '../providers/auth_provider.dart';
 import 'forgot_password_page.dart';
@@ -586,6 +587,14 @@ class _LoginPageState extends State<LoginPage> {
       );
 
       if (!result.success) {
+        // Conta barrada por e-mail não confirmado: o link original expira
+        // em horas e esta pessoa NÃO tem sessão — este diálogo é o único
+        // caminho dela para um link novo. Sem ele, religar a exigência de
+        // confirmação trancaria para sempre quem perdeu o e-mail.
+        if (result.errorCode == AuthErrorCode.emailNotConfirmed) {
+          if (mounted) await _oferecerReenvioDeConfirmacao(email);
+          return;
+        }
         throw Exception(result.errorMessage ?? AppLocalizations.of(context).authLoginError);
       }
 
@@ -608,6 +617,49 @@ class _LoginPageState extends State<LoginPage> {
         setState(() => _isLoading = false);
       }
     }
+  }
+
+  /// Oferece o reenvio do link de confirmação quando o login foi barrado
+  /// por e-mail não confirmado. Passa pelo mesmo portão de captcha do
+  /// cadastro — o reenvio usa a mesma cota de e-mail.
+  Future<void> _oferecerReenvioDeConfirmacao(String email) async {
+    final l10n = AppLocalizations.of(context);
+    final reenviar = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l10n.authResendConfirmTitle),
+        content: Text(l10n.authResendConfirmBody(email)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: Text(l10n.authReloginLater),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: Text(l10n.authResendConfirmAction),
+          ),
+        ],
+      ),
+    );
+    if (reenviar != true || !mounted) return;
+
+    final captchaToken = await CaptchaGate.resolve(context);
+    if (!mounted) return;
+    if (CaptchaConfig.isConfigured && captchaToken == null) {
+      showAuthSnack(context, l10n.authCaptchaFailed, type: AuthSnackType.error);
+      return;
+    }
+
+    final result = await SupabaseAuthRepository()
+        .resendConfirmationEmail(email, captchaToken: captchaToken);
+    if (!mounted) return;
+    showAuthSnack(
+      context,
+      result.success
+          ? l10n.forgotResendSuccess
+          : (result.errorMessage ?? l10n.forgotResendError),
+      type: result.success ? AuthSnackType.success : AuthSnackType.error,
+    );
   }
 
   Future<void> _handleGoogleLogin() async {
