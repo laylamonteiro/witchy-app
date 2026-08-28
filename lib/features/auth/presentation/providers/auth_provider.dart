@@ -50,6 +50,12 @@ class AuthProvider extends ChangeNotifier {
   /// (?code= na URL) — ANTES do Supabase.initialize, que limpa a URL.
   static bool bootCameFromOAuthReturn = false;
 
+  /// Marcado no main() quando o link de e-mail da URL não verificou —
+  /// expirado, já usado, ou de uma conta que já está confirmada. A tela de
+  /// login avisa e a pessoa entra com e-mail e senha (a confirmação vale
+  /// desde o primeiro clique, então em geral não falta mais nada).
+  static bool linkDeEmailExpirado = false;
+
   /// Marcado no main() quando o boot é a JANELA DE LOGIN voltando do
   /// Google (a marca no armazenamento diz; o COOP do Google apaga o
   /// `opener`). O AuthWrapper mostra o "pode fechar esta aba" em vez de

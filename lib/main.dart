@@ -92,6 +92,58 @@ void _abrirTrocaDeSenhaDaRecuperacao([int tentativas = 0]) {
   ));
 }
 
+/// Os tipos de link de e-mail que o app sabe verificar por `token_hash`.
+/// Só os que o Grimório emite — cada valor a mais é superfície sem uso.
+OtpType? _tipoDeLinkDeEmail(String? tipo) => switch (tipo) {
+      'signup' => OtpType.signup,
+      'email' => OtpType.email,
+      'recovery' => OtpType.recovery,
+      _ => null,
+    };
+
+/// Verifica um link de e-mail que chega como `?token_hash=...&type=...`.
+///
+/// SÓ NA WEB. No celular o link volta pelo deep link do próprio Supabase,
+/// que resolve a sessão sozinho — lá o verificador PKCE está no
+/// armazenamento do app, então o caminho de sempre funciona e não há o que
+/// consertar.
+///
+/// Nunca propaga erro: link expirado ou já usado é caminho normal (o
+/// primeiro clique é o que vale), e a saída é entrar com e-mail e senha.
+Future<void> _verificarLinkDeEmailDaUrl() async {
+  if (!kIsWeb) return;
+  final tokenHash = Uri.base.queryParameters['token_hash'];
+  if (tokenHash == null || tokenHash.isEmpty) return;
+
+  final tipo = _tipoDeLinkDeEmail(Uri.base.queryParameters['type']);
+  if (tipo == null) {
+    await debugLog('AUTH', 'Link de e-mail com tipo desconhecido na URL');
+    return;
+  }
+
+  try {
+    await Supabase.instance.client.auth.verifyOTP(
+      tokenHash: tokenHash,
+      type: tipo,
+    );
+    await debugLog('AUTH', 'Link de e-mail verificado (${tipo.name})');
+
+    // A URL ainda carrega o token de uso único. Marcar como retorno faz o
+    // AuthWrapper recomeçar na raiz (o mesmo caminho do login social), o
+    // que limpa a URL e tira o token do histórico da aba.
+    AuthProvider.bootCameFromOAuthReturn = true;
+
+    if (tipo == OtpType.recovery) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setInt(
+          _chaveRecuperacaoPendente, DateTime.now().millisecondsSinceEpoch);
+    }
+  } catch (e) {
+    await debugLog('AUTH', 'Link de e-mail não verificou: $e');
+    AuthProvider.linkDeEmailExpirado = true;
+  }
+}
+
 void main() {
   // Zona guardada: erros assíncronos não capturados (fora do ciclo de build)
   // são logados em vez de derrubarem o app silenciosamente — na web eles
@@ -222,6 +274,13 @@ Future<SharedPreferences> _initializeApp() async {
       // o parâmetro novo aceita a mesma chave.
       publishableKey: SupabaseConfig.anonKey,
     );
+    // Link de e-mail no formato `token_hash` (ver docs/email_templates):
+    // verificação que NÃO depende do verificador PKCE — aquele vive no
+    // armazenamento de QUEM PEDIU o cadastro, e o link quase sempre abre em
+    // outro navegador (o do app de e-mail), onde ele não existe. Sem isto, o
+    // clique no link terminava sem sessão nenhuma.
+    await _verificarLinkDeEmailDaUrl();
+
     // Initialize DataSyncService after Supabase
     DataSyncService().initialize();
     await debugLog('SYNC', 'DataSyncService inicializado');
