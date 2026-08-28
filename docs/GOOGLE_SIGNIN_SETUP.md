@@ -48,6 +48,12 @@ por isso o `ApiException: 10` persiste mesmo com o APK assinado em release.
 > (`54:84:54:75:7F:A8:37:1C:21:F4:B9:71:E7:B7:F8:05:25:85:FB:60`) como um novo
 > OAuth client Android no Google Cloud (Etapa 2 abaixo). Nada muda no app.
 
+**Enquanto isso não for feito**, a esteira de release não trava mais por causa
+disso (de 23/08 a 28/08 ela travava, e o APK deixou de ser gerado): o APK sai
+com o sufixo `-SEM-LOGIN-GOOGLE` no nome e o run mostra um aviso. Serve para
+testar todo o resto do app; só o login com o Google não funciona nele. AAB,
+Play e site não são afetados — a Play re-assina o AAB com a chave dela.
+
 ---
 
 ## Etapa 1 — Obter o SHA-1 (3 caminhos)
