@@ -491,9 +491,37 @@ jobs:
             # checklist de docs/GOOGLE_SIGNIN_SETUP.md manda instalar para
             # testar o login. Se a digital dele não está registrada, o login
             # está quebrado NESTE artefato, com certeza.
-            echo "::error::SHA-1 $sha1 não está em android/app/google-services.json (registradas: $(printf '%s ' $registrados))."
-            echo "::error::O login com o Google vai falhar (ApiException: 10) em quem instalar este APK. Conserto: Google Cloud → Credentials → o client OAuth *Android* do pacote com.grimoriodebolso.app → adicione esta SHA-1; baixe o google-services.json de novo e substitua android/app/google-services.json."
-            exit 1
+            #
+            # AVISO, não erro fatal — e a razão é o alcance de cada coisa.
+            # Isto não diz nada sobre a Play (o AAB é re-assinado por ela) nem
+            # sobre o site: é um defeito SÓ do APK, que a própria pipeline
+            # trata como anexo opcional ("o APK é opcional", na publicação).
+            # Como erro fatal, ele matava o job inteiro ANTES do empacotar, e
+            # o APK deixava de existir — de 23/08 a 28/08 nenhum release teve
+            # anexo e todo run ficou vermelho, sem que isso significasse nada
+            # de errado com o que foi publicado.
+            #
+            # Para não repetir o defeito que esta trava nasceu para pegar (um
+            # APK com login do Google quebrado passando despercebido), o
+            # arquivo sai CARIMBADO no nome — quem baixar lê o problema antes
+            # de instalar — e o aviso vai também para o resumo do run.
+            echo "APK_SEM_LOGIN_GOOGLE=1" >> "$GITHUB_ENV"
+            echo "::warning::O login com o Google vai falhar (ApiException: 10) em quem instalar este APK: a SHA-1 $sha1 não está registrada. O APK sai marcado no nome; AAB, Play e site não são afetados."
+            {
+              echo "### ⚠️ APK sem login com o Google"
+              echo
+              echo "A SHA-1 \`$sha1\` (keystore de release) não está em"
+              echo "\`android/app/google-services.json\` (registradas:"
+              echo "\`$(printf '%s ' $registrados)\`). Quem instalar este APK direto"
+              echo "vai ver *ApiException: 10* ao entrar com o Google."
+              echo
+              echo "**Conserto:** Google Cloud → Credentials → client OAuth *Android*"
+              echo "do pacote \`com.grimoriodebolso.app\` → adicione esta SHA-1;"
+              echo "baixe o \`google-services.json\` de novo e substitua"
+              echo "\`android/app/google-services.json\`."
+              echo
+              echo "Não afeta a Play (o AAB é re-assinado por ela) nem o site."
+            } >> "$GITHUB_STEP_SUMMARY"
           else
             # No AAB isto pode ser normal: a Play re-assina com a chave dela
             # (Play App Signing), e a digital que precisa estar registrada é
@@ -515,7 +543,15 @@ jobs:
             || 'build/app/outputs/bundle/release/app-release.aab' }}
         run: |
           mkdir -p release-files
-          cp "$ARQUIVO" "release-files/grimorio-de-bolso-${NOME}+${CODIGO}.${FORMATO}"
+          # Carimbo herdado da conferência acima: um APK cuja digital não
+          # está registrada no google-services.json entrega o app com o
+          # login do Google quebrado. Ele continua sendo gerado (serve para
+          # testar todo o resto), mas diz isso no próprio nome.
+          SUFIXO=''
+          if [ "${APK_SEM_LOGIN_GOOGLE:-}" = "1" ]; then
+            SUFIXO='-SEM-LOGIN-GOOGLE'
+          fi
+          cp "$ARQUIVO" "release-files/grimorio-de-bolso-${NOME}+${CODIGO}${SUFIXO}.${FORMATO}"
           if [ "$FORMATO" = "aab" ] && [ -d build/app/outputs/symbols ]; then
             (cd build/app/outputs/symbols && zip -qr - .) \
               > "release-files/grimorio-de-bolso-${NOME}-symbols.zip"
