@@ -950,6 +950,7 @@
   "authResendConfirmTitle": "Confirma tu correo",
   "authResendConfirmBody": "Tu cuenta aún no fue confirmada. Enviamos un enlace a {email}, pero puede haber expirado. ¿Quieres uno nuevo?",
   "authResendConfirmAction": "Reenviar enlace",
+  "authEmailLinkExpired": "Este enlace expiró o ya fue usado. Entra con tu correo y contraseña",
   "authErrInvalidCredentials": "Correo o contraseña incorrectos",
   "authErrWeakPassword": "La contraseña necesita al menos 6 caracteres",
   "authErrTooManyAttempts": "Demasiados intentos — espera unos minutos",

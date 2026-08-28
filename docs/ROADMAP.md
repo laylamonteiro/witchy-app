@@ -378,6 +378,14 @@ Anotações de coisas decididas como "fica para depois". Nenhuma bloqueia nada.
   adotada — o passo a passo completo (ordem, Redirect URLs, confirmação em
   lote das contas antigas) está em `supabase/religar_confirm_email.sql`.
   Religar torna o item do e-mail de boas-vindas acima desnecessário.
+- [ ] **Android App Links para os links de e-mail.** Os templates passaram
+  a usar `token_hash` apontando para o site (única forma de o link valer em
+  qualquer navegador — ver o cabeçalho de `docs/email_templates/`). Com
+  isso, quem se cadastra no Android confirma no navegador e depois entra no
+  app com a senha. Para o link voltar a abrir o app direto: publicar
+  `site/.well-known/assetlinks.json` com a impressão SHA-256 da chave de
+  assinatura (Play Console → App integrity) e pôr `autoVerify="true"` num
+  intent-filter de `https://grimoriodebolso.app` no AndroidManifest.
 - [ ] **Dropar `profiles.birth_date/birth_time/birth_place`.** Colunas
   mortas: nenhum fluxo grava nelas (o `updateProfile` do AuthProvider é
   só local) e a fonte real do nascimento é `birth_charts`. Ao dropar,

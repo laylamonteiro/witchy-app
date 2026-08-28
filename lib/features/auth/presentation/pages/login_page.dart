@@ -41,6 +41,25 @@ class _LoginPageState extends State<LoginPage> {
   bool _obscurePassword = true;
 
   @override
+  void initState() {
+    super.initState();
+    // Chegou por um link de e-mail que não verificou (expirado, já usado,
+    // ou aberto depois de a conta já estar confirmada). Diz o que houve e
+    // o que fazer — sem isto a pessoa cai numa tela de login muda, sem
+    // relação aparente com o link que acabou de tocar.
+    if (AuthProvider.linkDeEmailExpirado) {
+      AuthProvider.linkDeEmailExpirado = false;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        showAuthSnack(
+          context,
+          AppLocalizations.of(context).authEmailLinkExpired,
+        );
+      });
+    }
+  }
+
+  @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
