@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:uuid/uuid.dart';
 import '../../../diary/data/models/free_writing_model.dart';
@@ -10,6 +11,7 @@ import 'package:provider/provider.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
+import '../../../../core/theme/grimoire_motion.dart';
 import '../../../../core/database/database_helper.dart';
 import '../../../../core/services/data_sync_service.dart';
 import '../../data/models/oracle_card_model.dart';
@@ -41,6 +43,21 @@ class _OracleCardsPageState extends State<OracleCardsPage>
   bool _isReadingAI = false;
   late AnimationController _animController;
   bool _isDrawing = false;
+
+  /// Cadência da entrada da leitura: cada carta leva [GrimoireMotion.reveal]
+  /// para assentar, com até 90 ms entre vizinhas. Na tiragem de cinco o passo
+  /// aperta sozinho para a chegada inteira caber em [_tetoEntradaMs].
+  static final int _duracaoEntradaMs = GrimoireMotion.reveal.inMilliseconds;
+  static const int _tetoEntradaMs = 1200;
+
+  int _passoEntradaMs(int quantas) {
+    if (quantas <= 1) return 0;
+    final passo = (_tetoEntradaMs - _duracaoEntradaMs) ~/ (quantas - 1);
+    return passo > 90 ? 90 : passo;
+  }
+
+  int _totalEntradaMs(int quantas) =>
+      (quantas - 1) * _passoEntradaMs(quantas) + _duracaoEntradaMs;
 
   @override
   void initState() {
@@ -78,6 +95,9 @@ class _OracleCardsPageState extends State<OracleCardsPage>
       return;
     }
 
+    // Lida antes dos awaits: a preferência vale para a revelação inteira.
+    final reduzirMovimento = GrimoireMotion.reduced(context);
+
     setState(() {
       _isDrawing = true;
     });
@@ -112,7 +132,18 @@ class _OracleCardsPageState extends State<OracleCardsPage>
       _isDrawing = false;
     });
 
-    _animController.forward(from: 0);
+    // A leitura se revelou: um único toque marca o momento.
+    HapticFeedback.lightImpact();
+
+    // Sob "reduzir movimento" as cartas já nascem no lugar; senão, a chegada
+    // é dimensionada para a tiragem sorteada.
+    if (reduzirMovimento) {
+      _animController.value = 1.0;
+    } else {
+      _animController.duration =
+          Duration(milliseconds: _totalEntradaMs(drawn.length));
+      _animController.forward(from: 0);
+    }
 
     // Salvar leitura
     await _saveReading(drawn);
@@ -251,22 +282,30 @@ class _OracleCardsPageState extends State<OracleCardsPage>
               _buildReadingResult(_drawnCards!),
               const SizedBox(height: 16),
               if (_lastReading != null) ...[
-                _buildCounselorCard(),
-                const SizedBox(height: 8),
-                SaveToRecordsButton(
-                  key: ValueKey('save_${_lastReading!.id}'),
-                  buildEntry: () {
-                    final page = ReadingArchiveComposer.oracle(
-                      _lastReading!,
-                      interpretation: _aiReading,
-                    );
-                    return FreeWritingModel(
-                      userId: context.read<AuthProvider>().currentUser.id,
-                      title: page.title,
-                      content: page.content,
-                      source: FreeWritingSource.oracle,
-                    );
-                  },
+                _EntradaSuave(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      _buildCounselorCard(),
+                      const SizedBox(height: 8),
+                      SaveToRecordsButton(
+                        key: ValueKey('save_${_lastReading!.id}'),
+                        buildEntry: () {
+                          final page = ReadingArchiveComposer.oracle(
+                            _lastReading!,
+                            interpretation: _aiReading,
+                          );
+                          return FreeWritingModel(
+                            userId:
+                                context.read<AuthProvider>().currentUser.id,
+                            title: page.title,
+                            content: page.content,
+                            source: FreeWritingSource.oracle,
+                          );
+                        },
+                      ),
+                    ],
+                  ),
                 ),
                 const SizedBox(height: 8),
               ],
@@ -303,7 +342,11 @@ class _OracleCardsPageState extends State<OracleCardsPage>
         });
       },
       borderRadius: BorderRadius.circular(12),
-      child: Container(
+      child: AnimatedContainer(
+        duration: GrimoireMotion.reduced(context)
+            ? Duration.zero
+            : GrimoireMotion.state,
+        curve: GrimoireMotion.enter,
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: isSelected
@@ -469,18 +512,24 @@ class _OracleCardsPageState extends State<OracleCardsPage>
             child: AnimatedBuilder(
               animation: _animController,
               builder: (context, child) {
-                return FadeTransition(
-                  opacity: Tween<double>(begin: 0, end: 1).animate(
-                    CurvedAnimation(
-                      parent: _animController,
-                      curve: Interval(
-                        position.position * 0.15,
-                        (position.position * 0.15) + 0.4,
-                        curve: Curves.easeOut,
-                      ),
-                    ),
+                // Reduzir movimento: a carta já nasce assentada no lugar.
+                if (GrimoireMotion.reduced(context)) return child!;
+                final total = _totalEntradaMs(positions.length);
+                final inicio =
+                    position.position * _passoEntradaMs(positions.length);
+                final t = Interval(
+                  inicio / total,
+                  (inicio + _duracaoEntradaMs) / total,
+                  curve: GrimoireMotion.enter,
+                ).transform(_animController.value);
+                if (t >= 1.0) return child!;
+                // Desce e assenta, na mesma língua da queda das runas.
+                return Opacity(
+                  opacity: t.clamp(0.0, 1.0).toDouble(),
+                  child: Transform.translate(
+                    offset: Offset(0, 10 * (1 - t)),
+                    child: child,
                   ),
-                  child: child,
                 );
               },
               child: MagicalCard(
@@ -610,4 +659,34 @@ Widget _previaDoConselheiro(BuildContext context) {
       l10n.counselorLockedTitle4,
     ],
   );
+}
+
+/// Entrada de um bloco que chega DEPOIS: opacidade 0 → 1 e subida de 8 px,
+/// uma vez, na montagem.
+///
+/// O Conselheiro e o botão de salvar só existem depois que a leitura foi
+/// gravada no banco — um rebuild que acontece instantes após as cartas. Sem
+/// isto eles pipocam na tela, do nada.
+class _EntradaSuave extends StatelessWidget {
+  final Widget child;
+
+  const _EntradaSuave({required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    if (GrimoireMotion.reduced(context)) return child;
+    return TweenAnimationBuilder<double>(
+      tween: Tween<double>(begin: 0, end: 1),
+      duration: GrimoireMotion.state,
+      curve: GrimoireMotion.enter,
+      builder: (context, t, inner) => Opacity(
+        opacity: t,
+        child: Transform.translate(
+          offset: Offset(0, (1 - t) * 8),
+          child: inner,
+        ),
+      ),
+      child: child,
+    );
+  }
 }
