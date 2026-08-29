@@ -2,10 +2,12 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/ai/ai_service.dart';
+import '../../../../core/navigation/grimoire_route.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/magical_card.dart';
@@ -310,6 +312,9 @@ class _SpreadTabState extends State<_SpreadTab> {
     // Pequena pausa de "embaralhamento" antes de revelar.
     await Future.delayed(const Duration(milliseconds: 700));
     if (!mounted) return;
+    // Um toque só por revelação: a mesa vira como um evento único, não um
+    // tique por carta — e vale também sob "reduzir movimento".
+    HapticFeedback.lightImpact();
     setState(() {
       _revealed = true;
       if (saved != null) _aiReading = saved;
@@ -443,7 +448,7 @@ class _SpreadTabState extends State<_SpreadTab> {
             MagicalCard(
               child: InkWell(
                 onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const TarotLibraryPage()),
+                  GrimoireRoute(builder: (_) => const TarotLibraryPage()),
                 ),
                 borderRadius: BorderRadius.circular(12),
                 child: Row(
@@ -566,34 +571,29 @@ class _SpreadTabState extends State<_SpreadTab> {
                 runSpacing: 12,
                 alignment: WrapAlignment.center,
                 children: [
-                  for (final drawn in _drawn)
-                    AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 450),
-                      child: _revealed
-                          ? Column(
-                              key: ValueKey('front_${drawn.positionLabel}'),
-                              children: [
-                                TarotCardView(
-                                  card: drawn.card,
-                                  reversed: drawn.isReversed,
-                                ),
-                                const SizedBox(height: 6),
-                                SizedBox(
-                                  width: 110,
-                                  child: Text(
-                                    drawn.positionLabel,
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                      color: context.gc.textSecondary,
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            )
-                          : TarotCardBack(
-                              key: ValueKey('back_${drawn.positionLabel}'),
-                            ),
+                  for (var i = 0; i < _drawn.length; i++)
+                    TarotFlipCard(
+                      key: ValueKey('carta_${_drawn[i].positionLabel}'),
+                      revealed: _revealed,
+                      // Stagger: cada carta começa 90 ms depois da anterior —
+                      // a mesa vira em onda, sem esperar ninguém terminar.
+                      delay: Duration(milliseconds: 90 * i),
+                      back: const TarotCardBack(),
+                      front: TarotCardView(
+                        card: _drawn[i].card,
+                        reversed: _drawn[i].isReversed,
+                      ),
+                      caption: SizedBox(
+                        width: 110,
+                        child: Text(
+                          _drawn[i].positionLabel,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: context.gc.textSecondary,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
                     ),
                 ],
               ),

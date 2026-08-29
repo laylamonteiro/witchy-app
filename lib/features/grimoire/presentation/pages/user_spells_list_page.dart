@@ -6,6 +6,7 @@ import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/widgets/loading_widget.dart';
 import '../../../../core/widgets/empty_state_widget.dart';
 import '../../../../core/widgets/magical_fab.dart';
+import '../../../../core/navigation/grimoire_route.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import 'ai_spell_creation_page.dart';
@@ -226,7 +227,11 @@ class _UserSpellsListPageState extends State<UserSpellsListPage> {
                           : _source == SpellSource.ancestral
                                   ? AppLocalizations.of(context).spellNoAncestral
                                   : AppLocalizations.of(context).spellEmptyGrimoire,
-                      icon: Icons.auto_stories,
+                      // Com filtro ativo o vazio é "nada encontrado" (busca);
+                      // sem filtro, é o grimório ainda por escrever.
+                      type: hasActiveFilter
+                          ? MagicalEmptyStateType.search
+                          : MagicalEmptyStateType.generic,
                       actionText: showAddAction ? AppLocalizations.of(context).spellAdd : null,
                       onAction:
                           showAddAction ? () => _navigateToForm(context) : null,
@@ -246,7 +251,7 @@ class _UserSpellsListPageState extends State<UserSpellsListPage> {
                         onTap: () {
                           Navigator.push(
                             context,
-                            MaterialPageRoute(
+                            GrimoireRoute(
                               builder: (_) => SpellDetailPage(spell: spell),
                             ),
                           );
@@ -360,7 +365,7 @@ class _UserSpellsListPageState extends State<UserSpellsListPage> {
   void _navigateToForm(BuildContext context) {
     Navigator.push(
       context,
-      MaterialPageRoute(
+      GrimoireRoute(
         builder: (_) => const AISpellCreationPage(),
       ),
     );
