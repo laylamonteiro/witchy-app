@@ -36,7 +36,7 @@ class _PendulumPageState extends State<PendulumPage>
   /// Multiplica a oscilação nos últimos ~650 ms para o cristal PERDER força
   /// e pousar, em vez do corte seco para ângulo zero que havia antes.
   late AnimationController _settleController;
-  late final Animation<double> _settle;
+  late final CurvedAnimation _settle;
 
   /// Revelação da resposta: glow curto no rótulo sorteado e entrada do card
   /// de interpretação (fade + subida de 8 px).
@@ -73,6 +73,7 @@ class _PendulumPageState extends State<PendulumPage>
   void dispose() {
     _questionController.dispose();
     _swingController.dispose();
+    _settle.dispose();
     _settleController.dispose();
     _revealController.dispose();
     super.dispose();
@@ -494,7 +495,12 @@ class _PendulumPageState extends State<PendulumPage>
 
 /// Entrada do bloco de resposta: opacidade 0 → 1 e subida de 8 px, presa à
 /// segunda metade da revelação (primeiro o rótulo acende no painter, depois
-/// o card chega). Em `value == 1` devolve o filho puro — custo zero depois.
+/// o card chega).
+///
+/// A forma da árvore é SEMPRE a mesma (Opacity > Transform > filho): um
+/// atalho que devolvesse o filho puro no fim trocaria o tipo no slot e
+/// re-inflaria o subtree inteiro — o SaveToRecordsButton perderia o estado.
+/// Opacity em 1.0 e translação zero são curto-circuitados pelo render.
 class _RevealEntrance extends StatelessWidget {
   final Animation<double> animation;
   final Widget child;
@@ -506,9 +512,10 @@ class _RevealEntrance extends StatelessWidget {
     return AnimatedBuilder(
       animation: animation,
       builder: (context, inner) {
-        if (animation.value >= 1) return inner!;
-        final t = const Interval(0.25, 1, curve: GrimoireMotion.enter)
-            .transform(animation.value);
+        final t = animation.value >= 1
+            ? 1.0
+            : const Interval(0.25, 1, curve: GrimoireMotion.enter)
+                .transform(animation.value);
         return Opacity(
           opacity: t,
           child: Transform.translate(

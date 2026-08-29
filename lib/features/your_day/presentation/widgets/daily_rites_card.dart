@@ -10,6 +10,7 @@ import '../../../../core/navigation/app_deep_link.dart';
 import '../../../../core/navigation/grimoire_route.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/theme/grimoire_motion.dart';
+import '../../../../core/widgets/estrela_de_quatro_pontas.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../diary/data/models/gratitude_model.dart';
@@ -123,12 +124,10 @@ class _DailyRitesCardState extends State<DailyRitesCard>
     if (!checkin.isLoaded) return const SizedBox.shrink();
 
     // Provas de que a ação aconteceu de verdade.
-    final gratitudeDone = context
-        .watch<GratitudeProvider>()
-        .gratitudes
-        .any((g) => _isToday(g.createdAt));
-    final dreamDone =
-        context.watch<DreamProvider>().dreams.any((d) => _isToday(d.createdAt));
+    final gratidoes = context.watch<GratitudeProvider>();
+    final sonhos = context.watch<DreamProvider>();
+    final gratitudeDone = gratidoes.gratitudes.any((g) => _isToday(g.createdAt));
+    final dreamDone = sonhos.dreams.any((d) => _isToday(d.createdAt));
     final featuredId = DailyRites.featuredToday();
     final featured = _featuredSpec(context, l10n, featuredId);
     final featuredDone = checkin.isRiteDone(featuredId);
@@ -159,41 +158,51 @@ class _DailyRitesCardState extends State<DailyRitesCard>
     final complete = done == total;
 
     // Transições observadas: feedback só quando algo VIRA feito agora.
-    final reduced = GrimoireMotion.reduced(context);
-    final emCena = _lerEmCena(context);
-    final firstSight = _prevComplete == null;
-    final sealedNow = _prevComplete == false && complete;
-    final riteNow = (_prevGratitude == false && gratitudeDone) ||
-        (_prevDream == false && dreamDone) ||
-        (_prevFeatured == false && featuredDone);
-    _prevGratitude = gratitudeDone;
-    _prevDream = dreamDone;
-    _prevFeatured = featuredDone;
-    _prevComplete = complete;
+    //
+    // Enquanto um dos diários ainda está no load inicial, a contabilidade
+    // fica desarmada: um dia já feito chegando do banco (cold start) faria
+    // false→true de mentira e a celebração viraria abertura de app. O
+    // fluxo real (escrever a gratidão agora) passa pelo mesmo load, mas os
+    // prevs seguem congelados em "não feito" e a transição é vista quando
+    // a lista assenta.
+    final diariosCarregando = gratidoes.isLoading || sonhos.isLoading;
+    if (!diariosCarregando) {
+      final reduced = GrimoireMotion.reduced(context);
+      final emCena = _lerEmCena(context);
+      final firstSight = _prevComplete == null;
+      final sealedNow = _prevComplete == false && complete;
+      final riteNow = (_prevGratitude == false && gratitudeDone) ||
+          (_prevDream == false && dreamDone) ||
+          (_prevFeatured == false && featuredDone);
+      _prevGratitude = gratitudeDone;
+      _prevDream = dreamDone;
+      _prevFeatured = featuredDone;
+      _prevComplete = complete;
 
-    if (firstSight) {
-      // Primeiro build carregado: assenta o estado final em silêncio. Ainda
-      // não há listeners no controller, então mexer nele aqui é seguro.
-      _seal.value = complete ? 1.0 : 0.0;
-    } else if (sealedNow) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-        if (emCena) HapticFeedback.lightImpact();
-        if (reduced) {
-          _seal.value = 1.0;
-        } else {
-          _seal.forward(from: 0);
-        }
-      });
-    } else if (riteNow) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted && emCena) HapticFeedback.selectionClick();
-      });
-    } else if (!complete && _seal.value > 0) {
-      // Virada de meia-noite: o dia reabriu, o selo sai sem cerimônia.
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) _seal.value = 0.0;
-      });
+      if (firstSight) {
+        // Primeiro build carregado: assenta o estado final em silêncio.
+        // Ainda não há listeners no controller, então mexer nele é seguro.
+        _seal.value = complete ? 1.0 : 0.0;
+      } else if (sealedNow) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
+          if (emCena) HapticFeedback.lightImpact();
+          if (reduced) {
+            _seal.value = 1.0;
+          } else {
+            _seal.forward(from: 0);
+          }
+        });
+      } else if (riteNow) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted && emCena) HapticFeedback.selectionClick();
+        });
+      } else if (!complete && _seal.value > 0) {
+        // Virada de meia-noite: o dia reabriu, o selo sai sem cerimônia.
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) _seal.value = 0.0;
+        });
+      }
     }
 
     final accent = complete ? context.gc.mint : context.gc.lilac;
@@ -296,7 +305,8 @@ class _DailyRitesCardState extends State<DailyRitesCard>
                     const SizedBox(width: 6),
                     Expanded(
                       child: Text(
-                        l10n.yourDayRitesComplete(LearningProvider.xpPerFullDay),
+                        l10n.yourDayRitesComplete(
+                            LearningProvider.xpPerFullDay),
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                               color: context.gc.mint,
                               fontWeight: FontWeight.w700,
@@ -381,26 +391,11 @@ class _SealStarsPainter extends CustomPainter {
       final paint = Paint()
         ..color = color.withValues(alpha: (1 - ti) * 0.9)
         ..style = PaintingStyle.fill;
-      _estrela(canvas, pos, 2.6 * (1 - ti * 0.4), paint);
+      canvas.drawPath(
+        estrelaDeQuatroPontas(pos, 2.6 * (1 - ti * 0.4), razaoInterna: 0.35),
+        paint,
+      );
     }
-  }
-
-  // Estrela de 4 pontas: dois losangos finos cruzados.
-  void _estrela(Canvas canvas, Offset c, double r, Paint paint) {
-    final v = Path()
-      ..moveTo(c.dx, c.dy - r)
-      ..lineTo(c.dx + r * 0.35, c.dy)
-      ..lineTo(c.dx, c.dy + r)
-      ..lineTo(c.dx - r * 0.35, c.dy)
-      ..close();
-    final h = Path()
-      ..moveTo(c.dx - r, c.dy)
-      ..lineTo(c.dx, c.dy - r * 0.35)
-      ..lineTo(c.dx + r, c.dy)
-      ..lineTo(c.dx, c.dy + r * 0.35)
-      ..close();
-    canvas.drawPath(v, paint);
-    canvas.drawPath(h, paint);
   }
 
   @override
@@ -524,6 +519,13 @@ class _RiteTileState extends State<_RiteTile>
     value: widget.done ? 1.0 : 0.0,
   );
 
+  /// Campo (e não recriada por build): a curva do check é estável e é
+  /// liberada junto do controller, como manda o padrão da casa.
+  late final CurvedAnimation _popCurva = CurvedAnimation(
+    parent: _pop,
+    curve: GrimoireMotion.emphasis,
+  );
+
   @override
   void didUpdateWidget(covariant _RiteTile old) {
     super.didUpdateWidget(old);
@@ -540,6 +542,7 @@ class _RiteTileState extends State<_RiteTile>
 
   @override
   void dispose() {
+    _popCurva.dispose();
     _pop.dispose();
     super.dispose();
   }
@@ -579,10 +582,7 @@ class _RiteTileState extends State<_RiteTile>
                 ),
                 child: widget.done
                     ? ScaleTransition(
-                        scale: CurvedAnimation(
-                          parent: _pop,
-                          curve: GrimoireMotion.emphasis,
-                        ),
+                        scale: _popCurva,
                         child:
                             Icon(Icons.check, size: 16, color: context.gc.mint),
                       )

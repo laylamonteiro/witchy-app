@@ -10,6 +10,11 @@ import '../theme/grimoire_motion.dart';
 /// mesmo contrato do MaterialPageRoute, para migração 1:1 onde fizer
 /// sentido.
 ///
+/// Limite conhecido: sem o mixin Cupertino, o iOS perde o swipe de borda
+/// para voltar NESTA rota (o botão/gesto do sistema seguem valendo). Por
+/// isso ela entra tela a tela, nas navegações comuns — não em fluxos onde
+/// o swipe é parte do hábito.
+///
 /// Com "reduzir movimento" ativo, a tela aparece pronta (sem fade nem
 /// deslocamento).
 class GrimoireRoute<T> extends PageRouteBuilder<T> {
@@ -20,8 +25,14 @@ class GrimoireRoute<T> extends PageRouteBuilder<T> {
   }) : super(
           transitionDuration: GrimoireMotion.route,
           reverseTransitionDuration: const Duration(milliseconds: 180),
-          pageBuilder: (context, animation, secondaryAnimation) =>
-              builder(context),
+          // O MaterialPageRoute embrulha a página em Semantics de rota; o
+          // PageRouteBuilder cru não — sem isto, o leitor de tela deixaria
+          // de anunciar/escopar a tela nova como rota.
+          pageBuilder: (context, animation, secondaryAnimation) => Semantics(
+            scopesRoute: true,
+            explicitChildNodes: true,
+            child: builder(context),
+          ),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
             if (GrimoireMotion.reduced(context)) return child;
             final curved = CurvedAnimation(

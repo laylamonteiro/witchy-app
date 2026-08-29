@@ -1,7 +1,6 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 import '../theme/grimoire_colors.dart';
+import 'estrela_de_quatro_pontas.dart';
 
 /// O loader oficial do Grimório: lua crescente lilás com estrelinhas que
 /// acendem em sequência ao redor, no lugar do spinner genérico do Material.
@@ -222,8 +221,7 @@ class _LuaCrescentePainter extends CustomPainter {
       oldDelegate.cor != cor;
 }
 
-/// Estrela de 4 pontas (8 vértices alternando raio cheio e raio curto),
-/// a mesma silhueta ✦ do rastro do Salem.
+/// Estrela de 4 pontas — a silhueta ✦ compartilhada do app.
 class _EstrelaPainter extends CustomPainter {
   final Color cor;
 
@@ -232,24 +230,10 @@ class _EstrelaPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final raio = size.width / 2;
-    final centro = Offset(raio, raio);
-    final caminho = Path();
-
-    for (var i = 0; i < 8; i++) {
-      // -pi/2 para a primeira ponta olhar para cima.
-      final angulo = -math.pi / 2 + (math.pi / 4) * i;
-      final distancia = i.isEven ? raio : raio * 0.4;
-      final x = centro.dx + distancia * math.cos(angulo);
-      final y = centro.dy + distancia * math.sin(angulo);
-      if (i == 0) {
-        caminho.moveTo(x, y);
-      } else {
-        caminho.lineTo(x, y);
-      }
-    }
-    caminho.close();
-
-    canvas.drawPath(caminho, Paint()..color = cor);
+    canvas.drawPath(
+      estrelaDeQuatroPontas(Offset(raio, raio), raio),
+      Paint()..color = cor,
+    );
   }
 
   @override

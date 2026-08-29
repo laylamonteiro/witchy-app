@@ -13,7 +13,10 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   sqfliteFfiInit();
-  databaseFactory = databaseFactoryFfi;
+  // Sem isolate: dentro de testWidgets o loop é fake-async, e a resposta do
+  // isolate do sqflite nunca chegaria — o insert do botão penderia para
+  // sempre no pumpAndSettle.
+  databaseFactory = databaseFactoryFfiNoIsolate;
 
   late List<String> hapticos;
 
@@ -102,10 +105,18 @@ void main() {
     ));
 
     await tester.tap(find.byType(OutlinedButton));
-    await tester.pumpAndSettle();
+    // Nada de pumpAndSettle: ele deixaria uma animação de 260 ms passar
+    // despercebida. Três bombas de 10 ms (< qualquer duração do vocabulário)
+    // drenam o insert e provam que a confirmação chegou INSTANTÂNEA.
+    await tester.pump(const Duration(milliseconds: 10));
+    await tester.pump(const Duration(milliseconds: 10));
+    await tester.pump(const Duration(milliseconds: 10));
 
     expect(entradasMontadas, 1);
     expect(find.byIcon(Icons.bookmark_added), findsOneWidget);
+    // A prova da instantaneidade: com duração zero o ícone antigo já saiu
+    // da árvore; animando 260 ms ele ainda estaria aqui, em fade.
+    expect(find.byIcon(Icons.bookmark_add_outlined), findsNothing);
     expect(hapticos, ['HapticFeedbackType.selectionClick']);
     expect(tester.takeException(), isNull);
   });

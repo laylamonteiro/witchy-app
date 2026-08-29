@@ -456,6 +456,8 @@ class _NavIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // 180 ms de propósito, entre tap (140) e state (260): navegação pede
+    // resposta mais viva que uma mudança de estado, sem virar estalo.
     final duration = GrimoireMotion.reduced(context)
         ? Duration.zero
         : const Duration(milliseconds: 180);

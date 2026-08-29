@@ -35,11 +35,6 @@ class _CheckinFake extends DailyCheckinProvider {
     notifyListeners();
   }
 
-  void marca(String riteId) {
-    feitos.add(riteId);
-    notifyListeners();
-  }
-
   void cutuca() => notifyListeners();
 }
 

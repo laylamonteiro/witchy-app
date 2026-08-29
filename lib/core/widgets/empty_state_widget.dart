@@ -1,9 +1,8 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 
 import '../theme/grimoire_colors.dart';
 import '../theme/grimoire_motion.dart';
+import 'estrela_de_quatro_pontas.dart';
 
 /// Cenas ilustradas do estado vazio — cada canto do Grimório tem a sua.
 ///
@@ -374,24 +373,9 @@ class _ScenePainter extends CustomPainter {
     );
   }
 
-  /// Estrela de 4 pontas (8 vértices alternando raio cheio e 42%).
-  Path _estrela(Offset centro, double raio) {
-    final caminho = Path();
-    for (var i = 0; i < 8; i++) {
-      final angulo = i * math.pi / 4 - math.pi / 2;
-      final r = i.isEven ? raio : raio * 0.42;
-      final p = Offset(
-        centro.dx + math.cos(angulo) * r,
-        centro.dy + math.sin(angulo) * r,
-      );
-      if (i == 0) {
-        caminho.moveTo(p.dx, p.dy);
-      } else {
-        caminho.lineTo(p.dx, p.dy);
-      }
-    }
-    return caminho..close();
-  }
+  /// A silhueta ✦ compartilhada, com o miolo um tiquinho mais cheio.
+  Path _estrela(Offset centro, double raio) =>
+      estrelaDeQuatroPontas(centro, raio, razaoInterna: 0.42);
 
   @override
   bool shouldRepaint(_ScenePainter oldDelegate) =>
