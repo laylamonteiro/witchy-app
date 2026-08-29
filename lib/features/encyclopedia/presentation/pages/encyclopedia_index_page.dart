@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 
+import '../../../../core/haptics/toque_magico.dart';
 import '../../../../core/navigation/encyclopedia_section.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/living_emblem.dart' show BlinkStar;
@@ -106,9 +107,14 @@ class _EncyclopediaIndexPageState extends State<EncyclopediaIndexPage>
           _coverOpenedThisSession = true;
           setState(() => _coverGone = true);
         } else if (status == AnimationStatus.dismissed) {
-          // A capa pousou: o livro repousa — e solta a poeira.
+          // A capa pousou: o livro repousa — solta a poeira e pesa na mão.
+          // A vibração mora no mesmo guarda da poeira de propósito: quem pediu
+          // "reduzir movimento" fecha em silêncio (precedente do Shaker do
+          // auth), e o fechar SEM animação (_open.value = 0.0 na montagem)
+          // também cai aqui — esse não veio de gesto e não deve vibrar.
           _coverOpenedThisSession = false;
           if (!MediaQuery.disableAnimationsOf(context)) {
+            ToqueMagico.medio();
             setState(() => _dustTick++);
           }
         }
