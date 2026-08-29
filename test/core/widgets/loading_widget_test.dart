@@ -57,10 +57,10 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('sem mensagem: nenhum texto, mas o leitor de tela não fica mudo',
+  testWidgets('sem mensagem: nenhum texto e nenhum rótulo hardcoded',
       (tester) async {
-    final semantica = tester.ensureSemantics();
-
+    // Sem mensagem, o loader fica mudo de propósito (paridade com o spinner
+    // antigo): um rótulo fixo seria português hardcoded nas telas EN/ES.
     await tester.pumpWidget(tela(const LoadingWidget()));
     await tester.pump(const Duration(milliseconds: 500));
 
@@ -71,10 +71,7 @@ void main() {
       ),
       findsNothing,
     );
-    expect(find.bySemanticsLabel('Carregando…'), findsOneWidget);
     expect(tester.takeException(), isNull);
-
-    semantica.dispose();
   });
 
   testWidgets('com "reduzir movimento" a tela assenta — nada anima em laço',

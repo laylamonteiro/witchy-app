@@ -76,7 +76,9 @@ class _DailyRitesCardState extends State<DailyRitesCard>
   /// desliga o TickerMode, e embaixo de outra rota a página não é a atual —
   /// rebuilds acontecem do mesmo jeito (sync, completeRite das ferramentas),
   /// mas haptic fora de cena é só ruído (e dobraria com o da ferramenta).
-  bool get _emCena {
+  /// Lido no build (dependências registradas no lugar certo) e consumido
+  /// pelos callbacks pós-frame.
+  static bool _lerEmCena(BuildContext context) {
     final route = ModalRoute.of(context);
     return TickerMode.of(context) && (route?.isCurrent ?? true);
   }
@@ -158,6 +160,7 @@ class _DailyRitesCardState extends State<DailyRitesCard>
 
     // Transições observadas: feedback só quando algo VIRA feito agora.
     final reduced = GrimoireMotion.reduced(context);
+    final emCena = _lerEmCena(context);
     final firstSight = _prevComplete == null;
     final sealedNow = _prevComplete == false && complete;
     final riteNow = (_prevGratitude == false && gratitudeDone) ||
@@ -175,7 +178,7 @@ class _DailyRitesCardState extends State<DailyRitesCard>
     } else if (sealedNow) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
-        if (_emCena) HapticFeedback.lightImpact();
+        if (emCena) HapticFeedback.lightImpact();
         if (reduced) {
           _seal.value = 1.0;
         } else {
@@ -184,7 +187,7 @@ class _DailyRitesCardState extends State<DailyRitesCard>
       });
     } else if (riteNow) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted && _emCena) HapticFeedback.selectionClick();
+        if (mounted && emCena) HapticFeedback.selectionClick();
       });
     } else if (!complete && _seal.value > 0) {
       // Virada de meia-noite: o dia reabriu, o selo sai sem cerimônia.

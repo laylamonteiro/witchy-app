@@ -95,9 +95,11 @@ class _LoadingWidgetState extends State<LoadingWidget>
   Widget build(BuildContext context) {
     final gc = context.gc;
 
-    // Decorativo para o leitor de tela: quando há mensagem, o Text abaixo
-    // é quem fala; sem mensagem, um rótulo neutro cobre o silêncio.
-    Widget arte = ExcludeSemantics(
+    // Decorativo para o leitor de tela: quem fala é a mensagem abaixo (todas
+    // as telas de hoje passam uma). Um rótulo fixo aqui teria que ser
+    // hardcoded em português — pior para EN/ES do que o silêncio que o
+    // spinner antigo já tinha.
+    final Widget arte = ExcludeSemantics(
       child: RepaintBoundary(
         child: SizedBox(
           width: 64,
@@ -143,10 +145,6 @@ class _LoadingWidgetState extends State<LoadingWidget>
         ),
       ),
     );
-
-    if (widget.message == null) {
-      arte = Semantics(label: 'Carregando…', child: arte);
-    }
 
     return Center(
       child: Column(
