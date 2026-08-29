@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'dart:math' as math;
 import 'dart:async';
 import 'package:flutter_svg/flutter_svg.dart';
+import '../../../core/haptics/toque_magico.dart';
 import '../../../core/theme/grimoire_colors.dart';
 
 /// Poses do mascote baseadas nos novos SVG assets
@@ -439,7 +440,9 @@ class _DraggableCatMascotState extends State<DraggableCatMascot>
     _rapidTapCount++;
     _lastTapTime = now;
 
-    // Ativar expressão feliz
+    // Ativar expressão feliz — o carinho responde na mão também.
+    // (Só o toque que gera partículas vibra; acordar/levantar o gato, não.)
+    ToqueMagico.leve();
     setState(() => _isHappy = true);
 
     // Criar explosão de partículas (com limite)
@@ -496,6 +499,7 @@ class _DraggableCatMascotState extends State<DraggableCatMascot>
   /// avisado para esconder o Salem.
   void _dismissInSmoke() {
     if (_isDismissing) return;
+    ToqueMagico.medio(); // o puf merece o toque mais forte
     setState(() => _isDismissing = true);
     _createSmokeBurst(_x + widget.size / 2, _y + widget.size / 2);
     Future.delayed(const Duration(milliseconds: 550), () {

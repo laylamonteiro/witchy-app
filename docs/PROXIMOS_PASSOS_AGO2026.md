@@ -258,7 +258,12 @@ não como projeto separado.
 
 ---
 
-## 5. Vibrar ao fechar a capa e ao clicar no Salem
+## 5. Vibrar ao fechar a capa e ao clicar no Salem ✅ (implementado em ago/2026)
+
+> Entregue: helper `ToqueMagico` (`lib/core/haptics/toque_magico.dart`) com ponte
+> `navigator.vibrate` para a web; vibração na capa pousando (junto da poeira, mesmo
+> guarda do "reduzir movimento"), no carinho do Salem e no puf de fumaça. Sem toggle
+> (decisão: segue o sistema). Testes em `test/toque_magico_test.dart`.
 
 ### Viabilidade por plataforma (a parte que engana)
 
