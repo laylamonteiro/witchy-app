@@ -2,9 +2,17 @@
 /// (marcador preenchido, mint) e não aceita novo toque. O contrato inclui o
 /// feedback: um haptic no sucesso — e nenhum segundo salvamento por mais que
 /// se toque de novo. Com "reduzir movimento", a troca é instantânea.
+///
+/// O botão grava pelo repositório de verdade (sqflite ffi), e isso decide a
+/// forma do teste: abrir o banco é I/O de disco, que o relógio FALSO do
+/// testWidgets não avança — o await ficaria pendurado para sempre e a
+/// confirmação nunca chegaria à tela. Por isso o banco é aberto uma vez em
+/// setUpAll (relógio real) e a espera pelo insert alterna tempo real
+/// (runAsync) com desenho (pump), sempre com teto.
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:grimorio_de_bolso/core/database/database_helper.dart';
 import 'package:grimorio_de_bolso/features/diary/data/models/free_writing_model.dart';
 import 'package:grimorio_de_bolso/features/diary/presentation/widgets/save_to_records_button.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
@@ -13,12 +21,17 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   sqfliteFfiInit();
-  // Sem isolate: dentro de testWidgets o loop é fake-async, e a resposta do
-  // isolate do sqflite nunca chegaria — o insert do botão penderia para
-  // sempre no pumpAndSettle.
+  // Sem isolate: o SQLite responde no mesmo isolate, em vez de mensagens que
+  // o relógio falso do teste de widget não entregaria.
   databaseFactory = databaseFactoryFfiNoIsolate;
 
   late List<String> hapticos;
+
+  setUpAll(() async {
+    // Abre (e cria) o banco aqui fora, onde o relógio é real: dentro do
+    // testWidgets essa abertura nunca completaria.
+    await DatabaseHelper.instance.database;
+  });
 
   setUp(() {
     hapticos = [];
@@ -50,6 +63,28 @@ void main() {
         home: Scaffold(body: Center(child: child)),
       );
 
+  /// Toca em salvar e espera a confirmação chegar à tela: cada volta dá um
+  /// tempo REAL ao insert (runAsync) e desenha um quadro (pump). O teto de
+  /// 50 voltas (~1s) faz o teste falhar por asserção em vez de pendurar a
+  /// suíte se o salvamento nunca completar.
+  Future<void> tocarEmSalvar(WidgetTester tester) async {
+    await tester.tap(find.byType(OutlinedButton));
+    for (var i = 0; i < 50; i++) {
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 20)),
+      );
+      await tester.pump();
+      if (find.byIcon(Icons.bookmark_added).evaluate().isNotEmpty) return;
+    }
+  }
+
+  /// O SnackBar de confirmação fica alguns segundos em cena; sem deixar o
+  /// timer dele terminar, o binding acusa timer pendente no fim do teste.
+  Future<void> deixarOAvisoPassar(WidgetTester tester) async {
+    await tester.pump(const Duration(seconds: 5));
+    await tester.pumpAndSettle();
+  }
+
   testWidgets('salva uma vez, vira confirmação e ignora o segundo toque',
       (tester) async {
     var entradasMontadas = 0;
@@ -67,7 +102,7 @@ void main() {
 
     expect(find.byIcon(Icons.bookmark_add_outlined), findsOneWidget);
 
-    await tester.tap(find.byType(OutlinedButton));
+    await tocarEmSalvar(tester);
     await tester.pumpAndSettle();
 
     expect(entradasMontadas, 1);
@@ -83,6 +118,8 @@ void main() {
     await tester.pumpAndSettle();
     expect(entradasMontadas, 1);
     expect(hapticos.length, 1);
+
+    await deixarOAvisoPassar(tester);
     expect(tester.takeException(), isNull);
   });
 
@@ -104,20 +141,17 @@ void main() {
       semAnimacoes: true,
     ));
 
-    await tester.tap(find.byType(OutlinedButton));
-    // Nada de pumpAndSettle: ele deixaria uma animação de 260 ms passar
-    // despercebida. Três bombas de 10 ms (< qualquer duração do vocabulário)
-    // drenam o insert e provam que a confirmação chegou INSTANTÂNEA.
-    await tester.pump(const Duration(milliseconds: 10));
-    await tester.pump(const Duration(milliseconds: 10));
-    await tester.pump(const Duration(milliseconds: 10));
+    await tocarEmSalvar(tester);
+    // Um quadro a mais, sem avançar o relógio: com duração zero o ícone
+    // antigo já saiu: com os 260 ms de sempre ele ainda estaria em cena.
+    await tester.pump();
 
     expect(entradasMontadas, 1);
     expect(find.byIcon(Icons.bookmark_added), findsOneWidget);
-    // A prova da instantaneidade: com duração zero o ícone antigo já saiu
-    // da árvore; animando 260 ms ele ainda estaria aqui, em fade.
     expect(find.byIcon(Icons.bookmark_add_outlined), findsNothing);
     expect(hapticos, ['HapticFeedbackType.selectionClick']);
+
+    await deixarOAvisoPassar(tester);
     expect(tester.takeException(), isNull);
   });
 }
