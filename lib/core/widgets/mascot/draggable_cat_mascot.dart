@@ -77,6 +77,10 @@ class _DraggableCatMascotState extends State<DraggableCatMascot>
   // Timer para idle (dormir após inatividade)
   Timer? _idleTimer;
   Timer? _sleepTransitionTimer;
+
+  // O piscar era um Future.delayed solto que sobrevivia ao dispose — a mesma
+  // dívida já zerada no StaggeredEntrance/LivingEmblem. Timer cancelável.
+  Timer? _blinkTimer;
   static const Duration _idleTimeout = Duration(seconds: 12);
   static const Duration _lyingRelaxedIdleTimeout = Duration(seconds: 5);
 
@@ -254,6 +258,9 @@ class _DraggableCatMascotState extends State<DraggableCatMascot>
       _isMaterializing = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
+        // O puf da volta vibra como o do sumiço: os 5 toques na tela que
+        // trazem o Salem de volta merecem a mesma resposta na mão.
+        ToqueMagico.medio();
         setState(() {
           _createSmokeBurst(_x + widget.size / 2, _y + widget.size / 2);
         });
@@ -362,7 +369,8 @@ class _DraggableCatMascotState extends State<DraggableCatMascot>
   }
 
   void _startBlinking() {
-    Future.delayed(Duration(seconds: 3 + math.Random().nextInt(4)), () {
+    _blinkTimer?.cancel();
+    _blinkTimer = Timer(Duration(seconds: 3 + math.Random().nextInt(4)), () {
       if (mounted && !_isDragging) {
         setState(() => _isBlinking = true);
         _blinkController.forward().then((_) {
@@ -381,6 +389,7 @@ class _DraggableCatMascotState extends State<DraggableCatMascot>
   @override
   void dispose() {
     _idleTimer?.cancel();
+    _blinkTimer?.cancel();
     _scaleController.dispose();
     _shadowController.dispose();
     _particleController.dispose();

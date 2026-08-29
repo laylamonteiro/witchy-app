@@ -99,6 +99,22 @@ void main() {
       expect(sumiu, isTrue);
       expect(vibracoes(chamadas).last, 'HapticFeedbackType.mediumImpact');
     });
+
+    testWidgets('a volta do esconderijo materializa com o toque forte',
+        (tester) async {
+      final chamadas = espionarAPlataforma();
+      var voltou = false;
+      await tester.pumpWidget(app(DraggableCatMascot(
+        appearInSmoke: true,
+        onAppeared: () => voltou = true,
+      )));
+      // O puf da materialização sai no post-frame; o aviso ao pai, 550ms depois.
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 600));
+
+      expect(voltou, isTrue);
+      expect(vibracoes(chamadas), ['HapticFeedbackType.mediumImpact']);
+    });
   });
 
   group('Capa do Grimório', () {

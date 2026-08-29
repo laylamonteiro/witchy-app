@@ -262,7 +262,8 @@ não como projeto separado.
 
 > Entregue: helper `ToqueMagico` (`lib/core/haptics/toque_magico.dart`) com ponte
 > `navigator.vibrate` para a web; vibração na capa pousando (junto da poeira, mesmo
-> guarda do "reduzir movimento"), no carinho do Salem e no puf de fumaça. Sem toggle
+> guarda do "reduzir movimento"), no carinho do Salem e nos dois pufs de fumaça
+> (sumiço no 5º toque e reaparição pelos 5 toques na tela). Sem toggle
 > (decisão: segue o sistema). Testes em `test/toque_magico_test.dart`.
 
 ### Viabilidade por plataforma (a parte que engana)
