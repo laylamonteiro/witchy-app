@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import '../../../../core/theme/grimoire_colors.dart';
+import '../../../../core/theme/grimoire_motion.dart';
 import '../../data/models/free_writing_model.dart';
 import '../../data/repositories/free_writing_repository.dart';
 
@@ -8,6 +10,10 @@ import '../../data/repositories/free_writing_repository.dart';
 /// só entram no acervo quando a Bruxa QUER — salvar tudo automaticamente
 /// poluía o Meus Registros. Salva uma vez e vira confirmação; use uma `key`
 /// por leitura (ex.: ValueKey do id) para o botão renascer a cada tiragem.
+///
+/// Ao salvar, o próprio botão conta a história: o marcador vira o preenchido
+/// com um respiro, a cor assenta em mint e o rótulo cruza para "salvo" — o
+/// SnackBar segue existindo, mas já não é o único aviso.
 class SaveToRecordsButton extends StatefulWidget {
   /// Monta a entrada na hora do toque (título/conteúdo/origem prontos).
   final FreeWritingModel Function() buildEntry;
@@ -36,6 +42,8 @@ class _SaveToRecordsButtonState extends State<SaveToRecordsButton> {
       _saved = true;
       _saving = false;
     });
+    // Mudança concreta de estado (salvou de verdade): um clique leve basta.
+    HapticFeedback.selectionClick();
     messenger.showSnackBar(
       SnackBar(
         content: Text(l10n.palmSavedToRecords),
@@ -47,15 +55,47 @@ class _SaveToRecordsButtonState extends State<SaveToRecordsButton> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    return OutlinedButton.icon(
-      onPressed: _saved || _saving ? null : _save,
-      icon: Icon(_saved ? Icons.check : Icons.bookmark_add_outlined, size: 18),
-      label: Text(_saved ? l10n.palmSavedShort : l10n.saveToRecords),
-      style: OutlinedButton.styleFrom(
-        foregroundColor: context.gc.lilac,
-        side: BorderSide(color: context.gc.lilac),
-        padding: const EdgeInsets.symmetric(vertical: 12),
-      ),
+    final reduced = GrimoireMotion.reduced(context);
+    final duration = reduced ? Duration.zero : GrimoireMotion.state;
+    final target = _saved ? context.gc.mint : context.gc.lilac;
+
+    // ColorTween retargetável: lilás → mint quando salva (e o botão fica
+    // desabilitado, então a cor de disabled acompanha para não acinzentar
+    // a confirmação).
+    return TweenAnimationBuilder<Color?>(
+      tween: ColorTween(end: target),
+      duration: duration,
+      builder: (context, color, _) {
+        final c = color ?? target;
+        return OutlinedButton.icon(
+          onPressed: _saved || _saving ? null : _save,
+          icon: AnimatedSwitcher(
+            duration: duration,
+            switchInCurve: GrimoireMotion.emphasis,
+            switchOutCurve: GrimoireMotion.exit,
+            transitionBuilder: (child, animation) =>
+                ScaleTransition(scale: animation, child: child),
+            child: Icon(
+              _saved ? Icons.bookmark_added : Icons.bookmark_add_outlined,
+              key: ValueKey(_saved),
+              size: 18,
+            ),
+          ),
+          label: AnimatedSwitcher(
+            duration: duration,
+            child: Text(
+              _saved ? l10n.palmSavedShort : l10n.saveToRecords,
+              key: ValueKey(_saved),
+            ),
+          ),
+          style: OutlinedButton.styleFrom(
+            foregroundColor: c,
+            disabledForegroundColor: _saved ? c : null,
+            side: BorderSide(color: c),
+            padding: const EdgeInsets.symmetric(vertical: 12),
+          ),
+        );
+      },
     );
   }
 }
