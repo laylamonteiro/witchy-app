@@ -412,6 +412,15 @@ class _DraggableCatMascotState extends State<DraggableCatMascot>
   /// toques. Fica quieta no arraste, no sumiço ou desmontado.
   void _reacaoDeConquista() {
     if (!mounted || _isDragging || _isDismissing) return;
+    // Sob "reduzir movimento" a comemoração vai direto ao estado final: só a
+    // carinha feliz por um instante, sem pulo, escala nem faíscas.
+    if (MediaQuery.disableAnimationsOf(context)) {
+      setState(() => _isHappy = true);
+      Future.delayed(const Duration(milliseconds: 260), () {
+        if (mounted) setState(() => _isHappy = false);
+      });
+      return;
+    }
     setState(() => _isHappy = true);
     _createParticleBurst(_x + widget.size / 2, _y + widget.size / 2);
     if (!_scaleController.isAnimating) {
