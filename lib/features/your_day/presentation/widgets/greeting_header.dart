@@ -94,6 +94,7 @@ class GreetingHeader extends StatelessWidget {
                   child: _AnelDeNivel(
                     level: level,
                     progresso: learning.levelProgress,
+                    carregado: learning.isLoaded,
                   ),
                 ),
               ),
@@ -140,9 +141,11 @@ class _StreakPillState extends State<_StreakPill>
   @override
   void didUpdateWidget(covariant _StreakPill old) {
     super.didUpdateWidget(old);
-    // Só a SUBIDA comemora. A virada da meia-noite, que recomeça a
-    // sequência, e o sync que chega com outro número não são conquista.
-    if (widget.streak <= old.streak) return;
+    // Só o dia GANHO comemora: um degrau de exatamente um, que é o que a
+    // virada do dia registra. Queda, reconstrução e o SALTO que o sync traz
+    // da nuvem (5 → 21 numa reinstalação) são número que chegou, não
+    // conquista de agora.
+    if (widget.streak != old.streak + 1) return;
     if (GrimoireMotion.reduced(context)) return;
     _marco = _StreakPill.marcos.contains(widget.streak);
     _pulso.duration =
@@ -179,7 +182,7 @@ class _StreakPillState extends State<_StreakPill>
               color: color.withValues(alpha: 0.14),
               borderRadius: BorderRadius.circular(20),
               border: Border.all(color: color.withValues(alpha: 0.55)),
-              boxShadow: _marco && onda > 0
+              boxShadow: _marco && onda > 0.01
                   ? [
                       BoxShadow(
                         color: context.gc.gold.withValues(alpha: 0.45 * onda),
@@ -192,6 +195,9 @@ class _StreakPillState extends State<_StreakPill>
               mainAxisSize: MainAxisSize.min,
               children: [
                 Transform.scale(
+                  // Chave para o teste medir o pulso sem confundi-lo com a
+                  // escala de entrada, que embrulha o selo inteiro.
+                  key: const ValueKey('selo_chama'),
                   scale: 1 + 0.18 * onda,
                   child: const Text('🔥', style: TextStyle(fontSize: 14)),
                 ),
@@ -235,13 +241,21 @@ class _StreakPillState extends State<_StreakPill>
 /// Anel do nível.
 ///
 /// O anel acompanha o XP o tempo todo; o que se comemora é o DEGRAU: quando
-/// o título muda com a tela em cena, o emoji troca com um respiro e um halo
+/// o nível SOBE com a tela em cena, o emoji troca com um respiro e um halo
 /// dourado curto passa por trás. Montar já num nível alto não celebra nada.
 class _AnelDeNivel extends StatefulWidget {
   final LearningLevel level;
   final double progresso;
 
-  const _AnelDeNivel({required this.level, required this.progresso});
+  /// O XP já veio do banco? Antes disso o anel mostra o primeiro degrau por
+  /// falta de dado — e o nível real chegando seria festa de abertura.
+  final bool carregado;
+
+  const _AnelDeNivel({
+    required this.level,
+    required this.progresso,
+    required this.carregado,
+  });
 
   @override
   State<_AnelDeNivel> createState() => _AnelDeNivelState();
@@ -254,10 +268,28 @@ class _AnelDeNivelState extends State<_AnelDeNivel>
     duration: GrimoireMotion.celebration,
   );
 
+  /// Degrau já visto, guardado pelo LIMIAR DE XP e não pelo título: o título
+  /// é texto de tela, reescrito quando muda o idioma ou o tratamento, sem um
+  /// ponto de XP de diferença. O limiar é o que só muda quando se sobe.
+  int? _degrauVisto;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.carregado) _degrauVisto = widget.level.minXp;
+  }
+
   @override
   void didUpdateWidget(covariant _AnelDeNivel old) {
     super.didUpdateWidget(old);
-    if (widget.level.title == old.level.title) return;
+    if (!widget.carregado) return;
+    final degrau = widget.level.minXp;
+    // Primeiro degrau assentado: é o ponto de partida, não uma subida.
+    if (_degrauVisto == null || degrau <= _degrauVisto!) {
+      _degrauVisto = degrau;
+      return;
+    }
+    _degrauVisto = degrau;
     if (GrimoireMotion.reduced(context)) return;
     _subiu.forward(from: 0);
   }
@@ -282,7 +314,7 @@ class _AnelDeNivelState extends State<_AnelDeNivel>
         return DecoratedBox(
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            boxShadow: onda > 0
+            boxShadow: onda > 0.01
                 ? [
                     BoxShadow(
                       color: ouro.withValues(alpha: 0.5 * onda),
@@ -304,7 +336,7 @@ class _AnelDeNivelState extends State<_AnelDeNivel>
               ScaleTransition(scale: animation, child: child),
           child: Text(
             widget.level.emoji,
-            key: ValueKey(widget.level.title),
+            key: ValueKey(widget.level.minXp),
             style: const TextStyle(fontSize: 20),
           ),
         ),

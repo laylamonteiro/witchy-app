@@ -35,23 +35,63 @@ class GrimoireRoute<T> extends PageRouteBuilder<T> {
           ),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
             if (GrimoireMotion.reduced(context)) return child;
-            final curved = CurvedAnimation(
-              parent: animation,
-              curve: GrimoireMotion.enter,
-              reverseCurve: GrimoireMotion.exit,
-            );
-            return FadeTransition(
-              opacity: curved,
-              child: AnimatedBuilder(
-                animation: curved,
-                builder: (context, inner) => Transform.translate(
-                  // 8 px fixos (não fração da tela): sutil em qualquer altura.
-                  offset: Offset(0, (1 - curved.value) * 8),
-                  child: inner,
-                ),
-                child: child,
-              ),
-            );
+            return _EntradaDaRota(animation: animation, child: child);
           },
         );
+}
+
+/// A entrada em si: fade + subida de 8 px.
+///
+/// É um StatefulWidget porque a curva precisa VIVER mais que um quadro. O
+/// `transitionsBuilder` é chamado a cada quadro da transição, e uma
+/// CurvedAnimation criada ali dentro registra um listener na animação da
+/// rota a cada quadro — listeners que ninguém remove, em toda navegação.
+class _EntradaDaRota extends StatefulWidget {
+  final Animation<double> animation;
+  final Widget child;
+
+  const _EntradaDaRota({required this.animation, required this.child});
+
+  @override
+  State<_EntradaDaRota> createState() => _EntradaDaRotaState();
+}
+
+class _EntradaDaRotaState extends State<_EntradaDaRota> {
+  late CurvedAnimation _curva = _cria();
+
+  CurvedAnimation _cria() => CurvedAnimation(
+        parent: widget.animation,
+        curve: GrimoireMotion.enter,
+        reverseCurve: GrimoireMotion.exit,
+      );
+
+  @override
+  void didUpdateWidget(covariant _EntradaDaRota old) {
+    super.didUpdateWidget(old);
+    if (widget.animation == old.animation) return;
+    _curva.dispose();
+    _curva = _cria();
+  }
+
+  @override
+  void dispose() {
+    _curva.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeTransition(
+      opacity: _curva,
+      child: AnimatedBuilder(
+        animation: _curva,
+        builder: (context, inner) => Transform.translate(
+          // 8 px fixos (não fração da tela): sutil em qualquer altura.
+          offset: Offset(0, (1 - _curva.value) * 8),
+          child: inner,
+        ),
+        child: widget.child,
+      ),
+    );
+  }
 }

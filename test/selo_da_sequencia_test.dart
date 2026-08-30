@@ -51,6 +51,9 @@ class _LearningFake extends LearningProvider {
   @override
   double get levelProgress => 0.5;
 
+  @override
+  bool get isLoaded => true;
+
   void sobePara(LearningLevel novo) {
     _level = novo;
     notifyListeners();
@@ -92,19 +95,15 @@ void main() {
     );
   }
 
-  /// Maior escala aplicada à chama: o pulso vive num Transform.scale em volta
-  /// dela, então a matriz denuncia se a comemoração rodou ou não.
-  double escalaDaChama(WidgetTester tester) {
-    final transforms = tester.widgetList<Transform>(
-      find.ancestor(of: find.text('🔥'), matching: find.byType(Transform)),
-    );
-    var maior = 0.0;
-    for (final t in transforms) {
-      final sx = t.transform.storage[0];
-      if (sx > maior) maior = sx;
-    }
-    return maior;
-  }
+  /// Escala do pulso da chama, lida na matriz do Transform que a embrulha.
+  ///
+  /// Pela CHAVE, de propósito: a entrada do selo tem uma escala própria (e
+  /// com easeOutBack ela passa de 1 no meio do caminho), então medir a pilha
+  /// inteira de Transforms confundiria entrada com comemoração.
+  double escalaDaChama(WidgetTester tester) => tester
+      .widget<Transform>(find.byKey(const ValueKey('selo_chama')))
+      .transform
+      .storage[0];
 
   testWidgets('sequência que já chega alta assenta sem pulsar',
       (tester) async {
@@ -112,8 +111,10 @@ void main() {
     await tester.pumpWidget(
       app(checkin: checkin, learning: _LearningFake(_aprendiz)),
     );
-    // O céu do cabeçalho pisca em laço: nada de pumpAndSettle aqui.
-    await tester.pump(const Duration(milliseconds: 700));
+    // O céu do cabeçalho pisca em laço: nada de pumpAndSettle aqui. E a
+    // amostra é DENTRO da janela do pulso (260 ms) — depois dela, uma
+    // comemoração indevida já teria voltado a 1 sem deixar rastro.
+    await tester.pump(const Duration(milliseconds: 120));
 
     expect(find.text('🔥'), findsOneWidget);
     expect(escalaDaChama(tester), closeTo(1.0, 0.02),
@@ -140,6 +141,14 @@ void main() {
     // E assenta: o pulso é um respiro, não um estado novo.
     await tester.pump(const Duration(milliseconds: 400));
     expect(escalaDaChama(tester), closeTo(1.0, 0.02));
+
+    // O salto que o sync traz da nuvem não é dia ganho.
+    checkin.mudaPara(21);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 120));
+    expect(escalaDaChama(tester), closeTo(1.0, 0.02),
+        reason: 'número que chegou do banco não comemora');
+    await tester.pump(const Duration(milliseconds: 400));
 
     // Reconstruir com o MESMO número não recomeça nada.
     checkin.cutuca();
