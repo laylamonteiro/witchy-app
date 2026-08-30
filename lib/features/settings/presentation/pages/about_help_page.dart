@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/navigation/grimoire_route.dart';
 import 'package:flutter/services.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -58,7 +59,7 @@ class AboutHelpPage extends StatelessWidget {
                 title: 'FAQ',
                 subtitle: l10n.profileFaq,
                 onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const FaqPage()),
+                  GrimoireRoute(builder: (_) => const FaqPage()),
                 ),
               ),
               _divider(context),
@@ -68,7 +69,7 @@ class AboutHelpPage extends StatelessWidget {
                 title: l10n.authPrivacyPolicy,
                 subtitle: l10n.profilePrivacySafe,
                 onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => LegalDocumentPage.privacy),
+                  GrimoireRoute(builder: (_) => LegalDocumentPage.privacy),
                 ),
               ),
               _divider(context),
@@ -78,7 +79,7 @@ class AboutHelpPage extends StatelessWidget {
                 title: l10n.authTermsOfUse,
                 subtitle: l10n.settingsTermsSubtitle,
                 onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => LegalDocumentPage.terms),
+                  GrimoireRoute(builder: (_) => LegalDocumentPage.terms),
                 ),
               ),
             ]),

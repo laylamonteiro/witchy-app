@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/navigation/grimoire_route.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/grimoire_colors.dart';
@@ -207,7 +208,7 @@ class _SpellCategoriesHubPageState extends State<SpellCategoriesHubPage> {
           child: MagicalFAB(
             onPressed: () => Navigator.push(
               context,
-              MaterialPageRoute(builder: (_) => const AISpellCreationPage()),
+              GrimoireRoute(builder: (_) => const AISpellCreationPage()),
             ),
             icon: Icons.auto_fix_high,
           ),
@@ -236,7 +237,7 @@ class _SpellCategoriesHubPageState extends State<SpellCategoriesHubPage> {
           count: spellCount,
           onTap: () => Navigator.push(
             context,
-            MaterialPageRoute(
+            GrimoireRoute(
               // Abre com o chip "Todos" aceso (decisão da dona, 23/08: é o
               // padrão de TODO filtro de chips) — quem quer só os seus toca
               // em "Meus" ali mesmo.
@@ -254,7 +255,7 @@ class _SpellCategoriesHubPageState extends State<SpellCategoriesHubPage> {
           count: recordCount,
           onTap: () => Navigator.push(
             context,
-            MaterialPageRoute(
+            GrimoireRoute(
               builder: (_) => const RecordsArchiveListPage(),
             ),
           ),
@@ -270,7 +271,7 @@ class _SpellCategoriesHubPageState extends State<SpellCategoriesHubPage> {
                 .length,
             onTap: () => Navigator.push(
               context,
-              MaterialPageRoute(
+              GrimoireRoute(
                 builder: (_) => UserSpellsListPage(
                   title: group.title,
                   categoryGroup: group.categories,
@@ -383,7 +384,7 @@ class _SpellCategoriesHubPageState extends State<SpellCategoriesHubPage> {
         return MagicalCard(
           onTap: () => Navigator.push(
             context,
-            MaterialPageRoute(
+            GrimoireRoute(
               builder: (_) => SpellDetailPage(spell: spell),
             ),
           ),
