@@ -551,10 +551,11 @@ class _RuneReadingPageState extends State<RuneReadingPage>
             (inicioMs + _duracaoQuedaMs) / totalMs,
             curve: GrimoireMotion.enter,
           );
-          // Queda entre 12 e 20px; inclinação de 2–4° alternando o lado.
-          final queda = 12.0 + 2.0 * (indice % 5);
+          // Queda entre 48 e 72px (visível como "lançada na mesa", não um
+          // nudge); inclinação de 3–5° alternando o lado.
+          final queda = 48.0 + 8.0 * (indice % 4);
           final angulo =
-              (indice.isEven ? 1 : -1) * (2 + indice % 3) * pi / 180;
+              (indice.isEven ? 1 : -1) * (3 + indice % 3) * pi / 180;
 
           return Padding(
             padding: const EdgeInsets.only(bottom: 12),
@@ -572,7 +573,7 @@ class _RuneReadingPageState extends State<RuneReadingPage>
                     child: Transform.rotate(
                       angle: angulo * (1 - t),
                       child: Transform.scale(
-                        scale: 0.94 + 0.06 * t,
+                        scale: 0.88 + 0.12 * t,
                         child: child,
                       ),
                     ),

@@ -472,33 +472,22 @@ class _NavIcon extends StatelessWidget {
         ? Duration.zero
         : const Duration(milliseconds: 180);
 
+    // Só escala + um leve levantar quando selecionado. Sem cross-fade entre
+    // contorno e preenchido (na web os dois ícones se sobrepunham no meio da
+    // transição — o efeito de "duas camadas"/virada) e sem halo desenhado
+    // (que na web virava um disco solto atrás do ícone). O contorno↔preenchido
+    // troca na hora, imperceptível sob a escala; a cor do selecionado vem do
+    // tema do BottomNavigationBar.
     return AnimatedContainer(
       duration: duration,
       curve: GrimoireMotion.enter,
       transform: Matrix4.translationValues(0, selected ? 0 : 2, 0),
       transformAlignment: Alignment.center,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        boxShadow: selected
-            ? [
-                BoxShadow(
-                  color: context.gc.lilac.withValues(alpha: 0.18),
-                  blurRadius: 14,
-                ),
-              ]
-            : const [],
-      ),
       child: AnimatedScale(
         scale: selected ? 1.0 : 0.92,
         duration: duration,
         curve: GrimoireMotion.enter,
-        child: AnimatedSwitcher(
-          duration: duration,
-          child: Icon(
-            selected ? activeIcon : icon,
-            key: ValueKey(selected),
-          ),
-        ),
+        child: Icon(selected ? activeIcon : icon),
       ),
     );
   }
