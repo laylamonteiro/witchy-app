@@ -9,6 +9,8 @@
 /// confirmação nunca chegaria à tela. Por isso o banco é aberto uma vez em
 /// setUpAll (relógio real) e a espera pelo insert alterna tempo real
 /// (runAsync) com desenho (pump), sempre com teto.
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -28,6 +30,15 @@ void main() {
   late List<String> hapticos;
 
   setUpAll(() async {
+    // DatabaseHelper abre o banco por um caminho FIXO. Como o `flutter test`
+    // roda arquivos em paralelo (um isolate cada), dois arquivos que tocam o
+    // mesmo grimorio_de_bolso.db no disco disputam o arquivo e o SQLite trava
+    // ("database is locked"). Um diretório próprio, por arquivo de teste, tira
+    // este teste da disputa — getDatabasesPath() delega ao databaseFactory.
+    final dir =
+        await Directory.systemTemp.createTemp('grimorio_salvar_registros');
+    await databaseFactory.setDatabasesPath(dir.path);
+
     // Abre (e cria) o banco aqui fora, onde o relógio é real: dentro do
     // testWidgets essa abertura nunca completaria.
     await DatabaseHelper.instance.database;
