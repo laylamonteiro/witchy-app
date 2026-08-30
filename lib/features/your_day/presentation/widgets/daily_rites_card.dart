@@ -67,18 +67,31 @@ class _DailyRitesCardState extends State<DailyRitesCard>
   bool? _prevFeatured;
   bool? _prevComplete;
 
+  // Na conta local o id nunca muda, então GratitudeProvider/DreamProvider
+  // podem responder lista vazia sem NUNCA ter lido o banco. Os registros
+  // que chegam quando a pessoa abre o Diário são passado assentando, não
+  // rito feito agora — até um diário fechar seu primeiro ciclo de load, as
+  // transições dele são silenciadas. A gratidão escrita AQUI no card é a
+  // exceção (_gratidaoDaqui): ela merece a celebração mesmo no primeiro load.
+  bool _gratidoesAssentando = false;
+  bool _sonhosAssentando = false;
+  bool _gratidoesLidas = false;
+  bool _sonhosLidos = false;
+  bool _gratidaoDaqui = false;
+
   @override
   void dispose() {
     _seal.dispose();
     super.dispose();
   }
 
-  /// O card está de fato diante da pessoa? Sob outra aba o IndexedStack
-  /// desliga o TickerMode, e embaixo de outra rota a página não é a atual —
-  /// rebuilds acontecem do mesmo jeito (sync, completeRite das ferramentas),
-  /// mas haptic fora de cena é só ruído (e dobraria com o da ferramenta).
-  /// Lido no build (dependências registradas no lugar certo) e consumido
-  /// pelos callbacks pós-frame.
+  /// O card está de fato diante da pessoa? Fora da aba ativa o HomePage
+  /// desliga o TickerMode desta subárvore, e embaixo de outra rota a página
+  /// não é a atual — rebuilds acontecem do mesmo jeito (sync, completeRite
+  /// das ferramentas), mas haptic fora de cena é só ruído (e dobraria com o
+  /// da ferramenta) e a celebração se perderia sem ninguém ver. Lido no
+  /// build: a consulta ao TickerMode registra dependência, então voltar à
+  /// aba reconstrói o card e a transição pendente é celebrada aí.
   static bool _lerEmCena(BuildContext context) {
     final route = ModalRoute.of(context);
     return TickerMode.of(context) && (route?.isCurrent ?? true);
@@ -159,46 +172,81 @@ class _DailyRitesCardState extends State<DailyRitesCard>
 
     // Transições observadas: feedback só quando algo VIRA feito agora.
     //
-    // Enquanto um dos diários ainda está no load inicial, a contabilidade
-    // fica desarmada: um dia já feito chegando do banco (cold start) faria
-    // false→true de mentira e a celebração viraria abertura de app. O
-    // fluxo real (escrever a gratidão agora) passa pelo mesmo load, mas os
-    // prevs seguem congelados em "não feito" e a transição é vista quando
-    // a lista assenta.
-    final diariosCarregando = gratidoes.isLoading || sonhos.isLoading;
+    // Enquanto um dos diários está no load, a contabilidade fica desarmada:
+    // a lista velha/vazia não decide nada. E o PRIMEIRO ciclo de load de
+    // cada diário é passado assentando (o dia já feito chegando do banco não
+    // vira celebração de abertura).
+    final gratLoading = gratidoes.isLoading;
+    final dreamLoading = sonhos.isLoading;
+    if (gratLoading && !_gratidoesLidas) _gratidoesAssentando = true;
+    if (dreamLoading && !_sonhosLidos) _sonhosAssentando = true;
+    final diariosCarregando = gratLoading || dreamLoading;
+
     if (!diariosCarregando) {
+      // A gratidão escrita no próprio card celebra mesmo sendo o primeiro
+      // load do convidado; o resto do primeiro load assenta calado.
+      final assentando =
+          (_gratidoesAssentando && !_gratidaoDaqui) || _sonhosAssentando;
+      // Ciclo de load fechado → diário confiável daqui em diante.
+      if (_gratidoesAssentando) {
+        _gratidoesLidas = true;
+        _gratidoesAssentando = false;
+      }
+      if (_sonhosAssentando) {
+        _sonhosLidos = true;
+        _sonhosAssentando = false;
+      }
+      // A marca da gratidão-do-card cumpriu o papel assim que o diário virou
+      // confiável (ou se já era) — limpa para não vazar.
+      if (_gratidoesLidas) _gratidaoDaqui = false;
+
       final reduced = GrimoireMotion.reduced(context);
       final emCena = _lerEmCena(context);
       final firstSight = _prevComplete == null;
+      final silencioso = firstSight || assentando;
       final sealedNow = _prevComplete == false && complete;
       final riteNow = (_prevGratitude == false && gratitudeDone) ||
           (_prevDream == false && dreamDone) ||
           (_prevFeatured == false && featuredDone);
-      _prevGratitude = gratitudeDone;
-      _prevDream = dreamDone;
-      _prevFeatured = featuredDone;
-      _prevComplete = complete;
 
-      if (firstSight) {
-        // Primeiro build carregado: assenta o estado final em silêncio.
-        // Ainda não há listeners no controller, então mexer nele é seguro.
-        _seal.value = complete ? 1.0 : 0.0;
-      } else if (sealedNow) {
+      // Fora de cena a transição fica PENDENTE (os prevs não avançam) e é
+      // celebrada quando a aba volta. Silencioso (primeiro build / primeiro
+      // load) consome os prevs sem festa. As duas coisas só avançam os prevs
+      // quando há o que registrar.
+      if (silencioso || emCena) {
+        _prevGratitude = gratitudeDone;
+        _prevDream = dreamDone;
+        _prevFeatured = featuredDone;
+        _prevComplete = complete;
+      }
+
+      if (silencioso) {
+        final alvo = complete ? 1.0 : 0.0;
+        if (firstSight) {
+          // Sem listeners ainda: seguro no próprio build.
+          _seal.value = alvo;
+        } else if (_seal.value != alvo) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) _seal.value = alvo;
+          });
+        }
+      } else if (sealedNow && emCena) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (!mounted) return;
-          if (emCena) HapticFeedback.lightImpact();
+          HapticFeedback.lightImpact();
           if (reduced) {
             _seal.value = 1.0;
           } else {
             _seal.forward(from: 0);
           }
         });
-      } else if (riteNow) {
+      } else if (riteNow && emCena) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted && emCena) HapticFeedback.selectionClick();
+          if (mounted) HapticFeedback.selectionClick();
         });
       } else if (!complete && _seal.value > 0) {
-        // Virada de meia-noite: o dia reabriu, o selo sai sem cerimônia.
+        // Virada de meia-noite: o dia reabriu, o selo sai sem cerimônia
+        // (silencioso e sem gate de cena — precisa acompanhar o dia).
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (mounted) _seal.value = 0.0;
         });
@@ -339,7 +387,7 @@ class _DailyRitesCardState extends State<DailyRitesCard>
   ///
   /// O haptic não fica aqui: quem sente a mudança é o card, quando o rito
   /// VIRA feito no rebuild (um só clique, mesmo caminho de qualquer rito).
-  static Future<void> _writeGratitude(BuildContext context) async {
+  Future<void> _writeGratitude(BuildContext context) async {
     final text = await showModalBottomSheet<String>(
       context: context,
       isScrollControlled: true,
@@ -352,6 +400,9 @@ class _DailyRitesCardState extends State<DailyRitesCard>
 
     if (text == null || text.isEmpty || !context.mounted) return;
 
+    // A gratidão nasceu de um toque no card: mesmo que este seja o primeiro
+    // load do diário (convidado em cold start), ela merece a celebração.
+    _gratidaoDaqui = true;
     await context.read<GratitudeProvider>().addGratitude(
           GratitudeModel(
             title: text.length > 40 ? '${text.substring(0, 40)}…' : text,

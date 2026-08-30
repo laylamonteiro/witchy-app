@@ -40,12 +40,29 @@ class _CheckinFake extends DailyCheckinProvider {
 
 class _GratidaoFake extends GratitudeProvider {
   List<GratitudeModel> lista = [];
+  bool carregando = false;
 
   @override
   List<GratitudeModel> get gratitudes => lista;
 
+  @override
+  bool get isLoading => carregando;
+
   void registraHoje() {
     lista = [GratitudeModel(title: 'g', content: 'g', tags: const [])];
+    notifyListeners();
+  }
+
+  void comecaLoad() {
+    carregando = true;
+    notifyListeners();
+  }
+
+  void terminaLoad({bool comRegistro = false}) {
+    if (comRegistro) {
+      lista = [GratitudeModel(title: 'g', content: 'g', tags: const [])];
+    }
+    carregando = false;
     notifyListeners();
   }
 }
@@ -94,7 +111,20 @@ void main() {
     required _GratidaoFake gratidao,
     required _SonhosFake sonhos,
     bool semAnimacoes = false,
+    ValueListenable<bool>? emCena,
   }) {
+    // Sem toggle, o card fica direto no Scaffold (TickerMode.of devolve true,
+    // ou seja, "em cena"). Com toggle, o TickerMode simula a aba escondida do
+    // IndexedStack, como o HomePage faz de verdade.
+    const card = DailyRitesCard();
+    final Widget body = emCena == null
+        ? card
+        : ValueListenableBuilder<bool>(
+            valueListenable: emCena,
+            builder: (_, visivel, child) =>
+                TickerMode(enabled: visivel, child: child!),
+            child: card,
+          );
     return MultiProvider(
       providers: [
         ChangeNotifierProvider<DailyCheckinProvider>.value(value: checkin),
@@ -113,7 +143,7 @@ void main() {
                   child: child!,
                 )
             : null,
-        home: const Scaffold(body: DailyRitesCard()),
+        home: Scaffold(body: body),
       ),
     );
   }
@@ -201,6 +231,75 @@ void main() {
 
     expect(find.byIcon(Icons.check_circle), findsOneWidget);
     expect(hapticos, ['HapticFeedbackType.lightImpact']);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('dia selado fora de cena não gasta a celebração; ela vem na volta',
+      (tester) async {
+    final emCena = ValueNotifier<bool>(true);
+    addTearDown(emCena.dispose);
+    final checkin = _CheckinFake()..feitos.add(DailyRites.featuredToday());
+    final gratidao = _GratidaoFake()..registraHoje(); // 2/3
+    final sonhos = _SonhosFake();
+
+    await tester.pumpWidget(app(
+      checkin: checkin,
+      gratidao: gratidao,
+      sonhos: sonhos,
+      emCena: emCena,
+    ));
+    await tester.pumpAndSettle();
+    hapticos.clear();
+
+    // A pessoa foi para o Diário registrar o sonho: o card sai de cena.
+    emCena.value = false;
+    await tester.pump();
+
+    // O sonho registrado fecha o dia com o card fora de vista.
+    sonhos.registraHoje();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 1000));
+    expect(hapticos, isEmpty,
+        reason: 'celebração não roda para ninguém ver');
+
+    // Volta ao Seu Dia: a transição ficou pendente e é celebrada agora.
+    emCena.value = true;
+    await tester.pump();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 1000));
+    await tester.pumpAndSettle();
+    expect(hapticos, ['HapticFeedbackType.lightImpact']);
+    expect(find.byIcon(Icons.check_circle), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets(
+      'convidado: primeiro load do diário assenta em silêncio; rito real '
+      'depois celebra', (tester) async {
+    final checkin = _CheckinFake();
+    final gratidao = _GratidaoFake();
+    final sonhos = _SonhosFake();
+
+    await tester.pumpWidget(
+        app(checkin: checkin, gratidao: gratidao, sonhos: sonhos));
+    await tester.pumpAndSettle();
+    hapticos.clear();
+
+    // Conta local: o diário só lê o banco quando a pessoa abre o Diário, e o
+    // registro de hoje chegando no primeiro load é passado, não rito agora.
+    gratidao.comecaLoad();
+    await tester.pump();
+    gratidao.terminaLoad(comRegistro: true);
+    await tester.pump();
+    await tester.pumpAndSettle();
+    expect(hapticos, isEmpty,
+        reason: 'dado do primeiro load não comemora');
+
+    // Diário agora confiável: uma conclusão real (o rito do dia) celebra.
+    await checkin.completeRite(DailyRites.featuredToday());
+    await tester.pump();
+    await tester.pumpAndSettle();
+    expect(hapticos, ['HapticFeedbackType.selectionClick']);
     expect(tester.takeException(), isNull);
   });
 }

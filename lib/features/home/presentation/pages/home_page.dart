@@ -283,11 +283,20 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   }
 
   Widget _buildTabNavigator(int index) {
-    return Navigator(
-      key: _navigatorKeys[index],
-      onGenerateRoute: (settings) => MaterialPageRoute(
-        settings: settings,
-        builder: (_) => _pages[index],
+    // Aba escondida não é aba em cena: sem ticker, nada anima atrás da aba
+    // que a pessoa está olhando — e o card de Ritos sabe adiar a celebração
+    // do dia selado para quando a aba volta, em vez de gastá-la invisível.
+    // (O IndexedStack, ao contrário do que se supõe, mantém o ticker dos
+    // filhos escondidos vivo; quem desliga é este TickerMode.) O mascote
+    // fica FORA da pilha de abas, então segue animando normalmente.
+    return TickerMode(
+      enabled: index == _selectedIndex,
+      child: Navigator(
+        key: _navigatorKeys[index],
+        onGenerateRoute: (settings) => MaterialPageRoute(
+          settings: settings,
+          builder: (_) => _pages[index],
+        ),
       ),
     );
   }
