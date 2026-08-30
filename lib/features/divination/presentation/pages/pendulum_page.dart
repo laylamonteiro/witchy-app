@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
+import 'package:sensors_plus/sensors_plus.dart';
 import 'package:uuid/uuid.dart';
 import '../../../diary/data/models/free_writing_model.dart';
 import '../../../diary/data/services/reading_archive_composer.dart';
@@ -27,7 +29,7 @@ class PendulumPage extends StatefulWidget {
 }
 
 class _PendulumPageState extends State<PendulumPage>
-    with TickerProviderStateMixin {
+    with TickerProviderStateMixin, WidgetsBindingObserver {
   final _questionController = TextEditingController();
 
   late AnimationController _swingController;
@@ -49,9 +51,53 @@ class _PendulumPageState extends State<PendulumPage>
   String _question = '';
   bool _isSwinging = false;
 
+  /// Inclinação lateral do aparelho (−1..1), suavizada. É ENFEITE puro: o
+  /// cristal pende para o lado que a mão inclina. NUNCA toca no sorteio da
+  /// resposta — só entra no ângulo desenhado.
+  final ValueNotifier<double> _inclinacao = ValueNotifier<double>(0);
+  StreamSubscription<AccelerometerEvent>? _sensorSub;
+  double _tiltFiltrado = 0;
+  bool? _sensorLigado;
+
+  /// Só onde há acelerômetro de verdade: no navegador o Safari exige
+  /// permissão por gesto e o desktop não vibra nem inclina — melhor deixar
+  /// o pêndulo exatamente como era.
+  static bool get _plataformaComSensor =>
+      !kIsWeb &&
+      (defaultTargetPlatform == TargetPlatform.android ||
+          defaultTargetPlatform == TargetPlatform.iOS);
+
+  void _assinarSensor() {
+    _sensorSub ??= accelerometerEventStream(
+      samplingPeriod: const Duration(milliseconds: 33), // ~30 Hz basta
+    ).listen(
+      (e) {
+        // x é a inclinação lateral (±g no limite). Normaliza, suaviza com
+        // passa-baixa e clampa — mão trêmula não vira cristal epilético.
+        final alvo = (-e.x / 9.8).clamp(-1.0, 1.0);
+        _tiltFiltrado = _tiltFiltrado * 0.85 + alvo * 0.15;
+        final v = _tiltFiltrado.clamp(-1.0, 1.0).toDouble();
+        if ((v - _inclinacao.value).abs() > 0.005) _inclinacao.value = v;
+      },
+      onError: (_) {
+        // Sensor indisponível (MissingPluginException em teste/desktop): o
+        // pêndulo segue como antes, sem inclinação.
+        _desassinarSensor();
+        _inclinacao.value = 0;
+      },
+      cancelOnError: true,
+    );
+  }
+
+  void _desassinarSensor() {
+    _sensorSub?.cancel();
+    _sensorSub = null;
+  }
+
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _swingController = AnimationController(
       duration: const Duration(seconds: 3),
       vsync: this,
@@ -70,7 +116,36 @@ class _PendulumPageState extends State<PendulumPage>
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // "Reduzir movimento" desliga a inclinação, como todo o resto.
+    final quer = !GrimoireMotion.reduced(context) && _plataformaComSensor;
+    if (quer == _sensorLigado) return;
+    _sensorLigado = quer;
+    if (quer) {
+      _assinarSensor();
+    } else {
+      _desassinarSensor();
+      _inclinacao.value = 0;
+    }
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (!(_sensorLigado ?? false)) return;
+    // Em segundo plano o acelerômetro só gasta bateria.
+    if (state == AppLifecycleState.resumed) {
+      _assinarSensor();
+    } else if (state == AppLifecycleState.paused) {
+      _desassinarSensor();
+    }
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _desassinarSensor();
+    _inclinacao.dispose();
     _questionController.dispose();
     _swingController.dispose();
     _settle.dispose();
@@ -308,6 +383,7 @@ class _PendulumPageState extends State<PendulumPage>
                     _swingController,
                     _settleController,
                     _revealController,
+                    _inclinacao,
                   ]),
                   builder: (context, child) {
                     return CustomPaint(
@@ -321,11 +397,16 @@ class _PendulumPageState extends State<PendulumPage>
                         starColor: context.gc.starYellow,
                         // O envelope (1 → 0) amortece a oscilação no fim da
                         // consulta: o cristal perde força e pousa no centro.
-                        swingAngle: _isSwinging
-                            ? sin(_swingController.value * 2 * pi) *
-                                0.8 *
-                                (1 - _settle.value)
-                            : 0,
+                        // O ângulo desenhado = oscilação amortecida MAIS a
+                        // inclinação do aparelho (repouso pende mais; durante
+                        // a consulta, um vestígio). Enfeite: o sorteio não vê
+                        // nada disto.
+                        swingAngle: (_isSwinging
+                                ? sin(_swingController.value * 2 * pi) *
+                                    0.8 *
+                                    (1 - _settle.value)
+                                : 0.0) +
+                            _inclinacao.value * (_isSwinging ? 0.05 : 0.12),
                         answer: _answer,
                         revealProgress: _revealController.value,
                       ),
