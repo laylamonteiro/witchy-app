@@ -288,6 +288,20 @@ class AuthProvider extends ChangeNotifier {
         '✅ AuthProvider registrado para receber updates do PaymentService');
   }
 
+  /// Mapeia o tipo de assinatura do RevenueCat para o plano do UserModel,
+  /// preservando o ANUAL — o antigo `isLifetime ? lifetime : monthly` o perdia.
+  static SubscriptionPlan _planoDoTipo(SubscriptionType? tipo) {
+    switch (tipo) {
+      case SubscriptionType.lifetime:
+        return SubscriptionPlan.lifetime;
+      case SubscriptionType.yearly:
+        return SubscriptionPlan.yearly;
+      case SubscriptionType.monthly:
+      case null:
+        return SubscriptionPlan.monthly;
+    }
+  }
+
   /// Chamado quando o status Pro muda no PaymentService (ex: cancelamento, reembolso)
   Future<void> _onPaymentStatusChanged(bool isPro) async {
     await debugLog('AUTH', 'PaymentService notificou mudança: isPro=$isPro');
@@ -308,10 +322,9 @@ class AuthProvider extends ChangeNotifier {
     if (isPro) {
       await debugLog('AUTH', 'Atualizando para Premium');
       final paymentService = PaymentService();
-      final isLifetime = paymentService.isLifetime;
       _currentUser = _currentUser.copyWith(
         role: UserRole.premium,
-        plan: isLifetime ? SubscriptionPlan.lifetime : SubscriptionPlan.monthly,
+        plan: _planoDoTipo(paymentService.activeSubscriptionType),
       );
     } else {
       // Não fazer downgrade de usuários com acesso lifetime (Código Premium):
@@ -799,10 +812,9 @@ class AuthProvider extends ChangeNotifier {
 
     if (paymentService.isPro) {
       // Usuário tem assinatura ativa
-      final isLifetime = paymentService.isLifetime;
       _currentUser = _currentUser.copyWith(
         role: UserRole.premium,
-        plan: isLifetime ? SubscriptionPlan.lifetime : SubscriptionPlan.monthly,
+        plan: _planoDoTipo(paymentService.activeSubscriptionType),
       );
       await _saveUser();
       notifyListeners();
