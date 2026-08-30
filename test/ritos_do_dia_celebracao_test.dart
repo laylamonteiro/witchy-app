@@ -111,7 +111,7 @@ void main() {
     required _GratidaoFake gratidao,
     required _SonhosFake sonhos,
     bool semAnimacoes = false,
-    ValueListenable<bool>? emCena,
+    ValueNotifier<bool>? emCena,
   }) {
     // Sem toggle, o card fica direto no Scaffold (TickerMode.of devolve true,
     // ou seja, "em cena"). Com toggle, o TickerMode simula a aba escondida do
