@@ -598,7 +598,11 @@ class _PendulumPageState extends State<PendulumPage>
                               width: crystalBoxW,
                               height: crystalH,
                               child: Transform.rotate(
-                                angle: swing,
+                                // O cristal é espelhado na vertical (flip), e
+                                // espelho inverte o sentido do giro: girar por
+                                // -swing faz a PONTA apontar na direção da
+                                // corrente (= para a resposta), não o contrário.
+                                angle: -swing,
                                 alignment: const Alignment(0, alignY),
                                 child: const IgnorePointer(
                                   child: CrystalGlyph(
