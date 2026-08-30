@@ -371,6 +371,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
               initialX: mascotLeft,
               initialY: _mascotTop,
               size: _mascotSize,
+              reactionTick: mascot.reactionTick,
               positionNotifier: _mascotPosition,
               onDismissed: mascot.hide,
               // Voltou do esconderijo (ou do tour) → materializa em fumaça.

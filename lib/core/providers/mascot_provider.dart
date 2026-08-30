@@ -73,4 +73,17 @@ class MascotProvider with ChangeNotifier {
   void consumeTourRequest() {
     _tourRequested = false;
   }
+
+  /// Reações pontuais a acontecimentos raros (level up, milestone de streak).
+  /// Um contador que só sobe: a HomePage o repassa ao mascote, que comemora
+  /// quando o número muda. Não precisa de "consume" — o mesmo valor não
+  /// dispara de novo, e uma reação pedida com o Salem escondido se perde
+  /// (sem tela, sem festa), que é o comportamento certo.
+  int _reactionTick = 0;
+  int get reactionTick => _reactionTick;
+
+  void react() {
+    _reactionTick++;
+    notifyListeners();
+  }
 }

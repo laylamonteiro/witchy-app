@@ -9,6 +9,7 @@ import '../../../../core/i18n/tratamento_do_contexto.dart';
 import '../../../../core/navigation/grimoire_route.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/theme/grimoire_motion.dart';
+import '../../../../core/providers/mascot_provider.dart';
 import '../../../../core/widgets/magical_progress.dart';
 import '../../../../core/widgets/starfield_background.dart';
 import '../../../journeys/presentation/pages/magical_progress_page.dart';
@@ -151,6 +152,14 @@ class _StreakPillState extends State<_StreakPill>
     _pulso.duration =
         _marco ? GrimoireMotion.celebration : GrimoireMotion.state;
     _pulso.forward(from: 0);
+
+    // Marco de sequência (7, 21, 30 dias) é raro o bastante para o Salem
+    // comemorar junto. Pós-frame para não notificar durante o didUpdateWidget;
+    // o mascote flutua sobre esta aba, então a reação é vista.
+    if (_marco) {
+      final mascot = context.read<MascotProvider>();
+      WidgetsBinding.instance.addPostFrameCallback((_) => mascot.react());
+    }
   }
 
   @override
