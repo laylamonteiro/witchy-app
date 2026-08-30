@@ -1097,6 +1097,23 @@ class PaymentService extends ChangeNotifier {
     return pro.expirationDate == null;
   }
 
+  /// O TIPO da assinatura Pro ativa (mensal/anual/vitalícia), ou null quando
+  /// não há entitlement Pro.
+  ///
+  /// Existe para o app rotular o plano CERTO: o atalho `isLifetime ? lifetime
+  /// : monthly` colapsava o ANUAL em mensal (o servidor, via webhook, já
+  /// gravava `yearly` correto, mas o rótulo local não). Sem expiração ⇒
+  /// vitalício; com expiração, deduz mensal/anual pelo id do produto (mesma
+  /// regra de [subscriptionTypeFromIdentifier]), caindo em mensal só quando o
+  /// id não diz a duração.
+  SubscriptionType? get activeSubscriptionType {
+    final pro = _proAtivo;
+    if (pro == null) return null;
+    if (pro.expirationDate == null) return SubscriptionType.lifetime;
+    return subscriptionTypeFromIdentifier(pro.productIdentifier) ??
+        SubscriptionType.monthly;
+  }
+
   /// ID do app user no RevenueCat
   String? get appUserId => _customerInfo?.originalAppUserId;
 
