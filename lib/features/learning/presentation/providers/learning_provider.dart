@@ -5,6 +5,7 @@ import '../../data/data_sources/trails_data.dart';
 import '../../data/models/trail_model.dart';
 import '../../data/repositories/learning_progress_repository.dart';
 import '../../../../core/content/content_locale.dart';
+import '../../../../core/i18n/gender.dart';
 import '../../../../core/database/database_helper.dart';
 import '../../../your_day/presentation/providers/daily_checkin_provider.dart';
 
@@ -51,14 +52,51 @@ class LearningProvider with ChangeNotifier {
   static const int xpPerFullDay = 15;
 
   /// Níveis com nomes no idioma atual (limiares de XP invariantes).
-  static List<LearningLevel> get levels => [
-        LearningLevel(_l10n.learnLevelApprentice, '🕯️', 0),
-        LearningLevel(_l10n.learnLevelInitiate, '🌙', 100),
-        LearningLevel(_l10n.learnLevelPractitioner, '⭐', 300),
-        LearningLevel(_l10n.learnLevelAdept, '🔮', 600),
-        LearningLevel(_l10n.learnLevelMaster, '👑', 1000),
-        LearningLevel(_l10n.learnLevelGuardian, '📜', 1500),
-      ];
+  ///
+  /// Getter ESTÁTICO, sem `BuildContext`: o tratamento vem do espelho que o
+  /// `AuthProvider` mantém. "Aprendiz" e "Praticante" não aparecem aqui
+  /// porque não marcam gênero em nenhum dos três idiomas — os outros quatro
+  /// marcavam, e ficavam no feminino mesmo para quem escolheu masculino.
+  static List<LearningLevel> get levels {
+    final l10n = _l10n;
+    final tratamento = TratamentoAtual.instance.preferencia;
+    String titulo(String feminine, String masculine, String neutral) =>
+        GenderText.select(
+          preference: tratamento,
+          feminine: feminine,
+          masculine: masculine,
+          neutral: neutral,
+        );
+
+    return [
+      LearningLevel(l10n.learnLevelApprentice, '🕯️', 0),
+      LearningLevel(
+        titulo(l10n.learnLevelInitiateFeminine,
+            l10n.learnLevelInitiateMasculine, l10n.learnLevelInitiateNeutral),
+        '🌙',
+        100,
+      ),
+      LearningLevel(l10n.learnLevelPractitioner, '⭐', 300),
+      LearningLevel(
+        titulo(l10n.learnLevelAdeptFeminine, l10n.learnLevelAdeptMasculine,
+            l10n.learnLevelAdeptNeutral),
+        '🔮',
+        600,
+      ),
+      LearningLevel(
+        titulo(l10n.learnLevelMasterFeminine, l10n.learnLevelMasterMasculine,
+            l10n.learnLevelMasterNeutral),
+        '👑',
+        1000,
+      ),
+      LearningLevel(
+        titulo(l10n.learnLevelGuardianFeminine,
+            l10n.learnLevelGuardianMasculine, l10n.learnLevelGuardianNeutral),
+        '📜',
+        1500,
+      ),
+    ];
+  }
 
   Set<String> _completed = {};
   bool _loaded = false;

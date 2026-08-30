@@ -50,6 +50,12 @@ class AuthProvider extends ChangeNotifier {
   /// (?code= na URL) — ANTES do Supabase.initialize, que limpa a URL.
   static bool bootCameFromOAuthReturn = false;
 
+  /// Marcado no main() quando o link de e-mail da URL não verificou —
+  /// expirado, já usado, ou de uma conta que já está confirmada. A tela de
+  /// login avisa e a pessoa entra com e-mail e senha (a confirmação vale
+  /// desde o primeiro clique, então em geral não falta mais nada).
+  static bool linkDeEmailExpirado = false;
+
   /// Marcado no main() quando o boot é a JANELA DE LOGIN voltando do
   /// Google (a marca no armazenamento diz; o COOP do Google apaga o
   /// `opener`). O AuthWrapper mostra o "pode fechar esta aba" em vez de
@@ -153,9 +159,7 @@ class AuthProvider extends ChangeNotifier {
     if (userJson != null) {
       try {
         _currentUser = UserModel.fromJson(jsonDecode(userJson));
-        AIService.instance.setGender(
-          _currentUser.gender,
-        );
+        _propagarTratamento();
         // Resetar contadores se necessário
         await _checkAndResetCounters();
       } catch (e) {
@@ -253,6 +257,17 @@ class AuthProvider extends ChangeNotifier {
 
     _serverSessionSubscription ??= repository.authStateChanges.listen((user) {
       if (user != null) unawaited(_adoptServerSession(user));
+    }, onError: (Object e) {
+      // A sessão do retorno NÃO vai chegar (troca do código falhou — na web,
+      // tipicamente o link do e-mail aberto em outro navegador, sem o
+      // verificador PKCE). Esperar os 15s do prazo é só spinner: libera a
+      // tela de entrada agora, onde a pessoa entra com e-mail e senha.
+      unawaited(debugLog('AUTH', 'Retorno não virou sessão: $e'));
+      if (_oauthReturnPending) {
+        _oauthReturnPending = false;
+        _oauthReturnTimeout?.cancel();
+        notifyListeners();
+      }
     });
   }
 
@@ -324,8 +339,19 @@ class AuthProvider extends ChangeNotifier {
   Future<void> _saveUser() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_userKey, jsonEncode(_currentUser.toJson()));
-    // Ponto único de mudança do usuário: mantém a IA ciente do tratamento.
+    _propagarTratamento();
+  }
+
+  /// Espelha o tratamento do usuário atual para quem vive fora do `Provider`:
+  /// a IA (que monta prompts) e o [TratamentoAtual] (que serve os títulos de
+  /// nível, montados num getter estático, sem `BuildContext`).
+  ///
+  /// Chamado em TODA troca de usuário — inclusive nos dois logouts, que não
+  /// passam por `_saveUser` e por isso deixavam o tratamento da conta anterior
+  /// de pé sobre o estado anônimo.
+  void _propagarTratamento() {
     AIService.instance.setGender(_currentUser.gender);
+    TratamentoAtual.instance.definir(_currentUser.gender);
   }
 
   /// Define a forma de tratamento (feminina/masculina/neutra) da pessoa.
@@ -820,6 +846,7 @@ class AuthProvider extends ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_userKey);
     _currentUser = UserModel.defaultUser();
+    _propagarTratamento();
     notifyListeners();
   }
 
@@ -904,6 +931,7 @@ class AuthProvider extends ChangeNotifier {
 
     _currentUser = UserModel.defaultUser();
     _isOriginalAdmin = false;
+    _propagarTratamento();
     notifyListeners();
     _isSigningOut = false;
     await debugLog('AUTH', 'Logout concluído; estado local resetado');

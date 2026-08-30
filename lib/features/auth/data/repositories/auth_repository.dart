@@ -13,12 +13,21 @@ class AuthResult {
   /// pena de piscar uma tela intermediária antes de o navegador sair.
   final bool redirecting;
 
+  /// A conta foi criada mas o Supabase NÃO devolveu sessão: o projeto exige
+  /// confirmação de e-mail e ela está pendente. Tratar como logado aqui é
+  /// mentira cara — o app inteiro passa a falar com o servidor como `anon`
+  /// e cada recurso de nuvem falha em silêncio (foi o bug do resgate de
+  /// Código Premium no webapp). Quem chamar deve mandar a pessoa confirmar
+  /// o e-mail e entrar pela tela de login.
+  final bool emailConfirmationPending;
+
   const AuthResult({
     required this.success,
     this.user,
     this.errorMessage,
     this.errorCode,
     this.redirecting = false,
+    this.emailConfirmationPending = false,
   });
 
   factory AuthResult.redirecting() =>
@@ -27,6 +36,12 @@ class AuthResult {
   factory AuthResult.success(UserModel user) => AuthResult(
         success: true,
         user: user,
+      );
+
+  factory AuthResult.confirmationPending(UserModel user) => AuthResult(
+        success: true,
+        user: user,
+        emailConfirmationPending: true,
       );
 
   factory AuthResult.error(String message, [AuthErrorCode? code]) => AuthResult(
@@ -48,6 +63,12 @@ enum AuthErrorCode {
   /// O projeto exige captcha e esta versão do app não sabe enviá-lo —
   /// só acontece com quem ainda não atualizou.
   captchaRequired,
+
+  /// Conta existe mas o e-mail nunca foi confirmado (o projeto exige
+  /// confirmação). Quem recebe este código deve OFERECER O REENVIO do
+  /// link — o original expira em horas e, sem sessão, o reenvio da tela
+  /// de perfil não alcança essa pessoa.
+  emailNotConfirmed,
   unknown,
 }
 

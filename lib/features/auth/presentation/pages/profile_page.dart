@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/i18n/tratamento_do_contexto.dart';
 import 'package:flutter/services.dart';
 import '../../../settings/presentation/pages/faq_page.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
@@ -89,7 +90,7 @@ class ProfilePage extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
-              user.displayName ?? AppLocalizations.of(context).profileAnonymous,
+              user.displayName ?? context.vocativo,
               style: TextStyle(
                 color: context.gc.textPrimary,
                 fontSize: 22,

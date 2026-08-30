@@ -1,5 +1,7 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import '../../../../core/i18n/gender.dart';
+
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
@@ -642,6 +644,25 @@ class _SignupPageState extends State<SignupPage> {
         if (!result.success) {
           throw Exception(result.errorMessage ?? AppLocalizations.of(context).authSignupError);
         }
+
+        // Conta criada mas sem sessão: o Supabase exige confirmação de
+        // e-mail. Entrar no app "logada" aqui seria mentira — sem JWT,
+        // todo recurso de nuvem falha como `anon` (era o bug do resgate
+        // de código no webapp). Avisa, manda para o login e pronto: o
+        // login já barra conta não confirmada com a mensagem certa e
+        // oferece o reenvio do link.
+        if (result.emailConfirmationPending) {
+          if (mounted) {
+            showAuthSnack(
+              context,
+              AppLocalizations.of(context).authConfirmEmailSent(email),
+              type: AuthSnackType.success,
+            );
+            Navigator.of(context)
+                .pushNamedAndRemoveUntil('/login', (route) => false);
+          }
+          return;
+        }
         authenticatedUser = result.user;
       }
 
@@ -661,7 +682,12 @@ class _SignupPageState extends State<SignupPage> {
         // Mostrar sucesso
         showAuthSnack(
           context,
-          AppLocalizations.of(context).authSignupSuccess,
+          GenderText.select(
+            preference: TratamentoAtual.instance.preferencia,
+            feminine: AppLocalizations.of(context).authSignupSuccessFeminine,
+            masculine: AppLocalizations.of(context).authSignupSuccessMasculine,
+            neutral: AppLocalizations.of(context).authSignupSuccessNeutral,
+          ),
           type: AuthSnackType.success,
         );
 

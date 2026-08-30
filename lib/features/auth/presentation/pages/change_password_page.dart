@@ -8,7 +8,14 @@ import '../../data/repositories/supabase_auth_repository.dart';
 
 /// Tela de alteração de senha
 class ChangePasswordPage extends StatefulWidget {
-  const ChangePasswordPage({super.key});
+  /// Fluxo "esqueci minha senha": a pessoa chegou pelo link do e-mail com
+  /// uma sessão de recuperação e NÃO SABE a senha atual — o campo dela é
+  /// escondido. Fora da recuperação o campo fica, como fricção honesta
+  /// contra troca de senha num aparelho desbloqueado alheio (o backend não
+  /// exige a senha atual; a checagem é só desta tela).
+  final bool recovery;
+
+  const ChangePasswordPage({super.key, this.recovery = false});
 
   @override
   State<ChangePasswordPage> createState() => _ChangePasswordPageState();
@@ -64,9 +71,11 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                 // Header
                 _buildHeader(),
                 const SizedBox(height: 32),
-                // Campo de senha atual
-                _buildCurrentPasswordField(),
-                const SizedBox(height: 16),
+                // Campo de senha atual (fora do fluxo de recuperação)
+                if (!widget.recovery) ...[
+                  _buildCurrentPasswordField(),
+                  const SizedBox(height: 16),
+                ],
                 // Campo de nova senha
                 _buildNewPasswordField(),
                 const SizedBox(height: 16),
@@ -183,7 +192,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
         if (value.length < 6) {
           return AppLocalizations.of(context).authPasswordMinLength;
         }
-        if (value == _currentPasswordController.text) {
+        if (!widget.recovery && value == _currentPasswordController.text) {
           return AppLocalizations.of(context).changePasswordMustDiffer;
         }
         return null;

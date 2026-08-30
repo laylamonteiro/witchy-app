@@ -3,6 +3,9 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 
+import '../../i18n/gender.dart';
+import '../../i18n/tratamento_do_contexto.dart';
+
 import '../../../features/encyclopedia/presentation/pages/encyclopedia_index_page.dart';
 import '../../navigation/app_deep_link.dart';
 import '../../theme/grimoire_colors.dart';
@@ -98,14 +101,21 @@ class _SalemTourOverlayState extends State<SalemTourOverlay>
     (tab: 0, target: null, link: null, text: _step8),
   ];
 
-  static String _step1(AppLocalizations l10n) => l10n.salemTourStep1;
+  static String _step1(AppLocalizations l10n) =>
+      l10n.salemTourStep1(_vocativo(l10n));
   static String _step2(AppLocalizations l10n) => l10n.salemTourStep2;
   static String _step3(AppLocalizations l10n) => l10n.salemTourStep3;
   static String _step4(AppLocalizations l10n) => l10n.salemTourStep4;
   static String _step5(AppLocalizations l10n) => l10n.salemTourStep5;
-  static String _step6(AppLocalizations l10n) => l10n.salemTourStep6;
+  static String _step6(AppLocalizations l10n) =>
+      l10n.salemTourStep6(_vocativo(l10n));
   static String _step7(AppLocalizations l10n) => l10n.salemTourStep7;
   static String _step8(AppLocalizations l10n) => l10n.salemTourStep8;
+
+  /// O tour é montado por funções estáticas, sem `BuildContext`: o
+  /// chamamento vem do espelho que o `AuthProvider` mantém.
+  static String _vocativo(AppLocalizations l10n) =>
+      vocativoDe(l10n, TratamentoAtual.instance.preferencia);
 
   /// Cantos do recorte, folga em volta da feature e tamanho do Salem-guia.
   /// O guia é bem MAIOR que o mascote do dia a dia (85): no tour ele é o

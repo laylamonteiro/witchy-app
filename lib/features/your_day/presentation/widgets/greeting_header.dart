@@ -3,7 +3,7 @@ import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
-import '../../../../core/i18n/gender.dart';
+import '../../../../core/i18n/tratamento_do_contexto.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/magical_progress.dart';
 import '../../../../core/widgets/starfield_background.dart';
@@ -39,12 +39,7 @@ class GreetingHeader extends StatelessWidget {
     final displayName = user.displayName?.trim();
     final name = (displayName != null && displayName.isNotEmpty)
         ? displayName.split(RegExp(r'\s+')).first
-        : GenderText.select(
-            preference: user.gender,
-            feminine: l10n.witchTreatmentFeminine,
-            masculine: l10n.witchTreatmentMasculine,
-            neutral: l10n.witchTreatmentNeutral,
-          );
+        : context.vocativo;
 
     final locale = Localizations.localeOf(context).toString();
     final dateText = DateFormat.yMMMMEEEEd(locale).format(DateTime.now());

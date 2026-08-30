@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
+
+import '../../../../core/i18n/tratamento_do_contexto.dart';
 import '../../data/models/gratitude_model.dart';
 import '../providers/gratitude_provider.dart';
 import '../../../../core/widgets/magical_button.dart';
@@ -100,7 +102,14 @@ class _GratitudeFormPageState extends State<GratitudeFormPage> {
             TextFormField(
               controller: _contentController,
               decoration: InputDecoration(
-                labelText: AppLocalizations.of(context).diaryGratitudeLabel,
+                labelText: context.porTratamento(
+                  feminine:
+                      AppLocalizations.of(context).diaryGratitudeLabelFeminine,
+                  masculine:
+                      AppLocalizations.of(context).diaryGratitudeLabelMasculine,
+                  neutral:
+                      AppLocalizations.of(context).diaryGratitudeLabelNeutral,
+                ),
                 hintText: AppLocalizations.of(context).diaryGratitudeHint,
               ),
               maxLines: 10,
