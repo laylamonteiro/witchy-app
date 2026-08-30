@@ -534,6 +534,7 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
       // a página morra no meio (use_build_context_synchronously).
       final navigator = Navigator.of(context);
       final messenger = ScaffoldMessenger.of(context);
+      final router = GoRouter.of(context);
       final gc = context.gc;
       final authProvider = context.read<AuthProvider>();
 
@@ -591,8 +592,9 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
 
         // Redirecionar para tela inicial. Com o router, o logout já dispara o
         // redirect para /welcome (refreshListenable); isto é explícito por
-        // garantia de tempo. `navigator.context` está sob o Navigator raiz.
-        navigator.context.go('/welcome');
+        // garantia de tempo. `router` foi capturado ANTES dos awaits, para não
+        // usar BuildContext depois deles (use_build_context_synchronously).
+        router.go('/welcome');
       } catch (e) {
         // Fechar loading
         navigator.pop();
