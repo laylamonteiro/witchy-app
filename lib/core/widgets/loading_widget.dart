@@ -147,6 +147,11 @@ class _LoadingWidgetState extends State<LoadingWidget>
 
     return Center(
       child: Column(
+        // min (não max): encolhe ao conteúdo, então funciona tanto como corpo
+        // de tela (o Center centraliza) quanto dentro de um diálogo, onde a
+        // altura chega ilimitada (AlertDialog rola o conteúdo) e um Column max
+        // estouraria. Visual idêntico nos dois casos.
+        mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           arte,

@@ -904,16 +904,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
         barrierDismissible: false,
         builder: (context) => AlertDialog(
           backgroundColor: context.gc.surface,
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              CircularProgressIndicator(color: context.gc.lilac),
-              const SizedBox(height: 16),
-              Text(
-                AppLocalizations.of(context).editDeleting,
-                style: GoogleFonts.nunito(color: context.gc.textSecondary),
-              ),
-            ],
+          content: LoadingWidget(
+            message: AppLocalizations.of(context).editDeleting,
           ),
         ),
       );

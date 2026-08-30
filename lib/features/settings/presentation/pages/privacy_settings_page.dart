@@ -542,17 +542,7 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
         barrierDismissible: false,
         builder: (context) => AlertDialog(
           backgroundColor: context.gc.surface,
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              CircularProgressIndicator(color: context.gc.lilac),
-              const SizedBox(height: 16),
-              Text(
-                l10n.editDeleting,
-                style: TextStyle(color: context.gc.textSecondary),
-              ),
-            ],
-          ),
+          content: LoadingWidget(message: l10n.editDeleting),
         ),
       );
 
