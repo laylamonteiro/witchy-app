@@ -75,7 +75,12 @@ void main() {
       await tester.tap(gatinho().first);
       await tester.pump(const Duration(milliseconds: 300));
 
-      expect(vibracoes(chamadas), ['HapticFeedbackType.lightImpact']);
+      // O toque no Salem dá o clique de seleção (pedido explícito da Bruxa) e o
+      // carinho em si vibra leve (lightImpact) — nessa ordem.
+      expect(vibracoes(chamadas), const [
+        'HapticFeedbackType.selectionClick',
+        'HapticFeedbackType.lightImpact',
+      ]);
     });
 
     testWidgets('o 5º toque rápido some em fumaça com o toque forte',
