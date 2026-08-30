@@ -15,6 +15,7 @@ import '../widgets/auth_motion.dart';
 import '../widgets/auth_feedback.dart';
 import '../../../../core/config/supabase_config.dart';
 import '../../data/models/user_model.dart';
+import '../../data/repositories/auth_repository.dart';
 import '../../data/repositories/supabase_auth_repository.dart';
 import '../providers/auth_provider.dart';
 import 'login_page.dart';
@@ -642,6 +643,22 @@ class _SignupPageState extends State<SignupPage> {
         );
 
         if (!result.success) {
+          // E-mail já cadastrado tem CÓDIGO próprio: mostra a mensagem já
+          // traduzida pelo repositório, sem passar pelo catch abaixo — que
+          // adivinha o erro por substring e classificaria "Este email já está
+          // em uso" como "e-mail inválido" (contém "email"). Este é o caso do
+          // e-mail existente que o Supabase não acusa (identities vazio).
+          if (result.errorCode == AuthErrorCode.emailAlreadyInUse) {
+            if (mounted) {
+              showAuthSnack(
+                context,
+                result.errorMessage ??
+                    AppLocalizations.of(context).authEmailInUse,
+                type: AuthSnackType.error,
+              );
+            }
+            return;
+          }
           throw Exception(result.errorMessage ?? AppLocalizations.of(context).authSignupError);
         }
 

@@ -104,6 +104,18 @@ class SupabaseAuthRepository implements AuthRepository {
     }
   }
 
+  /// O Supabase, com a confirmação de e-mail ligada, NÃO devolve erro quando o
+  /// e-mail JÁ existe (proteção anti-enumeração). Em vez disso, devolve um
+  /// usuário "ofuscado" com `identities` VAZIO e não manda e-mail nenhum. Lista
+  /// vazia ⇒ conta já existe; lista com uma identidade ⇒ cadastro novo de
+  /// verdade; nulo ⇒ desconhecido (não afirma nada). É a única forma de
+  /// distinguir os dois casos sem consultar a base — o que o cliente `anon`
+  /// nem poderia (o lockdown fecha `profiles`), e que seria justamente o
+  /// vazamento de enumeração que a ofuscação evita.
+  @visibleForTesting
+  static bool respostaIndicaEmailJaCadastrado(List<Object?>? identities) =>
+      identities != null && identities.isEmpty;
+
   @override
   Future<AuthResult> signUpWithEmail({
     required String email,
@@ -131,6 +143,17 @@ class SupabaseAuthRepository implements AuthRepository {
       );
 
       if (response.user != null) {
+        // E-MAIL JÁ CADASTRADO: o Supabase não acusa erro (anti-enumeração) —
+        // devolve um usuário ofuscado com `identities` vazio e SEM mandar
+        // e-mail. Sem isto, o app dizia "confirmação enviada" para um link que
+        // nunca chega, porque a conta já existe. Trata como e-mail em uso.
+        if (respostaIndicaEmailJaCadastrado(response.user!.identities)) {
+          return AuthResult.error(
+            _l10n.authErrEmailInUse,
+            AuthErrorCode.emailAlreadyInUse,
+          );
+        }
+
         // Só com sessão: sem ela o cliente é `anon`, e o lockdown de
         // `profiles` nega a escrita (dois 401 garantidos, atrasando o
         // cadastro à toa). Quem cria a linha nesse caso é o trigger
