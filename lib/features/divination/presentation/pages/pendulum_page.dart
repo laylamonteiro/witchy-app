@@ -47,6 +47,31 @@ class _PendulumPageState extends State<PendulumPage>
 
   PendulumAnswer? _answer;
 
+  /// Resposta já sorteada, guardada ANTES do assentamento para o pêndulo
+  /// poder pousar apontando para ela (o card/glow só entram depois, via
+  /// [_answer]). O sorteio continua puro: isto não o influencia.
+  PendulumAnswer? _pendingAnswer;
+
+  /// Ângulo em que o cristal repousa: aponta para a resposta (sim = esquerda,
+  /// não = direita, talvez = reto para baixo). O balanço amortecido converge
+  /// para cá — o "ricocheteio" que assenta na diagonal.
+  double _targetAngle = 0;
+
+  /// Diagonal do sim/não (~28,6°). Mesma constante posiciona os rótulos, então
+  /// o cristal aponta exatamente para onde a palavra está.
+  static const double _kSwingTarget = 0.5;
+
+  double _anguloDaResposta(PendulumAnswer a) {
+    switch (a) {
+      case PendulumAnswer.yes:
+        return -_kSwingTarget;
+      case PendulumAnswer.no:
+        return _kSwingTarget;
+      case PendulumAnswer.maybe:
+        return 0;
+    }
+  }
+
   /// Última consulta salva — alimenta o botão "Salvar nos Registros".
   PendulumConsultation? _lastConsultation;
   String _question = '';
@@ -189,19 +214,32 @@ class _PendulumPageState extends State<PendulumPage>
     setState(() {
       _isSwinging = true;
       _answer = null;
+      _pendingAnswer = null;
+      _targetAngle = 0;
     });
+    // Zera a fase antes de tudo: no modo "reduzir movimento" (que não gira o
+    // controller) o cristal fica reto durante a pausa, em vez de travado num
+    // ângulo herdado da consulta anterior.
+    _swingController.value = 0;
+    _settleController.value = 0;
 
     if (reduced) {
       // Sem movimento: uma pausa curta de "consulta" e direto à resposta.
       await Future.delayed(const Duration(milliseconds: 600));
     } else {
-      _settleController.value = 0;
       _swingController.repeat(reverse: true);
 
       // Oscila com força e, no fim, perde amplitude até assentar — o total
       // continua ~3 s, mas o pouso é físico em vez de corte seco.
       await Future.delayed(const Duration(milliseconds: 2350));
       if (!mounted) return;
+
+      // Sorteia AGORA, antes do assentamento, para o cristal ricochetear e
+      // pousar apontando para a resposta (a revelação — card/glow — só vem
+      // depois, em _showAnswer). O sorteio segue puro.
+      _pendingAnswer = PendulumAnswer.values[Random().nextInt(3)];
+      _targetAngle = _anguloDaResposta(_pendingAnswer!);
+
       try {
         await _settleController.forward(from: 0).orCancel;
       } on TickerCanceled {
@@ -216,23 +254,28 @@ class _PendulumPageState extends State<PendulumPage>
   }
 
   Future<void> _showAnswer() async {
-    // Gerar resposta aleatória
-    final answers = PendulumAnswer.values;
-    final random = Random();
+    // O assentamento já sorteou (para o cristal pousar apontando); se veio do
+    // modo "reduzir movimento", que pulou o assentamento, sorteia agora.
+    final escolhido =
+        _pendingAnswer ?? PendulumAnswer.values[Random().nextInt(3)];
 
     // Anúncio ANTES de revelar a resposta (free, cooldown interno).
     await AdService.instance.showBeforeResult();
     if (!mounted) return;
 
     setState(() {
-      _answer = answers[random.nextInt(answers.length)];
+      _answer = escolhido;
       _isSwinging = false;
+      // O cristal repousa apontando para a resposta.
+      _targetAngle = _anguloDaResposta(escolhido);
     });
 
     // A resposta assentou: um toque leve, e o destaque/card entram juntos.
     HapticFeedback.lightImpact();
     if (GrimoireMotion.reduced(context)) {
       _revealController.value = 1.0;
+      // Sem assentamento animado: fixa o cristal no ângulo final da resposta.
+      _settleController.value = 1.0;
     } else {
       _revealController.forward(from: 0);
     }
@@ -375,107 +418,8 @@ class _PendulumPageState extends State<PendulumPage>
 
             const SizedBox(height: 16),
 
-            // Visualização do pêndulo
-            MagicalCard(
-              child: SizedBox(
-                height: 300,
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    final w = constraints.maxWidth;
-                    const h = 300.0;
-                    final anchor = Offset(w / 2, 20);
-                    // Corda um pouco mais curta que antes (0.6 → 0.5): o cristal
-                    // pendurado é maior que a antiga setinha e precisa de folga
-                    // acima do rótulo "TALVEZ".
-                    final cordLength = h * 0.5;
-                    // O cristal é o MESMO ícone dos emblemas (SectionEmblem
-                    // .crystals), de cabeça para baixo. viewBox 120x130; o topo
-                    // achatado fica em y=118 → invertido em y=12. A corrente
-                    // prende nesse topo, e o cristal gira em torno dele.
-                    const crystalH = 54.0;
-                    const flatTopFrac = 12 / 130;
-                    const attachTop = flatTopFrac * crystalH;
-                    const alignY = flatTopFrac * 2 - 1;
-                    final crystalBoxW = crystalH * 120 / 130;
-                    return AnimatedBuilder(
-                      animation: Listenable.merge([
-                        _swingController,
-                        _settleController,
-                        _revealController,
-                        _inclinacao,
-                      ]),
-                      builder: (context, _) {
-                        // O envelope (1 → 0) amortece a oscilação no fim da
-                        // consulta: o cristal perde força e pousa no centro. O
-                        // ângulo = oscilação amortecida MAIS a inclinação do
-                        // aparelho (repouso pende mais; na consulta, um
-                        // vestígio). Enfeite: o sorteio não vê nada disto.
-                        final swing = (_isSwinging
-                                ? sin(_swingController.value * 2 * pi) *
-                                    0.8 *
-                                    (1 - _settle.value)
-                                : 0.0) +
-                            _inclinacao.value * (_isSwinging ? 0.05 : 0.12);
-                        final bob = Offset(
-                          anchor.dx + sin(swing) * cordLength * 0.5,
-                          anchor.dy + cos(swing) * cordLength,
-                        );
-                        return Stack(
-                          clipBehavior: Clip.none,
-                          children: [
-                            // Corrente dourada + rótulos + fixação.
-                            Positioned.fill(
-                              child: CustomPaint(
-                                painter: PendulumPainter(
-                                  anchor: anchor,
-                                  bob: bob,
-                                  swing: swing,
-                                  tilt: _inclinacao.value,
-                                  successColor: context.gc.success,
-                                  alertColor: context.gc.alert,
-                                  starColor: context.gc.starYellow,
-                                  yesLabel:
-                                      AppLocalizations.of(context).pendulumYes,
-                                  noLabel:
-                                      AppLocalizations.of(context).pendulumNo,
-                                  maybeLabel:
-                                      AppLocalizations.of(context).pendulumMaybe,
-                                  answer: _answer,
-                                  revealProgress: _revealController.value,
-                                ),
-                              ),
-                            ),
-                            // O cristal pendurado: mesmo ícone dos emblemas,
-                            // invertido, girando junto da corda em torno do topo
-                            // (onde a corrente prende).
-                            Positioned(
-                              left: bob.dx - crystalBoxW / 2,
-                              top: bob.dy - attachTop,
-                              width: crystalBoxW,
-                              height: crystalH,
-                              child: Transform.rotate(
-                                angle: swing,
-                                alignment: const Alignment(0, alignY),
-                                child: const IgnorePointer(
-                                  child: CrystalGlyph(
-                                    height: crystalH,
-                                    flipVertical: true,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        );
-                      },
-                    );
-                  },
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 16),
-
-            // Campo de pergunta
+            // Pergunta + Consultar ANTES do pêndulo: a pessoa se concentra e
+            // pergunta primeiro; só então o cristal balança abaixo e responde.
             MagicalCard(
               child: TextField(
                 controller: _questionController,
@@ -523,9 +467,9 @@ class _PendulumPageState extends State<PendulumPage>
               ),
             ),
 
-            const SizedBox(height: 24),
+            const SizedBox(height: 16),
 
-            if (_answer == null)
+            if (_answer == null) ...[
               ElevatedButton.icon(
                 onPressed: _isSwinging ? null : _askPendulum,
                 icon: _isSwinging
@@ -540,7 +484,9 @@ class _PendulumPageState extends State<PendulumPage>
                         ),
                       )
                     : const Icon(Icons.help),
-                label: Text(_isSwinging ? AppLocalizations.of(context).pendulumAsking : AppLocalizations.of(context).pendulumAsk),
+                label: Text(_isSwinging
+                    ? AppLocalizations.of(context).pendulumAsking
+                    : AppLocalizations.of(context).pendulumAsk),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: context.gc.lilac,
                   foregroundColor: context.gc.darkBackground,
@@ -548,9 +494,130 @@ class _PendulumPageState extends State<PendulumPage>
                     horizontal: 32,
                     vertical: 16,
                   ),
-                  disabledBackgroundColor: context.gc.lilac.withValues(alpha: 0.3),
+                  disabledBackgroundColor:
+                      context.gc.lilac.withValues(alpha: 0.3),
                 ),
               ),
+              const SizedBox(height: 16),
+            ],
+
+            // Visualização do pêndulo
+            MagicalCard(
+              child: SizedBox(
+                height: 300,
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final w = constraints.maxWidth;
+                    const h = 300.0;
+                    final anchor = Offset(w / 2, 20);
+                    final cordLength = h * 0.5;
+                    // O cristal é o MESMO ícone dos emblemas (SectionEmblem
+                    // .crystals), de cabeça para baixo. viewBox 120x130; o topo
+                    // achatado fica em y=118 → invertido em y=12. A corrente
+                    // prende nesse topo, e o cristal gira em torno dele.
+                    const crystalH = 54.0;
+                    const flatTopFrac = 12 / 130;
+                    const attachTop = flatTopFrac * crystalH;
+                    const alignY = flatTopFrac * 2 - 1;
+                    final crystalBoxW = crystalH * 120 / 130;
+                    // Ponta do cristal a partir da fixação: a corda mais o
+                    // corpo visível do cristal (110/130 do viewBox). Os rótulos
+                    // ficam logo além dessa ponta, no arco que ela percorre —
+                    // por isso o cristal aponta exatamente para a palavra.
+                    final pointerR = cordLength + crystalH * 110 / 130;
+                    final labelR = pointerR + 18;
+                    Offset onArc(double a) => Offset(
+                          anchor.dx + sin(a) * labelR,
+                          anchor.dy + cos(a) * labelR,
+                        );
+                    final yesPos = onArc(-_kSwingTarget);
+                    final noPos = onArc(_kSwingTarget);
+                    final maybePos = onArc(0);
+                    return AnimatedBuilder(
+                      animation: Listenable.merge([
+                        _swingController,
+                        _settleController,
+                        _revealController,
+                        _inclinacao,
+                      ]),
+                      builder: (context, _) {
+                        // Ângulo do cristal: converge para _targetAngle (aponta
+                        // para a resposta) enquanto a oscilação amortecida some —
+                        // o ricocheteio de um pêndulo pousando na diagonal. Fora
+                        // da consulta, repousa no alvo + a inclinação do aparelho.
+                        // Enfeite: o sorteio não vê nada disto.
+                        final settleV = _settle.value;
+                        final swing = _targetAngle * settleV +
+                            (_isSwinging
+                                ? sin(_swingController.value * 2 * pi) *
+                                    0.6 *
+                                    (1 - settleV)
+                                : 0.0) +
+                            _inclinacao.value * (_isSwinging ? 0.05 : 0.12);
+                        // Órbita circular (sem achatamento): a ponta do cristal
+                        // segue a linha da corda, então apontar para o alvo é
+                        // apontar para o rótulo.
+                        final bob = Offset(
+                          anchor.dx + sin(swing) * cordLength,
+                          anchor.dy + cos(swing) * cordLength,
+                        );
+                        return Stack(
+                          clipBehavior: Clip.none,
+                          children: [
+                            // Corrente dourada + rótulos + fixação.
+                            Positioned.fill(
+                              child: CustomPaint(
+                                painter: PendulumPainter(
+                                  anchor: anchor,
+                                  bob: bob,
+                                  swing: swing,
+                                  tilt: _inclinacao.value,
+                                  successColor: context.gc.success,
+                                  alertColor: context.gc.alert,
+                                  starColor: context.gc.starYellow,
+                                  yesLabel:
+                                      AppLocalizations.of(context).pendulumYes,
+                                  noLabel:
+                                      AppLocalizations.of(context).pendulumNo,
+                                  maybeLabel:
+                                      AppLocalizations.of(context).pendulumMaybe,
+                                  yesPos: yesPos,
+                                  noPos: noPos,
+                                  maybePos: maybePos,
+                                  answer: _answer,
+                                  revealProgress: _revealController.value,
+                                ),
+                              ),
+                            ),
+                            // O cristal pendurado: mesmo ícone dos emblemas,
+                            // invertido, girando junto da corda em torno do topo
+                            // (onde a corrente prende).
+                            Positioned(
+                              left: bob.dx - crystalBoxW / 2,
+                              top: bob.dy - attachTop,
+                              width: crystalBoxW,
+                              height: crystalH,
+                              child: Transform.rotate(
+                                angle: swing,
+                                alignment: const Alignment(0, alignY),
+                                child: const IgnorePointer(
+                                  child: CrystalGlyph(
+                                    height: crystalH,
+                                    flipVertical: true,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        );
+                      },
+                    );
+                  },
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 16),
 
             if (_answer != null)
               // A interpretação entra depois que o pêndulo assentou: fade +
@@ -608,8 +675,13 @@ class _PendulumPageState extends State<PendulumPage>
                       onPressed: () {
                         setState(() {
                           _answer = null;
+                          _pendingAnswer = null;
                           _question = '';
                           _questionController.clear();
+                          // Volta o cristal ao repouso (reto), pronto para a
+                          // próxima pergunta.
+                          _targetAngle = 0;
+                          _settleController.value = 0;
                         });
                       },
                       icon: const Icon(Icons.refresh),
@@ -687,6 +759,13 @@ class PendulumPainter extends CustomPainter {
   final String noLabel;
   final String maybeLabel;
 
+  /// Posições dos rótulos, no arco que a ponta do cristal percorre — o "sim" e
+  /// o "não" ficam lá embaixo, na diagonal, onde o pêndulo de fato pousa (e não
+  /// no meio, onde nunca pararia).
+  final Offset yesPos;
+  final Offset noPos;
+  final Offset maybePos;
+
   /// Progresso da revelação (0 → 1): o rótulo sorteado acende com um glow
   /// curto que some ao final. Em 1 (ou sem resposta), pinta o estado
   /// estável de sempre.
@@ -703,6 +782,9 @@ class PendulumPainter extends CustomPainter {
     required this.yesLabel,
     required this.noLabel,
     required this.maybeLabel,
+    required this.yesPos,
+    required this.noPos,
+    required this.maybePos,
     this.answer,
     this.revealProgress = 1.0,
   });
@@ -722,32 +804,13 @@ class PendulumPainter extends CustomPainter {
         ..strokeWidth = 1.2,
     );
 
-    // Desenhar respostas ao redor (sempre visíveis)
-    // Destacar a resposta selecionada quando houver resultado
-    _drawAnswerText(
-      canvas,
-      size,
-      yesLabel,
-      Offset(size.width * 0.2, size.height * 0.5),
-      successColor,
-      isSelected: answer == PendulumAnswer.yes,
-    );
-    _drawAnswerText(
-      canvas,
-      size,
-      noLabel,
-      Offset(size.width * 0.8, size.height * 0.5),
-      alertColor,
-      isSelected: answer == PendulumAnswer.no,
-    );
-    _drawAnswerText(
-      canvas,
-      size,
-      maybeLabel,
-      Offset(size.width * 0.5, size.height * 0.8),
-      starColor,
-      isSelected: answer == PendulumAnswer.maybe,
-    );
+    // Rótulos no arco (sempre visíveis); o sorteado acende na revelação.
+    _drawAnswerText(canvas, yesLabel, yesPos, successColor,
+        isSelected: answer == PendulumAnswer.yes);
+    _drawAnswerText(canvas, noLabel, noPos, alertColor,
+        isSelected: answer == PendulumAnswer.no);
+    _drawAnswerText(canvas, maybeLabel, maybePos, starColor,
+        isSelected: answer == PendulumAnswer.maybe);
   }
 
   /// A corrente dourada fina: um fio curvo (não uma reta rígida) semeado de
@@ -803,7 +866,7 @@ class PendulumPainter extends CustomPainter {
   }
 
   void _drawAnswerText(
-      Canvas canvas, Size size, String text, Offset position, Color color,
+      Canvas canvas, String text, Offset position, Color color,
       {bool isSelected = false}) {
     // O rótulo sorteado cresce e acende junto com a revelação (t = 1 é o
     // estado estável de sempre); os demais ficam no apagado padrão.
@@ -849,6 +912,9 @@ class PendulumPainter extends CustomPainter {
         oldDelegate.tilt != tilt ||
         oldDelegate.answer != answer ||
         oldDelegate.revealProgress != revealProgress ||
+        oldDelegate.yesPos != yesPos ||
+        oldDelegate.noPos != noPos ||
+        oldDelegate.maybePos != maybePos ||
         oldDelegate.successColor != successColor ||
         oldDelegate.alertColor != alertColor ||
         oldDelegate.starColor != starColor;
