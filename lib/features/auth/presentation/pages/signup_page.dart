@@ -18,7 +18,6 @@ import '../../../../core/config/supabase_config.dart';
 import '../../data/models/user_model.dart';
 import '../../data/repositories/supabase_auth_repository.dart';
 import '../providers/auth_provider.dart';
-import 'login_page.dart';
 import '../../../../core/config/captcha_config.dart';
 import '../widgets/captcha_gate.dart';
 
@@ -571,10 +570,7 @@ class _SignupPageState extends State<SignupPage> {
           ),
         ),
         TextButton(
-          onPressed: () => Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (_) => const LoginPage()),
-          ),
+          onPressed: () => context.pushReplacement('/login'),
           style: TextButton.styleFrom(
             padding: EdgeInsets.zero,
             minimumSize: Size.zero,

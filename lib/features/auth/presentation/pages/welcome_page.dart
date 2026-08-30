@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import '../../../../core/theme/grimoire_colors.dart';
@@ -6,8 +7,6 @@ import '../../../../core/widgets/staggered_entrance.dart';
 import '../../../../core/widgets/starfield_background.dart';
 import '../widgets/auth_motion.dart';
 import '../widgets/breathing_badge.dart';
-import 'login_page.dart';
-import 'signup_page.dart';
 
 /// Tela de boas-vindas com opções de login ou cadastro.
 ///
@@ -228,10 +227,7 @@ class WelcomePage extends StatelessWidget {
               child: SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-              onPressed: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const SignupPage()),
-              ),
+              onPressed: () => context.push('/signup'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: context.gc.lilac,
                 foregroundColor: const Color(0xFF2B2143),
@@ -258,10 +254,7 @@ class WelcomePage extends StatelessWidget {
           child: SizedBox(
             width: double.infinity,
             child: OutlinedButton(
-            onPressed: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const LoginPage()),
-            ),
+            onPressed: () => context.push('/login'),
             style: OutlinedButton.styleFrom(
               foregroundColor: context.gc.lilac,
               side: BorderSide(color: context.gc.lilac, width: 2),
