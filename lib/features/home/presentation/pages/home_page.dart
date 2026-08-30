@@ -291,12 +291,14 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
-    // NA WEB o voltar é do go_router (histórico real) + a guarda de piso
-    // (/inicio) impede a saída no Seu Dia — então NÃO interceptamos aqui
-    // (`canPop: true`), o que também tira o alerta "alterações serão perdidas"
-    // que o Flutter mostra quando um PopScope declara que trata o voltar.
+    // NA WEB o voltar é do go_router (histórico real): dentro do app navega
+    // tela a tela, e no Seu Dia — esgotado o histórico do app — sai LIMPO. Por
+    // isso NÃO interceptamos aqui (`canPop: true`), o que também tira o alerta
+    // "alterações serão perdidas" que o Flutter mostra quando um PopScope
+    // declara que trata o voltar. (As telas de entrada abaixo do Seu Dia quicam
+    // invisíveis pelo redirect do router, então o login não reaparece.)
     // NO CELULAR o voltar do sistema é `popRoute`: mantemos o intercept e a
-    // caminhada (que faz o toque duplo para sair, reversível).
+    // caminhada (que faz o toque duplo para ir a segundo plano, reversível).
     final conteudo = PopScope(
       canPop: kIsWeb,
       onPopInvokedWithResult: (didPop, _) {

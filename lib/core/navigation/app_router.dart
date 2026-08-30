@@ -47,14 +47,6 @@ const String rotaSignup = '/signup';
 const String rotaRecuperarSenha = '/recuperar-senha';
 const String rotaAssinatura = '/assinatura';
 
-/// O PISO do app (só web, só logada). Um degrau com URL PRÓPRIA que fica um
-/// nível abaixo do Seu Dia e reempurra o Seu Dia por cima. Assim, quando a
-/// Bruxa dá voltar no Seu Dia, o navegador cai AQUI (uma entrada de verdade,
-/// URL distinta — o Chrome não a poda como podava os degraus de mesma URL) e o
-/// piso a devolve ao Seu Dia, em vez de sair do app. É best-effort: numa recarga
-/// direta em `/seu-dia` o piso não existe abaixo, e ali o voltar pode sair.
-const String rotaInicio = '/inicio';
-
 /// Gate de carregamento (enquanto a sessão não foi lida do disco) e gate dos
 /// estados transitórios da volta do login social.
 const String _rotaCarregando = '/carregando';
@@ -109,10 +101,6 @@ GoRouter criarAppRouter({
       GoRoute(
         path: _rotaCarregando,
         builder: (_, __) => const TelaDeCarregamento(),
-      ),
-      GoRoute(
-        path: rotaInicio,
-        builder: (_, __) => const _PisoDoApp(),
       ),
       GoRoute(
         path: _rotaEntrando,
@@ -208,6 +196,10 @@ String? decidirRedirect({
   // A recuperação de senha tem token na URL e sessão própria; a página decide.
   if (local == rotaRecuperarSenha) return null;
 
+  // A RAIZ `/` não tem tela própria (o app é servido em `/`): manda para o Seu
+  // Dia e deixa o resto deste redirect decidir entrada/Home/gate pelo estado.
+  if (local == '/') return rotaSeuDia;
+
   // Sessão ainda não lida do disco: mostrar login por meio segundo e trocar por
   // Home é pior que esperar (era o `_Carregando` do AuthWrapper).
   if (!inicializada) {
@@ -225,41 +217,19 @@ String? decidirRedirect({
   }
 
   if (!logada) {
-    // Sem sessão: só as telas de entrada (sem piso — a pessoa ainda não entrou,
-    // e prender quem só quer voltar de onde veio seria hostil). A raiz e o resto
-    // viram boas-vindas.
+    // Sem sessão: só as telas de entrada. Qualquer outra vira boas-vindas.
     return _rotasDeEntrada.contains(local) ? null : rotaWelcome;
   }
 
-  // Com sessão: a raiz, o pós-carregando, o gate e as telas de entrada passam
-  // pelo PISO (/inicio), que monta e empurra /seu-dia por cima — assim o voltar
-  // no Seu Dia cai no piso em vez de sair do app. Ver [rotaInicio].
-  if (local == '/' ||
+  // Com sessão: nunca deixar aparecer tela de entrada nem gate transitório —
+  // eles quicam para o Seu Dia (invisível: o redirect roda ANTES do build).
+  // Assim, o voltar no Seu Dia que caísse em /login ou /welcome volta ao Seu
+  // Dia sem mostrá-los; esgotado o histórico, o voltar sai LIMPO (sem alerta,
+  // porque na web o PopScope do shell é `canPop: true`).
+  if (_rotasDeEntrada.contains(local) ||
       local == _rotaCarregando ||
-      local == _rotaEntrando ||
-      _rotasDeEntrada.contains(local)) {
-    return rotaInicio;
+      local == _rotaEntrando) {
+    return rotaSeuDia;
   }
-
-  // /inicio (o piso monta e empurra /seu-dia) e as rotas de conteúdo passam.
   return null;
-}
-
-/// O PISO (ver [rotaInicio]): monta e empurra o /seu-dia por cima de si, ficando
-/// um degrau abaixo com URL própria. O voltar no Seu Dia cai AQUI (o Chrome não
-/// poda uma entrada de URL distinta) e este piso reempurra o Seu Dia, em vez de
-/// deixar o app.
-class _PisoDoApp extends StatelessWidget {
-  const _PisoDoApp();
-
-  @override
-  Widget build(BuildContext context) {
-    // Depois do frame (durante o build não se navega). `push` — e não `go` —
-    // para o /inicio CONTINUAR embaixo, comprando o voltar.
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (context.mounted) context.push(rotaSeuDia);
-    });
-    // Enquanto empurra, a mesma tela de carregamento — sem piscar outra coisa.
-    return const TelaDeCarregamento();
-  }
 }
