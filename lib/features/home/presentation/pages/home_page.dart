@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
@@ -290,8 +291,14 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
+    // NA WEB o voltar é do go_router (histórico real) + a guarda de piso
+    // (/inicio) impede a saída no Seu Dia — então NÃO interceptamos aqui
+    // (`canPop: true`), o que também tira o alerta "alterações serão perdidas"
+    // que o Flutter mostra quando um PopScope declara que trata o voltar.
+    // NO CELULAR o voltar do sistema é `popRoute`: mantemos o intercept e a
+    // caminhada (que faz o toque duplo para sair, reversível).
     final conteudo = PopScope(
-      canPop: false,
+      canPop: kIsWeb,
       onPopInvokedWithResult: (didPop, _) {
         if (didPop) return;
         _handleSystemBack();

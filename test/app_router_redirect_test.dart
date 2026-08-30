@@ -46,18 +46,28 @@ void main() {
   });
 
   group('com sessão', () {
-    test('as telas de entrada e os gates levam ao Seu Dia', () {
-      expect(_r(local: '/welcome', logada: true), '/seu-dia');
-      expect(_r(local: '/login', logada: true), '/seu-dia');
-      expect(_r(local: '/signup', logada: true), '/seu-dia');
-      expect(_r(local: '/carregando', logada: true), '/seu-dia');
-      expect(_r(local: '/entrando', logada: true), '/seu-dia');
+    test('a raiz, as telas de entrada e os gates passam pelo PISO (/inicio)', () {
+      // O piso monta e empurra /seu-dia por cima, para o voltar no Seu Dia cair
+      // nele em vez de sair do app.
+      expect(_r(local: '/', logada: true), '/inicio');
+      expect(_r(local: '/welcome', logada: true), '/inicio');
+      expect(_r(local: '/login', logada: true), '/inicio');
+      expect(_r(local: '/signup', logada: true), '/inicio');
+      expect(_r(local: '/carregando', logada: true), '/inicio');
+      expect(_r(local: '/entrando', logada: true), '/inicio');
     });
-    test('as rotas de conteúdo passam', () {
+    test('o piso monta (não é redirecionado) e as rotas de conteúdo passam', () {
+      expect(_r(local: '/inicio', logada: true), isNull);
       expect(_r(local: '/seu-dia', logada: true), isNull);
       expect(_r(local: '/enciclopedia', logada: true), isNull);
       expect(_r(local: '/grimorio', logada: true), isNull);
       expect(_r(local: '/diarios', logada: true), isNull);
+    });
+    test('sem laço: /inicio → (piso empurra) /seu-dia → passa', () {
+      // Se /inicio quicasse para /seu-dia, o piso nunca montaria; se /seu-dia
+      // voltasse ao piso, laço. Nenhum dos dois.
+      expect(_r(local: '/inicio', logada: true), isNull);
+      expect(_r(local: '/seu-dia', logada: true), isNull);
     });
   });
 
