@@ -142,6 +142,11 @@ GoRouter criarAppRouter({
         },
         branches: [
           StatefulShellBranch(
+            // preload: constrói o Navigator da aba de cara (offstage), como o
+            // IndexedStack da main fazia — assim `chavesDeAba[i].currentState`
+            // não é null numa aba ainda não visitada (ex.: deep link de
+            // notificação abrindo o Grimório com o app fechado).
+            preload: true,
             navigatorKey: chavesDeAba[0],
             routes: [
               GoRoute(
@@ -151,6 +156,11 @@ GoRouter criarAppRouter({
             ],
           ),
           StatefulShellBranch(
+            // preload: constrói o Navigator da aba de cara (offstage), como o
+            // IndexedStack da main fazia — assim `chavesDeAba[i].currentState`
+            // não é null numa aba ainda não visitada (ex.: deep link de
+            // notificação abrindo o Grimório com o app fechado).
+            preload: true,
             navigatorKey: chavesDeAba[1],
             routes: [
               GoRoute(
@@ -161,6 +171,11 @@ GoRouter criarAppRouter({
             ],
           ),
           StatefulShellBranch(
+            // preload: constrói o Navigator da aba de cara (offstage), como o
+            // IndexedStack da main fazia — assim `chavesDeAba[i].currentState`
+            // não é null numa aba ainda não visitada (ex.: deep link de
+            // notificação abrindo o Grimório com o app fechado).
+            preload: true,
             navigatorKey: chavesDeAba[2],
             routes: [
               GoRoute(
@@ -171,6 +186,11 @@ GoRouter criarAppRouter({
             ],
           ),
           StatefulShellBranch(
+            // preload: constrói o Navigator da aba de cara (offstage), como o
+            // IndexedStack da main fazia — assim `chavesDeAba[i].currentState`
+            // não é null numa aba ainda não visitada (ex.: deep link de
+            // notificação abrindo o Grimório com o app fechado).
+            preload: true,
             navigatorKey: chavesDeAba[3],
             routes: [
               GoRoute(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -39,6 +40,22 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
     super.dispose();
   }
 
+  /// Sai da tela do jeito certo para cada modo.
+  ///
+  /// Em RECUPERAÇÃO esta é uma rota de TOPO do go_router (aberta por
+  /// `router.go('/recuperar-senha')`, sem nada embaixo), então `Navigator.pop`
+  /// seria no-op e a Bruxa ficaria presa depois de trocar a senha. Ali usa-se
+  /// `context.go('/seu-dia')` — a sessão de recuperação está viva. Fora da
+  /// recuperação a tela foi EMPURRADA por cima do app (MaterialPageRoute das
+  /// Configurações), e o pop volta certo.
+  void _sair() {
+    if (widget.recovery) {
+      context.go('/seu-dia');
+    } else {
+      Navigator.pop(context);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -47,7 +64,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
         elevation: 0,
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: context.gc.lilac),
-          onPressed: () => Navigator.pop(context),
+          onPressed: _sair,
         ),
         title: ResponsiveAppBarTitle(
           AppLocalizations.of(context).changePasswordTitle,
@@ -298,8 +315,8 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
           ),
         );
 
-        // Voltar para a tela anterior
-        Navigator.pop(context);
+        // Sai da tela (ver [_sair] — recuperação usa go_router).
+        _sair();
       }
     } catch (e) {
       if (mounted) {
