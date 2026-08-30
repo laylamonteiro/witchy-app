@@ -5,6 +5,7 @@ import '../content/content_locale.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import '../theme/app_theme.dart';
 import '../theme/grimoire_colors.dart';
+import '../widgets/loading_widget.dart';
 
 /// Exibe um documento legal empacotado como asset (offline, sem servidor).
 /// Renderiza um subconjunto simples de Markdown: #, ##, ###, listas e texto.
@@ -42,9 +43,7 @@ class LegalDocumentPage extends StatelessWidget {
         future: rootBundle.loadString(assetPath),
         builder: (context, snapshot) {
           if (!snapshot.hasData) {
-            return Center(
-              child: CircularProgressIndicator(color: context.gc.lilac),
-            );
+            return const LoadingWidget();
           }
           return SingleChildScrollView(
             padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),

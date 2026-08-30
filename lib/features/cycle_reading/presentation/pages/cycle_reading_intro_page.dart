@@ -12,6 +12,7 @@ import '../../../../core/providers/notification_provider.dart';
 import '../../../../core/services/payment_service.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
+import '../../../../core/widgets/loading_widget.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../auth/data/models/user_model.dart';
 import '../../../astrology/presentation/pages/birth_chart_input_page.dart';
@@ -663,7 +664,7 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
       return const MagicalCard(
         child: SizedBox(
           height: 240,
-          child: Center(child: CircularProgressIndicator()),
+          child: LoadingWidget(),
         ),
       );
     }
@@ -1114,12 +1115,7 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
           ),
           const SizedBox(height: 12),
           if (_isLoading)
-            Center(
-              child: Padding(
-                padding: const EdgeInsets.all(8),
-                child: CircularProgressIndicator(color: context.gc.lilac),
-              ),
-            )
+            const LoadingWidget()
           else ...[
             Text(
               isWeek
@@ -1180,17 +1176,7 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
 
   Widget _buildActions(AppLocalizations l10n) {
     if (_isWorking) {
-      return Column(
-        children: [
-          CircularProgressIndicator(color: context.gc.lilac),
-          const SizedBox(height: 12),
-          Text(
-            l10n.cycleReadingGenerating,
-            textAlign: TextAlign.center,
-            style: TextStyle(color: context.gc.textSecondary),
-          ),
-        ],
-      );
+      return LoadingWidget(message: l10n.cycleReadingGenerating);
     }
 
     final existing = _existing;

@@ -3,6 +3,7 @@ import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
+import '../../../../core/widgets/loading_widget.dart';
 import '../../../../core/database/database_helper.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../learning/presentation/providers/learning_provider.dart';
@@ -177,7 +178,7 @@ class _JourneysPageState extends State<JourneysPage> {
   @override
   Widget build(BuildContext context) {
     final body = _isLoading
-        ? Center(child: CircularProgressIndicator(color: context.gc.lilac))
+        ? const LoadingWidget()
         : Column(
             children: [
               // XP Header

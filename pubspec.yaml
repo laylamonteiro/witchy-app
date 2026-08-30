@@ -125,6 +125,10 @@ dependencies:
   share_plus: ^12.0.1
   gal: ^2.3.0
 
+  # Acelerômetro para a inclinação decorativa do pêndulo (só no
+  # dispositivo; jamais influencia o sorteio da resposta).
+  sensors_plus: ^6.1.0
+
   # Só usado no build web (lib/core/sharing/image_download_web.dart), para
   # entregar a imagem como download do navegador — não há galeria do sistema
   # ali. Declarado explicitamente porque hoje só vinha como dependência

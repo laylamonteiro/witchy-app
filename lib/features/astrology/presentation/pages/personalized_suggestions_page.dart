@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import '../../../../core/content/content_locale.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
+import '../../../../core/widgets/loading_widget.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/database/database_helper.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
@@ -191,9 +192,7 @@ class _PersonalizedSuggestionsPageState
           ),
           backgroundColor: context.gc.darkBackground,
           body: _isLoading
-              ? Center(
-                  child: CircularProgressIndicator(color: context.gc.lilac),
-                )
+              ? const LoadingWidget()
               : !_hasNatalChart
                   ? _buildNoChartView()
                   : SingleChildScrollView(

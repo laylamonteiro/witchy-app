@@ -7,6 +7,7 @@ import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/widgets/loading_widget.dart';
 import '../../../../core/widgets/empty_state_widget.dart';
 import '../../../../core/widgets/magical_fab.dart';
+import '../../../../core/navigation/grimoire_route.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import 'affirmation_form_page.dart';
 
@@ -73,7 +74,9 @@ class _AffirmationsListPageState extends State<AffirmationsListPage> {
                     ? EmptyStateWidget(
                         message:
                             AppLocalizations.of(context).diaryEmptyAffirmationsCategory,
-                        icon: Icons.auto_awesome,
+                        // Afirmação é intenção declarada: a estrela por
+                        // acender dos desejos é a cena mais coerente.
+                        type: MagicalEmptyStateType.desires,
                         actionText: AppLocalizations.of(context).diaryAddAffirmation,
                         onAction: () => _navigateToForm(context),
                       )
@@ -176,7 +179,7 @@ class _AffirmationsListPageState extends State<AffirmationsListPage> {
   void _navigateToForm(BuildContext context, {affirmation}) {
     Navigator.push(
       context,
-      MaterialPageRoute(
+      GrimoireRoute(
         builder: (_) => AffirmationFormPage(affirmation: affirmation),
       ),
     );

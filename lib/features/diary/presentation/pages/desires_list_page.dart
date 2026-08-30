@@ -8,6 +8,7 @@ import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/widgets/loading_widget.dart';
 import '../../../../core/widgets/empty_state_widget.dart';
 import '../../../../core/widgets/magical_fab.dart';
+import '../../../../core/navigation/grimoire_route.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import 'desire_form_page.dart';
 
@@ -42,7 +43,7 @@ class _DesiresListPageState extends State<DesiresListPage> {
             return EmptyStateWidget(
               message:
                   AppLocalizations.of(context).diaryEmptyDesires,
-              icon: Icons.auto_awesome,
+              type: MagicalEmptyStateType.desires,
               actionText: AppLocalizations.of(context).diaryAddDesire,
               onAction: () => _navigateToForm(context),
             );
@@ -152,7 +153,7 @@ class _DesiresListPageState extends State<DesiresListPage> {
   void _navigateToForm(BuildContext context, {desire}) {
     Navigator.push(
       context,
-      MaterialPageRoute(
+      GrimoireRoute(
         builder: (_) => DesireFormPage(desire: desire),
       ),
     );

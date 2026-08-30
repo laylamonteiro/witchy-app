@@ -1,12 +1,15 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:uuid/uuid.dart';
 import 'package:provider/provider.dart';
 import 'dart:math';
 import '../../../../core/widgets/magical_card.dart';
+import '../../../../core/navigation/grimoire_route.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
+import '../../../../core/theme/grimoire_motion.dart';
 import '../../data/models/rune_spread_model.dart';
 import '../../../diary/data/models/free_writing_model.dart';
 import '../../../diary/data/services/reading_archive_composer.dart';
@@ -38,6 +41,20 @@ class _RuneReadingPageState extends State<RuneReadingPage>
   List<RunePosition>? _drawnRunes;
   late AnimationController _animController;
   bool _isDrawing = false;
+
+  /// Cadência da queda das runas: cada uma leva [GrimoireMotion.reveal] para
+  /// assentar, com até 90ms entre vizinhas. Nas mesas grandes o passo aperta
+  /// para a entrada inteira caber em [_tetoEntradaMs].
+  static final int _duracaoQuedaMs = GrimoireMotion.reveal.inMilliseconds;
+  static const int _tetoEntradaMs = 1200;
+
+  int _passoQuedaMs(int quantas) {
+    if (quantas <= 1) return 0;
+    return min(90, (_tetoEntradaMs - _duracaoQuedaMs) ~/ (quantas - 1));
+  }
+
+  int _totalEntradaMs(int quantas) =>
+      (quantas - 1) * _passoQuedaMs(quantas) + _duracaoQuedaMs;
 
   @override
   void initState() {
@@ -115,7 +132,18 @@ class _RuneReadingPageState extends State<RuneReadingPage>
       _aiReading = null;
     });
 
-    _animController.forward(from: 0);
+    // A leitura acabou de se revelar: um único toque físico marca o momento.
+    HapticFeedback.lightImpact();
+
+    // Sob "reduzir movimento" as runas aparecem já assentadas; senão, a
+    // queda escalonada é dimensionada para a mesa sorteada.
+    if (GrimoireMotion.reduced(context)) {
+      _animController.value = 1.0;
+    } else {
+      _animController.duration =
+          Duration(milliseconds: _totalEntradaMs(drawn.length));
+      _animController.forward(from: 0);
+    }
 
     // Salvar leitura
     await _saveReading(drawn);
@@ -313,18 +341,23 @@ class _RuneReadingPageState extends State<RuneReadingPage>
 
               ElevatedButton.icon(
                 onPressed: _isDrawing ? null : _drawRunes,
-                icon: _isDrawing
-                    ? SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                            context.gc.darkBackground,
-                          ),
-                        ),
-                      )
-                    : const Icon(Icons.auto_awesome),
+                // Enquanto o sorteio prepara a mesa, os glifos do cartão de
+                // abertura se revezam no botão; sob "reduzir movimento" fica
+                // o indicador circular de sempre.
+                icon: !_isDrawing
+                    ? const Icon(Icons.auto_awesome)
+                    : GrimoireMotion.reduced(context)
+                        ? SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                context.gc.darkBackground,
+                              ),
+                            ),
+                          )
+                        : _GlifosDoSorteio(cor: context.gc.darkBackground),
                 label: Text(_isDrawing ? AppLocalizations.of(context).runesDrawing : AppLocalizations.of(context).runesDraw),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: context.gc.lilac,
@@ -504,31 +537,53 @@ class _RuneReadingPageState extends State<RuneReadingPage>
 
         const SizedBox(height: 16),
 
-        // Runas tiradas
+        // Runas tiradas — cada uma entra como se lançada na mesa: cai de
+        // alguns pixels, assenta rotação e tamanho e acende, uma após a
+        // outra. As variações (altura da queda, lado da inclinação) derivam
+        // do índice da posição, nunca de sorteio novo: o resultado da
+        // tiragem é intocável.
         ...positions.map((position) {
+          final indice = position.position;
+          final totalMs = _totalEntradaMs(positions.length);
+          final inicioMs = indice * _passoQuedaMs(positions.length);
+          final curva = Interval(
+            inicioMs / totalMs,
+            (inicioMs + _duracaoQuedaMs) / totalMs,
+            curve: GrimoireMotion.enter,
+          );
+          // Queda entre 48 e 72px (visível como "lançada na mesa", não um
+          // nudge); inclinação de 3–5° alternando o lado.
+          final queda = 48.0 + 8.0 * (indice % 4);
+          final angulo =
+              (indice.isEven ? 1 : -1) * (3 + indice % 3) * pi / 180;
+
           return Padding(
             padding: const EdgeInsets.only(bottom: 12),
             child: AnimatedBuilder(
               animation: _animController,
               builder: (context, child) {
-                return FadeTransition(
-                  opacity: Tween<double>(begin: 0, end: 1).animate(
-                    CurvedAnimation(
-                      parent: _animController,
-                      curve: Interval(
-                        position.position * 0.1,
-                        (position.position * 0.1) + 0.3,
-                        curve: Curves.easeOut,
+                // Reduzir movimento: a runa aparece já assentada no lugar.
+                if (GrimoireMotion.reduced(context)) return child!;
+                final t = curva.transform(_animController.value);
+                if (t >= 1.0) return child!;
+                return Opacity(
+                  opacity: t.clamp(0.0, 1.0).toDouble(),
+                  child: Transform.translate(
+                    offset: Offset(0, -queda * (1 - t)),
+                    child: Transform.rotate(
+                      angle: angulo * (1 - t),
+                      child: Transform.scale(
+                        scale: 0.88 + 0.12 * t,
+                        child: child,
                       ),
                     ),
                   ),
-                  child: child,
                 );
               },
               child: InkWell(
                 onTap: () {
                   Navigator.of(context).push(
-                    MaterialPageRoute(
+                    GrimoireRoute(
                       builder: (_) => RuneDetailPage(rune: position.rune),
                     ),
                   );
@@ -708,4 +763,91 @@ Widget _previaDoConselheiro(BuildContext context) {
       l10n.counselorLockedTitle4,
     ],
   );
+}
+
+/// Glifos que se revezam no botão enquanto o sorteio prepara a mesa — os
+/// mesmos caracteres do cartão de abertura ('ᚱᚢᚾᚨ'), acendendo e apagando
+/// um por vez. Puramente decorativo (o rótulo do botão já diz o estado),
+/// por isso fora da árvore de semântica.
+///
+/// Quem decide o fallback sob "reduzir movimento" é o chamador; ainda
+/// assim, o loop aqui segue a regra da casa: só começa depois de ler a
+/// preferência de acessibilidade, nunca no initState.
+class _GlifosDoSorteio extends StatefulWidget {
+  const _GlifosDoSorteio({required this.cor});
+
+  final Color cor;
+
+  @override
+  State<_GlifosDoSorteio> createState() => _GlifosDoSorteioState();
+}
+
+class _GlifosDoSorteioState extends State<_GlifosDoSorteio>
+    with SingleTickerProviderStateMixin {
+  static const List<String> _glifos = ['ᚱ', 'ᚢ', 'ᚾ', 'ᚨ'];
+
+  late final AnimationController _c;
+  bool? _reduzido;
+
+  @override
+  void initState() {
+    super.initState();
+    _c = AnimationController(
+      duration: const Duration(milliseconds: 1400),
+      vsync: this,
+    );
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final reduzido = MediaQuery.disableAnimationsOf(context);
+    if (reduzido == _reduzido) return;
+    _reduzido = reduzido;
+    if (reduzido) {
+      _c.stop();
+      _c.value = 0.5;
+    } else {
+      _c.repeat();
+    }
+  }
+
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ExcludeSemantics(
+      child: SizedBox(
+        width: 20,
+        height: 20,
+        child: AnimatedBuilder(
+          animation: _c,
+          builder: (context, _) {
+            final volta = _c.value * _glifos.length;
+            final indice = volta.floor() % _glifos.length;
+            // Meia-senoide por glifo: acende e apaga sem sumir de vez.
+            final brilho = 0.35 + 0.65 * sin(pi * (volta % 1.0));
+            return Center(
+              child: Opacity(
+                opacity: brilho.clamp(0.0, 1.0).toDouble(),
+                child: Text(
+                  _glifos[indice],
+                  style: TextStyle(
+                    fontSize: 15,
+                    height: 1.0,
+                    fontWeight: FontWeight.bold,
+                    color: widget.cor,
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
 }

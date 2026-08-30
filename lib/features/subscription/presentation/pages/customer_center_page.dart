@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/services/payment_service.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
+import '../../../../core/widgets/loading_widget.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 
 /// Página de Customer Center do RevenueCat
@@ -62,9 +63,7 @@ class _CustomerCenterPageState extends State<CustomerCenterPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            CircularProgressIndicator(
-              color: context.gc.lilac,
-            ),
+            const LoadingWidget(),
             const SizedBox(height: 24),
             Text(
               'Abrindo Central do Assinante...',
