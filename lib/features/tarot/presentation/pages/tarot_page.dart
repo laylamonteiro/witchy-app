@@ -7,7 +7,6 @@ import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/ai/ai_service.dart';
-import '../../../../core/navigation/grimoire_route.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/magical_card.dart';
@@ -22,7 +21,6 @@ import '../../../diary/data/services/reading_archive_composer.dart';
 import '../../../diary/presentation/widgets/save_to_records_button.dart';
 import '../widgets/tarot_card_view.dart';
 import 'tarot_learn_tab.dart';
-import 'tarot_library_page.dart';
 import '../../../../core/services/ad_service.dart';
 import '../../../../core/widgets/premium_locked_preview.dart';
 
@@ -441,46 +439,6 @@ class _SpreadTabState extends State<_SpreadTab> {
                     borderSide:
                         BorderSide(color: context.gc.gold, width: 1.5),
                   ),
-                ),
-              ),
-            ),
-            // Biblioteca de Cartas: acesso rápido a partir da Tiragem.
-            MagicalCard(
-              child: InkWell(
-                onTap: () => Navigator.of(context).push(
-                  GrimoireRoute(builder: (_) => const TarotLibraryPage()),
-                ),
-                borderRadius: BorderRadius.circular(12),
-                child: Row(
-                  children: [
-                    const Text('📚', style: TextStyle(fontSize: 32)),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            AppLocalizations.of(context).tarotLibraryTitle,
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleMedium
-                                ?.copyWith(
-                                  color: context.gc.textPrimary,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                          ),
-                          Text(
-                            AppLocalizations.of(context).tarotLibraryDesc,
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodySmall
-                                ?.copyWith(color: context.gc.textSecondary),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Icon(Icons.chevron_right, color: context.gc.textSecondary),
-                  ],
                 ),
               ),
             ),
