@@ -44,8 +44,8 @@ import 'features/wheel_of_year/presentation/providers/wheel_of_year_provider.dar
 import 'features/astrology/presentation/providers/astrology_provider.dart';
 import 'core/navigation/janela_de_login.dart';
 import 'core/navigation/observador_de_rotas_raiz.dart';
+import 'core/navigation/estrategia_de_url.dart';
 import 'package:go_router/go_router.dart';
-import 'package:flutter_web_plugins/url_strategy.dart';
 
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();
@@ -162,7 +162,7 @@ void main() {
     // desempilha telas de verdade. Isso substitui o antigo "corrimão" de
     // degraus (`web/index.html`) e o `PorteiroDoVoltar`, que existiam só porque
     // o app vivia dentro de UMA entrada de histórico.
-    if (kIsWeb) usePathUrlStrategy();
+    usarUrlDeCaminho(); // no-op fora da web (importação condicional)
 
     // Erros do framework (build/layout) também vão para o log persistente,
     // mantendo o comportamento padrão de apresentação.
