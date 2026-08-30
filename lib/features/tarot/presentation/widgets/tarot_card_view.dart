@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/theme/grimoire_motion.dart';
@@ -266,22 +267,36 @@ class _TarotFlipCardState extends State<TarotFlipCard>
     super.dispose();
   }
 
-  /// Face visível no instante [t]: verso de 0° a 90° e, dali em diante, a
-  /// frente com contra-rotação (t·π − π) — assim ela chega legível, nunca
-  /// espelhada, e o ângulo jamais encosta em π (a matriz degeneraria).
+  /// Face visível no instante [t]: verso até a metade, frente daí em diante.
+  ///
+  /// No app nativo é um giro 3D em Y com perspectiva (setEntry) — carta física
+  /// virando. Na WEB a matriz de perspectiva do CanvasKit varia entre
+  /// navegadores (às vezes achata/some), então lá o giro é 2D em escala X: a
+  /// carta afina até uma linha no meio e reabre já na frente — lê como flip e é
+  /// confiável em qualquer navegador. Nos dois casos a frente chega legível,
+  /// nunca espelhada.
   Widget _face(double t) {
     if (t <= 0.0) return widget.back;
     if (t >= 1.0) return widget.front;
     final mostraFrente = t >= 0.5;
-    final angulo = mostraFrente ? t * pi - pi : t * pi;
+    final face = mostraFrente ? widget.front : widget.back;
+    final Matrix4 transform;
+    if (kIsWeb) {
+      // Escala X 1 → 0 (verso) e 0 → 1 (frente): flip sem perspectiva 3D.
+      final sx = mostraFrente ? (t - 0.5) * 2 : 1 - t * 2;
+      transform = Matrix4.identity()..scale(sx.clamp(0.0, 1.0), 1.0, 1.0);
+    } else {
+      // Contra-rotação (t·π − π) na frente; o ângulo nunca encosta em π (a
+      // matriz degeneraria).
+      final angulo = mostraFrente ? t * pi - pi : t * pi;
+      transform = Matrix4.identity()
+        ..setEntry(3, 2, 0.0015)
+        ..rotateY(angulo);
+    }
     return Transform(
       alignment: Alignment.center,
-      // setEntry(3, 2) dá a perspectiva sutil — sem ela o giro parece um
-      // achatamento, não uma carta física virando.
-      transform: Matrix4.identity()
-        ..setEntry(3, 2, 0.0015)
-        ..rotateY(angulo),
-      child: mostraFrente ? widget.front : widget.back,
+      transform: transform,
+      child: face,
     );
   }
 
