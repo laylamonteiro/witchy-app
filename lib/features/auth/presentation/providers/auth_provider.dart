@@ -763,8 +763,17 @@ class AuthProvider extends ChangeNotifier {
     // hoje se guarda sozinho — sai na primeira linha quando o SDK está de pé.
     await paymentService.initialize();
 
-    // Se PaymentService diz que não é Pro, fazer downgrade
-    if (!paymentService.isPro && _currentUser.role == UserRole.premium) {
+    // Só rebaixa com sinal POSITIVO de que não é mais Pro (RevenueCat
+    // consultado E negando). Se o RevenueCat não carregou (web/rede ruim),
+    // NÃO rebaixa: o acesso do espelho de `profiles` continua valendo, e um
+    // assinante válido não perde o acesso por uma falha de rede no boot.
+    final rebaixar = PaymentService.deveRebaixar(
+      statusConhecido: paymentService.subscriptionStatusKnown,
+      isPro: paymentService.isPro,
+      isLifetime: _currentUser.plan == SubscriptionPlan.lifetime,
+      isAdmin: _isOriginalAdmin,
+    );
+    if (rebaixar && _currentUser.role == UserRole.premium) {
       await debugLog(
           'AUTH', 'Assinatura expirou - fazendo downgrade para Free');
       _currentUser = _currentUser.copyWith(
@@ -797,9 +806,15 @@ class AuthProvider extends ChangeNotifier {
       );
       await _saveUser();
       notifyListeners();
-    } else if (!_isOriginalAdmin &&
-        _currentUser.plan != SubscriptionPlan.lifetime) {
-      // Se não é mais Pro, não é admin e não tem lifetime (Código Premium), fazer downgrade
+    } else if (PaymentService.deveRebaixar(
+      statusConhecido: paymentService.subscriptionStatusKnown,
+      isPro: paymentService.isPro,
+      isLifetime: _currentUser.plan == SubscriptionPlan.lifetime,
+      isAdmin: _isOriginalAdmin,
+    )) {
+      // Rebaixa só com sinal positivo de que não é mais Pro. Sem RevenueCat
+      // carregado, mantém o acesso do espelho (nunca derruba assinante válido
+      // por falha de rede). Lifetime (Código Premium) e admin nunca caem aqui.
       await debugLog('AUTH',
           'Assinatura não está mais ativa - fazendo downgrade para Free');
       _currentUser = _currentUser.copyWith(

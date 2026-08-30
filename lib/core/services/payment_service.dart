@@ -1043,6 +1043,39 @@ class PaymentService extends ChangeNotifier {
     return _customerInfo!.entitlements.active.isNotEmpty;
   }
 
+  /// O RevenueCat REALMENTE respondeu sobre este cliente?
+  ///
+  /// `_customerInfo` só é não-nulo depois de um `getCustomerInfo`/update bem
+  /// sucedido. Distingue "sei que NÃO é Pro" de "não consegui verificar" — e
+  /// essa diferença vale dinheiro: sem ela, `isPro == false` por falha de
+  /// carregamento (o caso da web / rede ruim, onde o SDK às vezes nem sobe)
+  /// era lido como "não é assinante", e o boot rebaixava para Free um
+  /// assinante válido cujo acesso o servidor já concedeu (o espelho de
+  /// `profiles`). Enquanto o status é desconhecido, mantém-se o acesso.
+  bool get subscriptionStatusKnown => _customerInfo != null;
+
+  /// Deve rebaixar para Free com base no RevenueCat?
+  ///
+  /// Só com sinal POSITIVO de que a assinatura não vale mais: RevenueCat
+  /// consultado ([statusConhecido]) E dizendo que não é Pro. NUNCA rebaixa por
+  /// não ter conseguido consultar (mantém o acesso do espelho/servidor), nem
+  /// vitalício (Código Premium/compra), nem admin. É a trava central do
+  /// "nunca perde acesso enquanto o plano vigorar".
+  ///
+  /// Pública (não `@visibleForTesting`) porque é usada em produção pelo
+  /// AuthProvider (`_checkSubscriptionExpiration`/`refreshPremiumStatus`), e
+  /// não só nos testes — a lógica de rebaixar mora aqui, num único lugar.
+  static bool deveRebaixar({
+    required bool statusConhecido,
+    required bool isPro,
+    required bool isLifetime,
+    required bool isAdmin,
+  }) {
+    if (isAdmin || isLifetime) return false;
+    if (!statusConhecido) return false;
+    return !isPro;
+  }
+
   /// Data de expiração da assinatura (se houver)
   DateTime? get subscriptionExpirationDate {
     final expirationDate = _proAtivo?.expirationDate;
