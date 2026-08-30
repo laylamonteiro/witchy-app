@@ -26,11 +26,10 @@ import 'core/services/payment_service.dart';
 import 'core/services/debug_log_service.dart';
 import 'core/services/data_sync_service.dart';
 import 'core/navigation/app_deep_link.dart';
+import 'core/navigation/app_router.dart';
+import 'core/navigation/section_reset_notifier.dart';
 import 'core/utils/app_session_policy.dart';
-import 'features/home/presentation/pages/home_page.dart';
 import 'features/auth/auth.dart';
-import 'features/auth/presentation/pages/change_password_page.dart';
-import 'features/subscription/subscription.dart';
 import 'features/grimoire/presentation/providers/spell_provider.dart';
 import 'features/diary/presentation/providers/dream_provider.dart';
 import 'features/diary/presentation/providers/desire_provider.dart';
@@ -44,20 +43,24 @@ import 'features/lunar/presentation/providers/lunar_provider.dart';
 import 'features/wheel_of_year/presentation/providers/wheel_of_year_provider.dart';
 import 'features/astrology/presentation/providers/astrology_provider.dart';
 import 'core/navigation/janela_de_login.dart';
-import 'core/navigation/corrimao_de_voltar.dart';
 import 'core/navigation/observador_de_rotas_raiz.dart';
-import 'core/navigation/porteiro_do_voltar.dart';
+import 'package:go_router/go_router.dart';
+import 'package:flutter_web_plugins/url_strategy.dart';
 
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();
 
-/// A chave do Navigator raiz.
+/// A chave do Navigator raiz do go_router (`criarAppRouter`).
 ///
-/// Fora da classe de propósito: o [PorteiroDoVoltar] é instalado ANTES do
-/// `runApp` — precisa estar na fila de observadores antes do primeiro voltar, e
-/// antes até da tela de erro de boot — e precisa alcançar o navegador assim que
-/// ele existir.
+/// Fora da classe de propósito: é passada ao router na criação e usada por
+/// alguns pontos que precisam do Navigator raiz de fora da árvore (o deep link
+/// que revela a Home fechando telas cheias, e a espera do boot pela montagem).
 final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>();
+
+/// O router do app, exposto no nível de biblioteca para os poucos pontos que
+/// navegam de FORA da árvore de widgets (o retorno do link de recuperação de
+/// senha, que chega durante o boot). Preenchido pelo estado do app ao montar.
+GoRouter? _routerGlobal;
 
 /// Marca de recuperação de senha pendente. Persistida porque, NA WEB, o
 /// AuthWrapper descarta o documento da volta do OAuth com um
@@ -76,8 +79,8 @@ const Duration _validadeRecuperacaoPendente = Duration(minutes: 15);
 /// existir — então espera-se o navegador montar, frame a frame, com um
 /// teto de tentativas para não rodar para sempre num boot que falhou.
 void _abrirTrocaDeSenhaDaRecuperacao([int tentativas = 0]) {
-  final nav = _rootNavigatorKey.currentState;
-  if (nav == null) {
+  final router = _routerGlobal;
+  if (router == null || _rootNavigatorKey.currentState == null) {
     if (tentativas > 600) return; // boot não montou o app; desiste em silêncio
     WidgetsBinding.instance.addPostFrameCallback(
         (_) => _abrirTrocaDeSenhaDaRecuperacao(tentativas + 1));
@@ -87,9 +90,7 @@ void _abrirTrocaDeSenhaDaRecuperacao([int tentativas = 0]) {
   // deve reabri-la.
   unawaited(SharedPreferences.getInstance()
       .then((p) => p.remove(_chaveRecuperacaoPendente)));
-  nav.push(MaterialPageRoute(
-    builder: (_) => const ChangePasswordPage(recovery: true),
-  ));
+  router.go(rotaRecuperarSenha);
 }
 
 /// Os tipos de link de e-mail que o app sabe verificar por `token_hash`.
@@ -149,26 +150,19 @@ void main() {
   // são logados em vez de derrubarem o app silenciosamente — na web eles
   // viravam um "Uncaught Error" minificado no console e tela branca.
   runZonedGuarded<void>(() async {
-    // O VIGIA DO CORRIMÃO antes de tudo: assim o ouvinte de `popstate` do app
-    // entra na fila ANTES do ouvinte do motor (que só nasce quando o Navigator
-    // raiz monta) e lê o estado do pouso antes de qualquer reação dele. Não
-    // escreve nada no histórico — quem ergue os degraus é o script de
-    // `web/index.html`, que roda antes deste código existir.
-    instalarVigiaDoCorrimao();
-
     // Precisa rodar DENTRO da zona: binding e runApp na mesma zona, senão o
     // Flutter emite aviso de "Zone mismatch" e os erros escapam da guarda.
     WidgetsFlutterBinding.ensureInitialized();
 
-    // O PORTEIRO DO VOLTAR, antes de qualquer tela existir.
+    // O CONSERTO DE VERDADE DO VOLTAR: URL de caminho por tela.
     //
-    // Ele é observador do BINDING, não widget: vale no boot, na tela de erro de
-    // render, na troca de sessão e em qualquer quadro sem `PopScope` montado.
-    // Enquanto ele estiver de pé, `handlePopRoute` NUNCA chega ao
-    // `SystemNavigator.pop()` — que na web desmonta o histórico do motor e
-    // deixa o voltar morto pelo resto do documento, fazendo o gesto seguinte
-    // fechar a aba a partir de qualquer tela. Ver [PorteiroDoVoltar].
-    PorteiroDoVoltar.instalar(raiz: () => _rootNavigatorKey.currentState);
+    // Com `usePathUrlStrategy()` + `MaterialApp.router` + o [criarAppRouter], o
+    // Flutter passa a usar `MultiEntriesBrowserHistory` — cada tela vira uma
+    // entrada de histórico de verdade, e o gesto de voltar do navegador
+    // desempilha telas de verdade. Isso substitui o antigo "corrimão" de
+    // degraus (`web/index.html`) e o `PorteiroDoVoltar`, que existiam só porque
+    // o app vivia dentro de UMA entrada de histórico.
+    if (kIsWeb) usePathUrlStrategy();
 
     // Erros do framework (build/layout) também vão para o log persistente,
     // mantendo o comportamento padrão de apresentação.
@@ -404,12 +398,44 @@ class _GrimorioDeBolsoAppState extends State<GrimorioDeBolsoApp>
   /// voltar — o esconderijo nunca sobrevive a uma sessão nova.
   late final MascotProvider _mascotProvider = MascotProvider(widget.prefs);
 
+  /// O AuthProvider é ICADO para fora do MultiProvider: o router precisa lê-lo
+  /// no `redirect` e reagir a ele (`refreshListenable`). Continua exposto na
+  /// árvore por `.value` (mesma posição — a ORDEM importa para os ProxyProviders
+  /// abaixo dele).
+  final AuthProvider _authProvider = AuthProvider()..initialize();
+
+  /// Chaves dos Navigators de aba e notificadores de reset por seção — criados
+  /// aqui (vida = app) e compartilhados entre o router e o shell.
+  final List<GlobalKey<NavigatorState>> _chavesDeAba =
+      List.generate(4, (_) => GlobalKey<NavigatorState>());
+  final List<SectionResetNotifier> _resetNotifiers =
+      List.generate(4, (_) => SectionResetNotifier());
+
+  late final GoRouter _appRouter = criarAppRouter(
+    chaveRaiz: _rootNavigatorKey,
+    auth: _authProvider,
+    chavesDeAba: _chavesDeAba,
+    resetNotifiers: _resetNotifiers,
+    consumirSplashInicial: _consumirSplashInicial,
+    observadoresRaiz: [ObservadorDeRotasRaiz()],
+  );
+
+  bool _consumirSplashInicial() {
+    final mostrar = _showSplash;
+    _showSplash = false;
+    return mostrar;
+  }
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     DeepLinkService.instance.pending.addListener(_onDeepLink);
-    _checkSplashDisplay();
+    _decidirSplashInicial();
+    // Exposto para os pontos que navegam de fora da árvore (a volta do link de
+    // recuperação de senha, que chega durante o boot). Acessar `_appRouter`
+    // aqui já o instancia — ele não depende de BuildContext.
+    _routerGlobal = _appRouter;
     // Restaura os dados automaticamente quando o app inicia com uma sessão
     // Premium já ativa. O próprio método valida preferência e disponibilidade.
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -422,6 +448,10 @@ class _GrimorioDeBolsoAppState extends State<GrimorioDeBolsoApp>
     DeepLinkService.instance.pending.removeListener(_onDeepLink);
     WidgetsBinding.instance.removeObserver(this);
     _mascotProvider.dispose();
+    for (final n in _resetNotifiers) {
+      n.dispose();
+    }
+    _authProvider.dispose();
     super.dispose();
   }
 
@@ -433,20 +463,14 @@ class _GrimorioDeBolsoAppState extends State<GrimorioDeBolsoApp>
     _rootNavigatorKey.currentState?.popUntil((route) => route.isFirst);
   }
 
-  Future<void> _checkSplashDisplay() async {
+  /// Decide o splash de marca ANTES da primeira montagem, de forma síncrona (o
+  /// shell consome a decisão uma vez, ao montar). Se o app foi aberto nos
+  /// últimos 30 min, é volta de background, não fechamento — sem splash.
+  void _decidirSplashInicial() {
     final lastOpened = widget.prefs.getInt(_lastOpenedKey) ?? 0;
     final now = DateTime.now().millisecondsSinceEpoch;
-
-    // Se o app foi aberto nos últimos 30 minutos, não mostrar splash
-    // (significa que está voltando de background, não de um fechamento completo)
-    if (now - lastOpened < 30 * 60 * 1000) {
-      setState(() {
-        _showSplash = false;
-      });
-    }
-
-    // Atualizar timestamp de abertura
-    await widget.prefs.setInt(_lastOpenedKey, now);
+    _showSplash = (now - lastOpened) >= 30 * 60 * 1000;
+    unawaited(widget.prefs.setInt(_lastOpenedKey, now));
   }
 
   @override
@@ -479,16 +503,10 @@ class _GrimorioDeBolsoAppState extends State<GrimorioDeBolsoApp>
     await widget.prefs.setInt(_lastOpenedKey, now.millisecondsSinceEpoch);
 
     if (shouldStartNewSession && mounted) {
-      // Sessão nova = Salem de volta (o esconderijo é sempre temporário).
+      // Sessão nova = Salem de volta (o esconderijo é sempre temporário) e a
+      // navegação recomeça no Seu Dia, descartando as páginas internas.
       _mascotProvider.show();
-      // Recria toda a navegação, como em uma abertura real: páginas internas
-      // são descartadas, o splash reaparece e a bubble verifica o novo dia.
-      _rootNavigatorKey.currentState?.pushAndRemoveUntil(
-        MaterialPageRoute(
-          builder: (_) => const AuthWrapper(showSplash: true),
-        ),
-        (_) => false,
-      );
+      _appRouter.go(rotaSeuDia);
     }
 
     await _triggerBackgroundSync();
@@ -539,7 +557,7 @@ class _GrimorioDeBolsoAppState extends State<GrimorioDeBolsoApp>
         // ATENÇÃO À ORDEM: todo ChangeNotifierProxyProvider<AuthProvider, X>
         // precisa vir DEPOIS desta linha — ele lê o AuthProvider do contexto
         // acima de si mesmo, e não o encontra se for declarado antes.
-        ChangeNotifierProvider(create: (_) => AuthProvider()..initialize()),
+        ChangeNotifierProvider<AuthProvider>.value(value: _authProvider),
         ChangeNotifierProxyProvider<AuthProvider, LearningProvider>(
           create: (_) => LearningProvider(),
           update: (_, auth, provider) {
@@ -637,11 +655,13 @@ class _GrimorioDeBolsoAppState extends State<GrimorioDeBolsoApp>
         ),
       ],
       child: Consumer2<LanguageProvider, ThemeProvider>(
-        builder: (context, languageProvider, themeProvider, child) => MaterialApp(
-          navigatorKey: _rootNavigatorKey,
-          // Avisa a Home quando uma tela cheia abre ou fecha na raiz — ela
-          // não enxerga isso sozinha (ver [mudancasDaPilhaRaiz]).
-          navigatorObservers: [ObservadorDeRotasRaiz()],
+        builder: (context, languageProvider, themeProvider, _) =>
+            MaterialApp.router(
+          // Roteamento de verdade: URL por tela, histórico de navegador real.
+          // As guardas de auth e os estados transitórios do login social vivem
+          // no `redirect`/gates do [criarAppRouter]; o Navigator raiz e o
+          // ObservadorDeRotasRaiz agora vivem dentro do router.
+          routerConfig: _appRouter,
           // `onGenerateTitle` e não `title`: o nome do app é TRADUZIDO
           // ("Pocket Grimoire", "Grimorio de Bolsillo") e a chave `appTitle`
           // existia nos quatro ARBs sem nenhum chamador. Cravado, o nome
@@ -659,27 +679,10 @@ class _GrimorioDeBolsoAppState extends State<GrimorioDeBolsoApp>
           localeResolutionCallback: LanguageProvider.resolve,
           theme: themeProvider.themeData,
           // Na web em desktop, enquadra o app numa largura de celular.
-          builder: (context, navigator) =>
-              WebMobileFrame(child: navigator ?? const SizedBox.shrink()),
-          home: child,
-          routes: {
-            // Rotas de conteúdo exigem sessão: na web a URL é endereçável
-            // (o navegador guarda `#/home`) e abriria a Home sem passar pelo
-            // AuthWrapper. Sem login, RequireAuth devolve o fluxo de entrada.
-            '/home': (context) => const RequireAuth(child: HomePage()),
-            '/subscription': (context) =>
-                const RequireAuth(child: SubscriptionPage()),
-            // E o inverso: as telas de ENTRADA não podem aparecer para quem
-            // já entrou. Voltar no navegador caminha pelo histórico, que
-            // guarda a URL de antes do login — sem GuestOnly, um voltar
-            // reabria `#/login` por cima de uma sessão viva.
-            '/welcome': (context) => const GuestOnly(child: WelcomePage()),
-            '/login': (context) => const GuestOnly(child: LoginPage()),
-            '/signup': (context) => const GuestOnly(child: SignupPage()),
-          },
+          builder: (context, child) =>
+              WebMobileFrame(child: child ?? const SizedBox.shrink()),
           debugShowCheckedModeBanner: false,
         ),
-        child: AuthWrapper(showSplash: _showSplash),
       ),
     );
   }

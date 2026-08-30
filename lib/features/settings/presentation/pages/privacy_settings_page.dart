@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/legal/legal_document_page.dart';
@@ -588,8 +589,10 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
           ),
         );
 
-        // Redirecionar para tela inicial
-        navigator.pushNamedAndRemoveUntil('/welcome', (route) => false);
+        // Redirecionar para tela inicial. Com o router, o logout já dispara o
+        // redirect para /welcome (refreshListenable); isto é explícito por
+        // garantia de tempo. `navigator.context` está sob o Navigator raiz.
+        navigator.context.go('/welcome');
       } catch (e) {
         // Fechar loading
         navigator.pop();

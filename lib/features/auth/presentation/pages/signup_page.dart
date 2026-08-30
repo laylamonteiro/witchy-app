@@ -1,5 +1,6 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/i18n/gender.dart';
 
 import 'package:flutter/services.dart';
@@ -62,11 +63,10 @@ class _SignupPageState extends State<SignupPage> {
   /// deixaria a tela preta. Sem nada abaixo, volta-se para a porta de
   /// entrada (Welcome).
   void _handleBack() {
-    final nav = Navigator.of(context);
-    if (nav.canPop()) {
-      nav.pop();
+    if (context.canPop()) {
+      context.pop();
     } else {
-      nav.pushReplacementNamed('/welcome');
+      context.go('/welcome');
     }
   }
 
@@ -658,8 +658,7 @@ class _SignupPageState extends State<SignupPage> {
               AppLocalizations.of(context).authConfirmEmailSent(email),
               type: AuthSnackType.success,
             );
-            Navigator.of(context)
-                .pushNamedAndRemoveUntil('/login', (route) => false);
+            context.go('/login');
           }
           return;
         }
@@ -692,7 +691,7 @@ class _SignupPageState extends State<SignupPage> {
         );
 
         // Navegar para home
-        Navigator.of(context).pushNamedAndRemoveUntil('/home', (route) => false);
+        context.go('/seu-dia');
       }
     } catch (e) {
       if (mounted) {
@@ -767,7 +766,7 @@ class _SignupPageState extends State<SignupPage> {
 
         if (!mounted) return;
         // Navegar para home
-        Navigator.of(context).pushNamedAndRemoveUntil('/home', (route) => false);
+        context.go('/seu-dia');
       } else {
         showAuthSnack(
           context,

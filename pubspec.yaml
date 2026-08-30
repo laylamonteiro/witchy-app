@@ -38,6 +38,10 @@ dependencies:
   # State Management
   provider: ^6.1.1
 
+  # Navigation — URL por tela (histórico de navegador real). Ver
+  # lib/core/navigation/app_router.dart e docs/AMBIENTES_WEB.md.
+  go_router: ^14.6.2
+
   # Local Storage
   sqflite: ^2.3.0
   path_provider: ^2.1.1

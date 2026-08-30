@@ -135,9 +135,18 @@
     // seja `origin` nem `flutter` faz o motor responder com `go(-1)` EM
     // CASCATA, e aí um voltar leva a aba para fora do app.
     (function () {
-      // Cada degrau compra um voltar. O polegar repete ~5 vezes por segundo;
-      // 8 cobre uma deslizada nervosa inteira, e a lista de histórico da aba
-      // fica com 8 entradas repetidas, não 30.
+      // DESATIVADO na migração para ROTAS DE VERDADE (go_router +
+      // usePathUrlStrategy, ver lib/core/navigation/app_router.dart).
+      //
+      // O histórico do navegador agora cresce sozinho — uma entrada por tela —
+      // e o voltar desempilha telas de verdade. Os "degraus" abaixo empurravam
+      // entradas de MESMA URL e a guarda de `beforeunload` bloqueava a saída;
+      // os dois CONFLITAM com o histórico real do go_router. Por isso o corpo
+      // não roda mais (o `return` logo abaixo). Mantido como bloco, em vez de
+      // apagado, para o diff da migração ficar legível e a volta ser trivial;
+      // sai numa limpeza depois de validado no staging.
+      return;
+      // eslint-disable-next-line
       var ALVO = 8;
       var CHAVE = 'gdb_degrau';
 
