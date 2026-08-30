@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 
@@ -182,6 +183,9 @@ class _EncyclopediaIndexPageState extends State<EncyclopediaIndexPage>
   /// Fecha a capa (re-toque na bottom bar com o livro aberto no índice).
   void _closeCover() {
     if (!_coverGone && _open.value == 0) return; // já fechada
+    // O livro se fecha: um baque tátil leve, como uma capa pousando. Só na
+    // ação real de fechar — a guarda acima já barrou o "já fechada".
+    HapticFeedback.lightImpact();
     setState(() {
       _coverGone = false;
       _flip.value = 0.0;

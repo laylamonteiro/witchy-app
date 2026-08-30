@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 // Using raster PNG assets for the mascot images instead of SVG
 import 'dart:math' as math;
 import 'dart:async';
@@ -396,6 +397,10 @@ class _DraggableCatMascotState extends State<DraggableCatMascot>
   void _onTap() {
     // Evitar cliques durante arraste
     if (_isDragging) return;
+
+    // Um clique leve responde ao toque no mascote (pedido explícito da
+    // Bruxa). No arraste não — o guard acima já saiu.
+    HapticFeedback.selectionClick();
 
     // Se estava dormindo, vai para deitado relaxado primeiro
     if (_currentPose == MascotPose.sleeping) {
