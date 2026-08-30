@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -20,7 +21,6 @@ import '../../../diary/data/services/reading_archive_composer.dart';
 import '../../../diary/presentation/widgets/save_to_records_button.dart';
 import '../widgets/tarot_card_view.dart';
 import 'tarot_learn_tab.dart';
-import 'tarot_library_page.dart';
 import '../../../../core/services/ad_service.dart';
 import '../../../../core/widgets/premium_locked_preview.dart';
 
@@ -310,6 +310,9 @@ class _SpreadTabState extends State<_SpreadTab> {
     // Pequena pausa de "embaralhamento" antes de revelar.
     await Future.delayed(const Duration(milliseconds: 700));
     if (!mounted) return;
+    // Um toque só por revelação: a mesa vira como um evento único, não um
+    // tique por carta — e vale também sob "reduzir movimento".
+    HapticFeedback.lightImpact();
     setState(() {
       _revealed = true;
       if (saved != null) _aiReading = saved;
@@ -439,46 +442,6 @@ class _SpreadTabState extends State<_SpreadTab> {
                 ),
               ),
             ),
-            // Biblioteca de Cartas: acesso rápido a partir da Tiragem.
-            MagicalCard(
-              child: InkWell(
-                onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const TarotLibraryPage()),
-                ),
-                borderRadius: BorderRadius.circular(12),
-                child: Row(
-                  children: [
-                    const Text('📚', style: TextStyle(fontSize: 32)),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            AppLocalizations.of(context).tarotLibraryTitle,
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleMedium
-                                ?.copyWith(
-                                  color: context.gc.textPrimary,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                          ),
-                          Text(
-                            AppLocalizations.of(context).tarotLibraryDesc,
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodySmall
-                                ?.copyWith(color: context.gc.textSecondary),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Icon(Icons.chevron_right, color: context.gc.textSecondary),
-                  ],
-                ),
-              ),
-            ),
             for (final spread in TarotSpread.values)
               InkWell(
                 onTap: () => _startSpread(spread),
@@ -566,34 +529,29 @@ class _SpreadTabState extends State<_SpreadTab> {
                 runSpacing: 12,
                 alignment: WrapAlignment.center,
                 children: [
-                  for (final drawn in _drawn)
-                    AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 450),
-                      child: _revealed
-                          ? Column(
-                              key: ValueKey('front_${drawn.positionLabel}'),
-                              children: [
-                                TarotCardView(
-                                  card: drawn.card,
-                                  reversed: drawn.isReversed,
-                                ),
-                                const SizedBox(height: 6),
-                                SizedBox(
-                                  width: 110,
-                                  child: Text(
-                                    drawn.positionLabel,
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                      color: context.gc.textSecondary,
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            )
-                          : TarotCardBack(
-                              key: ValueKey('back_${drawn.positionLabel}'),
-                            ),
+                  for (var i = 0; i < _drawn.length; i++)
+                    TarotFlipCard(
+                      key: ValueKey('carta_${_drawn[i].positionLabel}'),
+                      revealed: _revealed,
+                      // Stagger: cada carta começa 90 ms depois da anterior —
+                      // a mesa vira em onda, sem esperar ninguém terminar.
+                      delay: Duration(milliseconds: 90 * i),
+                      back: const TarotCardBack(),
+                      front: TarotCardView(
+                        card: _drawn[i].card,
+                        reversed: _drawn[i].isReversed,
+                      ),
+                      caption: SizedBox(
+                        width: 110,
+                        child: Text(
+                          _drawn[i].positionLabel,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: context.gc.textSecondary,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
                     ),
                 ],
               ),

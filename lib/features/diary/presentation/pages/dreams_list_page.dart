@@ -7,6 +7,7 @@ import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/widgets/loading_widget.dart';
 import '../../../../core/widgets/empty_state_widget.dart';
 import '../../../../core/widgets/magical_fab.dart';
+import '../../../../core/navigation/grimoire_route.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import 'dream_form_page.dart';
 import 'dream_interpretation_page.dart';
@@ -46,7 +47,7 @@ class _DreamsListPageState extends State<DreamsListPage> {
                   child: EmptyStateWidget(
                     message:
                         AppLocalizations.of(context).diaryEmptyDreams,
-                    icon: Icons.nightlight,
+                    type: MagicalEmptyStateType.dreams,
                     actionText: AppLocalizations.of(context).diaryRegisterDream,
                     onAction: () => _navigateToForm(context),
                   ),
@@ -134,7 +135,7 @@ class _DreamsListPageState extends State<DreamsListPage> {
   void _navigateToForm(BuildContext context, {dream}) {
     Navigator.push(
       context,
-      MaterialPageRoute(
+      GrimoireRoute(
         builder: (_) => DreamFormPage(dream: dream),
       ),
     );
@@ -154,7 +155,7 @@ class _DreamsListPageState extends State<DreamsListPage> {
               emoji: '🔮',
               label: AppLocalizations.of(context).diaryInterpretDream,
               onTap: () => Navigator.of(context).push(
-                MaterialPageRoute(
+                GrimoireRoute(
                   builder: (_) => const DreamInterpretationPage(),
                 ),
               ),

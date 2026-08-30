@@ -7,6 +7,7 @@ import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/widgets/loading_widget.dart';
 import '../../../../core/widgets/empty_state_widget.dart';
 import '../../../../core/widgets/magical_fab.dart';
+import '../../../../core/navigation/grimoire_route.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import 'gratitude_form_page.dart';
 
@@ -41,7 +42,7 @@ class _GratitudesListPageState extends State<GratitudesListPage> {
             return EmptyStateWidget(
               message:
                   AppLocalizations.of(context).diaryEmptyGratitudes,
-              icon: Icons.favorite,
+              type: MagicalEmptyStateType.gratitude,
               actionText: AppLocalizations.of(context).diaryAddGratitude,
               onAction: () => _navigateToForm(context),
             );
@@ -111,7 +112,7 @@ class _GratitudesListPageState extends State<GratitudesListPage> {
   void _navigateToForm(BuildContext context, {gratitude}) {
     Navigator.push(
       context,
-      MaterialPageRoute(
+      GrimoireRoute(
         builder: (_) => GratitudeFormPage(gratitude: gratitude),
       ),
     );

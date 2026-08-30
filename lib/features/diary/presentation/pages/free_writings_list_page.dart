@@ -48,7 +48,7 @@ class _FreeWritingsListPageState extends State<FreeWritingsListPage> {
             return EmptyStateWidget(
               message:
                   AppLocalizations.of(context).diaryEmptyReflections,
-              icon: Icons.auto_stories,
+              type: MagicalEmptyStateType.writing,
             );
           }
 

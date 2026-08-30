@@ -23,9 +23,9 @@ nem reembolsam do mesmo jeito. Este documento existe para que a resposta a
 ## A regra de ouro: quem manda é o RevenueCat, não o nosso banco
 
 O direito de acesso (entitlement `Grimorio de Bolso Pro`) e a loja que o
-emitiu vivem no RevenueCat. **Não duplique isso no perfil.** Se copiássemos
-"esta pessoa é da Play" para o `profiles`, o dado envelheceria no primeiro
-cancelamento, upgrade ou troca de loja — e passaríamos a mandar a pessoa
+emitiu vivem no RevenueCat — ele é a **fonte de verdade**. A LOJA e o
+`managementURL` nunca são copiados para o `profiles`: esses sim envelheceriam
+no primeiro cancelamento, upgrade ou troca de loja, e mandariam a pessoa
 cancelar no lugar errado.
 
 Na prática:
@@ -36,6 +36,31 @@ Na prática:
   URL na mão.
 - **Para saber a loja**: `entitlement.store` do entitlement ativo.
 - **Para saber de onde a CONTA veio**: aí sim é nosso — ver abaixo.
+
+### O espelho do plano em `profiles` (exceção sancionada)
+
+`profiles.role`/`plan`/`plan_expires_at` guardam um **espelho VIVO** do plano
+— não uma cópia feita uma vez. Quem o mantém é o webhook
+`revenuecat-webhook`, que reage a CADA evento do RevenueCat (compra,
+renovação, expiração), então ele **não envelhece** como o exemplo da loja
+acima. O RevenueCat continua sendo a fonte de verdade; o banco é um cache
+durável dele.
+
+Por que existe, se a regra é "não duplique":
+
+- **Acesso na entrada, sem depender do RevenueCat carregar.** Na web e em
+  reinstalação o SDK demora ou nem sobe; lendo `role`/`plan` do servidor no
+  login, o assinante entra Premium na hora. O app só REBAIXA com sinal
+  positivo de que não é mais Pro (`PaymentService.deveRebaixar`) — nunca por
+  falha de carregamento.
+- **Suporte e relatório.** Sem isso o banco não sabia quem comprou (era só
+  Código Premium e admin); "quantos assinantes mensais?" não tinha resposta.
+
+O que o espelho **NÃO** é: não é autoridade de acesso ao vivo (isso é o
+RevenueCat), e não guarda loja/managementURL. Escrita só pela service_role,
+via `apply_subscription_state`; o cliente não escreve `role`/`plan` (lockdown).
+Passo a passo, segurança e configuração do painel em
+`docs/ESPELHO_DE_ASSINATURA.md`.
 
 ## O que é nosso: a origem do cadastro
 

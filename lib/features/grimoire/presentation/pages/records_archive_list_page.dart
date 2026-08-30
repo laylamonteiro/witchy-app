@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
+import '../../../../core/widgets/loading_widget.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/widgets/staggered_entrance.dart';
 import '../../../cycle_reading/data/models/cycle_reading_model.dart';
@@ -226,11 +227,7 @@ class _RecordsArchiveListPageState extends State<RecordsArchiveListPage> {
               ),
               Expanded(
                 child: provider.isLoading
-                    ? Center(
-                        child: CircularProgressIndicator(
-                          color: context.gc.lilac,
-                        ),
-                      )
+                    ? const LoadingWidget()
                     : entries.isEmpty
                         ? Center(
                             child: Padding(

@@ -5,6 +5,10 @@ import '../../../../core/services/debug_log_service.dart';
 import '../providers/auth_provider.dart';
 import '../../../../core/navigation/janela_de_login.dart';
 import '../../../../core/navigation/recomeco.dart';
+// A `main` padronizou as telas de espera em LoadingWidget (o merge dobrou essa
+// troca dentro das classes desta versão). Só este import vem de lá: os de
+// welcome/home/splash eram do AuthWrapper antigo, que saiu.
+import '../../../../core/widgets/loading_widget.dart';
 
 /// A decisão de "logada → app / sem sessão → entrada" MUDOU DE CASA: agora vive
 /// no `redirect` do [criarAppRouter] (lib/core/navigation/app_router.dart), com
@@ -23,7 +27,7 @@ class _Carregando extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
+        body: LoadingWidget(),
       );
 }
 
@@ -34,16 +38,7 @@ class _EsperandoASessao extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const CircularProgressIndicator(),
-            const SizedBox(height: 16),
-            Text(AppLocalizations.of(context).authFinishingLogin),
-          ],
-        ),
-      ),
+      body: LoadingWidget(message: AppLocalizations.of(context).authFinishingLogin),
     );
   }
 }

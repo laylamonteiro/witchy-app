@@ -10,6 +10,7 @@ import '../../../../core/navigation/app_deep_link.dart';
 import '../../../../core/navigation/section_reset_notifier.dart';
 import '../../../../core/providers/mascot_provider.dart';
 import '../../../../core/theme/grimoire_colors.dart';
+import '../../../../core/theme/grimoire_motion.dart';
 import '../../../../core/navigation/observador_de_rotas_raiz.dart';
 import '../../../../core/utils/saida_por_dois_toques.dart';
 import '../caminhada_do_voltar.dart';
@@ -364,6 +365,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
               initialX: mascotLeft,
               initialY: _mascotTop,
               size: _mascotSize,
+              reactionTick: mascot.reactionTick,
               positionNotifier: _mascotPosition,
               onDismissed: mascot.hide,
               // Voltou do esconderijo (ou do tour) → materializa em fumaça.
@@ -399,24 +401,87 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
             type: BottomNavigationBarType.fixed,
             items: [
               BottomNavigationBarItem(
-                icon: const Icon(Icons.auto_awesome),
+                icon: _NavIcon(
+                  selected: _selectedIndex == 0,
+                  icon: Icons.auto_awesome_outlined,
+                  activeIcon: Icons.auto_awesome,
+                ),
                 label: AppLocalizations.of(context).navYourDay,
               ),
               BottomNavigationBarItem(
-                icon: const Icon(Icons.auto_stories),
+                icon: _NavIcon(
+                  selected: _selectedIndex == 1,
+                  icon: Icons.auto_stories_outlined,
+                  activeIcon: Icons.auto_stories,
+                ),
                 label: AppLocalizations.of(context).navEncyclopedia,
               ),
               BottomNavigationBarItem(
-                icon: const Icon(Icons.stars_outlined),
+                icon: _NavIcon(
+                  selected: _selectedIndex == 2,
+                  icon: Icons.stars_outlined,
+                  activeIcon: Icons.stars,
+                ),
                 label: AppLocalizations.of(context).navGrimoire,
               ),
               BottomNavigationBarItem(
-                icon: const Icon(Icons.menu_book),
+                icon: _NavIcon(
+                  selected: _selectedIndex == 3,
+                  icon: Icons.menu_book_outlined,
+                  activeIcon: Icons.menu_book,
+                ),
                 label: AppLocalizations.of(context).navDiaries,
               ),
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Ícone da barra inferior: o item selecionado assenta (0.92 → 1, sobe 2 px)
+/// com um brilho lilás muito leve e a versão preenchida do ícone; os demais
+/// descansam levemente recolhidos. Só Transform/efeito visual — a largura de
+/// cada slot não muda, então o spotlight do tour continua alinhado.
+///
+/// Nada aqui mexe em re-tap, reset de seção, back ou deep link: o widget é
+/// só a cara do item, o comportamento segue no BottomNavigationBar.
+class _NavIcon extends StatelessWidget {
+  final bool selected;
+  final IconData icon;
+  final IconData activeIcon;
+
+  const _NavIcon({
+    required this.selected,
+    required this.icon,
+    required this.activeIcon,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    // 180 ms de propósito, entre tap (140) e state (260): navegação pede
+    // resposta mais viva que uma mudança de estado, sem virar estalo.
+    final duration = GrimoireMotion.reduced(context)
+        ? Duration.zero
+        : const Duration(milliseconds: 180);
+
+    // Só escala + um leve levantar quando selecionado. Sem cross-fade entre
+    // contorno e preenchido (na web os dois ícones se sobrepunham no meio da
+    // transição — o efeito de "duas camadas"/virada) e sem halo desenhado
+    // (que na web virava um disco solto atrás do ícone). O contorno↔preenchido
+    // troca na hora, imperceptível sob a escala; a cor do selecionado vem do
+    // tema do BottomNavigationBar.
+    return AnimatedContainer(
+      duration: duration,
+      curve: GrimoireMotion.enter,
+      transform: Matrix4.translationValues(0, selected ? 0 : 2, 0),
+      transformAlignment: Alignment.center,
+      child: AnimatedScale(
+        scale: selected ? 1.0 : 0.92,
+        duration: duration,
+        curve: GrimoireMotion.enter,
+        child: Icon(selected ? activeIcon : icon),
       ),
     );
   }

@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../../../core/services/debug_log_service.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/living_emblem.dart';
+import '../../../../core/widgets/loading_widget.dart';
 import '../../../../core/widgets/magical_button.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/widgets/staggered_entrance.dart';
@@ -143,7 +144,7 @@ class _Carregando extends StatelessWidget {
   Widget build(BuildContext context) => const MagicalCard(
         child: SizedBox(
           height: 120,
-          child: Center(child: CircularProgressIndicator()),
+          child: LoadingWidget(),
         ),
       );
 }

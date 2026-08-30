@@ -6,6 +6,7 @@ import '../../../../core/providers/sync_provider.dart';
 import '../../../../core/services/data_sync_service.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
+import '../../../../core/widgets/loading_widget.dart';
 
 /// Sincronização e Backup com item PRÓPRIO nas Configurações — morava
 /// dentro de Privacidade, onde ninguém achava (e semanticamente privacidade
@@ -67,7 +68,7 @@ class _SyncSettingsPageState extends State<SyncSettingsPage> {
         ),
       ),
       body: _isLoading
-          ? Center(child: CircularProgressIndicator(color: context.gc.lilac))
+          ? const LoadingWidget()
           : SingleChildScrollView(
               padding: const EdgeInsets.all(16),
               child: Column(

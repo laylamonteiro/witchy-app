@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
+import '../../../../core/widgets/loading_widget.dart';
 import '../../../../core/widgets/paged_reading.dart';
 import '../../../../core/widgets/reading_markdown.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
@@ -216,7 +217,7 @@ class _Tecendo extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            CircularProgressIndicator(color: context.gc.lilac),
+            const LoadingWidget(),
             const SizedBox(height: 20),
             Text(
               title,

@@ -115,13 +115,31 @@ GoRouter criarAppRouter({
       ),
 
       // ── O shell das 4 abas ──
-      StatefulShellRoute.indexedStack(
+      StatefulShellRoute(
         builder: (context, state, navigationShell) => HomePage(
           navigationShell: navigationShell,
           chavesDeAba: chavesDeAba,
           resetNotifiers: resetNotifiers,
           consumirSplashInicial: consumirSplashInicial,
         ),
+        // Como o `.indexedStack`, mas com TickerMode por aba: aba escondida não
+        // anima atrás da que está em cena — e o card de "Ritos de Hoje" adia a
+        // celebração do dia selado para quando a aba volta (ver daily_rites_card,
+        // que consulta `TickerMode.of`). O IndexedStack sozinho mantém vivo o
+        // ticker dos filhos escondidos; quem desliga é este TickerMode. Trazido
+        // da main no merge, readaptado ao shell do go_router.
+        navigatorContainerBuilder: (context, navigationShell, children) {
+          return IndexedStack(
+            index: navigationShell.currentIndex,
+            children: [
+              for (var i = 0; i < children.length; i++)
+                TickerMode(
+                  enabled: i == navigationShell.currentIndex,
+                  child: children[i],
+                ),
+            ],
+          );
+        },
         branches: [
           StatefulShellBranch(
             navigatorKey: chavesDeAba[0],

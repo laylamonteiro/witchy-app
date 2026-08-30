@@ -9,6 +9,7 @@ import '../../../../core/content/content_locale.dart';
 import '../../../../core/offers/offer_engine.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
+import '../../../../core/widgets/loading_widget.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/widgets/reading_markdown.dart';
 import '../../data/data_sources/daily_weather_content.dart';
@@ -175,36 +176,11 @@ class _DailyMagicalWeatherPageState extends State<DailyMagicalWeatherPage> {
 
   Widget _buildBody() {
     if (_isLoading) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            CircularProgressIndicator(color: context.gc.lilac),
-            const SizedBox(height: 24),
-            Text(
-              _sel(
-                pt: 'Consultando as estrelas...',
-                en: 'Consulting the stars...',
-                es: 'Consultando las estrellas...',
-              ),
-              style: GoogleFonts.cinzelDecorative(
-                fontSize: 18,
-                color: context.gc.lilac,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              _sel(
-                pt: 'O Conselheiro Místico está analisando os trânsitos de hoje',
-                en: "The Mystic Counselor is analyzing today's transits",
-                es: 'El Consejero Místico está analizando los tránsitos de hoy',
-              ),
-              style: TextStyle(
-                color: context.gc.softWhite.withValues(alpha: 0.7),
-                fontSize: 14,
-              ),
-            ),
-          ],
+      return LoadingWidget(
+        message: _sel(
+          pt: 'Consultando as estrelas...',
+          en: 'Consulting the stars...',
+          es: 'Consultando las estrellas...',
         ),
       );
     }
