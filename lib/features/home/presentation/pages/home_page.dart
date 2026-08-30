@@ -1,13 +1,11 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../auth/presentation/widgets/relogin_dialog.dart';
 import '../../../cycle_reading/presentation/pages/cycle_reading_intro_page.dart';
-import '../../../grimoire/presentation/pages/grimoire_page.dart';
-import '../../../your_day/presentation/pages/your_day_page.dart';
-import '../../../diary/presentation/pages/diary_page.dart';
-import '../../../encyclopedia/presentation/pages/encyclopedia_page.dart';
 import '../../../../core/navigation/app_deep_link.dart';
 import '../../../../core/navigation/section_reset_notifier.dart';
 import '../../../../core/providers/mascot_provider.dart';
@@ -21,19 +19,49 @@ import '../../../../core/widgets/mascot/cat_chat_bubble.dart';
 import '../../../../core/widgets/mascot/draggable_cat_mascot.dart';
 import '../../../../core/widgets/mascot/salem_tour.dart';
 import '../../../../core/widgets/mascot/tour_targets.dart';
+import '../../../../core/widgets/splash_screen.dart';
 
+/// O SHELL das 4 abas (StatefulShellRoute do go_router).
+///
+/// Antes esta página era dona da navegação (um IndexedStack de 4 Navigators
+/// aninhados e o `_selectedIndex`). Agora o [criarAppRouter] é o dono: cada aba
+/// é um branch com URL própria, e esta página recebe o [navigationShell] —
+/// mantendo tudo o mais que sempre foi dela (o Salem, o tour, os deep links, o
+/// gesto secreto de volta e o `PopScope` que impede a saída na raiz).
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+  const HomePage({
+    super.key,
+    required this.navigationShell,
+    required this.chavesDeAba,
+    required this.resetNotifiers,
+    required this.consumirSplashInicial,
+  });
+
+  /// O shell do go_router: `currentIndex` e `goBranch` no lugar do antigo
+  /// `_selectedIndex`/IndexedStack.
+  final StatefulNavigationShell navigationShell;
+
+  /// As chaves dos Navigators de cada aba (as MESMAS instâncias do router),
+  /// para a caminhada do voltar desempilhar as páginas de detalhe da aba ativa.
+  final List<GlobalKey<NavigatorState>> chavesDeAba;
+
+  /// Reset por seção (re-toque na aba ativa → volta à primeira sub-aba).
+  final List<SectionResetNotifier> resetNotifiers;
+
+  /// Splash inicial (regra dos 30 min), consumido uma vez ao montar.
+  final bool Function() consumirSplashInicial;
 
   @override
   State<HomePage> createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
-  /// A tela inicial é SEMPRE o "Seu Dia" (aba 0) — tanto em aberturas novas
-  /// quanto no "refresh" de sessão (AppSessionPolicy recria a navegação
-  /// inteira, voltando para cá).
-  int _selectedIndex = 0;
+  /// A aba atual — vem do shell do go_router. A tela inicial é SEMPRE o "Seu
+  /// Dia" (aba 0), tanto em aberturas novas quanto no "refresh" de sessão.
+  int get _selectedIndex => widget.navigationShell.currentIndex;
+
+  /// Splash inicial, decidido uma vez ao montar.
+  late final bool _mostrarSplash = widget.consumirSplashInicial();
 
   /// A regra do "voltar de novo para sair".
   ///
@@ -52,9 +80,9 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   /// aqui; a decisão é dela.
   late final CaminhadaDoVoltar _caminhada = CaminhadaDoVoltar(
     raiz: () => mounted ? Navigator.maybeOf(context) : null,
-    abaAtiva: () => _navigatorKeys[_selectedIndex].currentState,
+    abaAtiva: () => widget.chavesDeAba[_selectedIndex].currentState,
     abaAtual: () => _selectedIndex,
-    irParaAba: (indice) => setState(() => _selectedIndex = indice),
+    irParaAba: (indice) => widget.navigationShell.goBranch(indice),
     mostrarAviso: _avisarQueOProximoSai,
     mostrarFimDaCaminhada: _avisarQueJaEstaNoSeuDia,
     regra: _saida,
@@ -81,29 +109,12 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   final ValueNotifier<Offset> _mascotPosition =
       ValueNotifier(const Offset(0, _mascotTop));
 
-  /// Um Navigator aninhado por aba: as páginas de conteúdo (detalhes de
-  /// cristais, feitiços, sigilos etc.) são empilhadas DENTRO da aba, mantendo
-  /// a bottom bar sempre visível. Fluxos de tela cheia (Configurações,
-  /// Assinatura) devem usar `Navigator.of(context, rootNavigator: true)`.
-  /// Abas: 0 = Seu Dia, 1 = Enciclopédia, 2 = Grimório, 3 = Diários.
-  final List<GlobalKey<NavigatorState>> _navigatorKeys = List.generate(
-    4,
-    (_) => GlobalKey<NavigatorState>(),
-  );
-
-  /// Notificadores de reset por seção (re-toque na aba ativa → seção volta
-  /// à primeira aba interna).
-  final List<SectionResetNotifier> _resetNotifiers = List.generate(
-    4,
-    (_) => SectionResetNotifier(),
-  );
-
-  late final List<Widget> _pages = [
-    YourDayPage(resetNotifier: _resetNotifiers[0]),
-    EncyclopediaPage(resetNotifier: _resetNotifiers[1]),
-    GrimoirePage(resetNotifier: _resetNotifiers[2]),
-    DiaryPage(resetNotifier: _resetNotifiers[3]),
-  ];
+  /// As chaves dos Navigators de aba e os notificadores de reset vêm do router
+  /// (ver [criarAppRouter]): as páginas de conteúdo (detalhes de cristais,
+  /// feitiços, sigilos etc.) são empilhadas DENTRO da aba pelo go_router,
+  /// mantendo a bottom bar sempre visível. Fluxos de tela cheia (Configurações,
+  /// Assinatura) usam o Navigator raiz. Abas: 0 = Seu Dia, 1 = Enciclopédia,
+  /// 2 = Grimório, 3 = Diários.
 
   /// Tour do Salem em exibição?
   bool _showTour = false;
@@ -191,9 +202,8 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     DeepLinkService.instance.pending.removeListener(_onDeepLink);
     mudancasDaPilhaRaiz.removeListener(_esquecerASaida);
     WidgetsBinding.instance.removeObserver(this);
-    for (final notifier in _resetNotifiers) {
-      notifier.dispose();
-    }
+    // Os resetNotifiers pertencem ao router (vivem o app inteiro); não são
+    // descartados aqui.
     _mascotPosition.dispose();
     super.dispose();
   }
@@ -204,10 +214,10 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   void _onDeepLink() {
     final link = DeepLinkService.instance.pending.value?.link;
     if (link == null || !mounted) return;
-    final navigator = _navigatorKeys[link.homeTab].currentState;
+    final navigator = widget.chavesDeAba[link.homeTab].currentState;
     navigator?.popUntil((route) => route.isFirst);
     if (_selectedIndex != link.homeTab) {
-      setState(() => _selectedIndex = link.homeTab);
+      widget.navigationShell.goBranch(link.homeTab);
     }
 
     // A Leitura do Ciclo não tem aba própria: o convite empilha a página
@@ -227,17 +237,15 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     // caminhada em vez de encontrar uma saída armada.
     _esquecerASaida();
     if (index == _selectedIndex) {
-      // Re-toque na aba já selecionada: volta para a raiz da seção
-      // (desempilha as páginas de detalhe e reseta a TabBar interna).
-      final navigator = _navigatorKeys[index].currentState;
-      navigator?.popUntil((route) => route.isFirst);
-      _resetNotifiers[index].requestReset();
+      // Re-toque na aba já selecionada: volta para a raiz da seção. O
+      // `initialLocation: true` desempilha as páginas de detalhe do branch, e
+      // o resetNotifier reseta a TabBar interna da seção.
+      widget.navigationShell.goBranch(index, initialLocation: true);
+      widget.resetNotifiers[index].requestReset();
       return;
     }
 
-    setState(() {
-      _selectedIndex = index;
-    });
+    widget.navigationShell.goBranch(index);
   }
 
   /// Gesto/botão de voltar: SEMPRE prioriza voltar de página em vez de sair.
@@ -282,29 +290,18 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
       );
   }
 
-  Widget _buildTabNavigator(int index) {
-    // Aba escondida não é aba em cena: sem ticker, nada anima atrás da aba
-    // que a pessoa está olhando — e o card de Ritos sabe adiar a celebração
-    // do dia selado para quando a aba volta, em vez de gastá-la invisível.
-    // (O IndexedStack, ao contrário do que se supõe, mantém o ticker dos
-    // filhos escondidos vivo; quem desliga é este TickerMode.) O mascote
-    // fica FORA da pilha de abas, então segue animando normalmente.
-    return TickerMode(
-      enabled: index == _selectedIndex,
-      child: Navigator(
-        key: _navigatorKeys[index],
-        onGenerateRoute: (settings) => MaterialPageRoute(
-          settings: settings,
-          builder: (_) => _pages[index],
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
-    return PopScope(
-      canPop: false,
+    // NA WEB o voltar é do go_router (histórico real): dentro do app navega
+    // tela a tela, e no Seu Dia — esgotado o histórico do app — sai LIMPO. Por
+    // isso NÃO interceptamos aqui (`canPop: true`), o que também tira o alerta
+    // "alterações serão perdidas" que o Flutter mostra quando um PopScope
+    // declara que trata o voltar. (As telas de entrada abaixo do Seu Dia quicam
+    // invisíveis pelo redirect do router, então o login não reaparece.)
+    // NO CELULAR o voltar do sistema é `popRoute`: mantemos o intercept e a
+    // caminhada (que faz o toque duplo para ir a segundo plano, reversível).
+    final conteudo = PopScope(
+      canPop: kIsWeb,
       onPopInvokedWithResult: (didPop, _) {
         if (didPop) return;
         _handleSystemBack();
@@ -327,7 +324,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                 Positioned.fill(
                   child: SalemTourOverlay(
                     onTabChange: (index) =>
-                        setState(() => _selectedIndex = index),
+                        widget.navigationShell.goBranch(index),
                     onFinished: _finishTour,
                   ),
                 ),
@@ -336,6 +333,10 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
         },
       ),
     );
+
+    // Splash de marca (2,5s) só na primeira entrada — a regra dos 30 min é
+    // decidida uma vez, ao montar. Fora dela, o app aparece direto.
+    return _mostrarSplash ? SplashScreen(child: conteudo) : conteudo;
   }
 
   Widget _buildScaffold(BuildContext context, MascotProvider mascot) {
@@ -349,21 +350,14 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     return Scaffold(
       body: Stack(
         children: [
-          // Páginas principais — cada aba com seu próprio Navigator.
-          // O NotificationListener ABSORVE as NavigationNotification dos
-          // navigators aninhados: com o predictive back do Android
-          // (targetSdk 36), quando um navigator de aba esvaziava ele
-          // avisava o sistema "não tenho mais nada a tratar"
-          // (setFrameworkHandlesBack(false)) e o gesto seguinte fechava o
-          // app sem consultar o PopScope desta página. Quem manda no back
-          // é sempre o PopScope raiz (canPop: false).
-          NotificationListener<NavigationNotification>(
-            onNotification: (_) => true,
-            child: IndexedStack(
-              index: _selectedIndex,
-              children: List.generate(4, _buildTabNavigator),
-            ),
-          ),
+          // Páginas principais — o shell do go_router (um IndexedStack de 4
+          // branches, cada aba com seu Navigator). As NavigationNotification
+          // dos navigators aninhados PRECISAM subir até o Router do go_router,
+          // que as usa para reportar ao sistema/navegador se ainda há o que
+          // desempilhar (`setFrameworkHandlesBack`). Por isso NÃO há mais um
+          // NotificationListener absorvendo-as aqui: com histórico real, quem
+          // decide o back é o próprio go_router, e no piso o PopScope abaixo.
+          widget.navigationShell,
           if (showMascot) ...[
             CatChatBubble(mascotPosition: _mascotPosition),
             // Mascote flutuando sobre o conteúdo — sobrepõe o balão
