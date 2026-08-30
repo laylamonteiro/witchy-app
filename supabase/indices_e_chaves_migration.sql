@@ -20,6 +20,13 @@
 --     ON DELETE CASCADE (seção 3)
 -- ============================================================================
 
+-- Tudo numa transação explícita: a seção 3 derruba e readiciona a FK da
+-- profiles, e o BEGIN/COMMIT garante que uma falha reverta o DROP — a tabela
+-- nunca fica sem a FK, independente de como o editor agrupa o buffer. (Nada
+-- aqui usa CREATE INDEX CONCURRENTLY, então rodar em transação é seguro; a
+-- limpeza OPCIONAL da seção 4 fica de fora, depois do COMMIT.)
+BEGIN;
+
 
 -- ----------------------------------------------------------------------------
 -- 1. ÍNDICES QUE FALTAM NAS CHAVES ESTRANGEIRAS
@@ -97,6 +104,8 @@ ALTER TABLE public.profiles DROP CONSTRAINT IF EXISTS profiles_id_fkey;
 ALTER TABLE public.profiles
   ADD CONSTRAINT profiles_id_fkey
   FOREIGN KEY (id) REFERENCES auth.users(id) ON DELETE CASCADE;
+
+COMMIT;
 
 
 -- ----------------------------------------------------------------------------
