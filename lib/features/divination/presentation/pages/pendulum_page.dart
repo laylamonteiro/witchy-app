@@ -11,6 +11,7 @@ import '../../../diary/data/services/reading_archive_composer.dart';
 import '../../../diary/presentation/widgets/save_to_records_button.dart';
 import 'dart:math';
 import '../../../../core/widgets/magical_card.dart';
+import '../../../../core/widgets/living_emblem.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/theme/grimoire_motion.dart';
@@ -378,39 +379,94 @@ class _PendulumPageState extends State<PendulumPage>
             MagicalCard(
               child: SizedBox(
                 height: 300,
-                child: AnimatedBuilder(
-                  animation: Listenable.merge([
-                    _swingController,
-                    _settleController,
-                    _revealController,
-                    _inclinacao,
-                  ]),
-                  builder: (context, child) {
-                    return CustomPaint(
-                      painter: PendulumPainter(
-                        yesLabel: AppLocalizations.of(context).pendulumYes,
-                        noLabel: AppLocalizations.of(context).pendulumNo,
-                        maybeLabel: AppLocalizations.of(context).pendulumMaybe,
-                        accentColor: context.gc.lilac,
-                        successColor: context.gc.success,
-                        alertColor: context.gc.alert,
-                        starColor: context.gc.starYellow,
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final w = constraints.maxWidth;
+                    const h = 300.0;
+                    final anchor = Offset(w / 2, 20);
+                    // Corda um pouco mais curta que antes (0.6 → 0.5): o cristal
+                    // pendurado é maior que a antiga setinha e precisa de folga
+                    // acima do rótulo "TALVEZ".
+                    final cordLength = h * 0.5;
+                    // O cristal é o MESMO ícone dos emblemas (SectionEmblem
+                    // .crystals), de cabeça para baixo. viewBox 120x130; o topo
+                    // achatado fica em y=118 → invertido em y=12. A corrente
+                    // prende nesse topo, e o cristal gira em torno dele.
+                    const crystalH = 54.0;
+                    const flatTopFrac = 12 / 130;
+                    const attachTop = flatTopFrac * crystalH;
+                    const alignY = flatTopFrac * 2 - 1;
+                    final crystalBoxW = crystalH * 120 / 130;
+                    return AnimatedBuilder(
+                      animation: Listenable.merge([
+                        _swingController,
+                        _settleController,
+                        _revealController,
+                        _inclinacao,
+                      ]),
+                      builder: (context, _) {
                         // O envelope (1 → 0) amortece a oscilação no fim da
-                        // consulta: o cristal perde força e pousa no centro.
-                        // O ângulo desenhado = oscilação amortecida MAIS a
-                        // inclinação do aparelho (repouso pende mais; durante
-                        // a consulta, um vestígio). Enfeite: o sorteio não vê
-                        // nada disto.
-                        swingAngle: (_isSwinging
+                        // consulta: o cristal perde força e pousa no centro. O
+                        // ângulo = oscilação amortecida MAIS a inclinação do
+                        // aparelho (repouso pende mais; na consulta, um
+                        // vestígio). Enfeite: o sorteio não vê nada disto.
+                        final swing = (_isSwinging
                                 ? sin(_swingController.value * 2 * pi) *
                                     0.8 *
                                     (1 - _settle.value)
                                 : 0.0) +
-                            _inclinacao.value * (_isSwinging ? 0.05 : 0.12),
-                        answer: _answer,
-                        revealProgress: _revealController.value,
-                      ),
-                      child: Container(),
+                            _inclinacao.value * (_isSwinging ? 0.05 : 0.12);
+                        final bob = Offset(
+                          anchor.dx + sin(swing) * cordLength * 0.5,
+                          anchor.dy + cos(swing) * cordLength,
+                        );
+                        return Stack(
+                          clipBehavior: Clip.none,
+                          children: [
+                            // Corrente dourada + rótulos + fixação.
+                            Positioned.fill(
+                              child: CustomPaint(
+                                painter: PendulumPainter(
+                                  anchor: anchor,
+                                  bob: bob,
+                                  swing: swing,
+                                  tilt: _inclinacao.value,
+                                  successColor: context.gc.success,
+                                  alertColor: context.gc.alert,
+                                  starColor: context.gc.starYellow,
+                                  yesLabel:
+                                      AppLocalizations.of(context).pendulumYes,
+                                  noLabel:
+                                      AppLocalizations.of(context).pendulumNo,
+                                  maybeLabel:
+                                      AppLocalizations.of(context).pendulumMaybe,
+                                  answer: _answer,
+                                  revealProgress: _revealController.value,
+                                ),
+                              ),
+                            ),
+                            // O cristal pendurado: mesmo ícone dos emblemas,
+                            // invertido, girando junto da corda em torno do topo
+                            // (onde a corrente prende).
+                            Positioned(
+                              left: bob.dx - crystalBoxW / 2,
+                              top: bob.dy - attachTop,
+                              width: crystalBoxW,
+                              height: crystalH,
+                              child: Transform.rotate(
+                                angle: swing,
+                                alignment: const Alignment(0, alignY),
+                                child: const IgnorePointer(
+                                  child: CrystalGlyph(
+                                    height: crystalH,
+                                    flipVertical: true,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        );
+                      },
                     );
                   },
                 ),
@@ -611,9 +667,19 @@ class _RevealEntrance extends StatelessWidget {
 }
 
 class PendulumPainter extends CustomPainter {
-  final double swingAngle;
+  /// Ponto de fixação (topo) e o peso (onde a corrente encontra o cristal).
+  final Offset anchor;
+  final Offset bob;
+
+  /// Ângulo do balanço (0 = repouso). Só molda a flexão da corrente — o peso
+  /// já vem posicionado em [bob].
+  final double swing;
+
+  /// Inclinação do aparelho (−1..1): a corrente escorre de leve para o lado que
+  /// a mão pende. Enfeite; jamais toca no sorteio.
+  final double tilt;
+
   final PendulumAnswer? answer;
-  final Color accentColor;
   final Color successColor;
   final Color alertColor;
   final Color starColor;
@@ -627,8 +693,10 @@ class PendulumPainter extends CustomPainter {
   final double revealProgress;
 
   PendulumPainter({
-    required this.swingAngle,
-    required this.accentColor,
+    required this.anchor,
+    required this.bob,
+    required this.swing,
+    required this.tilt,
     required this.successColor,
     required this.alertColor,
     required this.starColor,
@@ -641,53 +709,18 @@ class PendulumPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = accentColor
-      ..strokeWidth = 2
-      ..style = PaintingStyle.stroke;
+    _drawChain(canvas);
 
-    final fillPaint = Paint()
-      ..color = accentColor
-      ..style = PaintingStyle.fill;
-
-    // Ponto de fixação
-    final anchorX = size.width / 2;
-    final anchorY = 20.0;
-
-    // Comprimento da corda
-    final cordLength = size.height * 0.6;
-
-    // Posição do pêndulo
-    final pendulumX = anchorX + sin(swingAngle) * cordLength * 0.5;
-    final pendulumY = anchorY + cos(swingAngle) * cordLength;
-
-    // Desenhar ponto de fixação
+    // Argola de fixação, dourada, onde a corrente prende.
+    canvas.drawCircle(anchor, 3.2, Paint()..color = starColor);
     canvas.drawCircle(
-      Offset(anchorX, anchorY),
-      4,
-      fillPaint,
+      anchor,
+      3.2,
+      Paint()
+        ..color = Color.lerp(starColor, Colors.white, 0.35)!
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.2,
     );
-
-    // Desenhar corda
-    canvas.drawLine(
-      Offset(anchorX, anchorY),
-      Offset(pendulumX, pendulumY),
-      paint,
-    );
-
-    // Desenhar pêndulo (cristal)
-    final pendulumPaint = Paint()
-      ..color = accentColor
-      ..style = PaintingStyle.fill;
-
-    final pendulumPath = Path();
-    pendulumPath.moveTo(pendulumX, pendulumY - 20);
-    pendulumPath.lineTo(pendulumX - 10, pendulumY);
-    pendulumPath.lineTo(pendulumX, pendulumY + 30);
-    pendulumPath.lineTo(pendulumX + 10, pendulumY);
-    pendulumPath.close();
-
-    canvas.drawPath(pendulumPath, pendulumPaint);
 
     // Desenhar respostas ao redor (sempre visíveis)
     // Destacar a resposta selecionada quando houver resultado
@@ -715,6 +748,58 @@ class PendulumPainter extends CustomPainter {
       starColor,
       isSelected: answer == PendulumAnswer.maybe,
     );
+  }
+
+  /// A corrente dourada fina: um fio curvo (não uma reta rígida) semeado de
+  /// elos ovais alternados. Faz barriga para o lado enquanto balança e escorre
+  /// com a inclinação — o aspecto maleável de uma correntinha de verdade.
+  void _drawChain(Canvas canvas) {
+    final chord = bob - anchor;
+    final len = chord.distance;
+    if (len < 1) return;
+    final dir = chord / len;
+    final perp = Offset(-dir.dy, dir.dx);
+    // Barriga lateral: acompanha o balanço (a corrente "chicoteia" um pouco) e
+    // escorre com a inclinação; mais um fio de folga constante para nunca
+    // parecer uma vara.
+    final lateral = -sin(swing) * len * 0.10 + tilt * 6.0;
+    final mid = anchor + chord * 0.5 + perp * lateral + const Offset(0, 3);
+    final path = Path()
+      ..moveTo(anchor.dx, anchor.dy)
+      ..quadraticBezierTo(mid.dx, mid.dy, bob.dx, bob.dy);
+
+    // Fio de base, para dar continuidade entre os elos.
+    canvas.drawPath(
+      path,
+      Paint()
+        ..color = starColor.withValues(alpha: 0.5)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1
+        ..strokeCap = StrokeCap.round,
+    );
+
+    // Elos: ovais pequenos, cruzando a cada passo (elo deitado, elo em pé).
+    final elo = Paint()
+      ..color = starColor
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.2;
+    const passo = 6.0;
+    for (final metric in path.computeMetrics()) {
+      final n = (metric.length / passo).floor();
+      for (var i = 1; i < n; i++) {
+        final t = metric.getTangentForOffset(i * passo);
+        if (t == null) continue;
+        canvas.save();
+        canvas.translate(t.position.dx, t.position.dy);
+        canvas.rotate(
+            atan2(t.vector.dy, t.vector.dx) + (i.isEven ? 0.0 : pi / 2));
+        canvas.drawOval(
+          Rect.fromCenter(center: Offset.zero, width: 5.2, height: 2.6),
+          elo,
+        );
+        canvas.restore();
+      }
+    }
   }
 
   void _drawAnswerText(
@@ -758,10 +843,12 @@ class PendulumPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(PendulumPainter oldDelegate) {
-    return oldDelegate.swingAngle != swingAngle ||
+    return oldDelegate.anchor != anchor ||
+        oldDelegate.bob != bob ||
+        oldDelegate.swing != swing ||
+        oldDelegate.tilt != tilt ||
         oldDelegate.answer != answer ||
         oldDelegate.revealProgress != revealProgress ||
-        oldDelegate.accentColor != accentColor ||
         oldDelegate.successColor != successColor ||
         oldDelegate.alertColor != alertColor ||
         oldDelegate.starColor != starColor;
