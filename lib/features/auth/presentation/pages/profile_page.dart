@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/i18n/tratamento_do_contexto.dart';
 import 'package:flutter/services.dart';
 import '../../../settings/presentation/pages/faq_page.dart';
@@ -503,8 +504,7 @@ class ProfilePage extends StatelessWidget {
               Navigator.pop(dialogContext);
               await authProvider.signOut();
               if (pageContext.mounted) {
-                Navigator.of(pageContext, rootNavigator: true)
-                    .pushNamedAndRemoveUntil('/welcome', (route) => false);
+                pageContext.go('/welcome');
               }
             },
             style: ElevatedButton.styleFrom(

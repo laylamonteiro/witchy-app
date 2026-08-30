@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -946,8 +947,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
         );
 
         // Redirecionar para tela inicial
-        Navigator.of(context)
-            .pushNamedAndRemoveUntil('/welcome', (route) => false);
+        context.go('/welcome');
       } catch (e) {
         if (!mounted) return;
 

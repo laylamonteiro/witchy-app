@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/i18n/tratamento_do_contexto.dart';
 import 'package:flutter/services.dart';
@@ -19,7 +20,6 @@ import '../../data/repositories/auth_repository.dart';
 import '../../data/repositories/supabase_auth_repository.dart';
 import '../providers/auth_provider.dart';
 import 'forgot_password_page.dart';
-import 'signup_page.dart';
 import '../../../../core/config/captcha_config.dart';
 import '../widgets/captcha_gate.dart';
 
@@ -72,11 +72,10 @@ class _LoginPageState extends State<LoginPage> {
   /// deixaria a tela preta. Sem nada abaixo, volta-se para a porta de
   /// entrada (Welcome).
   void _handleBack() {
-    final nav = Navigator.of(context);
-    if (nav.canPop()) {
-      nav.pop();
+    if (context.canPop()) {
+      context.pop();
     } else {
-      nav.pushReplacementNamed('/welcome');
+      context.go('/welcome');
     }
   }
 
@@ -533,10 +532,7 @@ class _LoginPageState extends State<LoginPage> {
           ),
         ),
         TextButton(
-          onPressed: () => Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (_) => const SignupPage()),
-          ),
+          onPressed: () => context.pushReplacement('/signup'),
           style: TextButton.styleFrom(
             padding: EdgeInsets.zero,
             minimumSize: Size.zero,
@@ -582,7 +578,7 @@ class _LoginPageState extends State<LoginPage> {
         );
 
         if (mounted) {
-          Navigator.of(context).pushNamedAndRemoveUntil('/home', (route) => false);
+          context.go('/seu-dia');
         }
         return;
       }
@@ -620,7 +616,7 @@ class _LoginPageState extends State<LoginPage> {
       await authProvider.syncAuthenticatedUser(result.user!);
 
       if (mounted) {
-        Navigator.of(context).pushNamedAndRemoveUntil('/home', (route) => false);
+        context.go('/seu-dia');
       }
     } catch (e) {
       if (mounted) {
@@ -721,7 +717,7 @@ class _LoginPageState extends State<LoginPage> {
 
         if (!mounted) return;
         // Navegar para home
-        Navigator.of(context).pushNamedAndRemoveUntil('/home', (route) => false);
+        context.go('/seu-dia');
       } else {
         showAuthSnack(
           context,

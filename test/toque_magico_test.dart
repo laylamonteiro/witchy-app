@@ -75,12 +75,11 @@ void main() {
       await tester.tap(gatinho().first);
       await tester.pump(const Duration(milliseconds: 300));
 
-      // O toque no Salem dá o clique de seleção (pedido explícito da Bruxa) e o
-      // carinho em si vibra leve (lightImpact) — nessa ordem.
-      expect(vibracoes(chamadas), const [
-        'HapticFeedbackType.selectionClick',
-        'HapticFeedbackType.lightImpact',
-      ]);
+      // O toque no mascote dá SEMPRE um clique leve (selectionClick, pedido
+      // explícito da Bruxa) e, quando gera partículas (gato já sentado), também
+      // o carinho leve (lightImpact). Ver DraggableCatMascot._onTap.
+      expect(vibracoes(chamadas),
+          ['HapticFeedbackType.selectionClick', 'HapticFeedbackType.lightImpact']);
     });
 
     testWidgets('o 5º toque rápido some em fumaça com o toque forte',

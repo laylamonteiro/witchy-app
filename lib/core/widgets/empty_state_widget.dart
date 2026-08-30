@@ -56,38 +56,56 @@ class EmptyStateWidget extends StatelessWidget {
     // A ilustração vence quando declarada; o ícone segura o formato antigo.
     final variante =
         type ?? (icon == null ? MagicalEmptyStateType.generic : null);
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            if (variante != null)
-              _EmptyIllustration(type: variante)
-            else
-              Icon(
-                icon,
-                size: 80,
-                color: context.gc.surfaceBorder,
-              ),
-            const SizedBox(height: 24),
-            Text(
-              message,
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: context.gc.textSecondary,
-                  ),
-              textAlign: TextAlign.center,
+
+    final conteudo = Padding(
+      padding: const EdgeInsets.all(32.0),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          if (variante != null)
+            _EmptyIllustration(type: variante)
+          else
+            Icon(
+              icon,
+              size: 80,
+              color: context.gc.surfaceBorder,
             ),
-            if (actionText != null && onAction != null) ...[
-              const SizedBox(height: 24),
-              ElevatedButton(
-                onPressed: onAction,
-                child: Text(actionText!),
-              ),
-            ],
+          const SizedBox(height: 24),
+          Text(
+            message,
+            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                  color: context.gc.textSecondary,
+                ),
+            textAlign: TextAlign.center,
+          ),
+          if (actionText != null && onAction != null) ...[
+            const SizedBox(height: 24),
+            ElevatedButton(
+              onPressed: onAction,
+              child: Text(actionText!),
+            ),
           ],
-        ),
+        ],
       ),
+    );
+
+    // Centraliza quando há espaço e ROLA quando não há — assim o botão de ação
+    // nunca fica cortado (o que acontecia em telas onde o conteúdo passava de
+    // pouquinho a altura disponível). Sob um pai de altura ilimitada (dentro de
+    // uma lista/scroll), só centraliza, sem embrulhar noutro scroll.
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (!constraints.hasBoundedHeight) {
+          return Center(child: conteudo);
+        }
+        return SingleChildScrollView(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: constraints.maxHeight),
+            child: IntrinsicHeight(child: Center(child: conteudo)),
+          ),
+        );
+      },
     );
   }
 }
