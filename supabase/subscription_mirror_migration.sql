@@ -59,11 +59,10 @@ BEGIN
   END IF;
 END $$;
 
--- COMMENTs para quem for ler o schema depois.
 COMMENT ON COLUMN public.profiles.plan_expires_at IS
   'Espelho do RevenueCat: quando a assinatura vigente expira. NULL para vitalício/free. Mantido pelo webhook revenuecat-webhook; RevenueCat continua sendo a fonte de verdade.';
 COMMENT ON COLUMN public.profiles.plan_updated_at IS
-  'Quando o espelho de plano foi atualizado pela última vez (webhook/RPC).';
+  'Quando o EVENTO que atualizou o espelho ocorreu (event_timestamp do RevenueCat). Usado para ordenar eventos e ignorar re-entrega atrasada.';
 COMMENT ON COLUMN public.profiles.plan_source IS
   'Origem do plano atual: revenuecat (compra), beta_code (Código Premium), admin. NULL em linhas anteriores ao espelho.';
 
@@ -79,11 +78,14 @@ GRANT SELECT (plan_expires_at, plan_updated_at, plan_source)
 -- 2. A ÚNICA PORTA DE ESCRITA DO ESPELHO
 -- ----------------------------------------------------------------------------
 -- Recebe o estado autoritativo (vindo do RevenueCat, via webhook) e aplica na
--- linha da pessoa, com duas travas que valem dinheiro:
+-- linha da pessoa, com TRÊS travas que valem dinheiro:
 --   · NUNCA rebaixa admin.
 --   · NUNCA rebaixa um `lifetime` (Código Premium OU compra vitalícia): o
 --     RevenueCat não conhece o lifetime de Código Premium, então um evento de
 --     expiração/cancelamento não pode derrubar o acesso vitalício de ninguém.
+--   · NUNCA aplica um evento mais VELHO que o último já aplicado (ordenação por
+--     tempo de evento): uma RENEWAL atrasada, re-entregue DEPOIS de uma
+--     EXPIRATION, não ressuscita o acesso.
 --
 -- SECURITY INVOKER de propósito (o oposto do redeem_beta_code): esta função
 -- NÃO precisa escalar para o cliente — só a service_role a chama, e a
@@ -91,11 +93,18 @@ GRANT SELECT (plan_expires_at, plan_updated_at, plan_source)
 -- `authenticated` por engano, ela roda com o privilégio do cliente e o
 -- lockdown (REVOKE UPDATE das colunas role/plan) a barra. Defesa em
 -- profundidade.
+
+-- Remove a versão de 4 argumentos (sem ordenação por tempo), se um run
+-- anterior a criou — a assinatura ganhou `p_event_at`. Chamadas com 4
+-- argumentos nomeados continuam funcionando: casam com a de 5 (o default).
+DROP FUNCTION IF EXISTS public.apply_subscription_state(uuid, text, timestamptz, text);
+
 CREATE OR REPLACE FUNCTION public.apply_subscription_state(
   p_user_id    uuid,
-  p_plan       text,         -- 'free' | 'monthly' | 'yearly' | 'lifetime'
-  p_expires_at timestamptz,  -- NULL para vitalício/free
-  p_source     text          -- 'revenuecat' | 'beta_code' | 'admin'
+  p_plan       text,          -- 'free' | 'monthly' | 'yearly' | 'lifetime'
+  p_expires_at timestamptz,   -- NULL para vitalício/free
+  p_source     text,          -- 'revenuecat' | 'beta_code' | 'admin'
+  p_event_at   timestamptz DEFAULT NULL  -- quando o EVENTO ocorreu (ordenação)
 )
 RETURNS jsonb
 LANGUAGE plpgsql
@@ -103,8 +112,9 @@ SECURITY INVOKER
 SET search_path = public
 AS $$
 DECLARE
-  v_role text;
-  v_plan text;
+  v_role       text;
+  v_plan       text;
+  v_updated_at timestamptz;
 BEGIN
   IF p_plan IS NULL OR p_plan NOT IN ('free', 'monthly', 'yearly', 'lifetime') THEN
     RETURN jsonb_build_object('ok', false, 'reason', 'invalid_plan');
@@ -113,7 +123,8 @@ BEGIN
     RETURN jsonb_build_object('ok', false, 'reason', 'invalid_source');
   END IF;
 
-  SELECT role, plan INTO v_role, v_plan
+  SELECT role, plan, plan_updated_at
+    INTO v_role, v_plan, v_updated_at
     FROM public.profiles
    WHERE id = p_user_id;
 
@@ -131,13 +142,21 @@ BEGIN
     RETURN jsonb_build_object('ok', true, 'reason', 'lifetime_kept');
   END IF;
 
+  -- Trava 3: ordenação. Evento mais velho que o último aplicado é ignorado —
+  -- é a re-entrega atrasada que ressuscitaria estado. Sem tempo de evento não
+  -- há como ordenar, então aplica (melhor esforço).
+  IF p_event_at IS NOT NULL AND v_updated_at IS NOT NULL
+     AND p_event_at < v_updated_at THEN
+    RETURN jsonb_build_object('ok', true, 'reason', 'stale_event');
+  END IF;
+
   IF p_plan = 'free' THEN
     UPDATE public.profiles
        SET role            = 'free',
            plan            = 'free',
            plan_expires_at = NULL,
            plan_source     = p_source,
-           plan_updated_at = now(),
+           plan_updated_at = COALESCE(p_event_at, now()),
            updated_at      = now()
      WHERE id = p_user_id;
   ELSE
@@ -146,7 +165,7 @@ BEGIN
            plan            = p_plan,
            plan_expires_at = CASE WHEN p_plan = 'lifetime' THEN NULL ELSE p_expires_at END,
            plan_source     = p_source,
-           plan_updated_at = now(),
+           plan_updated_at = COALESCE(p_event_at, now()),
            updated_at      = now()
      WHERE id = p_user_id;
   END IF;
@@ -158,9 +177,9 @@ $$;
 -- ATENÇÃO: NUNCA conceda EXECUTE desta função a `authenticated`/`anon`. Ela
 -- confia nos argumentos; o cliente declarar o próprio plano é exatamente a
 -- escalada que o lockdown fechou. Só a service_role (servidor) a chama.
-REVOKE ALL ON FUNCTION public.apply_subscription_state(uuid, text, timestamptz, text)
+REVOKE ALL ON FUNCTION public.apply_subscription_state(uuid, text, timestamptz, text, timestamptz)
   FROM public, anon, authenticated;
-GRANT EXECUTE ON FUNCTION public.apply_subscription_state(uuid, text, timestamptz, text)
+GRANT EXECUTE ON FUNCTION public.apply_subscription_state(uuid, text, timestamptz, text, timestamptz)
   TO service_role;
 
 

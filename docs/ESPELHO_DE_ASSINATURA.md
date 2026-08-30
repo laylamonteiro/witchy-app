@@ -26,7 +26,10 @@ RevenueCat  ──webhook (POST, Authorization: <segredo>)──▶  Edge Functi
 
 - **`apply_subscription_state`** é a ÚNICA porta de escrita do espelho.
   `SECURITY INVOKER`, executável só pela `service_role`. Travas: nunca rebaixa
-  `admin`, nunca rebaixa `lifetime` (Código Premium ou compra vitalícia).
+  `admin`, nunca rebaixa `lifetime` (Código Premium ou compra vitalícia), e
+  nunca aplica um evento mais VELHO que o último já aplicado (ordenação por
+  tempo de evento — uma renovação atrasada re-entregue depois de uma expiração
+  não ressuscita o acesso).
 - **O cliente NÃO escreve `role`/`plan`** (o lockdown segue de pé). Nada aqui
   reabre a auto-promoção.
 - **O app só rebaixa com sinal positivo** de "não é mais Pro"
@@ -74,9 +77,13 @@ Painel do RevenueCat → **Integrations → Webhooks → Add**:
 - **Authorization header**: o MESMO segredo do passo 1, **exatamente** como
   está (o header é comparado byte a byte). Se o RevenueCat exigir um prefixo,
   use o valor cru sem `Bearer`.
-- **Environment**: comece por **Production**. (A função ignora eventos que não
-  sejam `PRODUCTION`, a menos que você defina o secret
-  `REVENUECAT_ALLOW_SANDBOX=true` — útil só num projeto de teste.)
+- **Environment**: **Production** (ou "Both Production and Sandbox" — tanto
+  faz: a função **ignora** eventos que não sejam `PRODUCTION`, de propósito,
+  para compra de teste não virar Premium). ATENÇÃO ao testar: o **Send test
+  event** do RevenueCat manda um evento `SANDBOX`, então ele será **ignorado**
+  (`{"ignored":"nao_producao"}`) e NÃO grava no banco — não é defeito. Para um
+  teste que grava, defina o secret `REVENUECAT_ALLOW_SANDBOX=true`
+  temporariamente e remova depois.
 - **Eventos**: pode mandar todos. A função trata os que importam e ignora o
   resto:
   - concedem/renovam: `INITIAL_PURCHASE`, `RENEWAL`, `UNCANCELLATION`,

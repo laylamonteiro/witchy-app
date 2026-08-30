@@ -5,10 +5,18 @@
 // separada do Deno.serve de index.ts).
 
 import { assertEquals } from 'jsr:@std/assert@1'
-import { decide, planFromProduct, pickSupabaseUid, safeEqual, PRO_ENTITLEMENT } from './logic.ts'
+import {
+  decide,
+  planForGrant,
+  planFromProductId,
+  pickSupabaseUid,
+  safeEqual,
+  PRO_ENTITLEMENT,
+} from './logic.ts'
 
 const UID = '11111111-2222-3333-4444-555555555555'
-const EXP = 1893456000000 // 2030-01-01, só para ter uma expiração no futuro
+const EXP = 1893456000000 // 2030-01-01
+const EVENT_AT = 1735689600000 // 2025-01-01
 
 function ev(overrides: Record<string, unknown>) {
   return {
@@ -18,22 +26,29 @@ function ev(overrides: Record<string, unknown>) {
     entitlement_ids: [PRO_ENTITLEMENT],
     product_id: 'grimorio_pro_monthly',
     expiration_at_ms: EXP,
+    event_timestamp_ms: EVENT_AT,
     ...overrides,
   }
 }
 
-Deno.test('planFromProduct: durações por id', () => {
-  assertEquals(planFromProduct('grimorio_pro_monthly', EXP), 'monthly')
-  assertEquals(planFromProduct('com.grimoriodebolso.pro.yearly', EXP), 'yearly')
-  assertEquals(planFromProduct('plano_anual', EXP), 'yearly')
-  assertEquals(planFromProduct('grimorio_pro_lifetime', null), 'lifetime')
-  assertEquals(planFromProduct('vitalicio', null), 'lifetime')
+Deno.test('planFromProductId: duração explícita, ou null', () => {
+  assertEquals(planFromProductId('grimorio_pro_monthly'), 'monthly')
+  assertEquals(planFromProductId('com.grimoriodebolso.pro.yearly'), 'yearly')
+  assertEquals(planFromProductId('plano_anual'), 'yearly')
+  assertEquals(planFromProductId('grimorio_pro_lifetime'), 'lifetime')
+  assertEquals(planFromProductId('plano_mensal'), 'monthly') // "plano" tem "ano"
+  assertEquals(planFromProductId('grimorio_pro'), null) // sem token
+  assertEquals(planFromProductId(''), null)
 })
 
-Deno.test('planFromProduct: sem duração no id, decide pela expiração', () => {
-  assertEquals(planFromProduct('grimorio_pro', EXP), 'monthly') // tem expiração → assinatura
-  assertEquals(planFromProduct('grimorio_pro', null), 'lifetime') // sem expiração → única
-  assertEquals(planFromProduct('plano_mensal', EXP), 'monthly') // "plano" contém "ano" — não pode virar anual
+Deno.test('planForGrant: vitalício SÓ em compra única sem expiração', () => {
+  assertEquals(planForGrant('NON_RENEWING_PURCHASE', 'grimorio_pro', null), 'lifetime')
+  assertEquals(planForGrant('NON_RENEWING_PURCHASE', 'grimorio_pro_lifetime', null), 'lifetime')
+  // O buraco corrigido: grant temporário sem token NÃO pode virar lifetime
+  // (viraria irrevogável). Cai no padrão seguro `monthly`.
+  assertEquals(planForGrant('TEMPORARY_ENTITLEMENT_GRANT', 'grimorio_pro', null), 'monthly')
+  // Assinatura sem token, mas com expiração → mensal (revogável).
+  assertEquals(planForGrant('RENEWAL', 'grimorio_pro', EXP), 'monthly')
 })
 
 Deno.test('pickSupabaseUid: acha o uuid; ignora anônimo', () => {
@@ -42,13 +57,14 @@ Deno.test('pickSupabaseUid: acha o uuid; ignora anônimo', () => {
   assertEquals(pickSupabaseUid({ app_user_id: '$RCAnonymousID:abc' }), null)
 })
 
-Deno.test('compra inicial concede premium com expiração', () => {
+Deno.test('compra inicial concede premium com expiração e tempo de evento', () => {
   const d = decide(ev({ type: 'INITIAL_PURCHASE' }))
   assertEquals(d.action, 'apply')
   if (d.action === 'apply') {
     assertEquals(d.plan, 'monthly')
     assertEquals(d.uid, UID)
     assertEquals(typeof d.expiresIso, 'string')
+    assertEquals(d.eventAtIso, '2025-01-01T00:00:00.000Z')
   }
 })
 
@@ -66,14 +82,25 @@ Deno.test('vitalício não tem expiração no espelho', () => {
   }
 })
 
+Deno.test('grant temporário NÃO vira lifetime (evita premium irrevogável)', () => {
+  const d = decide(ev({ type: 'TEMPORARY_ENTITLEMENT_GRANT', product_id: 'grimorio_pro', expiration_at_ms: null }))
+  assertEquals(d.action, 'apply')
+  assertEquals(d.action === 'apply' && d.plan, 'monthly')
+})
+
+Deno.test('product change usa o produto NOVO (new_product_id)', () => {
+  const d = decide(ev({ type: 'PRODUCT_CHANGE', product_id: 'grimorio_pro_monthly', new_product_id: 'grimorio_pro_yearly' }))
+  assertEquals(d.action === 'apply' && d.plan, 'yearly')
+})
+
 Deno.test('expiração encerra o acesso (free)', () => {
   const d = decide(ev({ type: 'EXPIRATION' }))
   assertEquals(d.action === 'apply' && d.plan, 'free')
 })
 
-Deno.test('assinatura pausada encerra o acesso (free)', () => {
+Deno.test('assinatura pausada MANTÉM o acesso (espera EXPIRATION)', () => {
   const d = decide(ev({ type: 'SUBSCRIPTION_PAUSED' }))
-  assertEquals(d.action === 'apply' && d.plan, 'free')
+  assertEquals(d.action, 'ignore')
 })
 
 Deno.test('cancelamento MANTÉM o acesso (não mexe)', () => {

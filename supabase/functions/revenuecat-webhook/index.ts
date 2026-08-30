@@ -60,10 +60,13 @@ Deno.serve(async (req: Request) => {
   const event = (payload as any)?.event
   if (!event || typeof event !== 'object') return json({ erro: 'sem_event' }, 400)
 
-  // 3. AMBIENTE. Compra de teste (sandbox) não vira Premium na produção.
+  // 3. AMBIENTE. Só PRODUCTION afeta o banco — fail-closed: ambiente ausente
+  // ou sandbox NÃO processa (compra de teste não vira Premium na produção).
+  // Para testar ponta a ponta com sandbox, defina REVENUECAT_ALLOW_SANDBOX=true
+  // (e remova depois).
   const allowSandbox = (Deno.env.get('REVENUECAT_ALLOW_SANDBOX') ?? '') === 'true'
-  if (event.environment && event.environment !== 'PRODUCTION' && !allowSandbox) {
-    return json({ ignored: 'sandbox' }, 200)
+  if (event.environment !== 'PRODUCTION' && !allowSandbox) {
+    return json({ ignored: 'nao_producao' }, 200)
   }
 
   // 4. DECIDE (lógica pura, testada em logic.test.ts).
@@ -94,6 +97,7 @@ Deno.serve(async (req: Request) => {
         p_plan: d.plan,
         p_expires_at: d.expiresIso,
         p_source: 'revenuecat',
+        p_event_at: d.eventAtIso,
       }),
     })
     const body = await res.text()
