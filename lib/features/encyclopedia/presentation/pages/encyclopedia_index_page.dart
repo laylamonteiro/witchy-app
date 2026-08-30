@@ -189,22 +189,21 @@ class _EncyclopediaIndexPageState extends State<EncyclopediaIndexPage>
   /// Fecha a capa (re-toque na bottom bar com o livro aberto no índice).
   void _closeCover() {
     if (!_coverGone && _open.value == 0) return; // já fechada
-    // O livro se fecha: um baque tátil leve, como uma capa pousando. Só na
-    // ação real de fechar (a guarda acima já barrou o "já fechada") — e NÃO sob
-    // "reduzir movimento", onde a capa pousa em silêncio, no mesmo guarda da
-    // poeira/animação abaixo (é o que o teste em toque_magico_test cobre).
-    if (!MediaQuery.disableAnimationsOf(context)) {
-      HapticFeedback.lightImpact();
-    }
     setState(() {
       _coverGone = false;
       _flip.value = 0.0;
       if (_open.value == 0) _open.value = 1.0;
     });
     if (MediaQuery.disableAnimationsOf(context)) {
+      // Sob "reduzir movimento" a capa fecha instantânea e EM SILÊNCIO (mesmo
+      // guarda da poeira/animação; é o que toque_magico_test cobre).
       _open.value = 0.0;
     } else {
-      _open.reverse();
+      // O baque tátil leve é a CAPA POUSANDO: sai no FIM da animação de fechar,
+      // não no clique que a inicia.
+      _open.reverse().then((_) {
+        if (mounted) HapticFeedback.lightImpact();
+      });
     }
   }
 
