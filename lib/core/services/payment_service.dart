@@ -1061,7 +1061,10 @@ class PaymentService extends ChangeNotifier {
   /// não ter conseguido consultar (mantém o acesso do espelho/servidor), nem
   /// vitalício (Código Premium/compra), nem admin. É a trava central do
   /// "nunca perde acesso enquanto o plano vigorar".
-  @visibleForTesting
+  ///
+  /// Pública (não `@visibleForTesting`) porque é usada em produção pelo
+  /// AuthProvider (`_checkSubscriptionExpiration`/`refreshPremiumStatus`), e
+  /// não só nos testes — a lógica de rebaixar mora aqui, num único lugar.
   static bool deveRebaixar({
     required bool statusConhecido,
     required bool isPro,
