@@ -3,6 +3,7 @@ import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/widgets/living_emblem.dart';
+import '../../../../core/widgets/loading_widget.dart';
 import '../../../../core/widgets/staggered_entrance.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/theme/grimoire_colors.dart';
@@ -41,11 +42,7 @@ class _AstrologyTabState extends State<AstrologyTab> {
     return Consumer<AstrologyProvider>(
       builder: (context, provider, _) {
         if (provider.isLoading) {
-          return Center(
-            child: CircularProgressIndicator(
-              valueColor: AlwaysStoppedAnimation<Color>(context.gc.lilac),
-            ),
-          );
+          return const LoadingWidget();
         }
 
         return SingleChildScrollView(

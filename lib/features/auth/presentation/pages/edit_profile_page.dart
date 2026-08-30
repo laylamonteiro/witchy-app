@@ -12,6 +12,7 @@ import '../../../../core/database/database_helper.dart';
 import '../../../../core/config/supabase_config.dart';
 import '../providers/auth_provider.dart';
 import '../../data/repositories/supabase_auth_repository.dart';
+import '../../../../core/widgets/loading_widget.dart';
 
 /// Página de edição de perfil com todas as configurações de privacidade
 class EditProfilePage extends StatefulWidget {
@@ -94,8 +95,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
         ),
       ),
       body: _isLoading
-          ? Center(
-              child: CircularProgressIndicator(color: context.gc.lilac))
+          ? const LoadingWidget()
           : SingleChildScrollView(
               padding: const EdgeInsets.all(16),
               child: Column(

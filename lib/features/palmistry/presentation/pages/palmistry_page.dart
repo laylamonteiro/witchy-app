@@ -7,6 +7,7 @@ import '../../../../core/ai/ai_service.dart';
 import '../../../../core/utils/image_compression.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
+import '../../../../core/widgets/loading_widget.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/widgets/premium_locked_preview.dart';
 import '../../../diary/presentation/widgets/dream_interpretation_text.dart';
@@ -268,15 +269,8 @@ class _PalmistryPageState extends State<PalmistryPage> {
             ),
           if (_isAnalyzing)
             MagicalCard(
-              child: Column(
-                children: [
-                  CircularProgressIndicator(color: context.gc.lilac),
-                  const SizedBox(height: 12),
-                  Text(
-                    AppLocalizations.of(context).palmReadingLines,
-                    style: TextStyle(color: context.gc.textSecondary),
-                  ),
-                ],
+              child: LoadingWidget(
+                message: AppLocalizations.of(context).palmReadingLines,
               ),
             ),
           if (_mostrarPrevia && _reading == null)

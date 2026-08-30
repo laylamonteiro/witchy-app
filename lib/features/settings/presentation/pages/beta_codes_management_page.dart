@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import '../../../../core/widgets/loading_widget.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
@@ -258,7 +259,7 @@ class _BetaCodesManagementPageState extends State<BetaCodesManagementPage> {
         ],
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const LoadingWidget()
           : SingleChildScrollView(
               padding: const EdgeInsets.all(20),
               child: Column(

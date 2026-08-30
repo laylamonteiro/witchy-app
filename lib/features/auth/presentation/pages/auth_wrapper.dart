@@ -9,6 +9,7 @@ import '../../../../core/navigation/recomeco.dart';
 import 'welcome_page.dart';
 import '../../../../features/home/presentation/pages/home_page.dart';
 import '../../../../core/widgets/splash_screen.dart';
+import '../../../../core/widgets/loading_widget.dart';
 
 /// Widget wrapper que gerencia o fluxo de autenticação
 /// Decide se mostra a tela de boas-vindas ou a home
@@ -126,7 +127,7 @@ class _Carregando extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
+        body: LoadingWidget(),
       );
 }
 
@@ -140,16 +141,7 @@ class _EsperandoASessao extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const CircularProgressIndicator(),
-            const SizedBox(height: 16),
-            Text(AppLocalizations.of(context).authFinishingLogin),
-          ],
-        ),
-      ),
+      body: LoadingWidget(message: AppLocalizations.of(context).authFinishingLogin),
     );
   }
 }

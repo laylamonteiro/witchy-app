@@ -6,6 +6,7 @@ import '../../../../core/services/data_export_service.dart';
 import '../../../../core/theme/app_theme.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import '../../../../core/theme/grimoire_colors.dart';
+import '../../../../core/widgets/loading_widget.dart';
 import '../../../../core/database/database_helper.dart';
 import '../../../../core/config/supabase_config.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
@@ -69,8 +70,7 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
         ),
       ),
       body: _isLoading
-          ? Center(
-              child: CircularProgressIndicator(color: context.gc.lilac))
+          ? const LoadingWidget()
           : SingleChildScrollView(
               padding: const EdgeInsets.all(16),
               child: Column(
