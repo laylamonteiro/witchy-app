@@ -528,6 +528,93 @@ class _LivingEmblemState extends State<LivingEmblem>
   }
 }
 
+/// A MESMA arte de cristal dos emblemas (SectionEmblem.crystals), reutilizável
+/// fora do cabeçalho de seção — com o MESMO brilho varrendo a superfície.
+///
+/// Usada de cabeça para baixo (flipVertical) como peso do pêndulo: um cristal
+/// pendurado tem a ponta para baixo. Fonte única do desenho (_svgCrystal), para
+/// nunca divergir do emblema. Congela num quadro bonito sob "reduzir movimento".
+class CrystalGlyph extends StatefulWidget {
+  final double height;
+  final bool flipVertical;
+
+  const CrystalGlyph({
+    super.key,
+    required this.height,
+    this.flipVertical = false,
+  });
+
+  @override
+  State<CrystalGlyph> createState() => _CrystalGlyphState();
+}
+
+class _CrystalGlyphState extends State<CrystalGlyph>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _sweep = AnimationController(
+      vsync: this, duration: const Duration(milliseconds: 3200));
+
+  bool? _reduced;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final reduced = MediaQuery.of(context).disableAnimations;
+    if (reduced != _reduced) {
+      _reduced = reduced;
+      if (reduced) {
+        _sweep.value = 1.0;
+      } else {
+        _sweep.repeat();
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _sweep.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    Widget art =
+        SvgPicture.string(_svgCrystal, height: widget.height, fit: BoxFit.contain);
+    if (widget.flipVertical) {
+      art = Transform(
+        alignment: Alignment.center,
+        transform: Matrix4.identity()..scale(1.0, -1.0),
+        child: art,
+      );
+    }
+    // Brilho diagonal varrendo — idêntico ao _shimmer dos emblemas.
+    return AnimatedBuilder(
+      animation: _sweep,
+      builder: (context, child) {
+        final x = -0.4 + 1.8 * _sweep.value;
+        return ShaderMask(
+          blendMode: BlendMode.srcATop,
+          shaderCallback: (rect) => LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Colors.white.withValues(alpha: 0),
+              Colors.white.withValues(alpha: 0.55),
+              Colors.white.withValues(alpha: 0),
+            ],
+            stops: [
+              (x - 0.16).clamp(0.0, 1.0),
+              x.clamp(0.0, 1.0),
+              (x + 0.16).clamp(0.0, 1.0),
+            ],
+          ).createShader(rect),
+          child: child,
+        );
+      },
+      child: art,
+    );
+  }
+}
+
 /// Estrela ✦ piscando sozinha — a mesma dos emblemas, pública para compor
 /// céus (ex.: em volta do livro do Grimório).
 class BlinkStar extends StatefulWidget {

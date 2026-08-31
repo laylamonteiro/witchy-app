@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 
@@ -194,9 +195,15 @@ class _EncyclopediaIndexPageState extends State<EncyclopediaIndexPage>
       if (_open.value == 0) _open.value = 1.0;
     });
     if (MediaQuery.disableAnimationsOf(context)) {
+      // Sob "reduzir movimento" a capa fecha instantânea e EM SILÊNCIO (mesmo
+      // guarda da poeira/animação; é o que toque_magico_test cobre).
       _open.value = 0.0;
     } else {
-      _open.reverse();
+      // O baque tátil leve é a CAPA POUSANDO: sai no FIM da animação de fechar,
+      // não no clique que a inicia.
+      _open.reverse().then((_) {
+        if (mounted) HapticFeedback.lightImpact();
+      });
     }
   }
 

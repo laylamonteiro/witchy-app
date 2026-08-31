@@ -288,6 +288,20 @@ class AuthProvider extends ChangeNotifier {
         '✅ AuthProvider registrado para receber updates do PaymentService');
   }
 
+  /// Mapeia o tipo de assinatura do RevenueCat para o plano do UserModel,
+  /// preservando o ANUAL — o antigo `isLifetime ? lifetime : monthly` o perdia.
+  static SubscriptionPlan _planoDoTipo(SubscriptionType? tipo) {
+    switch (tipo) {
+      case SubscriptionType.lifetime:
+        return SubscriptionPlan.lifetime;
+      case SubscriptionType.yearly:
+        return SubscriptionPlan.yearly;
+      case SubscriptionType.monthly:
+      case null:
+        return SubscriptionPlan.monthly;
+    }
+  }
+
   /// Chamado quando o status Pro muda no PaymentService (ex: cancelamento, reembolso)
   Future<void> _onPaymentStatusChanged(bool isPro) async {
     await debugLog('AUTH', 'PaymentService notificou mudança: isPro=$isPro');
@@ -308,10 +322,9 @@ class AuthProvider extends ChangeNotifier {
     if (isPro) {
       await debugLog('AUTH', 'Atualizando para Premium');
       final paymentService = PaymentService();
-      final isLifetime = paymentService.isLifetime;
       _currentUser = _currentUser.copyWith(
         role: UserRole.premium,
-        plan: isLifetime ? SubscriptionPlan.lifetime : SubscriptionPlan.monthly,
+        plan: _planoDoTipo(paymentService.activeSubscriptionType),
       );
     } else {
       // Não fazer downgrade de usuários com acesso lifetime (Código Premium):
@@ -763,8 +776,17 @@ class AuthProvider extends ChangeNotifier {
     // hoje se guarda sozinho — sai na primeira linha quando o SDK está de pé.
     await paymentService.initialize();
 
-    // Se PaymentService diz que não é Pro, fazer downgrade
-    if (!paymentService.isPro && _currentUser.role == UserRole.premium) {
+    // Só rebaixa com sinal POSITIVO de que não é mais Pro (RevenueCat
+    // consultado E negando). Se o RevenueCat não carregou (web/rede ruim),
+    // NÃO rebaixa: o acesso do espelho de `profiles` continua valendo, e um
+    // assinante válido não perde o acesso por uma falha de rede no boot.
+    final rebaixar = PaymentService.deveRebaixar(
+      statusConhecido: paymentService.subscriptionStatusKnown,
+      isPro: paymentService.isPro,
+      isLifetime: _currentUser.plan == SubscriptionPlan.lifetime,
+      isAdmin: _isOriginalAdmin,
+    );
+    if (rebaixar && _currentUser.role == UserRole.premium) {
       await debugLog(
           'AUTH', 'Assinatura expirou - fazendo downgrade para Free');
       _currentUser = _currentUser.copyWith(
@@ -790,16 +812,21 @@ class AuthProvider extends ChangeNotifier {
 
     if (paymentService.isPro) {
       // Usuário tem assinatura ativa
-      final isLifetime = paymentService.isLifetime;
       _currentUser = _currentUser.copyWith(
         role: UserRole.premium,
-        plan: isLifetime ? SubscriptionPlan.lifetime : SubscriptionPlan.monthly,
+        plan: _planoDoTipo(paymentService.activeSubscriptionType),
       );
       await _saveUser();
       notifyListeners();
-    } else if (!_isOriginalAdmin &&
-        _currentUser.plan != SubscriptionPlan.lifetime) {
-      // Se não é mais Pro, não é admin e não tem lifetime (Código Premium), fazer downgrade
+    } else if (PaymentService.deveRebaixar(
+      statusConhecido: paymentService.subscriptionStatusKnown,
+      isPro: paymentService.isPro,
+      isLifetime: _currentUser.plan == SubscriptionPlan.lifetime,
+      isAdmin: _isOriginalAdmin,
+    )) {
+      // Rebaixa só com sinal positivo de que não é mais Pro. Sem RevenueCat
+      // carregado, mantém o acesso do espelho (nunca derruba assinante válido
+      // por falha de rede). Lifetime (Código Premium) e admin nunca caem aqui.
       await debugLog('AUTH',
           'Assinatura não está mais ativa - fazendo downgrade para Free');
       _currentUser = _currentUser.copyWith(

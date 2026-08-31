@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../../../../core/services/payment_service.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
+import '../../../../core/widgets/loading_widget.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/widgets/staggered_entrance.dart';
 import '../../../../core/widgets/starfield_background.dart';
@@ -101,11 +102,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
             listenable: _paymentService,
             builder: (context, _) {
               if (_isLoading) {
-                return Center(
-                  child: CircularProgressIndicator(
-                    color: context.gc.lilac,
-                  ),
-                );
+                return const LoadingWidget();
               }
 
               // Fonte única de premium (RevenueCat, Código Premium ou admin)
@@ -690,9 +687,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
                     showDialog(
                       context: context,
                       barrierDismissible: false,
-                      builder: (context) => const Center(
-                        child: CircularProgressIndicator(),
-                      ),
+                      builder: (context) => const LoadingWidget(),
                     );
 
                     // Resgatar código

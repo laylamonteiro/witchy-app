@@ -1,5 +1,6 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/i18n/gender.dart';
 
 import 'package:flutter/services.dart';
@@ -15,9 +16,9 @@ import '../widgets/auth_motion.dart';
 import '../widgets/auth_feedback.dart';
 import '../../../../core/config/supabase_config.dart';
 import '../../data/models/user_model.dart';
+import '../../data/repositories/auth_repository.dart';
 import '../../data/repositories/supabase_auth_repository.dart';
 import '../providers/auth_provider.dart';
-import 'login_page.dart';
 import '../../../../core/config/captcha_config.dart';
 import '../widgets/captcha_gate.dart';
 
@@ -62,11 +63,10 @@ class _SignupPageState extends State<SignupPage> {
   /// deixaria a tela preta. Sem nada abaixo, volta-se para a porta de
   /// entrada (Welcome).
   void _handleBack() {
-    final nav = Navigator.of(context);
-    if (nav.canPop()) {
-      nav.pop();
+    if (context.canPop()) {
+      context.pop();
     } else {
-      nav.pushReplacementNamed('/welcome');
+      context.go('/welcome');
     }
   }
 
@@ -571,10 +571,7 @@ class _SignupPageState extends State<SignupPage> {
           ),
         ),
         TextButton(
-          onPressed: () => Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (_) => const LoginPage()),
-          ),
+          onPressed: () => context.pushReplacement('/login'),
           style: TextButton.styleFrom(
             padding: EdgeInsets.zero,
             minimumSize: Size.zero,
@@ -642,6 +639,22 @@ class _SignupPageState extends State<SignupPage> {
         );
 
         if (!result.success) {
+          // E-mail já cadastrado tem CÓDIGO próprio: mostra a mensagem já
+          // traduzida pelo repositório, sem passar pelo catch abaixo — que
+          // adivinha o erro por substring e classificaria "Este email já está
+          // em uso" como "e-mail inválido" (contém "email"). Este é o caso do
+          // e-mail existente que o Supabase não acusa (identities vazio).
+          if (result.errorCode == AuthErrorCode.emailAlreadyInUse) {
+            if (mounted) {
+              showAuthSnack(
+                context,
+                result.errorMessage ??
+                    AppLocalizations.of(context).authEmailInUse,
+                type: AuthSnackType.error,
+              );
+            }
+            return;
+          }
           throw Exception(result.errorMessage ?? AppLocalizations.of(context).authSignupError);
         }
 
@@ -658,8 +671,7 @@ class _SignupPageState extends State<SignupPage> {
               AppLocalizations.of(context).authConfirmEmailSent(email),
               type: AuthSnackType.success,
             );
-            Navigator.of(context)
-                .pushNamedAndRemoveUntil('/login', (route) => false);
+            context.go('/login');
           }
           return;
         }
@@ -692,7 +704,7 @@ class _SignupPageState extends State<SignupPage> {
         );
 
         // Navegar para home
-        Navigator.of(context).pushNamedAndRemoveUntil('/home', (route) => false);
+        context.go('/seu-dia');
       }
     } catch (e) {
       if (mounted) {
@@ -767,7 +779,7 @@ class _SignupPageState extends State<SignupPage> {
 
         if (!mounted) return;
         // Navegar para home
-        Navigator.of(context).pushNamedAndRemoveUntil('/home', (route) => false);
+        context.go('/seu-dia');
       } else {
         showAuthSnack(
           context,

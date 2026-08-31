@@ -9,6 +9,7 @@ import 'package:provider/provider.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/database/database_helper.dart';
+import '../../../../core/widgets/loading_widget.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../grimoire/data/models/spell_model.dart';
 import '../../../grimoire/presentation/pages/user_spells_list_page.dart';
@@ -364,7 +365,7 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
   @override
   Widget build(BuildContext context) {
     final body = _isLoading
-        ? Center(child: CircularProgressIndicator(color: context.gc.lilac))
+        ? const LoadingWidget()
         : RefreshIndicator(
             onRefresh: _loadStats,
             color: context.gc.lilac,

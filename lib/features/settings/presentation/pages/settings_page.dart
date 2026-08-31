@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -1160,8 +1161,7 @@ class SettingsPage extends StatelessWidget {
               Navigator.pop(dialogContext);
               await authProvider.signOut();
               if (pageContext.mounted) {
-                Navigator.of(pageContext, rootNavigator: true)
-                    .pushNamedAndRemoveUntil('/welcome', (route) => false);
+                pageContext.go('/welcome');
               }
             },
             style: ElevatedButton.styleFrom(

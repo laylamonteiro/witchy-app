@@ -3,12 +3,14 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../../../core/navigation/grimoire_route.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../data/data_sources/tarot_cards_data.dart';
 import '../../data/data_sources/tarot_concept_questions.dart';
 import '../../data/models/tarot_card_model.dart';
 import '../widgets/tarot_card_view.dart';
+import 'tarot_library_page.dart';
 import '../../../learning/data/data_sources/trails_data.dart';
 import '../../../learning/presentation/pages/trail_page.dart';
 
@@ -85,6 +87,45 @@ class _TarotLearnTabState extends State<TarotLearnTab> {
                       ),
                 ),
               ],
+            ),
+          ),
+          // Biblioteca de Cartas: consultar significados vive no Aprender,
+          // ao lado das Lições e do quiz — a Tiragem fica só para tirar.
+          MagicalCard(
+            child: InkWell(
+              onTap: () => Navigator.of(context).push(
+                GrimoireRoute(builder: (_) => const TarotLibraryPage()),
+              ),
+              borderRadius: BorderRadius.circular(12),
+              child: Row(
+                children: [
+                  const Text('📚', style: TextStyle(fontSize: 32)),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          AppLocalizations.of(context).tarotLibraryTitle,
+                          style:
+                              Theme.of(context).textTheme.titleMedium?.copyWith(
+                                    color: context.gc.textPrimary,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                        ),
+                        Text(
+                          AppLocalizations.of(context).tarotLibraryDesc,
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodySmall
+                              ?.copyWith(color: context.gc.textSecondary),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Icon(Icons.chevron_right, color: context.gc.textSecondary),
+                ],
+              ),
             ),
           ),
           // Lições de Tarot: a trilha do Grimório Vivo, a um toque do quiz.

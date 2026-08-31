@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../theme/grimoire_colors.dart';
+import '../theme/grimoire_motion.dart';
 
 /// Anel de progresso animado (0..1) com conteúdo opcional no centro.
 ///
@@ -28,7 +29,9 @@ class MagicalProgressRing extends StatelessWidget {
     final ringColor = color ?? context.gc.lilac;
     return TweenAnimationBuilder<double>(
       tween: Tween<double>(begin: 0, end: value.clamp(0.0, 1.0)),
-      duration: const Duration(milliseconds: 750),
+      duration: GrimoireMotion.reduced(context)
+          ? Duration.zero
+          : const Duration(milliseconds: 750),
       curve: Curves.easeOutCubic,
       builder: (context, animated, _) => SizedBox(
         width: size,
@@ -70,7 +73,9 @@ class MagicalProgressBar extends StatelessWidget {
     final barColor = color ?? context.gc.lilac;
     return TweenAnimationBuilder<double>(
       tween: Tween<double>(begin: 0, end: value.clamp(0.0, 1.0)),
-      duration: const Duration(milliseconds: 750),
+      duration: GrimoireMotion.reduced(context)
+          ? Duration.zero
+          : const Duration(milliseconds: 750),
       curve: Curves.easeOutCubic,
       builder: (context, animated, _) => ClipRRect(
         borderRadius: BorderRadius.circular(height / 2),

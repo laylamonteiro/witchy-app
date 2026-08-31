@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/navigation/grimoire_route.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/widgets/magical_card.dart';
@@ -56,7 +57,7 @@ class DivinationHubPage extends StatelessWidget {
               feature: AppFeature.runesReadings,
               onTap: () {
                 Navigator.of(context).push(
-                  MaterialPageRoute(
+                  GrimoireRoute(
                     builder: (_) => const RuneReadingPage(),
                   ),
                 );
@@ -71,7 +72,7 @@ class DivinationHubPage extends StatelessWidget {
               feature: AppFeature.divinationPendulum,
               onTap: () {
                 Navigator.of(context).push(
-                  MaterialPageRoute(
+                  GrimoireRoute(
                     builder: (_) => const PendulumPage(),
                   ),
                 );
@@ -86,7 +87,7 @@ class DivinationHubPage extends StatelessWidget {
               feature: AppFeature.divinationOracle,
               onTap: () {
                 Navigator.of(context).push(
-                  MaterialPageRoute(
+                  GrimoireRoute(
                     builder: (_) => const OracleCardsPage(),
                   ),
                 );

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 // Using raster PNG assets for the mascot images instead of SVG
 import 'dart:math' as math;
 import 'dart:async';
@@ -43,6 +44,10 @@ class DraggableCatMascot extends StatefulWidget {
   /// Fim da animação de materializar (o pai consome a flag transitória).
   final VoidCallback? onAppeared;
 
+  /// Contador de reações vindas de fora: quando muda, o Salem comemora um
+  /// acontecimento raro (level up, milestone de streak) sozinho, sem toque.
+  final int reactionTick;
+
   const DraggableCatMascot({
     super.key,
     this.initialX = 50,
@@ -54,6 +59,7 @@ class DraggableCatMascot extends StatefulWidget {
     this.onDismissed,
     this.appearInSmoke = false,
     this.onAppeared,
+    this.reactionTick = 0,
   });
 
   @override
@@ -403,9 +409,53 @@ class _DraggableCatMascotState extends State<DraggableCatMascot>
     super.dispose();
   }
 
+  @override
+  void didUpdateWidget(DraggableCatMascot oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.reactionTick != oldWidget.reactionTick) {
+      _reacaoDeConquista();
+    }
+  }
+
+  /// A mesma alegria do toque — expressão feliz, faíscas e pulinho — mas
+  /// disparada por um acontecimento raro, sem passar pela contagem de
+  /// toques. Fica quieta no arraste, no sumiço ou desmontado.
+  void _reacaoDeConquista() {
+    if (!mounted || _isDragging || _isDismissing) return;
+    // Sob "reduzir movimento" a comemoração vai direto ao estado final: só a
+    // carinha feliz por um instante, sem pulo, escala nem faíscas.
+    if (MediaQuery.disableAnimationsOf(context)) {
+      setState(() => _isHappy = true);
+      Future.delayed(const Duration(milliseconds: 260), () {
+        if (mounted) setState(() => _isHappy = false);
+      });
+      return;
+    }
+    setState(() => _isHappy = true);
+    _createParticleBurst(_x + widget.size / 2, _y + widget.size / 2);
+    if (!_scaleController.isAnimating) {
+      _scaleController.forward().then((_) {
+        if (mounted) _scaleController.reverse();
+      });
+    }
+    if (!_jumpController.isAnimating) {
+      _jumpController.forward().then((_) {
+        if (mounted) {
+          _jumpController.reverse().then((_) {
+            if (mounted) setState(() => _isHappy = false);
+          });
+        }
+      });
+    }
+  }
+
   void _onTap() {
     // Evitar cliques durante arraste
     if (_isDragging) return;
+
+    // Um clique leve responde ao toque no mascote (pedido explícito da
+    // Bruxa). No arraste não — o guard acima já saiu.
+    HapticFeedback.selectionClick();
 
     // Se estava dormindo, vai para deitado relaxado primeiro
     if (_currentPose == MascotPose.sleeping) {

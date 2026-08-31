@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/legal/legal_document_page.dart';
@@ -6,6 +7,7 @@ import '../../../../core/services/data_export_service.dart';
 import '../../../../core/theme/app_theme.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import '../../../../core/theme/grimoire_colors.dart';
+import '../../../../core/widgets/loading_widget.dart';
 import '../../../../core/database/database_helper.dart';
 import '../../../../core/config/supabase_config.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
@@ -69,8 +71,7 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
         ),
       ),
       body: _isLoading
-          ? Center(
-              child: CircularProgressIndicator(color: context.gc.lilac))
+          ? const LoadingWidget()
           : SingleChildScrollView(
               padding: const EdgeInsets.all(16),
               child: Column(
@@ -533,6 +534,7 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
       // a página morra no meio (use_build_context_synchronously).
       final navigator = Navigator.of(context);
       final messenger = ScaffoldMessenger.of(context);
+      final router = GoRouter.of(context);
       final gc = context.gc;
       final authProvider = context.read<AuthProvider>();
 
@@ -542,17 +544,7 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
         barrierDismissible: false,
         builder: (context) => AlertDialog(
           backgroundColor: context.gc.surface,
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              CircularProgressIndicator(color: context.gc.lilac),
-              const SizedBox(height: 16),
-              Text(
-                l10n.editDeleting,
-                style: TextStyle(color: context.gc.textSecondary),
-              ),
-            ],
-          ),
+          content: LoadingWidget(message: l10n.editDeleting),
         ),
       );
 
@@ -588,8 +580,11 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
           ),
         );
 
-        // Redirecionar para tela inicial
-        navigator.pushNamedAndRemoveUntil('/welcome', (route) => false);
+        // Redirecionar para tela inicial. Com o router, o logout já dispara o
+        // redirect para /welcome (refreshListenable); isto é explícito por
+        // garantia de tempo. `router` foi capturado ANTES dos awaits, para não
+        // usar BuildContext depois deles (use_build_context_synchronously).
+        router.go('/welcome');
       } catch (e) {
         // Fechar loading
         navigator.pop();

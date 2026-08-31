@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:grimorio_de_bolso/core/theme/app_theme.dart';
 import 'package:grimorio_de_bolso/core/theme/grimoire_colors.dart';
+import 'package:grimorio_de_bolso/core/widgets/loading_widget.dart';
 import 'package:grimorio_de_bolso/features/astrology/data/models/magical_profile_report.dart';
 import 'package:grimorio_de_bolso/features/astrology/presentation/pages/magical_profile_section_page.dart';
 import 'package:grimorio_de_bolso/features/astrology/presentation/providers/astrology_provider.dart';
@@ -101,7 +102,7 @@ void main() {
 
     // O PRIMEIRO frame, antes de a geração sequer partir.
     expect(find.text(l10n.profileSectionFailed), findsNothing);
-    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    expect(find.byType(LoadingWidget), findsOneWidget);
 
     await tester.pump();
     expect(find.text(l10n.profileSectionFailed), findsNothing);

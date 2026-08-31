@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
+import '../../../../core/navigation/grimoire_route.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/theme/grimoire_motion.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../data/data_sources/tarot_cards_data.dart';
 import '../../data/models/tarot_card_model.dart';
@@ -50,11 +52,12 @@ class TarotLibraryPage extends StatelessWidget {
               itemCount: entry.value.length,
               itemBuilder: (context, i) {
                 final card = entry.value[i];
+                final indice = tarotCards.indexOf(card);
                 return InkWell(
                   onTap: () => Navigator.of(context).push(
-                    MaterialPageRoute(
+                    GrimoireRoute(
                       builder: (_) => TarotCardDetailPage(
-                        initialIndex: tarotCards.indexOf(card),
+                        initialIndex: indice,
                       ),
                     ),
                   ),
@@ -63,9 +66,12 @@ class TarotLibraryPage extends StatelessWidget {
                     children: [
                       Expanded(
                         child: LayoutBuilder(
-                          builder: (context, constraints) => TarotCardView(
-                            card: card,
-                            width: constraints.maxWidth,
+                          builder: (context, constraints) => _CartaHeroi(
+                            indice: indice,
+                            child: TarotCardView(
+                              card: card,
+                              width: constraints.maxWidth,
+                            ),
                           ),
                         ),
                       ),
@@ -128,12 +134,12 @@ class _TarotCardDetailPageState extends State<TarotCardDetailPage> {
           _index = i;
           _reversed = false;
         }),
-        itemBuilder: (context, i) => _buildCard(context, tarotCards[i]),
+        itemBuilder: (context, i) => _buildCard(context, tarotCards[i], i),
       ),
     );
   }
 
-  Widget _buildCard(BuildContext context, TarotCard card) {
+  Widget _buildCard(BuildContext context, TarotCard card, int indice) {
     final l10n = AppLocalizations.of(context);
 
     return SingleChildScrollView(
@@ -146,7 +152,10 @@ class _TarotCardDetailPageState extends State<TarotCardDetailPage> {
               turns: _reversed ? 0.5 : 0,
               duration: const Duration(milliseconds: 450),
               curve: Curves.easeInOutBack,
-              child: TarotCardView(card: card, width: 210),
+              child: _CartaHeroi(
+                indice: indice,
+                child: TarotCardView(card: card, width: 210),
+              ),
             ),
           ),
           const SizedBox(height: 10),
@@ -241,6 +250,32 @@ class _TarotCardDetailPageState extends State<TarotCardDetailPage> {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Uma carta que voa entre a grade da biblioteca e o detalhe: o Hero usa o
+/// índice da carta no baralho como tag, único e igual nas duas telas, então
+/// o voo casa a célula tocada com a página aberta (e, na volta após deslizar,
+/// com a célula da carta em que se parou — todas as 78 vivem na grade).
+///
+/// Sob "reduzir movimento" o voo é desligado (o Flutter não o faz sozinho por
+/// MediaQuery): a tela abre direto, como o resto do app.
+class _CartaHeroi extends StatelessWidget {
+  final int indice;
+  final Widget child;
+
+  const _CartaHeroi({required this.indice, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return HeroMode(
+      enabled: !GrimoireMotion.reduced(context),
+      child: Hero(
+        tag: 'tarot_carta_$indice',
+        // O voo carrega só a imagem; sombra/borda do TarotCardView vão junto.
+        child: child,
       ),
     );
   }

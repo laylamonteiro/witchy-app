@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -12,6 +13,7 @@ import '../../../../core/database/database_helper.dart';
 import '../../../../core/config/supabase_config.dart';
 import '../providers/auth_provider.dart';
 import '../../data/repositories/supabase_auth_repository.dart';
+import '../../../../core/widgets/loading_widget.dart';
 
 /// Página de edição de perfil com todas as configurações de privacidade
 class EditProfilePage extends StatefulWidget {
@@ -94,8 +96,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
         ),
       ),
       body: _isLoading
-          ? Center(
-              child: CircularProgressIndicator(color: context.gc.lilac))
+          ? const LoadingWidget()
           : SingleChildScrollView(
               padding: const EdgeInsets.all(16),
               child: Column(
@@ -904,16 +905,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
         barrierDismissible: false,
         builder: (context) => AlertDialog(
           backgroundColor: context.gc.surface,
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              CircularProgressIndicator(color: context.gc.lilac),
-              const SizedBox(height: 16),
-              Text(
-                AppLocalizations.of(context).editDeleting,
-                style: GoogleFonts.nunito(color: context.gc.textSecondary),
-              ),
-            ],
+          content: LoadingWidget(
+            message: AppLocalizations.of(context).editDeleting,
           ),
         ),
       );
@@ -954,8 +947,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
         );
 
         // Redirecionar para tela inicial
-        Navigator.of(context)
-            .pushNamedAndRemoveUntil('/welcome', (route) => false);
+        context.go('/welcome');
       } catch (e) {
         if (!mounted) return;
 
