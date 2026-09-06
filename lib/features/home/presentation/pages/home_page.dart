@@ -14,6 +14,7 @@ import '../../../../core/theme/grimoire_motion.dart';
 import '../../../../core/navigation/observador_de_rotas_raiz.dart';
 import '../../../../core/utils/saida_por_dois_toques.dart';
 import '../caminhada_do_voltar.dart';
+import '../retoque_na_aba.dart';
 import '../../../../core/utils/um_de_cada_vez.dart';
 import '../../../../core/widgets/mascot/cat_chat_bubble.dart';
 import '../../../../core/widgets/mascot/draggable_cat_mascot.dart';
@@ -238,10 +239,16 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     _esquecerASaida();
     if (index == _selectedIndex) {
       // Re-toque na aba já selecionada: volta para a raiz da seção. O
-      // `initialLocation: true` desempilha as páginas de detalhe do branch, e
-      // o resetNotifier reseta a TabBar interna da seção.
-      widget.navigationShell.goBranch(index, initialLocation: true);
-      widget.resetNotifiers[index].requestReset();
+      // `initialLocation: true` só refaz as PÁGINAS do branch; as telas
+      // empurradas com Navigator.push (Pêndulo, Runas...) ficavam por cima —
+      // por isso o Navigator da aba é desempilhado primeiro (ver
+      // retocarAbaAtiva), e o resetNotifier reseta a TabBar interna.
+      retocarAbaAtiva(
+        navegadorDaAba: widget.chavesDeAba[index].currentState,
+        irParaARaizDoBranch: () =>
+            widget.navigationShell.goBranch(index, initialLocation: true),
+        resetarSecao: widget.resetNotifiers[index].requestReset,
+      );
       return;
     }
 

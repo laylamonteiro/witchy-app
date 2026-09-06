@@ -16,6 +16,22 @@ enum UserEntryCategory {
 
   String get key => name;
 
+  /// Só a erva tem identificação por foto. Cristal: a identificação visual
+  /// errava demais — a pessoa dá o nome e a foto vai junto do verbete. Cor:
+  /// não tem mais verbete pessoal (ver [aceitaEntradaPessoal]).
+  bool get identificavelPorFoto => this == UserEntryCategory.herb;
+
+  /// Cores saíram da criação pessoal: o catálogo fixo da aba Cores basta. O
+  /// valor continua no enum só para LER linhas antigas do banco.
+  bool get aceitaEntradaPessoal => this != UserEntryCategory.color;
+
+  /// Pasta da foto no Storage: `{uid}/{pasta}/{id}.jpg`.
+  String get pastaNoStorage => switch (this) {
+        UserEntryCategory.crystal => 'crystals',
+        UserEntryCategory.herb => 'herbs',
+        UserEntryCategory.color => 'colors',
+      };
+
   static UserEntryCategory? fromKey(String? key) {
     for (final category in values) {
       if (category.key == key) return category;

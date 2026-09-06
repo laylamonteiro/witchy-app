@@ -57,6 +57,10 @@ class TarotReadingRepository {
           for (final d in drawn)
             {
               'name': d.card.name,
+              // Naipe + número são as chaves estáveis entre idiomas: é por
+              // elas que a mesa de hoje é reconstruída ao ser revisitada.
+              'suit': d.card.suit.name,
+              'number': d.card.number,
               'position': d.positionLabel,
               'reversed': d.isReversed,
             },
@@ -68,6 +72,45 @@ class TarotReadingRepository {
       'synced': 0,
     });
     return id;
+  }
+
+  /// As cartas da tiragem [spreadName] já feita HOJE com esta [question]
+  /// (sem distinguir maiúsculas), a mais recente — ou null. É o que permite
+  /// REPETIR a mesa sem sortear de novo nem cobrar: a cota é por pergunta.
+  Future<List<Map<String, dynamic>>?> drawOfToday({
+    required String userId,
+    required String spreadName,
+    required String question,
+    DateTime? now,
+  }) async {
+    final db = await _dbHelper.database;
+    final agora = now ?? DateTime.now();
+    final inicioDoDia =
+        DateTime(agora.year, agora.month, agora.day).millisecondsSinceEpoch;
+    final rows = await db.query(
+      'tarot_readings',
+      columns: ['question', 'reading_data'],
+      where: 'user_id = ? AND spread_type = ? AND date >= ?',
+      whereArgs: [userId, spreadName, inicioDoDia],
+      orderBy: 'date DESC',
+    );
+    // A comparação fica no Dart: o LOWER() do SQLite só conhece ASCII.
+    final alvo = question.trim().toLowerCase();
+    for (final row in rows) {
+      final guardada = (row['question'] as String?)?.trim().toLowerCase();
+      if (guardada != alvo) continue;
+      try {
+        final data = jsonDecode(row['reading_data'] as String)
+            as Map<String, dynamic>;
+        final cards = data['cards'];
+        if (cards is List && cards.isNotEmpty) {
+          return cards.whereType<Map>().map(Map<String, dynamic>.from).toList();
+        }
+      } catch (_) {
+        // Registro estranho: segue para o próximo.
+      }
+    }
+    return null;
   }
 
   /// Anexa a interpretação do Conselheiro à tiragem já registrada — é ela

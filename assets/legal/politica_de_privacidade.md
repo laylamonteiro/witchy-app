@@ -11,7 +11,7 @@ Sua intimidade espiritual é sagrada — e seus dados também. Esta política ex
 - Não vendemos seus dados. Nunca.
 - Textos enviados ao Conselheiro Místico são processados para gerar a resposta e não são usados para outros fins pelo aplicativo.
 - A foto da leitura de mãos é processada na hora e descartada — não é armazenada.
-- As fotos que você anexa (perfil e verbetes da enciclopédia) ficam no seu aparelho no aplicativo de celular; no navegador, são guardadas em um espaço privado da sua conta, acessível só por você.
+- As fotos dos verbetes que você cria na enciclopédia vão para um espaço privado da sua conta (acessível só por você) quando você está logada com a sincronização ligada — assim aparecem em todos os seus aparelhos; sem conta ou com a sincronização desligada, ficam só no aparelho. A foto de perfil fica no aparelho no celular e nesse espaço privado no navegador.
 
 ## 2. O que coletamos e por quê
 
@@ -21,7 +21,7 @@ Nome de exibição, e-mail e credenciais — para autenticação e recuperação
 ### Conteúdo que você cria
 Feitiços, diários (sonhos, desejos, gratidão, afirmações, reflexões), sigilos, leituras salvas, perfil mágico e preferências (tema, idioma, gênero de tratamento). Armazenados localmente no aparelho; sincronizados com a nuvem apenas se você for Premium E ativar a sincronização.
 
-Também entram aqui as **fotos que você anexa**: a imagem de perfil e as fotos dos verbetes que você cria na enciclopédia. No aplicativo de celular elas ficam no próprio aparelho. No navegador não existe essa pasta local, então são enviadas para um armazenamento privado da sua conta (Supabase Storage) — veja a seção 4.
+Também entram aqui as **fotos que você anexa**. As fotos dos verbetes que você cria na enciclopédia são enviadas para um armazenamento privado da sua conta (Supabase Storage) quando você está logada com a sincronização ligada — é o que faz a página aparecer com a foto nos seus outros aparelhos; uma cópia comprimida fica também no aparelho, para abrir sem rede. Sem conta ou com a sincronização desligada, ficam só no aparelho. A imagem de perfil fica no aparelho no celular e, no navegador (onde não existe essa pasta local), nesse mesmo armazenamento privado — veja a seção 4.
 
 ### Dados de nascimento (opcionais)
 Data, hora e local — usados exclusivamente para cálculos de astrologia e numerologia.
@@ -44,7 +44,7 @@ Para gerar respostas (feitiços, interpretações de sonhos e tiragens, explica�
 
 - **No aparelho**: banco local (SQLite) e preferências. Desinstalar o app sem backup apaga esses dados.
 - **Na nuvem (opcional, Premium)**: Supabase, com Row Level Security — cada conta só enxerga os próprios registros.
-- **Fotos anexadas, quando usadas pelo navegador**: armazenamento privado no Supabase Storage. Os arquivos ficam em uma pasta identificada pela sua conta, e as regras do servidor impedem que uma pessoa acesse a pasta de outra. O armazenamento não é público: para exibir a imagem, o aplicativo gera um endereço temporário, válido por cerca de uma hora. Ao remover a foto no aplicativo, o arquivo é apagado do armazenamento.
+- **Fotos anexadas**: armazenamento privado no Supabase Storage — as fotos dos verbetes da enciclopédia em qualquer plataforma (com conta e sincronização ligada; sem isso, só no aparelho) e a foto de perfil quando usada pelo navegador. Os arquivos ficam em uma pasta identificada pela sua conta, e as regras do servidor impedem que uma pessoa acesse a pasta de outra. O armazenamento não é público: para exibir a imagem, o aplicativo gera um endereço temporário, válido por cerca de uma hora (no celular, a cópia local dispensa isso). Ao remover a foto ou o verbete no aplicativo, o arquivo é apagado do armazenamento.
 
 ## 5. Compartilhamento
 

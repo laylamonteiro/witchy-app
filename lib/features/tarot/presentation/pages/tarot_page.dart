@@ -13,6 +13,7 @@ import '../../../../core/widgets/magical_card.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../your_day/presentation/providers/daily_checkin_provider.dart';
 import '../../../auth/presentation/widgets/premium_blur_widget.dart';
+import '../../domain/regra_da_carta_do_dia.dart';
 import '../../data/data_sources/tarot_cards_data.dart';
 import '../../data/models/tarot_card_model.dart';
 import '../../data/repositories/tarot_reading_repository.dart';
@@ -117,14 +118,23 @@ class _SpreadTab extends StatefulWidget {
   State<_SpreadTab> createState() => _SpreadTabState();
 }
 
-class _SpreadTabState extends State<_SpreadTab> {
+class _SpreadTabState extends State<_SpreadTab>
+    with WidgetsBindingObserver {
   TarotSpread? _activeSpread;
   List<TarotDrawnCard> _drawn = [];
   bool _revealed = false;
 
-  /// Pergunta opcional de quem consulta — capturada ao iniciar a tiragem.
+  /// Pergunta de quem consulta — obrigatória, capturada ao iniciar a
+  /// tiragem. O foco volta para cá quando alguém tenta tirar sem perguntar.
   final _questionController = TextEditingController();
+  final _questionFocus = FocusNode();
   String _question = '';
+
+  /// O que foi posto no campo por esta tela (a pergunta de hoje) e em que
+  /// dia. Quando o dia vira com a tela aberta, o campo só é limpo se ainda
+  /// mostrar exatamente isto — o que a pessoa digitou por conta própria fica.
+  String? _perguntaPreenchida;
+  String? _diaPreenchido;
 
   String? _aiReading;
   bool _isReadingAI = false;
@@ -134,13 +144,24 @@ class _SpreadTabState extends State<_SpreadTab> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _userId = context.read<AuthProvider>().currentUser.id;
+    _carregarPerguntaDoDia();
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _questionController.dispose();
+    _questionFocus.dispose();
     super.dispose();
+  }
+
+  /// Voltou do segundo plano: se o dia virou, a pergunta de ontem sai do
+  /// campo (e a de hoje, se já houver, entra).
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) _carregarPerguntaDoDia();
   }
 
   /// Assinatura única das cartas tiradas (tipo de tiragem + cartas + invertida).
@@ -177,23 +198,70 @@ class _SpreadTabState extends State<_SpreadTab> {
     return '${now.year}-${now.month}-${now.day}';
   }
 
-  /// Esta pergunta já rendeu a carta do dia HOJE?
+  /// A pergunta que rendeu a carta do dia HOJE (null se ainda não houve).
   ///
   /// A carta é determinística: a mesma pergunta devolve a mesma carta. Então
   /// repetir a pergunta não é uma tiragem nova — não gasta a cota do dia nem
   /// esbarra no limite (senão a Bruxa ficaria sem poder rever a própria carta).
-  Future<bool> _isTodaysDailyQuestion(String question) async {
+  Future<String?> _perguntaDaCartaDeHoje() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getString('tarot_daily_q_$_userId') ==
-        '${_todayKey()}|${question.toLowerCase()}';
+    return perguntaSeForDeHoje(
+      guardada: prefs.getString('tarot_daily_q_$_userId'),
+      hoje: _todayKey(),
+    );
   }
 
   Future<void> _rememberDailyQuestion(String question) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(
       'tarot_daily_q_$_userId',
-      '${_todayKey()}|${question.toLowerCase()}',
+      carimbarPerguntaDoDia(
+        hoje: _todayKey(),
+        pergunta: question.toLowerCase(),
+      ),
     );
+  }
+
+  /// A ÚLTIMA pergunta que rendeu uma tiragem (qualquer uma), por conta e
+  /// por dia. É ela que volta ao campo ao abrir a tela — a pessoa faz as
+  /// outras tiragens sem redigitar. Na Free é, na prática, a da carta do dia
+  /// (as demais tiragens gastam a cota); no Premium, a última mesmo. Vira o
+  /// dia, some.
+  String get _chaveDaUltimaPergunta => 'tarot_last_q_$_userId';
+
+  Future<void> _lembrarUltimaPergunta(String question) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(
+      _chaveDaUltimaPergunta,
+      carimbarPerguntaDoDia(hoje: _todayKey(), pergunta: question),
+    );
+    _perguntaPreenchida = question;
+    _diaPreenchido = _todayKey();
+  }
+
+  /// Ao abrir (e ao voltar do segundo plano): a pergunta de hoje volta ao
+  /// campo; a de ontem, não. Se o dia virou com a tela aberta e o campo
+  /// ainda mostra o que foi preenchido, limpa — o que a pessoa digitou fica.
+  Future<void> _carregarPerguntaDoDia() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (!mounted) return;
+    final hoje = _todayKey();
+    final deHoje = perguntaSeForDeHoje(
+      guardada: prefs.getString(_chaveDaUltimaPergunta),
+      hoje: hoje,
+    );
+    final campo = _questionController.text;
+    if (deHoje != null) {
+      if (campo.isEmpty || campo == _perguntaPreenchida) {
+        _questionController.text = deHoje;
+      }
+    } else if (_diaPreenchido != null &&
+        _diaPreenchido != hoje &&
+        campo == _perguntaPreenchida) {
+      _questionController.clear();
+    }
+    _perguntaPreenchida = deHoje;
+    _diaPreenchido = hoje;
   }
 
   /// Carta do dia: determinística pela data E pelo usuário (mesma carta o dia
@@ -217,21 +285,78 @@ class _SpreadTabState extends State<_SpreadTab> {
     );
   }
 
+  /// Reconstrói a mesa registrada hoje: cada carta pelo naipe + número
+  /// (chaves estáveis entre idiomas; registros antigos só têm o nome). Null
+  /// se algo não bater — aí sorteia de novo, em vez de mostrar mesa capenga.
+  List<TarotDrawnCard>? _restaurarMesa(
+    List<Map<String, dynamic>> cartas,
+    List<String> positions,
+  ) {
+    if (cartas.length != positions.length) return null;
+    final drawn = <TarotDrawnCard>[];
+    for (var i = 0; i < cartas.length; i++) {
+      final registro = cartas[i];
+      final suit = registro['suit'];
+      final number = registro['number'];
+      TarotCard? card;
+      for (final candidata in tarotCards) {
+        final porChave = suit is String &&
+            number is int &&
+            candidata.suit.name == suit &&
+            candidata.number == number;
+        final porNome = suit == null && candidata.name == registro['name'];
+        if (porChave || porNome) {
+          card = candidata;
+          break;
+        }
+      }
+      if (card == null) return null;
+      drawn.add(TarotDrawnCard(
+        card: card,
+        isReversed: registro['reversed'] == true,
+        positionLabel: positions[i],
+      ));
+    }
+    return drawn;
+  }
+
   Future<void> _startSpread(TarotSpread spread) async {
     final question = _questionController.text.trim();
-    // A carta do dia SEM pergunta é sempre livre: é a mesma o dia inteiro.
-    // Com pergunta ela sorteia outra carta — aí é tiragem nova e, no plano
-    // Free, gasta a do dia (mesmo contador do Oráculo). Repetir a mesma
-    // pergunta devolve a mesma carta e não cobra de novo. As demais tiragens
-    // seguem o limite como sempre.
-    final isNewDailyQuestion = spread == TarotSpread.daily &&
-        question.isNotEmpty &&
-        !await _isTodaysDailyQuestion(question);
-    if (!mounted) return;
+    // Sem pergunta não há tiragem: as cartas respondem a alguma coisa. O
+    // toque no card é o que ensina a regra — o aviso vem com o foco no campo.
+    if (question.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppLocalizations.of(context).tarotQuestionRequired),
+          backgroundColor: context.gc.alert,
+        ),
+      );
+      _questionFocus.requestFocus();
+      return;
+    }
 
-    if (spread != TarotSpread.daily || isNewDailyQuestion) {
-      final authProvider = context.read<AuthProvider>();
-      if (!authProvider.canUseOracle) {
+    // A cota é por PERGUNTA, não por tiragem: com a pergunta do dia a pessoa
+    // faz cada tiragem (carta do dia, três cartas, cruz) uma vez; tocar de
+    // novo numa mesa já feita hoje só a mostra de novo; uma pergunta nova
+    // gasta a cota (mesmo contador do Oráculo) — no Free, a única do dia.
+    // Premium não tem cota. Ver decidirTiragem.
+    final authProvider = context.read<AuthProvider>();
+    final perguntaDoDia = await _perguntaDaCartaDeHoje();
+    final registrada = await TarotReadingRepository().drawOfToday(
+      userId: _userId,
+      spreadName: spread.name,
+      question: question,
+    );
+    if (!mounted) return;
+    final decisao = decidirTiragem(
+      premium: authProvider.isPremiumEffective,
+      perguntaDoDia: perguntaDoDia,
+      pergunta: question,
+      tiragemJaFeitaHoje: registrada != null,
+      temCota: authProvider.canUseOracle,
+    );
+    switch (decisao) {
+      case DecisaoDaTiragem.bloquear:
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
@@ -247,16 +372,35 @@ class _SpreadTabState extends State<_SpreadTab> {
           builder: (context) => const PremiumUpgradeSheet(),
         );
         return;
-      }
-      await authProvider.incrementOracleReadings();
-      if (!mounted) return;
+      case DecisaoDaTiragem.cobrar:
+        await authProvider.incrementOracleReadings();
+        if (!mounted) return;
+        break;
+      case DecisaoDaTiragem.liberar:
+      case DecisaoDaTiragem.repetir:
+        break;
     }
-    if (isNewDailyQuestion) await _rememberDailyQuestion(question);
+    // A pergunta que segura a cota de hoje: a primeira do dia e cada nova
+    // cobrada (no Premium é só memória).
+    if (decisao == DecisaoDaTiragem.cobrar || perguntaDoDia == null) {
+      await _rememberDailyQuestion(question);
+    }
+    // E, para qualquer tiragem, a última pergunta — a que volta ao campo.
+    await _lembrarUltimaPergunta(question);
     if (!mounted) return;
 
-    final positions = spread.positions(AppLocalizations.of(context));
+    final l10n = AppLocalizations.of(context);
+    final positions = spread.positions(l10n);
+    // Mesa já feita hoje com esta pergunta: as MESMAS cartas, sem sortear de
+    // novo (a cota é por pergunta) e sem anúncio — é uma revisita.
+    final restaurada =
+        decisao == DecisaoDaTiragem.repetir && registrada != null
+            ? _restaurarMesa(registrada, positions)
+            : null;
     List<TarotDrawnCard> drawn;
-    if (spread == TarotSpread.daily) {
+    if (restaurada != null) {
+      drawn = restaurada;
+    } else if (spread == TarotSpread.daily) {
       drawn = [_dailyCard(question)];
     } else {
       final random = Random();
@@ -272,12 +416,17 @@ class _SpreadTabState extends State<_SpreadTab> {
     }
 
     if (!mounted) return;
-    // Anúncio ANTES de revelar as cartas (free, não na carta do dia): a
-    // usuária quer o resultado, então o anúncio é visto — e as cartas só
-    // aparecem quando ele fecha.
-    if (spread != TarotSpread.daily) {
+    // Anúncio ANTES de revelar as cartas (free, não na carta do dia nem na
+    // revisita): a usuária quer o resultado, então o anúncio é visto — e as
+    // cartas só aparecem quando ele fecha.
+    if (spread != TarotSpread.daily && restaurada == null) {
       await AdService.instance.showBeforeResult();
       if (!mounted) return;
+    }
+    if (restaurada != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.tarotRepeatingToday)),
+      );
     }
 
     // A tiragem aconteceu: o rito de hoje pode se dar por cumprido.
@@ -401,18 +550,19 @@ class _SpreadTabState extends State<_SpreadTab> {
                     ),
               ),
             ),
-            // Pergunta opcional: o Conselheiro Místico ancora a leitura nela.
-            // Caixa dourada de destaque — é o convite principal da tiragem.
+            // Pergunta obrigatória: as cartas e o Conselheiro Místico ancoram
+            // a leitura nela. Caixa dourada — é o convite principal da tiragem.
             MagicalCard.accent(
               accent: context.gc.gold,
               child: TextField(
                 controller: _questionController,
+                focusNode: _questionFocus,
                 maxLines: 2,
                 minLines: 1,
                 textCapitalization: TextCapitalization.sentences,
                 style: TextStyle(color: context.gc.textPrimary),
                 decoration: InputDecoration(
-                  labelText: AppLocalizations.of(context).tarotQuestionOptional,
+                  labelText: AppLocalizations.of(context).tarotQuestionLabel,
                   labelStyle: TextStyle(
                     color: context.gc.gold,
                     fontWeight: FontWeight.w600,
