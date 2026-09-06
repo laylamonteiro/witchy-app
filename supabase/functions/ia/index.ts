@@ -1,15 +1,16 @@
 // ============================================================================
 // GRIMÓRIO DE BOLSO — O INTERMEDIÁRIO DAS CHAMADAS DE IA
 // ============================================================================
-// ESTE ARQUIVO NÃO ESTÁ NO AR. Ele é o material preparado para o achado
-// "as chaves da Groq e da Gemini vão compiladas dentro do site" — publicar
-// uma Edge Function exige o painel ou a CLI do Supabase, que não é minha
-// para usar. O passo a passo está em docs/CHAVES_DE_IA.md.
+// PUBLICADA em 06/09/2026 no projeto zadqmtamrkbvdpmqtexb (via MCP do
+// Supabase), com `verify_jwt=false`. Não é afrouxamento: a sessão é validada
+// AQUI, contra /auth/v1/user (passo 1 abaixo). Com verify_jwt=true o gateway
+// recusaria o preflight de CORS (OPTIONS), que por definição não carrega
+// Authorization — e a web quebraria com um erro opaco de CORS.
 //
-// NUNCA FOI EXECUTADO. Não há Deno nem Supabase CLI na máquina em que ele
-// foi escrito, então trate-o como um rascunho revisável, não como código
-// testado: rode `supabase functions serve ia` e faça uma chamada antes de
-// confiar nele.
+// Só responde de verdade depois de os secrets GROQ_API_KEY e GEMINI_API_KEY
+// existirem no painel (Edge Functions → Secrets). Sem eles devolve 500
+// {"erro":"chave ausente"} — de propósito, fail-closed. A conferência por
+// `curl` está em docs/CHAVES_DE_IA.md.
 //
 // POR QUE EXISTE
 // --------------
@@ -74,10 +75,20 @@ function origensPermitidas(): string[] {
   ]
 }
 
+// Prévias de branch do Cloudflare Pages: `https://<alias>.grimorio-de-bolso.pages.dev`.
+// O alias muda a cada publicação, então não dá para listar; o domínio
+// `grimorio-de-bolso.pages.dev` é do projeto (ninguém mais cria subdomínio
+// nele) e já é tratado como confiável nas Redirect URLs do Supabase
+// (docs/AMBIENTES_WEB.md). Um rótulo só, só https — nada de curinga geral.
+const PREVIA_PAGES = /^https:\/\/[a-z0-9-]+\.grimorio-de-bolso\.pages\.dev$/
+
+function origemAutorizada(origem: string): boolean {
+  return origensPermitidas().includes(origem) || PREVIA_PAGES.test(origem)
+}
+
 function cabecalhosDeCors(origem: string | null): Record<string, string> {
-  const permitidas = origensPermitidas()
   // Sem Origin é chamada de app nativo (não há CORS a resolver).
-  if (!origem || !permitidas.includes(origem)) return {}
+  if (!origem || !origemAutorizada(origem)) return {}
   return {
     'Access-Control-Allow-Origin': origem,
     'Access-Control-Allow-Headers': 'authorization, apikey, content-type',

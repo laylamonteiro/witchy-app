@@ -9,6 +9,7 @@ import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import '../../../../core/legal/legal_document_page.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/grimoire_colors.dart';
+import '../../../../core/utils/validacao_email.dart';
 import '../../../../core/widgets/staggered_entrance.dart';
 import '../../../../core/widgets/starfield_background.dart';
 import '../widgets/breathing_badge.dart';
@@ -226,10 +227,13 @@ class _SignupPageState extends State<SignupPage> {
         prefixIcon: Icon(Icons.email_outlined, color: context.gc.lilac),
       ),
       validator: (value) {
-        if (value == null || value.isEmpty) {
+        if (value == null || value.trim().isEmpty) {
           return AppLocalizations.of(context).authEmailRequired;
         }
-        if (!value.contains('@') || !value.contains('.')) {
+        // Antes só checava ter '@' e '.', o que deixava passar endereços
+        // malformados que davam hard bounce (o que dispara os avisos de
+        // reputação do Supabase). Agora exige um formato plausível de fato.
+        if (!emailTemFormatoValido(value)) {
           return AppLocalizations.of(context).authEmailInvalid;
         }
         return null;
@@ -623,7 +627,9 @@ class _SignupPageState extends State<SignupPage> {
     setState(() => _isLoading = true);
 
     try {
-      final email = _emailController.text.trim();
+      // Normaliza (trim + minúsculas) o que vai para o cadastro: o Supabase já
+      // guarda em minúsculas, então alinhar aqui evita divergência de caixa.
+      final email = normalizarEmail(_emailController.text);
       final password = _passwordController.text;
       final displayName = _nameController.text.trim();
       UserModel? authenticatedUser;
