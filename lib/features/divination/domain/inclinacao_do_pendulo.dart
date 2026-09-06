@@ -60,7 +60,7 @@ class InclinacaoDoPendulo {
     required double larguraDaArea,
     required double raioDaPonta,
     required double larguraDoCristal,
-    double margem = margem,
+    double margem = InclinacaoDoPendulo.margem,
     double teto = tetoEmRepouso,
   }) {
     final alcance = larguraDaArea / 2 - larguraDoCristal / 2 - margem;
