@@ -580,11 +580,12 @@ jobs:
         with:
           ref: ${{ needs.preparar.outputs.sha }}
 
-      - name: 🔐 Credenciais reais do app
+      - name: 🔐 Credenciais do app (sem chaves de IA — a web fala com a função)
+        # Etapa 4 de docs/CHAVES_DE_IA.md: com IA_PELO_SERVIDOR=true a IA na
+        # web passa pela Edge Function `ia`, então as chaves da Groq/Gemini
+        # NÃO entram mais neste bundle. Os stubs vazios mantêm o código
+        # compilando; o gate depois do build falha se alguma reaparecer.
         uses: ./.github/actions/credenciais-app
-        with:
-          groq-api-key: ${{ secrets.GROQ_API_KEY }}
-          gemini-api-key: ${{ secrets.GEMINI_API_KEY }}
 
       - name: 🛠️ Setup Flutter (pinado)
         uses: ./.github/actions/setup-flutter
@@ -661,10 +662,27 @@ jobs:
             --dart-define=SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY" \
             --dart-define=TURNSTILE_SITE_KEY="$TURNSTILE_SITE_KEY" \
             --dart-define=REVENUECAT_WEB_KEY="$REVENUECAT_WEB_KEY" \
+            --dart-define=IA_PELO_SERVIDOR=true \
             --dart-define=GOOGLE_WEB_CLIENT_ID="$GOOGLE_WEB_CLIENT_ID"
 
       - name: 🧩 Montar publicação (app na raiz, páginas estáticas ao lado)
         run: bash scripts/assemble_site.sh public
+
+      - name: 🔒 Nenhuma chave de IA no bundle web
+        # Etapa 4 de docs/CHAVES_DE_IA.md. Com IA_PELO_SERVIDOR=true a chave
+        # mora na Edge Function `ia`; se uma reaparecer no JavaScript
+        # publicado, é regressão de segurança e o build para aqui. Padrões:
+        # Groq (gsk_…) e Google AI (AIza…). Não há Firebase no projeto, logo
+        # AIza não tem uso legítimo no bundle. Só lista ARQUIVOS, nunca a
+        # chave, para o log do CI não virar mais um lugar onde ela aparece.
+        run: |
+          padrao='gsk_[A-Za-z0-9]{20,}|AIza[A-Za-z0-9_-]{30,}'
+          if grep -rqE "$padrao" public/; then
+            echo "::error::Chave de IA encontrada no bundle web (gsk_/AIza). A IA na web deve passar pela Edge Function ia — ver docs/CHAVES_DE_IA.md."
+            grep -rlE "$padrao" public/ | head
+            exit 1
+          fi
+          echo "Nenhuma chave de IA no bundle."
 
       - name: 🔍 A Leitura do Ciclo está DENTRO do bundle?
         # Verificação de fim de linha: não "o código está no arquivo", mas

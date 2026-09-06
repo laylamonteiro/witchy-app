@@ -66,9 +66,20 @@ fora da lista, e com origem fora da lista. Um intermediário permissivo troca
 "roubam a chave" por "usam a chave pelo meu servidor" — o mesmo prejuízo com
 mais passos.
 
-> ⚠️ **Nunca foi executada.** Foi escrita numa máquina sem Deno e sem a CLI
-> do Supabase. Rode `supabase functions serve ia` e faça uma chamada antes de
-> confiar nela.
+> ✅ **Publicada em 06/09/2026** no projeto `zadqmtamrkbvdpmqtexb` (v1, via
+> MCP do Supabase), com **`verify_jwt=false`**. Não é afrouxamento: a sessão é
+> validada na própria função, contra `/auth/v1/user`. Com `verify_jwt=true` o
+> gateway recusaria o preflight de CORS (`OPTIONS`), que não carrega
+> `Authorization`, e a web quebraria com um erro opaco de CORS.
+>
+> A função também aceita as **prévias de branch**
+> (`https://<alias>.grimorio-de-bolso.pages.dev`), não só produção e
+> `staging.` — sem isso a validação numa prévia dava 403 de origem.
+>
+> ⏳ **Falta, e é só painel:** cadastrar os secrets `GROQ_API_KEY` e
+> `GEMINI_API_KEY` em **Edge Functions → Secrets**. Até lá a função responde
+> `500 {"erro":"chave ausente"}` — fail-closed, de propósito. Depois disso,
+> a conferência por `curl` abaixo.
 
 ```bash
 supabase functions deploy ia --project-ref <ref>
@@ -116,11 +127,27 @@ caminho direto de sempre, exatamente como antes deste trabalho.
 
 A ordem, então, é:
 
-1. `supabase functions deploy ia` (Etapa 2) e a conferência por `curl`.
-2. Acrescentar `--dart-define=IA_PELO_SERVIDOR=true` ao build web em
-   `release.yml` e em `branch-validate.yml`.
-3. Confirmar no staging que a IA responde logada e recusa deslogada.
-4. Só então a Etapa 4.
+1. ✅ `supabase functions deploy ia` (Etapa 2). ⏳ A conferência por `curl`
+   depende dos secrets (painel).
+2. ✅ `--dart-define=IA_PELO_SERVIDOR=true` no build web de `release.yml` e
+   de `branch-validate.yml` (06/09/2026).
+3. ⏳ Confirmar no staging/prévia que a IA responde logada e recusa
+   deslogada — **depois** de cadastrar os secrets.
+4. ✅ Etapa 4 no mesmo commit (ver abaixo).
+
+> ⚠️ **Não corte uma tag de release antes de cadastrar os secrets.** Produção
+> só publica web em tag, então mergear este trabalho na `main` é seguro; mas
+> na primeira tag depois dele a IA na web passa a falar com a função, e sem
+> os dois secrets ela responderia `500` até eles existirem. Staging e prévias
+> já estão no caminho novo assim que o commit publicar — é ali que se valida.
+
+**Efeito colateral tratado:** `AIService._hasGemini` decidia "tem Gemini?"
+olhando só a chave **local** (`GeminiCredentials.apiKey.isNotEmpty`). Com a
+chave vazia no bundle web (Etapa 4), o app acharia que não tem Gemini e
+degradaria visão e sonhos para Groq em silêncio, mesmo com a chave no
+servidor. Agora vale `temGeminiDisponivel(peloServidor, chaveLocal)`:
+pelo servidor **ou** com chave local. `test/gemini_pelo_servidor_test.dart`
+tranca a regra.
 
 `test/ia_pelo_servidor_test.dart` tranca o estado inicial: um build que
 ligasse o caminho novo por engano, sem função no ar, não teria sintoma
@@ -140,6 +167,14 @@ if grep -rqE 'gsk_[A-Za-z0-9]{20,}|AIza[A-Za-z0-9_-]{30,}' public/; then
 fi
 ```
 
-Enquanto o interruptor da Etapa 3 estiver desligado, esse gate **falharia
-todo build** — por isso ele está aqui como texto, e não no workflow. Ligue-o
-no mesmo commit em que ligar o `IA_PELO_SERVIDOR`.
+✅ **Ligado no mesmo commit do interruptor (06/09/2026).** É o passo
+"🔒 Nenhuma chave de IA no bundle web" nos jobs web de `release.yml` e de
+`branch-validate.yml`, logo depois de montar `public/`. O job web **não
+recebe mais** `GROQ_API_KEY` nem `GEMINI_API_KEY` (a action de credenciais
+escreve stubs vazios). O gate lista só os **arquivos** que casarem, nunca a
+chave, para o log do CI não virar mais um lugar onde ela aparece.
+
+O job **Android** continua recebendo as chaves e no caminho direto: o
+interruptor foi ligado só no web, onde a chave era pública. Levar o Android
+para a função é o passo natural seguinte (o app já suporta; é só o define e
+o `IaPeloServidor` exigir conta lá também), mas é decisão de produto.
