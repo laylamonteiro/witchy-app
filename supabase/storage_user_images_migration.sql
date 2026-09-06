@@ -20,6 +20,12 @@ INSERT INTO storage.buckets (id, name, public)
 VALUES ('user-images', 'user-images', false)
 ON CONFLICT (id) DO UPDATE SET public = false;
 
+-- As políticas criadas à mão no painel (só SELECT/INSERT/DELETE, sem UPDATE)
+-- saem, para este arquivo ser a única fonte — sem políticas em dobro.
+DROP POLICY IF EXISTS "Usuarias leem as proprias imagens" ON storage.objects;
+DROP POLICY IF EXISTS "Usuarias enviam para a propria pasta" ON storage.objects;
+DROP POLICY IF EXISTS "Usuarias apagam as proprias imagens" ON storage.objects;
+
 DROP POLICY IF EXISTS "user-images: ler a própria pasta" ON storage.objects;
 CREATE POLICY "user-images: ler a própria pasta"
   ON storage.objects FOR SELECT TO authenticated
