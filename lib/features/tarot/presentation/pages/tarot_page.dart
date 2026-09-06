@@ -13,6 +13,7 @@ import '../../../../core/widgets/magical_card.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../your_day/presentation/providers/daily_checkin_provider.dart';
 import '../../../auth/presentation/widgets/premium_blur_widget.dart';
+import '../../domain/regra_da_carta_do_dia.dart';
 import '../../data/data_sources/tarot_cards_data.dart';
 import '../../data/models/tarot_card_model.dart';
 import '../../data/repositories/tarot_reading_repository.dart';
@@ -122,8 +123,10 @@ class _SpreadTabState extends State<_SpreadTab> {
   List<TarotDrawnCard> _drawn = [];
   bool _revealed = false;
 
-  /// Pergunta opcional de quem consulta — capturada ao iniciar a tiragem.
+  /// Pergunta de quem consulta — obrigatória, capturada ao iniciar a
+  /// tiragem. O foco volta para cá quando alguém tenta tirar sem perguntar.
   final _questionController = TextEditingController();
+  final _questionFocus = FocusNode();
   String _question = '';
 
   String? _aiReading;
@@ -140,6 +143,7 @@ class _SpreadTabState extends State<_SpreadTab> {
   @override
   void dispose() {
     _questionController.dispose();
+    _questionFocus.dispose();
     super.dispose();
   }
 
@@ -177,15 +181,17 @@ class _SpreadTabState extends State<_SpreadTab> {
     return '${now.year}-${now.month}-${now.day}';
   }
 
-  /// Esta pergunta já rendeu a carta do dia HOJE?
+  /// A pergunta que rendeu a carta do dia HOJE (null se ainda não houve).
   ///
   /// A carta é determinística: a mesma pergunta devolve a mesma carta. Então
   /// repetir a pergunta não é uma tiragem nova — não gasta a cota do dia nem
   /// esbarra no limite (senão a Bruxa ficaria sem poder rever a própria carta).
-  Future<bool> _isTodaysDailyQuestion(String question) async {
+  Future<String?> _perguntaDaCartaDeHoje() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getString('tarot_daily_q_$_userId') ==
-        '${_todayKey()}|${question.toLowerCase()}';
+    final guardada = prefs.getString('tarot_daily_q_$_userId');
+    final prefixo = '${_todayKey()}|';
+    if (guardada == null || !guardada.startsWith(prefixo)) return null;
+    return guardada.substring(prefixo.length);
   }
 
   Future<void> _rememberDailyQuestion(String question) async {
@@ -219,14 +225,28 @@ class _SpreadTabState extends State<_SpreadTab> {
 
   Future<void> _startSpread(TarotSpread spread) async {
     final question = _questionController.text.trim();
-    // A carta do dia SEM pergunta é sempre livre: é a mesma o dia inteiro.
-    // Com pergunta ela sorteia outra carta — aí é tiragem nova e, no plano
-    // Free, gasta a do dia (mesmo contador do Oráculo). Repetir a mesma
-    // pergunta devolve a mesma carta e não cobra de novo. As demais tiragens
-    // seguem o limite como sempre.
+    // Sem pergunta não há tiragem: as cartas respondem a alguma coisa. O
+    // toque no card é o que ensina a regra — o aviso vem com o foco no campo.
+    if (question.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppLocalizations.of(context).tarotQuestionRequired),
+          backgroundColor: context.gc.alert,
+        ),
+      );
+      _questionFocus.requestFocus();
+      return;
+    }
+
+    // Carta do dia: a PRIMEIRA pergunta do dia é a carta grátis; repetir a
+    // mesma pergunta devolve a mesma carta sem cobrar; uma pergunta diferente
+    // no mesmo dia é tiragem nova e, no plano Free, gasta a do dia (mesmo
+    // contador do Oráculo). As demais tiragens seguem o limite como sempre.
     final isNewDailyQuestion = spread == TarotSpread.daily &&
-        question.isNotEmpty &&
-        !await _isTodaysDailyQuestion(question);
+        deveCobrarCartaDoDia(
+          perguntaLembradaHoje: await _perguntaDaCartaDeHoje(),
+          pergunta: question,
+        );
     if (!mounted) return;
 
     if (spread != TarotSpread.daily || isNewDailyQuestion) {
@@ -251,7 +271,9 @@ class _SpreadTabState extends State<_SpreadTab> {
       await authProvider.incrementOracleReadings();
       if (!mounted) return;
     }
-    if (isNewDailyQuestion) await _rememberDailyQuestion(question);
+    // Lembra a pergunta da carta de hoje — a primeira (grátis) e cada nova
+    // (cobrada) — para a repetição não cobrar de novo.
+    if (spread == TarotSpread.daily) await _rememberDailyQuestion(question);
     if (!mounted) return;
 
     final positions = spread.positions(AppLocalizations.of(context));
@@ -401,18 +423,19 @@ class _SpreadTabState extends State<_SpreadTab> {
                     ),
               ),
             ),
-            // Pergunta opcional: o Conselheiro Místico ancora a leitura nela.
-            // Caixa dourada de destaque — é o convite principal da tiragem.
+            // Pergunta obrigatória: as cartas e o Conselheiro Místico ancoram
+            // a leitura nela. Caixa dourada — é o convite principal da tiragem.
             MagicalCard.accent(
               accent: context.gc.gold,
               child: TextField(
                 controller: _questionController,
+                focusNode: _questionFocus,
                 maxLines: 2,
                 minLines: 1,
                 textCapitalization: TextCapitalization.sentences,
                 style: TextStyle(color: context.gc.textPrimary),
                 decoration: InputDecoration(
-                  labelText: AppLocalizations.of(context).tarotQuestionOptional,
+                  labelText: AppLocalizations.of(context).tarotQuestionLabel,
                   labelStyle: TextStyle(
                     color: context.gc.gold,
                     fontWeight: FontWeight.w600,

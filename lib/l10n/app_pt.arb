@@ -1996,7 +1996,8 @@
   "faqA7": "Em Configurações → Privacidade você pode exportar todos os seus dados, limpar os dados locais ou excluir sua conta permanentemente",
   "faqQ8": "Como falo com o suporte?",
   "faqA8": "Pelo e-mail suporte.grimoriodebolso@gmail.com — o botão \"Email de Suporte\" em Ajuda & Suporte abre seu aplicativo de e-mail",
-  "tarotQuestionOptional": "Pergunta (opcional)",
+  "tarotQuestionLabel": "Sua pergunta",
+  "tarotQuestionRequired": "Escreva sua pergunta antes de tirar as cartas",
   "tarotQuestionHint": "Concentre-se e escreva sua pergunta para as cartas",
   "tarotQuestionPrefix": "Pergunta: {question}",
   "@tarotQuestionPrefix": {
