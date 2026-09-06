@@ -1,4 +1,10 @@
+import 'dart:async';
+import 'dart:typed_data';
+
 import 'package:flutter/foundation.dart';
+
+import '../../../../core/services/data_sync_service.dart';
+import '../../../../core/services/debug_log_service.dart';
 import '../../data/models/crystal_model.dart';
 import '../../data/models/color_model.dart';
 import '../../data/models/herb_model.dart';
@@ -11,6 +17,24 @@ import '../../data/data_sources/metals_data.dart';
 import '../../data/repositories/user_encyclopedia_repository.dart';
 
 class EncyclopediaProvider with ChangeNotifier {
+  EncyclopediaProvider({
+    UserEncyclopediaRepository? userRepository,
+    Stream<SyncStatus>? statusDoSync,
+  }) : _userRepository = userRepository ?? UserEncyclopediaRepository() {
+    // Fotos guardadas como arquivo local (antigas, ou sem rede na hora)
+    // sobem DEPOIS de um sync completo: aí as lápides remotas já foram
+    // aplicadas, e um verbete apagado em outro aparelho não ressuscita aqui
+    // com a foto migrada por cima.
+    _syncSub = (statusDoSync ?? DataSyncService().statusStream).listen(
+      (status) {
+        if (status == SyncStatus.success) _migrarFotosPendentes();
+      },
+    );
+  }
+
+  StreamSubscription<SyncStatus>? _syncSub;
+  bool _migrandoFotos = false;
+
   // Getters diretos (não campos) para que a troca de idioma em runtime
   // reflita imediatamente o conteúdo do locale atual via ContentLocale.
   List<CrystalModel> get _crystals => crystalsData;
@@ -25,8 +49,7 @@ class EncyclopediaProvider with ChangeNotifier {
 
   // ---- Entradas pessoais (foto + IA, Premium) ----
 
-  final UserEncyclopediaRepository _userRepository =
-      UserEncyclopediaRepository();
+  final UserEncyclopediaRepository _userRepository;
 
   String _userId = 'local_user';
   String? _loadedForUserId;
@@ -50,17 +73,19 @@ class EncyclopediaProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  /// Cria a entrada com a foto comprimida ([photoBytes]); onde a foto vai
+  /// parar é decisão do repositório (nuvem + espelho local, ou só local).
   Future<UserEncyclopediaEntry> addUserEntry({
     required UserEntryCategory category,
     required String name,
-    String? imagePath,
+    Uint8List? photoBytes,
     required Map<String, dynamic> data,
   }) async {
     final entry = await _userRepository.create(
       userId: _userId,
       category: category,
       name: name,
-      imagePath: imagePath,
+      photo: photoBytes,
       data: data,
     );
     _userEntries[category] = [entry, ...userEntries(category)];
@@ -77,6 +102,30 @@ class EncyclopediaProvider with ChangeNotifier {
 
   Future<int> userEntriesCreatedToday() =>
       _userRepository.countCreatedToday(_userId);
+
+  /// Sobe as fotos pendentes da conta atual e recarrega a lista se alguma
+  /// subiu (a referência nova muda o que as telas mostram).
+  Future<void> _migrarFotosPendentes() async {
+    if (_migrandoFotos || _userId == 'local_user') return;
+    _migrandoFotos = true;
+    try {
+      final enviadas = await _userRepository.uploadPendingPhotos(_userId);
+      if (enviadas > 0) {
+        _loadedForUserId = null;
+        await loadUserEntries(_userId);
+      }
+    } catch (e) {
+      unawaited(debugLog('STORAGE', 'migração de fotos falhou: $e'));
+    } finally {
+      _migrandoFotos = false;
+    }
+  }
+
+  @override
+  void dispose() {
+    _syncSub?.cancel();
+    super.dispose();
+  }
 
   List<CrystalModel> searchCrystals(String query) {
     final lowerQuery = query.toLowerCase();

@@ -2,9 +2,12 @@
 -- Rode este script no SQL Editor do Supabase (uma vez).
 --
 -- Observações:
--- - `image_path` guarda o caminho LOCAL do aparelho que criou a entrada; a
---   foto em si não é sincronizada (o app mostra o ícone da categoria quando
---   o arquivo não existe no aparelho atual)
+-- - `image_path` guarda a referência da foto no bucket privado `user-images`
+--   (`supabase://{uid}/{herbs|crystals}/{id}.jpg`, ver
+--   storage_user_images_migration.sql) — a foto sincroniza entre aparelhos.
+--   Linhas antigas do celular ainda podem trazer um caminho LOCAL
+--   (`/data/...`): o app sobe essas fotos no próximo sync bem-sucedido e
+--   troca a referência; até lá, mostra o ícone da categoria em outro aparelho
 -- - `data` é o verbete completo gerado pela IA (jsonb)
 
 CREATE TABLE IF NOT EXISTS user_encyclopedia_entries (

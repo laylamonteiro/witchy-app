@@ -8,12 +8,18 @@ class MagicalButton extends StatefulWidget {
   final bool isOutlined;
   final IconData? icon;
 
+  /// Desabilitado: não responde ao toque, sem partículas, esmaecido. Serve
+  /// para o CTA que ainda não pode acontecer (ex.: gerar sem foto), em vez
+  /// de um `onPressed` vazio que finge que aconteceu.
+  final bool enabled;
+
   const MagicalButton({
     super.key,
     required this.text,
     required this.onPressed,
     this.isOutlined = false,
     this.icon,
+    this.enabled = true,
   });
 
   /// Decoração dos CTAs primários do app: gradiente lilac→pink com um halo
@@ -160,29 +166,36 @@ class _MagicalButtonState extends State<MagicalButton>
           // Botão
           widget.isOutlined
               ? OutlinedButton.icon(
-                  onPressed: _handleTap,
+                  onPressed: widget.enabled ? _handleTap : null,
                   icon: widget.icon != null
                       ? Icon(widget.icon)
                       : const SizedBox.shrink(),
                   label: Text(widget.text),
                 )
-              : DecoratedBox(
-                  decoration: MagicalButton.ctaDecoration(context),
-                  child: ElevatedButton.icon(
-                    onPressed: _handleTap,
-                    // Fundo e sombra transparentes: o gradiente é do
-                    // DecoratedBox de fora. `onPrimary` é o único token com
-                    // legibilidade garantida sobre o acento — o teste de
-                    // contraste dos temas cobra onPrimary×lilac ≥ 4.5.
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.transparent,
-                      shadowColor: Colors.transparent,
-                      foregroundColor: context.gc.onPrimary,
+              // Desabilitado, o gradiente esmaece inteiro (o Material só
+              // trocaria o texto para onSurface, que some sobre o acento).
+              : Opacity(
+                  opacity: widget.enabled ? 1 : 0.45,
+                  child: DecoratedBox(
+                    decoration: MagicalButton.ctaDecoration(context),
+                    child: ElevatedButton.icon(
+                      onPressed: widget.enabled ? _handleTap : null,
+                      // Fundo e sombra transparentes: o gradiente é do
+                      // DecoratedBox de fora. `onPrimary` é o único token com
+                      // legibilidade garantida sobre o acento — o teste de
+                      // contraste dos temas cobra onPrimary×lilac ≥ 4.5.
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.transparent,
+                        shadowColor: Colors.transparent,
+                        foregroundColor: context.gc.onPrimary,
+                        disabledBackgroundColor: Colors.transparent,
+                        disabledForegroundColor: context.gc.onPrimary,
+                      ),
+                      icon: widget.icon != null
+                          ? Icon(widget.icon)
+                          : const SizedBox.shrink(),
+                      label: Text(widget.text),
                     ),
-                    icon: widget.icon != null
-                        ? Icon(widget.icon)
-                        : const SizedBox.shrink(),
-                    label: Text(widget.text),
                   ),
                 ),
         ],

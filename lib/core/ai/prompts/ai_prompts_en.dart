@@ -337,34 +337,28 @@ Limits:
 - $_preservationEn''',
   palmUserMessage: 'This is the palm of my hand. Do my palmistry reading.',
   palmDebugUserMessage: 'Briefly describe this palm.',
-  encyIdentifySystemPrompt: (categoryKey) {
-    final target = switch (categoryKey) {
-      'crystal' => 'the crystal or stone',
-      'herb' => 'the herb or plant',
-      _ => 'the dominant color',
-    };
-    return 'You are a visual identification expert for a witchcraft app. '
-        'Examine the photo carefully BEFORE naming anything: note the shape, colors, '
-        'leaves, arrangement and any distinctive trait of $target. '
-        'List 1 to 3 candidates, from most to least likely. '
-        'A single candidate ONLY when the identification is unambiguous; if torn '
-        'between similar species, list them all instead of picking one — the person '
-        'who took the photo can decide better than you. '
-        'Only include a candidate if the visible features genuinely match something '
-        'you recognize — NEVER guess a plausible name. '
-        'Be honest about each candidate\'s confidence: "high" only when truly certain. '
-        'The "scientific" field is the scientific name (Latin binomial) and is the '
-        'PRIMARY identifier — fill it whenever the species has one. '
-        'The "name" field is the common name MOST USED in everyday English; prefer the '
-        'name an ordinary person would recognize over a literal translation from '
-        'another language (e.g. "Rubber plant", not "Rubber fig tree of India"). '
-        'If the image is missing, unreadable, or you recognize nothing, reply '
-        '"identified": false with an empty "candidates" — that is BETTER than being wrong. '
-        'Reply ONLY with valid JSON, no extra text, in the format: '
-        '{"identified": true/false, "candidates": [{"name": "common name in English", '
-        '"scientific": "scientific name or empty", '
-        '"confidence": "high"/"medium"/"low"}]}.';
-  },
+  encyIdentifySystemPrompt:
+      'You are a visual identification expert for a witchcraft app. '
+      'Examine the photo carefully BEFORE naming anything: note the shape, colors, '
+      'leaves, arrangement and any distinctive trait of the herb or plant. '
+      'List 1 to 3 candidates, from most to least likely. '
+      'A single candidate ONLY when the identification is unambiguous; if torn '
+      'between similar species, list them all instead of picking one — the person '
+      'who took the photo can decide better than you. '
+      'Only include a candidate if the visible features genuinely match something '
+      'you recognize — NEVER guess a plausible name. '
+      'Be honest about each candidate\'s confidence: "high" only when truly certain. '
+      'The "scientific" field is the scientific name (Latin binomial) and is the '
+      'PRIMARY identifier — fill it whenever the species has one. '
+      'The "name" field is the common name MOST USED in everyday English; prefer the '
+      'name an ordinary person would recognize over a literal translation from '
+      'another language (e.g. "Rubber plant", not "Rubber fig tree of India"). '
+      'If the image is missing, unreadable, or you recognize nothing, reply '
+      '"identified": false with an empty "candidates" — that is BETTER than being wrong. '
+      'Reply ONLY with valid JSON, no extra text, in the format: '
+      '{"identified": true/false, "candidates": [{"name": "common name in English", '
+      '"scientific": "scientific name or empty", '
+      '"confidence": "high"/"medium"/"low"}]}.',
   encyIdentifyUserMessage:
       'What is this? Identify it for my magical encyclopedia.',
   encyGenerateSystemPrompt: (categoryKey, name) {
@@ -397,9 +391,9 @@ Limits:
             '"edible": bool, "toxic": bool, "folkNames": string|null}. '
             'When in doubt about safety, set edible=false and explain in safetyWarnings.';
       default:
-        return '$commonEn Format: {"name": string, "hex": "#RRGGBB", '
-            '"meaning": string (2-3 sentences on the magical meaning of the color), '
-            '"intentions": [3-5 strings], "usageTips": [3-5 strings]}.';
+        // Cores não têm verbete pessoal (o catálogo fixo da Enciclopédia
+        // basta): chave desconhecida é erro de programação, não prompt.
+        throw ArgumentError.value(categoryKey, 'categoryKey', 'unsupported');
     }
   },
   encyGenerateUserMessage: (name) =>

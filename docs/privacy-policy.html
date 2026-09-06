@@ -151,7 +151,7 @@
         <h2>4. Armazenamento e Segurança</h2>
         <ul>
             <li><strong>Local primeiro:</strong> seus dados vivem no seu dispositivo; a nuvem só é usada com a sincronização Premium ativada</li>
-            <li><strong>Fotos anexadas:</strong> a imagem de perfil e as fotos dos verbetes da enciclopédia ficam no próprio aparelho no aplicativo de celular. No navegador não existe essa pasta local, então são enviadas para um armazenamento privado da sua conta (Supabase Storage), isolado por conta e não público: para exibir, o app gera um endereço temporário de cerca de uma hora. Ao remover a foto, o arquivo é apagado.</li>
+            <li><strong>Fotos anexadas:</strong> as fotos dos verbetes da enciclopédia vão para um armazenamento privado da sua conta (Supabase Storage) quando você está logada com a sincronização ligada — isolado por conta e não público, com uma cópia comprimida no aparelho para abrir sem rede; sem conta ou com a sincronização desligada, ficam só no aparelho. A imagem de perfil fica no aparelho no celular e nesse mesmo armazenamento no navegador. Para exibir, o app gera um endereço temporário de cerca de uma hora. Ao remover a foto ou o verbete, o arquivo é apagado.</li>
             <li><strong>Criptografia:</strong> senhas protegidas via Supabase Auth (bcrypt)</li>
             <li><strong>Transmissão Segura:</strong> todos os dados trafegam via HTTPS/TLS</li>
             <li><strong>Acesso Restrito:</strong> apenas serviços autorizados acessam os dados</li>

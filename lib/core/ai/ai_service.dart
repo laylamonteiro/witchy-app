@@ -1289,8 +1289,9 @@ class AIService {
     }
   }
 
-  /// Identifica um item da enciclopédia pessoal por foto (visão, Premium).
-  /// [categoryKey]: `crystal` | `herb` | `color` (invariante).
+  /// Identifica uma ERVA por foto (visão, Premium). Só ervas: cristais e
+  /// cores perderam a identificação por imagem — a pessoa dá o nome e a
+  /// foto vai junto do verbete.
   /// Retorna `{"identified": bool, "candidates": [{name, scientific,
   /// confidence, votes}]}`, do mais provável ao menos provável.
   /// A imagem é enviada em memória e não é armazenada pelo serviço.
@@ -1301,17 +1302,13 @@ class AIService {
   /// vira certeza, e a DIVERGÊNCIA vira a lista de candidatos em vez de
   /// virar um "não consegui identificar" — as opiniões descartadas eram
   /// justamente as alternativas que ajudam quem tirou a foto a decidir.
-  Future<Map<String, dynamic>> identifyEncyclopediaItem({
+  Future<Map<String, dynamic>> identifyHerb({
     required List<int> jpegBytes,
-    required String categoryKey,
   }) async {
     Object? lastError;
     Future<Map<String, dynamic>?> vote() async {
       try {
-        return await _identifyOnce(
-          jpegBytes: jpegBytes,
-          categoryKey: categoryKey,
-        );
+        return await _identifyOnce(jpegBytes: jpegBytes);
       } catch (e) {
         // 503/429 transitórios não derrubam a identificação inteira: o voto
         // perdido é reposto pela rodada extra abaixo.
@@ -1466,12 +1463,11 @@ class AIService {
 
   Future<Map<String, dynamic>> _identifyOnce({
     required List<int> jpegBytes,
-    required String categoryKey,
   }) async {
     try {
       final content = await _visionRequest(
         systemPrompt: '${_localizedInstruction()}\n\n'
-            '${_prompts.encyIdentifySystemPrompt(categoryKey)}',
+            '${_prompts.encyIdentifySystemPrompt}',
         userText: _prompts.encyIdentifyUserMessage,
         jpegBytes: jpegBytes,
         temperature: 0.2,

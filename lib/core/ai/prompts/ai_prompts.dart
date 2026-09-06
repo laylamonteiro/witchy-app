@@ -140,10 +140,11 @@ class AiPrompts {
   /// Mensagem de usuário do diagnóstico admin da leitura de mãos.
   final String palmDebugUserMessage;
 
-  /// Identificação de item da enciclopédia por foto (visão). Recebe a chave
-  /// da categoria (`crystal`/`herb`/`color`, invariante) e retorna JSON
-  /// estrito `{"identified": bool, "name": string, "confidence": string}`.
-  final String Function(String categoryKey) encyIdentifySystemPrompt;
+  /// Identificação de ERVA por foto (visão). Só ervas: cristais e cores não
+  /// têm mais identificação por imagem — a pessoa dá o nome e a foto vai
+  /// junto do verbete. Retorna JSON estrito
+  /// `{"identified": bool, "candidates": [{name, scientific, confidence}]}`.
+  final String encyIdentifySystemPrompt;
 
   /// Mensagem de usuário enviada junto com a foto a identificar.
   final String encyIdentifyUserMessage;
