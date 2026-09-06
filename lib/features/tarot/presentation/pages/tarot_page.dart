@@ -285,6 +285,41 @@ class _SpreadTabState extends State<_SpreadTab>
     );
   }
 
+  /// Reconstrói a mesa registrada hoje: cada carta pelo naipe + número
+  /// (chaves estáveis entre idiomas; registros antigos só têm o nome). Null
+  /// se algo não bater — aí sorteia de novo, em vez de mostrar mesa capenga.
+  List<TarotDrawnCard>? _restaurarMesa(
+    List<Map<String, dynamic>> cartas,
+    List<String> positions,
+  ) {
+    if (cartas.length != positions.length) return null;
+    final drawn = <TarotDrawnCard>[];
+    for (var i = 0; i < cartas.length; i++) {
+      final registro = cartas[i];
+      final suit = registro['suit'];
+      final number = registro['number'];
+      TarotCard? card;
+      for (final candidata in tarotCards) {
+        final porChave = suit is String &&
+            number is int &&
+            candidata.suit.name == suit &&
+            candidata.number == number;
+        final porNome = suit == null && candidata.name == registro['name'];
+        if (porChave || porNome) {
+          card = candidata;
+          break;
+        }
+      }
+      if (card == null) return null;
+      drawn.add(TarotDrawnCard(
+        card: card,
+        isReversed: registro['reversed'] == true,
+        positionLabel: positions[i],
+      ));
+    }
+    return drawn;
+  }
+
   Future<void> _startSpread(TarotSpread spread) async {
     final question = _questionController.text.trim();
     // Sem pergunta não há tiragem: as cartas respondem a alguma coisa. O
@@ -300,20 +335,28 @@ class _SpreadTabState extends State<_SpreadTab>
       return;
     }
 
-    // Carta do dia: a PRIMEIRA pergunta do dia é a carta grátis; repetir a
-    // mesma pergunta devolve a mesma carta sem cobrar; uma pergunta diferente
-    // no mesmo dia é tiragem nova e, no plano Free, gasta a do dia (mesmo
-    // contador do Oráculo). As demais tiragens seguem o limite como sempre.
-    final isNewDailyQuestion = spread == TarotSpread.daily &&
-        deveCobrarCartaDoDia(
-          perguntaLembradaHoje: await _perguntaDaCartaDeHoje(),
-          pergunta: question,
-        );
+    // A cota é por PERGUNTA, não por tiragem: com a pergunta do dia a pessoa
+    // faz cada tiragem (carta do dia, três cartas, cruz) uma vez; tocar de
+    // novo numa mesa já feita hoje só a mostra de novo; uma pergunta nova
+    // gasta a cota (mesmo contador do Oráculo) — no Free, a única do dia.
+    // Premium não tem cota. Ver decidirTiragem.
+    final authProvider = context.read<AuthProvider>();
+    final perguntaDoDia = await _perguntaDaCartaDeHoje();
+    final registrada = await TarotReadingRepository().drawOfToday(
+      userId: _userId,
+      spreadName: spread.name,
+      question: question,
+    );
     if (!mounted) return;
-
-    if (spread != TarotSpread.daily || isNewDailyQuestion) {
-      final authProvider = context.read<AuthProvider>();
-      if (!authProvider.canUseOracle) {
+    final decisao = decidirTiragem(
+      premium: authProvider.isPremiumEffective,
+      perguntaDoDia: perguntaDoDia,
+      pergunta: question,
+      tiragemJaFeitaHoje: registrada != null,
+      temCota: authProvider.canUseOracle,
+    );
+    switch (decisao) {
+      case DecisaoDaTiragem.bloquear:
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
@@ -329,20 +372,35 @@ class _SpreadTabState extends State<_SpreadTab>
           builder: (context) => const PremiumUpgradeSheet(),
         );
         return;
-      }
-      await authProvider.incrementOracleReadings();
-      if (!mounted) return;
+      case DecisaoDaTiragem.cobrar:
+        await authProvider.incrementOracleReadings();
+        if (!mounted) return;
+        break;
+      case DecisaoDaTiragem.liberar:
+      case DecisaoDaTiragem.repetir:
+        break;
     }
-    // Lembra a pergunta da carta de hoje — a primeira (grátis) e cada nova
-    // (cobrada) — para a repetição não cobrar de novo.
-    if (spread == TarotSpread.daily) await _rememberDailyQuestion(question);
+    // A pergunta que segura a cota de hoje: a primeira do dia e cada nova
+    // cobrada (no Premium é só memória).
+    if (decisao == DecisaoDaTiragem.cobrar || perguntaDoDia == null) {
+      await _rememberDailyQuestion(question);
+    }
     // E, para qualquer tiragem, a última pergunta — a que volta ao campo.
     await _lembrarUltimaPergunta(question);
     if (!mounted) return;
 
-    final positions = spread.positions(AppLocalizations.of(context));
+    final l10n = AppLocalizations.of(context);
+    final positions = spread.positions(l10n);
+    // Mesa já feita hoje com esta pergunta: as MESMAS cartas, sem sortear de
+    // novo (a cota é por pergunta) e sem anúncio — é uma revisita.
+    final restaurada =
+        decisao == DecisaoDaTiragem.repetir && registrada != null
+            ? _restaurarMesa(registrada, positions)
+            : null;
     List<TarotDrawnCard> drawn;
-    if (spread == TarotSpread.daily) {
+    if (restaurada != null) {
+      drawn = restaurada;
+    } else if (spread == TarotSpread.daily) {
       drawn = [_dailyCard(question)];
     } else {
       final random = Random();
@@ -358,12 +416,17 @@ class _SpreadTabState extends State<_SpreadTab>
     }
 
     if (!mounted) return;
-    // Anúncio ANTES de revelar as cartas (free, não na carta do dia): a
-    // usuária quer o resultado, então o anúncio é visto — e as cartas só
-    // aparecem quando ele fecha.
-    if (spread != TarotSpread.daily) {
+    // Anúncio ANTES de revelar as cartas (free, não na carta do dia nem na
+    // revisita): a usuária quer o resultado, então o anúncio é visto — e as
+    // cartas só aparecem quando ele fecha.
+    if (spread != TarotSpread.daily && restaurada == null) {
       await AdService.instance.showBeforeResult();
       if (!mounted) return;
+    }
+    if (restaurada != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.tarotRepeatingToday)),
+      );
     }
 
     // A tiragem aconteceu: o rito de hoje pode se dar por cumprido.
