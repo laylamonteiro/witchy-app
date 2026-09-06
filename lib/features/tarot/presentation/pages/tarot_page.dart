@@ -118,7 +118,8 @@ class _SpreadTab extends StatefulWidget {
   State<_SpreadTab> createState() => _SpreadTabState();
 }
 
-class _SpreadTabState extends State<_SpreadTab> {
+class _SpreadTabState extends State<_SpreadTab>
+    with WidgetsBindingObserver {
   TarotSpread? _activeSpread;
   List<TarotDrawnCard> _drawn = [];
   bool _revealed = false;
@@ -129,6 +130,12 @@ class _SpreadTabState extends State<_SpreadTab> {
   final _questionFocus = FocusNode();
   String _question = '';
 
+  /// O que foi posto no campo por esta tela (a pergunta de hoje) e em que
+  /// dia. Quando o dia vira com a tela aberta, o campo só é limpo se ainda
+  /// mostrar exatamente isto — o que a pessoa digitou por conta própria fica.
+  String? _perguntaPreenchida;
+  String? _diaPreenchido;
+
   String? _aiReading;
   bool _isReadingAI = false;
 
@@ -137,14 +144,24 @@ class _SpreadTabState extends State<_SpreadTab> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _userId = context.read<AuthProvider>().currentUser.id;
+    _carregarPerguntaDoDia();
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _questionController.dispose();
     _questionFocus.dispose();
     super.dispose();
+  }
+
+  /// Voltou do segundo plano: se o dia virou, a pergunta de ontem sai do
+  /// campo (e a de hoje, se já houver, entra).
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) _carregarPerguntaDoDia();
   }
 
   /// Assinatura única das cartas tiradas (tipo de tiragem + cartas + invertida).
@@ -188,18 +205,63 @@ class _SpreadTabState extends State<_SpreadTab> {
   /// esbarra no limite (senão a Bruxa ficaria sem poder rever a própria carta).
   Future<String?> _perguntaDaCartaDeHoje() async {
     final prefs = await SharedPreferences.getInstance();
-    final guardada = prefs.getString('tarot_daily_q_$_userId');
-    final prefixo = '${_todayKey()}|';
-    if (guardada == null || !guardada.startsWith(prefixo)) return null;
-    return guardada.substring(prefixo.length);
+    return perguntaSeForDeHoje(
+      guardada: prefs.getString('tarot_daily_q_$_userId'),
+      hoje: _todayKey(),
+    );
   }
 
   Future<void> _rememberDailyQuestion(String question) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(
       'tarot_daily_q_$_userId',
-      '${_todayKey()}|${question.toLowerCase()}',
+      carimbarPerguntaDoDia(
+        hoje: _todayKey(),
+        pergunta: question.toLowerCase(),
+      ),
     );
+  }
+
+  /// A ÚLTIMA pergunta que rendeu uma tiragem (qualquer uma), por conta e
+  /// por dia. É ela que volta ao campo ao abrir a tela — a pessoa faz as
+  /// outras tiragens sem redigitar. Na Free é, na prática, a da carta do dia
+  /// (as demais tiragens gastam a cota); no Premium, a última mesmo. Vira o
+  /// dia, some.
+  String get _chaveDaUltimaPergunta => 'tarot_last_q_$_userId';
+
+  Future<void> _lembrarUltimaPergunta(String question) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(
+      _chaveDaUltimaPergunta,
+      carimbarPerguntaDoDia(hoje: _todayKey(), pergunta: question),
+    );
+    _perguntaPreenchida = question;
+    _diaPreenchido = _todayKey();
+  }
+
+  /// Ao abrir (e ao voltar do segundo plano): a pergunta de hoje volta ao
+  /// campo; a de ontem, não. Se o dia virou com a tela aberta e o campo
+  /// ainda mostra o que foi preenchido, limpa — o que a pessoa digitou fica.
+  Future<void> _carregarPerguntaDoDia() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (!mounted) return;
+    final hoje = _todayKey();
+    final deHoje = perguntaSeForDeHoje(
+      guardada: prefs.getString(_chaveDaUltimaPergunta),
+      hoje: hoje,
+    );
+    final campo = _questionController.text;
+    if (deHoje != null) {
+      if (campo.isEmpty || campo == _perguntaPreenchida) {
+        _questionController.text = deHoje;
+      }
+    } else if (_diaPreenchido != null &&
+        _diaPreenchido != hoje &&
+        campo == _perguntaPreenchida) {
+      _questionController.clear();
+    }
+    _perguntaPreenchida = deHoje;
+    _diaPreenchido = hoje;
   }
 
   /// Carta do dia: determinística pela data E pelo usuário (mesma carta o dia
@@ -274,6 +336,8 @@ class _SpreadTabState extends State<_SpreadTab> {
     // Lembra a pergunta da carta de hoje — a primeira (grátis) e cada nova
     // (cobrada) — para a repetição não cobrar de novo.
     if (spread == TarotSpread.daily) await _rememberDailyQuestion(question);
+    // E, para qualquer tiragem, a última pergunta — a que volta ao campo.
+    await _lembrarUltimaPergunta(question);
     if (!mounted) return;
 
     final positions = spread.positions(AppLocalizations.of(context));

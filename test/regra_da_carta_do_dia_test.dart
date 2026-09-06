@@ -31,4 +31,38 @@ void main() {
       isTrue,
     );
   });
+
+  group('pergunta guardada com o carimbo do dia', () {
+    test('carimbo de hoje devolve a pergunta com a grafia original', () {
+      final guardada = carimbarPerguntaDoDia(
+        hoje: '2026-9-6',
+        pergunta: 'Devo Aceitar a proposta?',
+      );
+      expect(guardada, '2026-9-6|Devo Aceitar a proposta?');
+      expect(
+        perguntaSeForDeHoje(guardada: guardada, hoje: '2026-9-6'),
+        'Devo Aceitar a proposta?',
+      );
+    });
+
+    test('carimbo de ontem, nada guardado ou lixo devolve null', () {
+      expect(
+        perguntaSeForDeHoje(guardada: '2026-9-5|Viajo?', hoje: '2026-9-6'),
+        isNull,
+      );
+      expect(perguntaSeForDeHoje(guardada: null, hoje: '2026-9-6'), isNull);
+      expect(perguntaSeForDeHoje(guardada: 'Viajo?', hoje: '2026-9-6'), isNull);
+      expect(
+        perguntaSeForDeHoje(guardada: '2026-9-6|', hoje: '2026-9-6'),
+        isNull,
+      );
+    });
+
+    test('uma pergunta com | dentro sobrevive inteira', () {
+      expect(
+        perguntaSeForDeHoje(guardada: '2026-9-6|A | B?', hoje: '2026-9-6'),
+        'A | B?',
+      );
+    });
+  });
 }
