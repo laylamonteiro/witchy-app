@@ -103,8 +103,22 @@ class AIService {
 
   // ====================================================================
 
-  /// O Gemini está configurado? (Sem a chave, tudo roda no Groq.)
-  static bool get _hasGemini => GeminiCredentials.apiKey.isNotEmpty;
+  /// Há Gemini disponível? Com a IA pelo servidor a chave mora na Edge
+  /// Function e a local é vazia DE PROPÓSITO (Etapa 4 de docs/CHAVES_DE_IA.md).
+  /// Olhar só a chave local faria o app achar que não tem Gemini e degradar
+  /// visão e sonhos para Groq em silêncio — com a chave lá no servidor.
+  static bool get _hasGemini => temGeminiDisponivel(
+        peloServidor: IaPeloServidor.ativo,
+        chaveLocal: GeminiCredentials.apiKey.isNotEmpty,
+      );
+
+  /// Regra pura e testável: pelo servidor OU com chave local presente.
+  /// Público (sem @visibleForTesting) porque é chamado em produção.
+  static bool temGeminiDisponivel({
+    required bool peloServidor,
+    required bool chaveLocal,
+  }) =>
+      peloServidor || chaveLocal;
 
   final Dio _dio = Dio();
   Locale _locale = const Locale('pt', 'BR');
