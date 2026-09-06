@@ -1,15 +1,15 @@
-/// O bug: "no pêndulo o teclado não abre no campo da pergunta". A causa era o
-/// próprio campo, desabilitado enquanto o cristal balançava E depois da
-/// resposta — desabilitar derruba o foco (o teclado fechava sozinho na
-/// consulta) e, com a resposta na tela, tocar no campo não fazia nada.
-///
-/// Estes testes provam o contrato novo: o campo abre o teclado, segura o foco
-/// durante o balanço inteiro, continua vivo depois da resposta, e editar a
-/// pergunta recomeça a consulta. De quebra, o toque duplo (que gastava duas
-/// consultas) e a saída no meio do assentamento (que deixava o botão morto).
-///
-/// O banco entra de verdade (sqflite ffi) porque a consulta é gravada: o
-/// arranjo é o mesmo de salvar_nos_registros_test.dart.
+// O bug: "no pêndulo o teclado não abre no campo da pergunta". A causa era o
+// próprio campo, desabilitado enquanto o cristal balançava E depois da
+// resposta — desabilitar derruba o foco (o teclado fechava sozinho na
+// consulta) e, com a resposta na tela, tocar no campo não fazia nada.
+//
+// Estes testes provam o contrato novo: o campo abre o teclado, segura o foco
+// durante o balanço inteiro, continua vivo depois da resposta, e editar a
+// pergunta recomeça a consulta. De quebra, o toque duplo (que gastava duas
+// consultas) e a saída no meio do assentamento (que deixava o botão morto).
+//
+// O banco entra de verdade (sqflite ffi) porque a consulta é gravada: o
+// arranjo é o mesmo de salvar_nos_registros_test.dart.
 import 'dart:io';
 
 import 'package:flutter/material.dart';

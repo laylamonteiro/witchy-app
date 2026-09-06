@@ -1,7 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:grimorio_de_bolso/core/database/database_helper.dart';
 import 'package:grimorio_de_bolso/core/services/data_sync_service.dart';
-import 'package:grimorio_de_bolso/core/services/servidor_de_sync.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
