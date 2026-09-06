@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'dart:ui' show lerpDouble;
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart' show Ticker;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
@@ -20,6 +22,7 @@ import '../../../../core/database/database_helper.dart';
 import '../../../../core/services/data_sync_service.dart';
 import '../../../auth/auth.dart';
 import '../../data/models/pendulum_model.dart';
+import '../../domain/inclinacao_do_pendulo.dart';
 import '../../../../core/services/ad_service.dart';
 import '../../../your_day/presentation/providers/daily_checkin_provider.dart';
 
@@ -87,13 +90,27 @@ class _PendulumPageState extends State<PendulumPage>
   String _perguntaConsultada = '';
   bool _isSwinging = false;
 
-  /// Inclinação lateral do aparelho (−1..1), suavizada. É ENFEITE puro: o
-  /// cristal pende para o lado que a mão inclina. NUNCA toca no sorteio da
-  /// resposta — só entra no ângulo desenhado.
+  /// θ da corrente (unidades normalizadas; passa de ±1 no overshoot): a
+  /// saída da mola que persegue a inclinação do aparelho. É ENFEITE puro: o
+  /// cristal pende para o lado que a mão inclina e balança com o tranco da
+  /// mão. NUNCA toca no sorteio da resposta — só entra no ângulo desenhado.
   final ValueNotifier<double> _inclinacao = ValueNotifier<double>(0);
   StreamSubscription<AccelerometerEvent>? _sensorSub;
-  double _tiltFiltrado = 0;
+  final _filtro = FiltroDeInclinacao();
+  final _mola = MolaDoPendulo();
+  double _alvoDaInclinacao = 0;
+
+  /// Quadro a quadro, a mola anda rumo ao alvo — só enquanto o sensor está
+  /// ligado (celular, em primeiro plano) e mudo com a aba escondida
+  /// (TickerMode), como todo ticker deste State.
+  Ticker? _tickerDaMola;
+  Duration? _ultimoQuadro;
   bool? _sensorLigado;
+
+  /// 0 = repouso (inclinação no alcance cheio); 1 = consultando/respondido
+  /// (só um sopro, para o cristal pousar e apontar no rótulo). Animado para o
+  /// teto não dar um pulo no toque em Perguntar.
+  late AnimationController _amortecimento;
 
   /// Só onde há acelerômetro de verdade: no navegador o Safari exige
   /// permissão por gesto e o desktop não vibra nem inclina — melhor deixar
@@ -111,26 +128,43 @@ class _PendulumPageState extends State<PendulumPage>
   void _assinarSensor() {
     _sensorSub ??= (widget.acelerometro ?? _acelerometroDoAparelho)().listen(
       (e) {
-        // x é a inclinação lateral (±g no limite). Normaliza, suaviza com
-        // passa-baixa e clampa — mão trêmula não vira cristal epilético.
-        final alvo = (-e.x / 9.8).clamp(-1.0, 1.0);
-        _tiltFiltrado = _tiltFiltrado * 0.85 + alvo * 0.15;
-        final v = _tiltFiltrado.clamp(-1.0, 1.0).toDouble();
-        if ((v - _inclinacao.value).abs() > 0.005) _inclinacao.value = v;
+        // x é a inclinação lateral — e também o tranco da mão, que chega no
+        // mesmo eixo. Normaliza (fundo de escala em ~30°), tira o ruído e
+        // entrega como ALVO da mola: quem balança é a corrente, no ticker.
+        _alvoDaInclinacao =
+            _filtro.atualizar(InclinacaoDoPendulo.normalizar(e.x));
       },
       onError: (_) {
         // Sensor indisponível (MissingPluginException em teste/desktop): o
         // pêndulo segue como antes, sem inclinação.
         _desassinarSensor();
-        _inclinacao.value = 0;
       },
       cancelOnError: true,
     );
+    _tickerDaMola ??= createTicker(_avancarMola)..start();
   }
 
   void _desassinarSensor() {
     _sensorSub?.cancel();
     _sensorSub = null;
+    _tickerDaMola?.dispose();
+    _tickerDaMola = null;
+    _ultimoQuadro = null;
+    _filtro.zerar();
+    _mola.zerar();
+    _alvoDaInclinacao = 0;
+    _inclinacao.value = 0;
+  }
+
+  /// Um quadro da corrente: a mola persegue o alvo e o cristal segue θ.
+  void _avancarMola(Duration decorrido) {
+    final anterior = _ultimoQuadro;
+    _ultimoQuadro = decorrido;
+    if (anterior == null) return;
+    final dt =
+        (decorrido - anterior).inMicroseconds / Duration.microsecondsPerSecond;
+    final theta = _mola.avancar(dt, _alvoDaInclinacao);
+    if ((theta - _inclinacao.value).abs() > 0.002) _inclinacao.value = theta;
   }
 
   @override
@@ -152,6 +186,10 @@ class _PendulumPageState extends State<PendulumPage>
       duration: GrimoireMotion.reveal,
       vsync: this,
     );
+    _amortecimento = AnimationController(
+      duration: const Duration(milliseconds: 300),
+      vsync: this,
+    );
   }
 
   @override
@@ -165,7 +203,6 @@ class _PendulumPageState extends State<PendulumPage>
       _assinarSensor();
     } else {
       _desassinarSensor();
-      _inclinacao.value = 0;
     }
   }
 
@@ -190,6 +227,7 @@ class _PendulumPageState extends State<PendulumPage>
     _settle.dispose();
     _settleController.dispose();
     _revealController.dispose();
+    _amortecimento.dispose();
     super.dispose();
   }
 
@@ -238,6 +276,13 @@ class _PendulumPageState extends State<PendulumPage>
     // ângulo herdado da consulta anterior.
     _swingController.value = 0;
     _settleController.value = 0;
+    // A inclinação recolhe para o sopro de consulta — animado, para o cristal
+    // não pular quando o teto muda.
+    if (reduced) {
+      _amortecimento.value = 1;
+    } else {
+      _amortecimento.forward();
+    }
 
     try {
       // Incrementar contador ANTES da animação (reserva a consulta na hora).
@@ -280,6 +325,7 @@ class _PendulumPageState extends State<PendulumPage>
       // botão e campo desabilitados até sair da tela.
       if (mounted && _isSwinging) {
         _swingController.stop();
+        _amortecimento.reverse();
         setState(() => _isSwinging = false);
       }
     }
@@ -332,6 +378,11 @@ class _PendulumPageState extends State<PendulumPage>
       _targetAngle = 0;
       _settleController.value = 0;
     });
+    if (GrimoireMotion.reduced(context)) {
+      _amortecimento.value = 0;
+    } else {
+      _amortecimento.reverse();
+    }
   }
 
   Future<void> _saveConsultation() async {
@@ -594,11 +645,19 @@ class _PendulumPageState extends State<PendulumPage>
                     final yesPos = onArc(-_kSwingTarget);
                     final noPos = onArc(_kSwingTarget);
                     final maybePos = onArc(0);
+                    // Até onde a inclinação pode levar o cristal NESTA
+                    // largura sem a ponta sair do card (InclinacaoDoPendulo).
+                    final tetoDaInclinacao = InclinacaoDoPendulo.anguloMaximo(
+                      larguraDaArea: w,
+                      raioDaPonta: pointerR,
+                      larguraDoCristal: crystalBoxW,
+                    );
                     return AnimatedBuilder(
                       animation: Listenable.merge([
                         _swingController,
                         _settleController,
                         _revealController,
+                        _amortecimento,
                         _inclinacao,
                       ]),
                       builder: (context, _) {
@@ -608,13 +667,26 @@ class _PendulumPageState extends State<PendulumPage>
                         // da consulta, repousa no alvo + a inclinação do aparelho.
                         // Enfeite: o sorteio não vê nada disto.
                         final settleV = _settle.value;
+                        // Inclinação: alcance cheio em repouso; consultando
+                        // ou respondido, só o sopro do teto absoluto — o lerp
+                        // evita o pulo na troca. Enfeite: o sorteio não vê
+                        // nada disto.
+                        final tetoAgora = lerpDouble(
+                          tetoDaInclinacao,
+                          InclinacaoDoPendulo.tetoAmortecido,
+                          _amortecimento.value,
+                        )!;
+                        final inclinacao = InclinacaoDoPendulo.angulo(
+                          _inclinacao.value,
+                          anguloMaximo: tetoAgora,
+                        );
                         final swing = _targetAngle * settleV +
                             (_isSwinging
                                 ? sin(_swingController.value * 2 * pi) *
                                     0.6 *
                                     (1 - settleV)
                                 : 0.0) +
-                            _inclinacao.value * (_isSwinging ? 0.05 : 0.12);
+                            inclinacao;
                         // Órbita circular (sem achatamento): a ponta do cristal
                         // segue a linha da corda, então apontar para o alvo é
                         // apontar para o rótulo.
@@ -632,7 +704,7 @@ class _PendulumPageState extends State<PendulumPage>
                                   anchor: anchor,
                                   bob: bob,
                                   swing: swing,
-                                  tilt: _inclinacao.value,
+                                  tilt: _inclinacao.value.clamp(-1.0, 1.0),
                                   successColor: context.gc.success,
                                   alertColor: context.gc.alert,
                                   starColor: context.gc.starYellow,
