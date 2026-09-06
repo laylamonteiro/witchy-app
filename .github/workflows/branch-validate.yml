@@ -642,11 +642,13 @@ jobs:
           sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/share/boost
           sudo apt-get clean
 
-      - name: 🔐 Credenciais reais do app
+      - name: 🔐 Credenciais do app (sem chaves de IA — o Android fala com a função)
+        # Etapa 5 de docs/CHAVES_DE_IA.md: com IA_PELO_SERVIDOR=true o Android
+        # também passa pela Edge Function `ia`, então as chaves da Groq/Gemini
+        # NÃO entram mais no APK/AAB. Os stubs vazios mantêm o código
+        # compilando; o gate depois do build falha se alguma reaparecer.
         uses: ./.github/actions/credenciais-app
         with:
-          groq-api-key: ${{ secrets.GROQ_API_KEY }}
-          gemini-api-key: ${{ secrets.GEMINI_API_KEY }}
           google-services-json: ${{ secrets.GOOGLE_SERVICES_JSON }}
 
       - name: 🛠️ Setup Flutter (pinado)
@@ -712,10 +714,39 @@ jobs:
             --dart-define=REVENUECAT_IOS_KEY="$REVENUECAT_IOS_KEY" \
             --dart-define=ADMIN_EMAIL="$ADMIN_EMAIL" \
             --dart-define=ADMIN_PASSWORD="$ADMIN_PASSWORD" \
+            --dart-define=IA_PELO_SERVIDOR=true \
             --dart-define=UNLIMITED_CYCLE_READINGS=true $ADMOB_FLAG $CAPTCHA_FLAG
           mkdir -p candidato
           cp build/app/outputs/flutter-apk/app-release.apk \
              "candidato/grimorio-de-bolso-${{ steps.versao.outputs.nome }}.apk"
+
+      - name: 🔒 Nenhuma chave de IA dentro do APK/AAB
+        # Etapa 5 de docs/CHAVES_DE_IA.md. O Android também fala com a Edge
+        # Function `ia`, então a chave da Groq/Gemini não pode estar compilada
+        # no snapshot Dart (libapp.so) nem nos assets. Abre cada artefato e
+        # procura os padrões gsk_/AIza — o AOT guarda literais ASCII como
+        # bytes legíveis, então o grep -a os encontra. Lista só o arquivo,
+        # nunca a chave. Zero artefato também é erro (passe vazio não vale).
+        run: |
+          padrao='gsk_[A-Za-z0-9]{20,}|AIza[A-Za-z0-9_-]{30,}'
+          artefatos=$(find build/app/outputs -type f \( -name '*.apk' -o -name '*.aab' \))
+          if [ -z "$artefatos" ]; then
+            echo "::error::Nenhum .apk/.aab em build/app/outputs — o build não produziu artefato."
+            exit 1
+          fi
+          achou=0
+          for art in $artefatos; do
+            dir=$(mktemp -d)
+            unzip -oq "$art" -d "$dir" 'lib/*' 'assets/*' 'base/lib/*' 'base/assets/*' 2>/dev/null || true
+            if grep -rlaE "$padrao" "$dir" >/dev/null 2>&1; then
+              echo "::error::Chave de IA dentro de $art (gsk_/AIza). O Android deve falar com a Edge Function ia — ver docs/CHAVES_DE_IA.md."
+              grep -rlaE "$padrao" "$dir" | sed "s#^$dir/##" | head
+              achou=1
+            fi
+            rm -rf "$dir"
+          done
+          [ "$achou" = "0" ] || exit 1
+          echo "Nenhuma chave de IA nos artefatos Android."
 
       - name: 📤 Upload do candidato
         uses: actions/upload-artifact@v4
