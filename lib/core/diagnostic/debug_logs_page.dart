@@ -17,7 +17,11 @@ class _DebugLogsPageState extends State<DebugLogsPage> {
   final _scrollController = ScrollController();
   String _filterTag = 'ALL';
 
-  final List<String> _tags = ['ALL', 'AUTH', 'SYSTEM', 'NAV', 'ERROR'];
+  // FOTO, ENCY e STORAGE são os tags da foto do verbete (abrir, converter,
+  // subir): sem chip próprio só apareciam em ALL, no meio de tudo.
+  final List<String> _tags = [
+    'ALL', 'AUTH', 'SYSTEM', 'NAV', 'ERROR', 'FOTO', 'ENCY', 'STORAGE', //
+  ];
 
   @override
   void initState() {

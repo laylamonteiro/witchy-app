@@ -6,5 +6,6 @@ Future<Uint8List?> reduzirImagemNoNavegador(
   Uint8List bytes, {
   required int ladoMaximo,
   required double qualidade,
+  void Function(String)? relatar,
 }) async =>
     null;

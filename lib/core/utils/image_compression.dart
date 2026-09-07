@@ -1,9 +1,11 @@
+import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart' show debugPrint, kIsWeb;
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../services/debug_log_service.dart';
 import 'reducao_de_imagem.dart';
 import 'reducao_de_imagem_stub.dart'
     if (dart.library.js_interop) 'reducao_de_imagem_web.dart';
@@ -28,7 +30,7 @@ import 'reducao_de_imagem_stub.dart'
 /// quiromancia e o diagnóstico, que não tinham nenhum, ficariam esperando
 /// para sempre. É maior que o limite interno da ponte, de propósito — quem
 /// deve responder "não deu" é ela, não este relógio.
-const Duration limiteDaReducaoWeb = Duration(seconds: 30);
+const Duration limiteDaReducaoWeb = Duration(seconds: 60);
 
 Future<Uint8List?> compressPickedImage(
   XFile picked, {
@@ -39,13 +41,22 @@ Future<Uint8List?> compressPickedImage(
   double qualidadeWeb = qualidadeDaFoto,
 }) async {
   if (kIsWeb) {
+    // Cada passo vai para o log de diagnóstico (chip FOTO): quando uma foto
+    // "não abre", é ali que se lê em que passo e em quanto tempo morreu.
+    void relatar(String o) => unawaited(debugLog('FOTO', o));
     try {
-      return await reduzirImagemNoNavegador(
-        await picked.readAsBytes(),
+      final bytes = await picked.readAsBytes();
+      relatar('lida: ${bytes.length} bytes, ${picked.mimeType ?? '?'}');
+      final saida = await reduzirImagemNoNavegador(
+        bytes,
         ladoMaximo: ladoMaximoWeb,
         qualidade: qualidadeWeb,
+        relatar: relatar,
       ).timeout(limiteDaReducaoWeb);
+      relatar(saida == null ? 'sem redução' : 'reduzida: ${saida.length} bytes');
+      return saida;
     } catch (e) {
+      relatar('redução falhou: $e');
       debugPrint('compressPickedImage: falha na web: $e');
       return null;
     }

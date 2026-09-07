@@ -203,6 +203,17 @@ jobs:
         # do JavaScript não alcança. O runner já traz Node.
         run: node test/ponte_heic_test.mjs
 
+      - name: 🧪 Ponte de HEIC num Chrome de verdade
+        # O teste em Node usa um libheif de mentira. Foi o libheif DE VERDADE
+        # que quebrou na primeira publicação (a variante compilada não busca
+        # o .wasm sozinha), e só um navegador pega isso: este passo serve
+        # web/ num servidor local e decodifica um HEIC real pela ponte, no
+        # Chrome que o runner já traz. Sem Chrome, o passo FALHA — nunca
+        # pula em silêncio, senão o gate fingiria que verificou.
+        run: |
+          npm install --no-save --no-audit --no-fund playwright-core@1.63.0 > /dev/null
+          node test/ponte_heic_navegador_test.mjs
+
       - name: 🔤 ARB key parity
         run: bash scripts/check_arb_sync.sh
 

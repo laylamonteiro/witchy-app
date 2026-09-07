@@ -146,3 +146,8 @@ public/
 # o `flutter build` regenerarem, e o CI roda `flutter gen-l10n` no passo de
 # setup. Versionar sem cobrar era o pior dos dois mundos.
 lib/l10n/generated/
+
+# Dependências de Node dos testes da ponte de HEIC (instaladas no CI com --no-save).
+node_modules/
+package-lock.json
+package.json

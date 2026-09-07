@@ -15,6 +15,11 @@ external JSObject? get _pontePraHeic;
 
 extension type _PonteHeic(JSObject _) implements JSObject {
   external JSPromise<web.ImageBitmap?> paraBitmap(JSUint8Array bytes);
+
+  /// Por que o último `paraBitmap` devolveu nulo ("script", "wasm",
+  /// "display", "tempo"…). Vai para o log de diagnóstico: sem isto a
+  /// primeira publicação falhou sem dizer em que passo.
+  external String get ultimoMotivo;
 }
 
 /// A perna web da redução de fotos: decodifica com o próprio navegador
@@ -34,9 +39,20 @@ Future<Uint8List?> reduzirImagemNoNavegador(
   Uint8List bytes, {
   required int ladoMaximo,
   required double qualidade,
+  void Function(String)? relatar,
 }) async {
-  final web.ImageBitmap? aberta =
-      await _abrir(bytes) ?? await _decodificarHeic(bytes);
+  final relogio = Stopwatch()..start();
+  void contar(String o) {
+    relatar?.call('$o (${relogio.elapsedMilliseconds} ms)');
+  }
+
+  web.ImageBitmap? aberta = await _abrir(bytes);
+  if (aberta != null) {
+    contar('navegador abriu ${aberta.width}×${aberta.height}');
+  } else {
+    contar('navegador recusou ${bytes.length} bytes');
+    aberta = await _decodificarHeic(bytes, contar);
+  }
   if (aberta == null) return null;
   final bitmap = aberta;
   try {
@@ -80,13 +96,29 @@ Future<web.ImageBitmap?> _abrir(Uint8List bytes) async {
 /// Chama a ponte só quando os bytes REALMENTE parecem HEIF: um JPEG truncado
 /// ou um TIFF também fazem `createImageBitmap` falhar, e não vale baixar
 /// 1,5 MB de decodificador para descobrir que não era isso.
-Future<web.ImageBitmap?> _decodificarHeic(Uint8List bytes) async {
-  if (!pareceHeif(bytes)) return null;
+Future<web.ImageBitmap?> _decodificarHeic(
+  Uint8List bytes,
+  void Function(String) contar,
+) async {
+  if (!pareceHeif(bytes)) {
+    contar('não parece HEIF: fica sem redução');
+    return null;
+  }
   final ponte = _pontePraHeic;
-  if (ponte == null) return null;
+  if (ponte == null) {
+    contar('ponte de HEIC ausente na página');
+    return null;
+  }
   try {
-    return await _PonteHeic(ponte).paraBitmap(bytes.toJS).toDart;
-  } catch (_) {
+    final bitmap = await _PonteHeic(ponte).paraBitmap(bytes.toJS).toDart;
+    if (bitmap == null) {
+      contar('libheif não abriu: ${_PonteHeic(ponte).ultimoMotivo}');
+    } else {
+      contar('libheif abriu ${bitmap.width}×${bitmap.height}');
+    }
+    return bitmap;
+  } catch (e) {
+    contar('ponte de HEIC lançou: $e');
     return null;
   }
 }

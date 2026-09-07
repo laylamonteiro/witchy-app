@@ -30,6 +30,7 @@ function montarAmbiente({
   createImageDataLanca = false,
   bitmapFalha = false,
   semScript = false,
+  semWasm = false,
   prontoNaHora = false,
   limiteMs = null,
 } = {}) {
@@ -37,6 +38,7 @@ function montarAmbiente({
     frees: 0,
     contextosLiberados: 0,
     scriptsCarregados: 0,
+    wasmBaixados: 0,
     tagsVivas: 0,
     telas: [],
   };
@@ -118,19 +120,38 @@ function montarAmbiente({
       registro.contextosLiberados++;
     },
   };
+  // Esta variante do libheif nao busca o .wasm sozinha: sem `wasmBinary` a
+  // fabrica de verdade lanca na hora ("sync fetching of the wasm failed"),
+  // e foi exatamente assim que a primeira publicacao falhou. O duplo se
+  // comporta igual, para o teste pegar isso.
   const fabricaFalsa = (config) => {
+    if (!(config.wasmBinary instanceof ArrayBuffer)) {
+      throw new Error('sync fetching of the wasm failed');
+    }
     Object.assign(config, modulo);
     if (prontoNaHora) {
       config.calledRun = true;
       return config;
     }
-    setTimeout(() => config.onRuntimeInitialized(), 0);
+    // Com o binario em maos a compilacao e' sincrona: o aviso dispara
+    // DENTRO da chamada, como no emscripten de verdade.
+    config.calledRun = true;
+    config.onRuntimeInitialized();
     return config;
   };
 
+  const fetchFalso = async (endereco) => {
+    if (semWasm || !/libheif\.wasm$/.test(endereco)) {
+      return { ok: false, status: 404 };
+    }
+    registro.wasmBaixados++;
+    registro.enderecoDoWasm = endereco;
+    return { ok: true, status: 200, arrayBuffer: async () => new ArrayBuffer(8) };
+  };
   const ctx = {
     window: janela,
     document: doc,
+    fetch: fetchFalso,
     setTimeout,
     clearTimeout,
     Promise,
@@ -150,7 +171,7 @@ function montarAmbiente({
   vm.createContext(ctx);
   let fonte = fonteDaPonte;
   if (limiteMs) {
-    fonte = fonte.replace('var LIMITE_MS = 20000;', `var LIMITE_MS = ${limiteMs};`);
+    fonte = fonte.replace('var LIMITE_MS = 45000;', `var LIMITE_MS = ${limiteMs};`);
   }
   vm.runInContext(fonte, ctx);
   return { janela, registro };
@@ -238,11 +259,57 @@ t('createImageBitmap falhando: null, sem vazar', async () => {
   if (registro.contextosLiberados !== 1) throw new Error('contexto vazou');
 });
 
-t('script que não carrega: null e nenhuma tag morta na árvore', async () => {
+t('script que não carrega: null, motivo "script", nenhuma tag morta', async () => {
   const { janela, registro } = montarAmbiente({ semScript: true });
   const r = await janela.grimorioHeic.paraBitmap(bytes);
   if (r !== null) throw new Error('devia ser null');
   if (registro.tagsVivas !== 0) throw new Error('sobrou tag morta');
+  if (janela.grimorioHeic.ultimoMotivo !== 'script') {
+    throw new Error('motivo: ' + janela.grimorioHeic.ultimoMotivo);
+  }
+});
+
+t('o .wasm vem da MESMA pasta do script e é entregue à fábrica', async () => {
+  const { janela, registro } = montarAmbiente();
+  const r = await janela.grimorioHeic.paraBitmap(bytes);
+  if (!r || !r.ehBitmap) throw new Error('sem bitmap: ' + janela.grimorioHeic.ultimoMotivo);
+  if (registro.wasmBaixados !== 1) throw new Error('wasm baixado ' + registro.wasmBaixados + 'x');
+  if (registro.enderecoDoWasm !== 'https://exemplo.test/heic/libheif.wasm') {
+    throw new Error('endereco: ' + registro.enderecoDoWasm);
+  }
+});
+
+t('wasm que não baixa: null e motivo "wasm"', async () => {
+  const { janela } = montarAmbiente({ semWasm: true });
+  const r = await janela.grimorioHeic.paraBitmap(bytes);
+  if (r !== null) throw new Error('devia ser null');
+  if (!/^wasm/.test(janela.grimorioHeic.ultimoMotivo)) {
+    throw new Error('motivo: ' + janela.grimorioHeic.ultimoMotivo);
+  }
+});
+
+t('cada saída em null diz o motivo', async () => {
+  const casos = [
+    [{ imagens: 0 }, 'sem imagens'],
+    [{ displayFalha: true }, 'display'],
+    [{ bitmapFalha: true }, 'bitmap'],
+    [{ semContexto2d: true }, 'canvas'],
+    [{ displayNuncaVolta: true, limiteMs: 60 }, 'tempo'],
+  ];
+  for (const [opcoes, esperado] of casos) {
+    const { janela } = montarAmbiente(opcoes);
+    await janela.grimorioHeic.paraBitmap(bytes);
+    if (janela.grimorioHeic.ultimoMotivo !== esperado) {
+      throw new Error(JSON.stringify(opcoes) + ' -> ' + janela.grimorioHeic.ultimoMotivo);
+    }
+  }
+});
+
+t('um pedido que dá certo limpa o motivo do anterior', async () => {
+  const { janela } = montarAmbiente({ displayFalha: false });
+  const r = await janela.grimorioHeic.paraBitmap(bytes);
+  if (!r) throw new Error('devia decodificar');
+  if (janela.grimorioHeic.ultimoMotivo !== '') throw new Error('motivo ficou: ' + janela.grimorioHeic.ultimoMotivo);
 });
 
 t('módulo já pronto (calledRun) também funciona', async () => {

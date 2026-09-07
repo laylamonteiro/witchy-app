@@ -68,3 +68,10 @@ lib/features/journeys/data/models/journey_model\.dart:
 # AppLocalizations aqui a quebraria no exato momento em que ela é necessária,
 # então os textos são intencionalmente fixos em PT.
 lib/core/widgets/boot_error_app\.dart:
+
+# Mensagens do log de diagnóstico da foto (chip FOTO em DebugLogsPage), nunca
+# exibidas na interface. O scanner já isenta debugLog(...); aqui elas passam
+# por um callback (`relatar`/`contar`) porque a redução de imagem é um
+# utilitário puro que não importa o serviço de log. Só as linhas da chamada.
+lib/core/utils/image_compression\.dart:[0-9]+:.*\brelatar\(
+lib/core/utils/reducao_de_imagem_web\.dart:[0-9]+:.*\bcontar\(
