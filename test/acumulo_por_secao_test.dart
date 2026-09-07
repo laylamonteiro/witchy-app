@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart' hide Element;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:grimorio_de_bolso/core/database/database_helper.dart';
@@ -25,9 +27,16 @@ void main() {
 
   const uid = '11111111-2222-3333-4444-555555555555';
 
-  setUpAll(() {
+  setUpAll(() async {
     sqfliteFfiInit();
     databaseFactory = databaseFactoryFfi;
+    // Banco em diretório próprio: o `flutter test` roda os arquivos em
+    // paralelo (um isolate cada) e todos os que usam o caminho padrão
+    // disputam o MESMO grimorio_de_bolso.db no disco — o SQLite trava
+    // ("database is locked"). getDatabasesPath() delega ao databaseFactory,
+    // então basta apontá-lo para cá.
+    final dir = await Directory.systemTemp.createTemp('grimorio_acumulo_por_secao');
+    await databaseFactory.setDatabasesPath(dir.path);
   });
 
   setUp(() async {
