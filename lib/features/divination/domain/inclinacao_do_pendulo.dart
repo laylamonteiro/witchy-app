@@ -3,7 +3,9 @@ import 'dart:math';
 /// A inclinação do aparelho vira balanço do pêndulo — e SÓ isso. Nada daqui
 /// encosta no sorteio da resposta (ver PendulumPage).
 ///
-/// Pipeline: amostra do acelerômetro → [normalizar] (−1..1, zona morta suave)
+/// Pipeline: amostra do acelerômetro → [PoseNeutraDoPendulo] (gira a leitura
+/// para o referencial de como a pessoa segura o celular) → [normalizar]
+/// (−1..1, zona morta suave)
 /// → [FiltroDeInclinacao] (tira o ruído do sensor) → alvo da [MolaDoPendulo]
 /// (a corrente: passa do alvo, volta, assenta) → [angulo] (θ vira radianos,
 /// com um teto que depende da largura da área para a PONTA do cristal nunca
@@ -144,5 +146,168 @@ class MolaDoPendulo {
   void zerar() {
     _theta = 0;
     _omega = 0;
+  }
+}
+
+/// Um vetor 3D mínimo (m/s²) — só o que a calibração da pose precisa.
+class Vetor3 {
+  const Vetor3(this.x, this.y, this.z);
+
+  final double x;
+  final double y;
+  final double z;
+
+  double get norma => sqrt(x * x + y * y + z * z);
+
+  Vetor3 get unitario {
+    final n = norma;
+    return n == 0 ? this : Vetor3(x / n, y / n, z / n);
+  }
+
+  double ponto(Vetor3 o) => x * o.x + y * o.y + z * o.z;
+
+  Vetor3 cruzado(Vetor3 o) =>
+      Vetor3(y * o.z - z * o.y, z * o.x - x * o.z, x * o.y - y * o.x);
+
+  Vetor3 vezes(double k) => Vetor3(x * k, y * k, z * k);
+
+  Vetor3 mais(Vetor3 o) => Vetor3(x + o.x, y + o.y, z + o.z);
+
+  @override
+  String toString() => 'Vetor3($x, $y, $z)';
+}
+
+/// A pose neutra: a orientação em que a pessoa está segurando o celular.
+///
+/// A inclinação era "quanto da gravidade aponta para a direita da tela" (o
+/// eixo x bruto do acelerômetro). Funciona com o celular deitado na mesa ou
+/// em pé na mão — mas deitada de lado na cama, com o celular de frente para
+/// o rosto, a gravidade JÁ aponta para a direita da tela, e o cristal ia
+/// todo para lá. Aqui a leitura é girada para o referencial em que a pose de
+/// quem segura o celular é o "em pé": inclinar EM RELAÇÃO a essa pose move o
+/// cristal; a pose em si, não.
+///
+/// A referência é capturada ao abrir a página (meio segundo de leituras),
+/// refeita a cada "Perguntar" (a pessoa está na pose de consulta) e, sozinha,
+/// quando o celular fica numa orientação muito diferente por um tempo
+/// (sentou-se na cama, deitou de lado): a corrente então balança até o novo
+/// centro, como um pêndulo que se acomoda. Continua sem tocar no sorteio.
+class PoseNeutraDoPendulo {
+  PoseNeutraDoPendulo({
+    this.tempoDeCaptura = 0.5,
+    this.limiarDeNovaPose = pi / 4,
+    this.esperaDaNovaPose = 1.5,
+    this.alfaDaGravidade = 0.15,
+  });
+
+  /// Quanto tempo de leituras (s) antes de fixar a primeira referência.
+  final double tempoDeCaptura;
+
+  /// Ângulo (rad) entre a gravidade e a referência a partir do qual uma
+  /// orientação SUSTENTADA vira pose nova. Uma inclinação deliberada de 30°
+  /// fica abaixo e continua movendo o cristal.
+  final double limiarDeNovaPose;
+
+  /// Por quanto tempo (s) a orientação nova precisa se manter.
+  final double esperaDaNovaPose;
+
+  /// Passa-baixa da gravidade estimada: o tranco da mão não entra na
+  /// referência (τ ≈ 0,2 s a 30 Hz).
+  final double alfaDaGravidade;
+
+  /// Leitura de um celular em pé (retrato, tela de frente): +g no eixo y.
+  static const Vetor3 emPe = Vetor3(0, 1, 0);
+
+  /// Abaixo disto a leitura não é gravidade (queda livre, sensor mudo): não
+  /// serve de referência.
+  static const double gravidadeMinima = InclinacaoDoPendulo.gravidade / 2;
+
+  Vetor3? _gravidade;
+  Vetor3? _referencia;
+  double _tempoLendo = 0;
+  double _tempoForaDaPose = 0;
+
+  bool get calibrada => _referencia != null;
+
+  /// A pose neutra atual (unitária), ou null antes da captura.
+  Vetor3? get referencia => _referencia;
+
+  /// Esquece tudo: a referência volta a ser capturada do zero (sensor
+  /// religado, volta do segundo plano).
+  void reiniciar() {
+    _gravidade = null;
+    _referencia = null;
+    _tempoLendo = 0;
+    _tempoForaDaPose = 0;
+  }
+
+  /// Fixa a pose de agora como neutra (o toque em Perguntar).
+  void recalibrar() {
+    final g = _gravidade;
+    if (g == null || g.norma < gravidadeMinima) return;
+    _referencia = g.unitario;
+    _tempoForaDaPose = 0;
+  }
+
+  /// Recebe uma [leitura] do acelerômetro (m/s²) e [dt] segundos desde a
+  /// anterior. Devolve a componente x (m/s²) da leitura GIRADA para o
+  /// referencial da pose neutra — exatamente o que
+  /// [InclinacaoDoPendulo.normalizar] espera —, ou null enquanto a
+  /// referência ainda não existe (aí o pêndulo fica no centro).
+  double? atualizar(Vetor3 leitura, {required double dt}) {
+    final passo = dt.isFinite && dt > 0 ? min(dt, 1.0) : 0.0;
+    final anterior = _gravidade;
+    final gravidade = anterior == null
+        ? leitura
+        : anterior.vezes(1 - alfaDaGravidade).mais(
+              leitura.vezes(alfaDaGravidade),
+            );
+    _gravidade = gravidade;
+
+    var referencia = _referencia;
+    if (referencia == null) {
+      _tempoLendo += passo;
+      if (_tempoLendo < tempoDeCaptura || gravidade.norma < gravidadeMinima) {
+        return null;
+      }
+      referencia = _referencia = gravidade.unitario;
+    } else if (gravidade.norma >= gravidadeMinima) {
+      final angulo = acos(
+        gravidade.unitario.ponto(referencia).clamp(-1.0, 1.0),
+      );
+      if (angulo > limiarDeNovaPose) {
+        _tempoForaDaPose += passo;
+        if (_tempoForaDaPose >= esperaDaNovaPose) {
+          referencia = _referencia = gravidade.unitario;
+          _tempoForaDaPose = 0;
+        }
+      } else {
+        _tempoForaDaPose = 0;
+      }
+    }
+    return girar(leitura, de: referencia, para: emPe).x;
+  }
+
+  /// A rotação mínima que leva [de] a [para] (ambos tratados como unitários),
+  /// aplicada a [v] — fórmula de Rodrigues. Com [de] exatamente oposto a
+  /// [para] (celular de cabeça para baixo como pose neutra) a rotação mínima
+  /// é ambígua: gira meia-volta em torno de z, o eixo da tela — é o limite
+  /// das poses vizinhas (todas em pé, giradas no plano da tela), então não há
+  /// salto ao passar por ela.
+  static Vetor3 girar(Vetor3 v, {required Vetor3 de, required Vetor3 para}) {
+    final a = de.unitario;
+    final b = para.unitario;
+    final eixo = a.cruzado(b);
+    final seno = eixo.norma;
+    final cosseno = a.ponto(b);
+    if (seno < 1e-6) {
+      if (cosseno >= 0) return v;
+      return Vetor3(-v.x, -v.y, v.z);
+    }
+    final k = eixo.vezes(1 / seno);
+    return v
+        .vezes(cosseno)
+        .mais(k.cruzado(v).vezes(seno))
+        .mais(k.vezes(k.ponto(v) * (1 - cosseno)));
   }
 }

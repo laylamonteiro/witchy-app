@@ -1,7 +1,9 @@
 import 'dart:async';
 import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show FilteringTextInputFormatter;
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
@@ -419,18 +421,38 @@ class _AddEntryPageState extends State<AddEntryPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            _buildPhotoCard(context, l10n),
+            // Chaves nos cards: sem elas, um card que aparece ANTES do card do
+            // nome (a prévia Premium) era casado por posição com ele, e o
+            // campo do nome renascia — perdia o foco, o teclado fechava.
+            KeyedSubtree(
+              key: const ValueKey('card-da-foto'),
+              child: _buildPhotoCard(context, l10n),
+            ),
             if (_mostrarPrevia && _jpegBytes == null)
               MagicalCard(
+                key: const ValueKey('card-da-previa'),
                 child: PremiumLockedPreview(titles: _camposDoVerbete(l10n)),
               ),
             if (_identifying)
-              _buildIdentifying(context, l10n)
+              KeyedSubtree(
+                key: const ValueKey('card-identificando'),
+                child: _buildIdentifying(context, l10n),
+              )
             else if (candidatosAbertos)
-              _buildCandidates(context, l10n)
+              KeyedSubtree(
+                key: const ValueKey('card-dos-candidatos'),
+                child: _buildCandidates(context, l10n),
+              )
             else
-              _buildNameCard(context, l10n),
-            if (_generated != null) _buildPreview(context, l10n),
+              KeyedSubtree(
+                key: const ValueKey('card-do-nome'),
+                child: _buildNameCard(context, l10n),
+              ),
+            if (_generated != null)
+              KeyedSubtree(
+                key: const ValueKey('card-do-verbete'),
+                child: _buildPreview(context, l10n),
+              ),
             if (_error != null)
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -649,8 +671,23 @@ class _AddEntryPageState extends State<AddEntryPage> {
             const SizedBox(height: 12),
           ],
           TextField(
+            // Chave própria: o título "Encontrei!" entra ANTES do campo depois
+            // da identificação, e sem chave o campo renascia noutra posição
+            // (foco e teclado perdidos).
+            key: const ValueKey('campo-do-nome'),
             controller: _nameController,
             textCapitalization: TextCapitalization.sentences,
+            // NA WEB, no Chrome do Android, este campo abria o teclado e ele
+            // fechava sozinho. Os campos de texto que funcionam lá (pergunta
+            // do pêndulo, pergunta do Tarô) são de duas linhas — no
+            // navegador, um <textarea>; este era o único <input> de uma
+            // linha do fluxo. O tipo `multiline` faz o engine da web criar o
+            // mesmo <textarea>, e o campo continua de UMA linha na tela:
+            // Enter é "concluir" (fecha o teclado) e quebra de linha não
+            // entra. Fora da web nada muda.
+            keyboardType: kIsWeb ? TextInputType.multiline : TextInputType.text,
+            textInputAction: TextInputAction.done,
+            inputFormatters: [FilteringTextInputFormatter.singleLineFormatter],
             decoration: InputDecoration(
               labelText: l10n.encyAddNameLabel,
               hintText: l10n.encyAddNameHint,

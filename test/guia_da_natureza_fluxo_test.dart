@@ -27,6 +27,16 @@ class _AuthPremium extends AuthProvider {
   AccessResult checkFeatureAccess(AppFeature feature) => AccessResult.full();
 }
 
+/// Sem Premium: a foto não é escolhida e a tela mostra a prévia dos campos.
+class _AuthSemPremium extends AuthProvider {
+  @override
+  bool get isPremiumEffective => false;
+
+  @override
+  AccessResult checkFeatureAccess(AppFeature feature) =>
+      AccessResult.preview();
+}
+
 class _EnciclopediaFake extends EncyclopediaProvider {
   _EnciclopediaFake() : super(statusDoSync: const Stream<SyncStatus>.empty());
 
@@ -91,9 +101,12 @@ void main() {
     SharedPreferences.setMockInitialValues({});
   });
 
-  Widget app(AddEntryPage page) => MultiProvider(
+  Widget app(AddEntryPage page, {AuthProvider Function()? auth}) =>
+      MultiProvider(
         providers: [
-          ChangeNotifierProvider<AuthProvider>(create: (_) => _AuthPremium()),
+          ChangeNotifierProvider<AuthProvider>(
+            create: (_) => (auth ?? _AuthPremium.new)(),
+          ),
           ChangeNotifierProvider<EncyclopediaProvider>(
             create: (_) => _EnciclopediaFake(),
           ),
@@ -135,16 +148,30 @@ void main() {
 
   Future<_IaDeMentira> montar(
     WidgetTester tester,
-    UserEntryCategory category,
-  ) async {
+    UserEntryCategory category, {
+    AuthProvider Function()? auth,
+  }) async {
     final ia = _IaDeMentira();
-    await tester.pumpWidget(app(AddEntryPage(
-      category: category,
-      escolherFoto: (_) async => png,
-      ia: ia,
-    )));
+    await tester.pumpWidget(app(
+      AddEntryPage(
+        category: category,
+        escolherFoto: (_) async => png,
+        ia: ia,
+      ),
+      auth: auth,
+    ));
     await tester.pumpAndSettle();
     return ia;
+  }
+
+  /// Toca no campo do nome (abre o teclado) e devolve o Element dele — a
+  /// prova de que o campo NÃO renasceu é o mesmo Element continuar vivo.
+  Future<Element> focarNome(WidgetTester tester) async {
+    await tester.tap(find.byType(TextField));
+    await tester.pump();
+    expect(tester.testTextInput.hasAnyClients, isTrue,
+        reason: 'o teclado abriu');
+    return tester.element(find.byType(TextField));
   }
 
   testWidgets('erva: sem foto, Gerar fica desabilitado e o atalho espera',
@@ -224,5 +251,55 @@ void main() {
         reason: 'nome da IA era da foto anterior');
     expect(find.text(l10n.encyAddIdentifiedAs), findsNothing);
     expect(ia.identificacoes, 1);
+  });
+
+  // O bug da web: "o teclado aparece e some". Um campo que renasce noutra
+  // posição da árvore perde o foco — e o teclado fecha. Dois cards entram
+  // ACIMA ou DENTRO do card do nome sem aviso: a prévia Premium e o título
+  // "Encontrei!". Com chaves, o campo é o mesmo antes e depois.
+  testWidgets('identificar não recria o campo do nome: o teclado fica aberto',
+      (tester) async {
+    await montar(tester, UserEntryCategory.herb);
+    final l10n = l10nDe(tester);
+    await tocar(tester, l10n.encyAddTakePhoto);
+
+    final antes = await focarNome(tester);
+    await tocar(tester, l10n.encyAddIdentifyCta);
+
+    expect(find.text(l10n.encyAddIdentifiedAs), findsOneWidget);
+    expect(identical(antes, tester.element(find.byType(TextField))), isTrue,
+        reason: 'o título entrou antes do campo, mas o campo é o mesmo');
+    expect(tester.testTextInput.hasAnyClients, isTrue,
+        reason: 'o teclado continua aberto');
+  });
+
+  testWidgets('sem Premium, a prévia entra acima e o nome continua no mesmo '
+      'campo, com o texto', (tester) async {
+    await montar(tester, UserEntryCategory.crystal, auth: _AuthSemPremium.new);
+    final l10n = l10nDe(tester);
+
+    final antes = await focarNome(tester);
+    await tester.enterText(find.byType(TextField), 'Ametista');
+    await tester.pump();
+
+    await tocar(tester, l10n.encyAddTakePhoto);
+    expect(find.text(l10n.encyLockedSaved), findsOneWidget,
+        reason: 'a prévia dos campos apareceu');
+    expect(identical(antes, tester.element(find.byType(TextField))), isTrue);
+    expect(campoNome(tester).controller!.text, 'Ametista');
+    expect(tester.testTextInput.hasAnyClients, isTrue);
+  });
+
+  testWidgets('o campo do nome é de uma linha: Enter conclui e não quebra',
+      (tester) async {
+    await montar(tester, UserEntryCategory.crystal);
+    final campo = campoNome(tester);
+    expect(campo.maxLines, 1);
+    expect(campo.textInputAction, TextInputAction.done);
+
+    await tester.enterText(find.byType(TextField), 'Quartzo\nrosa');
+    await tester.pump();
+    expect(campoNome(tester).controller!.text, 'Quartzorosa',
+        reason: 'quebra de linha não entra no nome');
   });
 }

@@ -100,6 +100,14 @@ class _PendulumPageState extends State<PendulumPage>
   final _mola = MolaDoPendulo();
   double _alvoDaInclinacao = 0;
 
+  /// A orientação em que a pessoa segura o celular é o "centro": deitada de
+  /// lado na cama, a gravidade já cai no eixo x da tela e o cristal ia todo
+  /// para a direita. A pose é capturada ao ligar o sensor e refeita a cada
+  /// Perguntar (ver [PoseNeutraDoPendulo]).
+  final _pose = PoseNeutraDoPendulo();
+  final _relogioDoSensor = Stopwatch();
+  Duration? _ultimaLeitura;
+
   /// Quadro a quadro, a mola anda rumo ao alvo — só enquanto o sensor está
   /// ligado (celular, em primeiro plano) e mudo com a aba escondida
   /// (TickerMode), como todo ticker deste State.
@@ -128,11 +136,22 @@ class _PendulumPageState extends State<PendulumPage>
   void _assinarSensor() {
     _sensorSub ??= (widget.acelerometro ?? _acelerometroDoAparelho)().listen(
       (e) {
-        // x é a inclinação lateral — e também o tranco da mão, que chega no
-        // mesmo eixo. Normaliza (fundo de escala em ~30°), tira o ruído e
-        // entrega como ALVO da mola: quem balança é a corrente, no ticker.
+        // A leitura é girada para o referencial da pose neutra: o x que sobra
+        // é a inclinação lateral EM RELAÇÃO a como a pessoa segura o celular
+        // — e também o tranco da mão, que chega no mesmo eixo. Normaliza
+        // (fundo de escala em ~30°), tira o ruído e entrega como ALVO da
+        // mola: quem balança é a corrente, no ticker. Antes da pose existir
+        // (meio segundo), o cristal fica no centro.
+        final agora = _relogioDoSensor.elapsed;
+        final anterior = _ultimaLeitura;
+        _ultimaLeitura = agora;
+        final dt = anterior == null
+            ? 0.0
+            : (agora - anterior).inMicroseconds /
+                Duration.microsecondsPerSecond;
+        final xNaPose = _pose.atualizar(Vetor3(e.x, e.y, e.z), dt: dt);
         _alvoDaInclinacao =
-            _filtro.atualizar(InclinacaoDoPendulo.normalizar(e.x));
+            _filtro.atualizar(InclinacaoDoPendulo.normalizar(xNaPose ?? 0));
       },
       onError: (_) {
         // Sensor indisponível (MissingPluginException em teste/desktop): o
@@ -142,6 +161,9 @@ class _PendulumPageState extends State<PendulumPage>
       cancelOnError: true,
     );
     _tickerDaMola ??= createTicker(_avancarMola)..start();
+    _relogioDoSensor
+      ..reset()
+      ..start();
   }
 
   void _desassinarSensor() {
@@ -150,6 +172,13 @@ class _PendulumPageState extends State<PendulumPage>
     _tickerDaMola?.dispose();
     _tickerDaMola = null;
     _ultimoQuadro = null;
+    _relogioDoSensor
+      ..stop()
+      ..reset();
+    _ultimaLeitura = null;
+    // Sensor religado = pose capturada de novo: a pessoa pode ter mudado de
+    // posição enquanto o app estava em segundo plano.
+    _pose.reiniciar();
     _filtro.zerar();
     _mola.zerar();
     _alvoDaInclinacao = 0;
@@ -271,6 +300,9 @@ class _PendulumPageState extends State<PendulumPage>
       _targetAngle = 0;
       _perguntaConsultada = pergunta;
     });
+    // Quem pergunta está na pose de consulta: ela vira o centro do pêndulo
+    // (deitada de lado, sentada, com o celular na mesa — tanto faz).
+    _pose.recalibrar();
     // Zera a fase antes de tudo: no modo "reduzir movimento" (que não gira o
     // controller) o cristal fica reto durante a pausa, em vez de travado num
     // ângulo herdado da consulta anterior.
