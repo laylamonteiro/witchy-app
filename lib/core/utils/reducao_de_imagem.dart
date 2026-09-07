@@ -64,6 +64,31 @@ String formatoDaFoto({String? mime, String? nome}) {
   return '?';
 }
 
+/// Os bytes parecem um arquivo da família HEIF (HEIC, HEIF, AVIF)?
+///
+/// A conta é a do contêiner ISOBMFF: os bytes 4..7 são `ftyp` e os 8..11
+/// trazem a marca. Serve para NÃO baixar 1,5 MB de decodificador por causa
+/// de um JPEG truncado ou de um TIFF, que também fazem o navegador recusar
+/// a imagem. `avif`/`avis` entram de propósito: o libheif também os abre, e
+/// navegadores antigos não.
+bool pareceHeif(List<int> bytes) {
+  if (bytes.length < 12) return false;
+  // 'ftyp'
+  if (bytes[4] != 0x66 ||
+      bytes[5] != 0x74 ||
+      bytes[6] != 0x79 ||
+      bytes[7] != 0x70) {
+    return false;
+  }
+  const marcas = {
+    'heic', 'heix', 'heim', 'heis', //
+    'hevc', 'hevx', 'hevm', 'hevs',
+    'mif1', 'msf1', 'avif', 'avis',
+  };
+  final marca = String.fromCharCodes(bytes.sublist(8, 12)).toLowerCase();
+  return marcas.contains(marca);
+}
+
 /// O navegador não decodifica esta foto (HEIC/HEIF, por exemplo): não dá
 /// para reduzir, e a tela também não conseguiria mostrá-la. Quem chama
 /// explica o formato em vez de seguir com bytes crus.

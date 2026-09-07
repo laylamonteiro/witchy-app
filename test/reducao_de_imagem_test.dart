@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:grimorio_de_bolso/core/utils/reducao_de_imagem.dart';
 
@@ -59,6 +61,41 @@ void main() {
       expect(formatoDaFoto(), '?');
       expect(formatoDaFoto(nome: 'semextensao'), '?');
       expect(formatoDaFoto(nome: 'termina.'), '?');
+    });
+  });
+
+  group('pareceHeif', () {
+    // Um HEIF de mentira: só o cabeçalho ISOBMFF importa aqui.
+    Uint8List comMarca(String marca, {String caixa = 'ftyp'}) =>
+        Uint8List.fromList([
+          0, 0, 0, 24, // tamanho da caixa
+          ...caixa.codeUnits,
+          ...marca.codeUnits,
+          ...List<int>.filled(12, 0),
+        ]);
+
+    Uint8List comeco(List<int> primeiros) =>
+        Uint8List.fromList([...primeiros, ...List<int>.filled(20, 0)]);
+
+    test('reconhece as marcas da família', () {
+      for (final marca in ['heic', 'heix', 'mif1', 'avif', 'hevc']) {
+        expect(pareceHeif(comMarca(marca)), isTrue, reason: marca);
+      }
+    });
+
+    test('não confunde JPEG nem PNG', () {
+      expect(pareceHeif(comeco([0xFF, 0xD8, 0xFF, 0xE0])), isFalse);
+      expect(pareceHeif(comeco([0x89, 0x50, 0x4E, 0x47])), isFalse);
+    });
+
+    test('caixa que não é ftyp, ou marca desconhecida, não passa', () {
+      expect(pareceHeif(comMarca('heic', caixa: 'moov')), isFalse);
+      expect(pareceHeif(comMarca('qt  ')), isFalse);
+    });
+
+    test('arquivo curto demais não explode', () {
+      expect(pareceHeif(Uint8List(0)), isFalse);
+      expect(pareceHeif(Uint8List(11)), isFalse);
     });
   });
 

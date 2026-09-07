@@ -82,8 +82,10 @@ Future<Uint8List?> _fotoDoAparelho(ImageSource source) async {
   if (picked == null) return null;
   Uint8List? reduzida;
   try {
+    // Folga sobre o teto de `compressPickedImage`: quem decide que não deu
+    // é a redução, com a mensagem certa, e não este relógio.
     reduzida = await compressPickedImage(picked)
-        .timeout(const Duration(seconds: 20));
+        .timeout(limiteDaReducaoWeb + const Duration(seconds: 15));
   } catch (e) {
     unawaited(debugLog('ENCY', 'Redução da foto falhou: $e'));
   }

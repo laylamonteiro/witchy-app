@@ -194,6 +194,15 @@ jobs:
         # incomodar na prática, rebaixar a informativo é reverter esta linha.
         run: flutter test
 
+      - name: 🧪 Ponte de HEIC (Node)
+        # A ponte JavaScript que decodifica HEIC/HEIF só existe no navegador,
+        # e `flutter test` roda na VM — então este é o único gate que a
+        # exercita. Ele prova o que cerca a decodificação: o encadeamento de
+        # promessas, o limite de tempo (a chamada de volta do libheif pode
+        # nunca vir) e a liberação da memória do wasm, que o coletor de lixo
+        # do JavaScript não alcança. O runner já traz Node.
+        run: node test/ponte_heic_test.mjs
+
       - name: 🔤 ARB key parity
         run: bash scripts/check_arb_sync.sh
 

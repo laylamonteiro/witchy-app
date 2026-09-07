@@ -61,6 +61,14 @@
        não atrasar o primeiro desenho: quem usa confere se já carregou. -->
   <script src="https://accounts.google.com/gsi/client" async></script>
 
+  <!-- HEIC/HEIF: o Chrome não decodifica o formato padrão da câmera de
+       muitos Androids e de todo iPhone, então a foto escolhida da galeria
+       nem aparecia. Este arquivo é só a ponte (2 KB); ele baixa o
+       decodificador de verdade (1,5 MB) apenas quando uma foto HEIC
+       aparece. `defer` porque nada disso é necessário para o primeiro
+       desenho. -->
+  <script src="heic/decodificador_heic.js" defer></script>
+
   <style>
     /* O fundo da página aparece em qualquer sobra; com a cor do app, some. */
     html, body {

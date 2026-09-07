@@ -22,6 +22,14 @@ import 'reducao_de_imagem_stub.dart'
 /// Devolve null quando a redução falha; quem chama decide o que fazer
 /// (no celular, seguir com os bytes originais; na web, null quer dizer que o
 /// navegador não abre a imagem — nem a tela conseguiria mostrá-la).
+/// Teto de espera da redução na web. Existe aqui, e não em cada tela, porque
+/// uma foto HEIC/HEIF passa pelo decodificador que o app carrega sob demanda
+/// (1,5 MB + compilação do wasm + decodificação): sem um teto único, a
+/// quiromancia e o diagnóstico, que não tinham nenhum, ficariam esperando
+/// para sempre. É maior que o limite interno da ponte, de propósito — quem
+/// deve responder "não deu" é ela, não este relógio.
+const Duration limiteDaReducaoWeb = Duration(seconds: 30);
+
 Future<Uint8List?> compressPickedImage(
   XFile picked, {
   int minWidth = 1024,
@@ -36,7 +44,7 @@ Future<Uint8List?> compressPickedImage(
         await picked.readAsBytes(),
         ladoMaximo: ladoMaximoWeb,
         qualidade: qualidadeWeb,
-      );
+      ).timeout(limiteDaReducaoWeb);
     } catch (e) {
       debugPrint('compressPickedImage: falha na web: $e');
       return null;

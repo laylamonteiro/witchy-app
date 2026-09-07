@@ -28,3 +28,10 @@
 
 /version.txt
   Cache-Control: no-cache, no-store, must-revalidate
+
+# O decodificador de HEIC tem nome fixo e conteúdo fixo (libheif 1.23.2), e
+# só é baixado por quem escolhe uma foto HEIC. Uma semana de cache poupa 1,5
+# MB a cada visita dessas — sem `immutable`, para uma atualização da
+# biblioteca não ficar presa atrás do cache de ninguém.
+/heic/*
+  Cache-Control: public, max-age=604800
