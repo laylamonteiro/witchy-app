@@ -52,8 +52,14 @@ type Provedor = keyof typeof PROVEDORES
 // no primeiro deploy sem configuração extra; `MODELOS_PERMITIDOS` (separados
 // por vírgula) sobrepõe. Lista vazia NÃO libera geral — recusa tudo.
 const MODELOS_PADRAO = [
-  'llama-3.3-70b-versatile',
+  // Texto. O `llama-3.3-70b-versatile` saiu daqui em 07/09/2026: virou
+  // Enterprise ("Contact Sales") no catálogo da Groq e passou a devolver
+  // 404 para esta conta. O `gpt-oss-120b` é o modelo de texto de PRODUÇÃO
+  // disponível no plano.
+  'openai/gpt-oss-120b',
+  // Visão (reserva; a principal é o Gemini).
   'qwen/qwen3.6-27b',
+  // Texto e visão do Google.
   'gemini-3.6-flash',
 ]
 
@@ -153,6 +159,11 @@ Deno.serve(async (req: Request) => {
   }
   const modelo = (pedido.modelo ?? '').trim()
   if (!modelo || !modelosPermitidos().includes(modelo)) {
+    // Registrado porque a recusa acontece ANTES de qualquer chamada ao
+    // provedor: sem esta linha, um modelo novo no app e uma lista velha aqui
+    // (ou um `MODELOS_PERMITIDOS` desatualizado) davam um 400 mudo, sem
+    // nada nos logs para apontar o culpado.
+    console.log(`ia: modelo recusado: ${modelo}`)
     return resposta({ erro: 'modelo' }, 400, cors)
   }
   if (pedido.corpo === null || typeof pedido.corpo !== 'object') {

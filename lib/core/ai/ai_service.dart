@@ -66,7 +66,16 @@ class AIService {
   AIService._();
 
   /// Modelo de texto do Groq.
-  static const String _textModel = 'llama-3.3-70b-versatile';
+  ///
+  /// Era o `llama-3.3-70b-versatile`, que em 07/09/2026 apareceu no catálogo
+  /// como Enterprise ("Contact Sales") e passou a devolver **404** para esta
+  /// conta — toda chamada de texto morria nele. O `gpt-oss-120b` é o modelo
+  /// de texto de PRODUÇÃO do plano (250 mil tokens/min, mil pedidos/min).
+  ///
+  /// Trocar aqui exige trocar também em `MODELOS_PADRAO` de
+  /// `supabase/functions/ia/index.ts`: a função recusa modelo fora da lista,
+  /// e agora registra a recusa no log.
+  static const String _textModel = 'openai/gpt-oss-120b';
 
   /// Modelo de texto do Google Gemini — o mesmo GA da visão.
   static const String _geminiTextModel = 'gemini-3.6-flash';
@@ -85,20 +94,10 @@ class AIService {
 
   // ===== Configuração de provedores (edite AQUI para trocar a IA) =====
 
-  /// Provedor de TEXTO padrão.
-  ///
-  /// Era o Groq, que responde mais rápido (sem a etapa de "pensamento" do
-  /// Gemini, que deixava análises longas lentas e truncadas). Só que o
-  /// [_textModel] saiu do catálogo e a Groq devolve **404** para ele: toda
-  /// chamada de texto gastava uma ida à rede antes de cair no Gemini. O
-  /// log da Edge Function mostra o par, minuto a minuto —
-  /// `groq/llama-3.3-70b-versatile -> 404` seguido de `gemini -> 503`.
-  ///
-  /// Para voltar ao Groq quando houver um modelo vigente: atualize
-  /// [_textModel], acrescente o nome novo a `MODELOS_PADRAO` em
-  /// `supabase/functions/ia/index.ts` (a função recusa modelo fora da
-  /// lista) e troque esta constante de volta.
-  static const AiProvider defaultTextProvider = AiProvider.gemini;
+  /// Provedor de TEXTO padrão. O Groq responde mais rápido (sem a etapa de
+  /// "pensamento" do Gemini, que deixava análises longas lentas e
+  /// truncadas) — com o [_textModel] vigente, ~500 tokens/s.
+  static const AiProvider defaultTextProvider = AiProvider.groq;
 
   /// Exceções por funcionalidade — a chave é a mesma `tag` que aparece nos
   /// logs [AI] ('sonho', 'feitiço', 'perfil mágico', 'clima do dia',
