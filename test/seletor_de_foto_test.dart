@@ -75,16 +75,22 @@ void main() {
     return (seletor: seletor, chamadas: chamadas);
   }
 
+  // Todo `escolher` roda em `runAsync`: o último passo lê um arquivo de
+  // verdade, e dentro do testWidgets (FakeAsync) I/O real nunca completa —
+  // a suíte inteira ficaria pendurada.
   testWidgets('a jornada inteira, na ordem, anunciando cada etapa',
       (tester) async {
     final etapas = <EtapaDaFoto>[];
     final saida = Uint8List.fromList([9, 9, 9]);
     final m = montar(reduzida: saida);
+    final ctx = await contexto(tester);
 
-    final bytes = await m.seletor.escolher(
-      await contexto(tester),
-      origem: ImageSource.gallery,
-      aoMudarEtapa: etapas.add,
+    final bytes = await tester.runAsync(
+      () => m.seletor.escolher(
+        ctx,
+        origem: ImageSource.gallery,
+        aoMudarEtapa: etapas.add,
+      ),
     );
 
     expect(bytes, saida);
@@ -100,22 +106,30 @@ void main() {
   testWidgets('o lado máximo pedido chega à redução (avatar usa 800)',
       (tester) async {
     final m = montar(reduzida: Uint8List(1));
-    await m.seletor.escolher(
-      await contexto(tester),
-      origem: ImageSource.camera,
-      ladoMaximo: 800,
+    final ctx = await contexto(tester);
+
+    await tester.runAsync(
+      () => m.seletor.escolher(
+        ctx,
+        origem: ImageSource.camera,
+        ladoMaximo: 800,
+      ),
     );
+
     expect(m.chamadas.last, 'reduzir:800');
   });
 
   testWidgets('desistir no seletor: null, e nada mais roda', (tester) async {
     final etapas = <EtapaDaFoto>[];
     final m = montar(desisteNoSeletor: true);
+    final ctx = await contexto(tester);
 
-    final bytes = await m.seletor.escolher(
-      await contexto(tester),
-      origem: ImageSource.gallery,
-      aoMudarEtapa: etapas.add,
+    final bytes = await tester.runAsync(
+      () => m.seletor.escolher(
+        ctx,
+        origem: ImageSource.gallery,
+        aoMudarEtapa: etapas.add,
+      ),
     );
 
     expect(bytes, isNull);
@@ -125,10 +139,10 @@ void main() {
 
   testWidgets('desistir no recorte: null, sem reduzir', (tester) async {
     final m = montar(recortado: null);
+    final ctx = await contexto(tester);
 
-    final bytes = await m.seletor.escolher(
-      await contexto(tester),
-      origem: ImageSource.gallery,
+    final bytes = await tester.runAsync(
+      () => m.seletor.escolher(ctx, origem: ImageSource.gallery),
     );
 
     expect(bytes, isNull);
@@ -142,11 +156,21 @@ void main() {
   testWidgets('foto que nem o libheif abre: a exceção sobe antes do recorte',
       (tester) async {
     final m = montar(conversaoFalha: true);
+    final ctx = await contexto(tester);
 
-    await expectLater(
-      m.seletor.escolher(await contexto(tester), origem: ImageSource.gallery),
-      throwsA(isA<FotoNaoSuportadaException>()
-          .having((e) => e.formato, 'formato', 'HEIC')),
+    Object? erro;
+    await tester.runAsync(() async {
+      try {
+        await m.seletor.escolher(ctx, origem: ImageSource.gallery);
+      } catch (e) {
+        erro = e;
+      }
+    });
+
+    expect(
+      erro,
+      isA<FotoNaoSuportadaException>()
+          .having((e) => e.formato, 'formato', 'HEIC'),
     );
     expect(m.chamadas, ['pegar:gallery:$ladoDoRecorte', 'preparar']);
   });
@@ -154,10 +178,10 @@ void main() {
   testWidgets('redução que devolve null: seguem os bytes do recorte',
       (tester) async {
     final m = montar(reduzida: null);
+    final ctx = await contexto(tester);
 
-    final bytes = await m.seletor.escolher(
-      await contexto(tester),
-      origem: ImageSource.gallery,
+    final bytes = await tester.runAsync(
+      () => m.seletor.escolher(ctx, origem: ImageSource.gallery),
     );
 
     expect(bytes, jpegDoRecorte);

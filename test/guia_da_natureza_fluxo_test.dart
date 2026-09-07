@@ -89,7 +89,7 @@ class _IaDeMentira implements GuiaDaNaturezaIa {
   Future<Map<String, dynamic>> gerar({
     required String name,
     required String categoryKey,
-    required Uint8List jpegBytes,
+    Uint8List? jpegBytes,
   }) async {
     geracoes++;
     bytesGerados = jpegBytes;
@@ -338,6 +338,8 @@ void main() {
 
     expect(ia.identificacoes, 0, reason: 'cristal nunca chama a visão');
     expect(ia.geracoes, 1);
+    expect(ia.bytesGerados, isNull,
+        reason: 'a foto do cristal fica na página, não vai ao prompt');
     expect(find.text(l10n.encyAddPreviewTitle), findsOneWidget);
   });
 

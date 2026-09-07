@@ -37,11 +37,14 @@ abstract class GuiaDaNaturezaIa {
   /// [UserEntryCategory.identificavelPorFoto]).
   Future<Map<String, dynamic>> identificarErva({required Uint8List jpegBytes});
 
-  /// O verbete completo a partir do nome, com a foto anexada.
+  /// O verbete completo a partir do nome. A foto vai junto SÓ para erva
+  /// (a descrição se ancora no exemplar real); cristal vai sem foto, pelo
+  /// caminho de texto — o de visão é mais lento e tem cota apertada, e a
+  /// pedra não precisa dele.
   Future<Map<String, dynamic>> gerar({
     required String name,
     required String categoryKey,
-    required Uint8List jpegBytes,
+    Uint8List? jpegBytes,
   });
 }
 
@@ -58,7 +61,7 @@ class _IaDoApp implements GuiaDaNaturezaIa {
   Future<Map<String, dynamic>> gerar({
     required String name,
     required String categoryKey,
-    required Uint8List jpegBytes,
+    Uint8List? jpegBytes,
   }) =>
       AIService.instance.generateEncyclopediaEntry(
         name: name,
@@ -410,9 +413,12 @@ class _AddEntryPageState extends State<AddEntryPage> {
       final data = await widget.ia.gerar(
         name: name,
         categoryKey: widget.category.key,
-        // O verbete considera a foto real: a descrição fala do exemplar
-        // fotografado, não de uma versão genérica da espécie.
-        jpegBytes: bytes,
+        // Erva: o verbete considera a foto real — a descrição fala do
+        // exemplar fotografado, não de uma versão genérica da espécie.
+        // Cristal: sem foto. O caminho de visão é mais lento (Gemini
+        // estourava 60 s) e tem cota apertada (Groq 429), e a pedra não
+        // precisa dele; a foto fica só na página.
+        jpegBytes: widget.category.identificavelPorFoto ? bytes : null,
       );
       if (!mounted) return;
       setState(() {
