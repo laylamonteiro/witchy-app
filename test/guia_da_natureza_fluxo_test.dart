@@ -55,12 +55,12 @@ class _CheckinFake extends DailyCheckinProvider {
 }
 
 class _IaDeMentira implements GuiaDaNaturezaIa {
-  _IaDeMentira({this.candidatos = 1, this.reconhece = true});
+  _IaDeMentira({this.candidatos = 1});
 
   /// Quantos nomes a identificação devolve: um segue a jornada sozinha,
-  /// mais de um abre o card de candidatos e espera a escolha.
+  /// mais de um abre o card de candidatos e espera a escolha, nenhum é
+  /// "não reconheci".
   final int candidatos;
-  final bool reconhece;
 
   int identificacoes = 0;
   int geracoes = 0;
@@ -73,7 +73,7 @@ class _IaDeMentira implements GuiaDaNaturezaIa {
     identificacoes++;
     const nomes = ['Alecrim', 'Lavanda', 'Camomila'];
     return {
-      'identified': reconhece,
+      'identified': true,
       'candidates': [
         for (var i = 0; i < candidatos; i++)
           {
@@ -220,7 +220,7 @@ void main() {
 
     await alternarNaoSeiONome(tester);
     expect(naoSeiONome(tester).value, isTrue);
-    expect(campoNome(tester).enabled, isFalse,
+    expect(campoNome(tester).readOnly, isTrue,
         reason: 'quem preenche o nome agora é a identificação');
 
     await tocar(tester, l10n.encyAddGenerateCta);
@@ -238,7 +238,7 @@ void main() {
     final l10n = l10nDe(tester);
 
     await tocar(tester, l10n.encyAddTakePhoto);
-    expect(campoNome(tester).enabled, isTrue);
+    expect(campoNome(tester).readOnly, isFalse);
     await tester.enterText(find.byType(TextField), 'Arruda');
     await tester.pump();
     await tocar(tester, l10n.encyAddGenerateCta);
@@ -281,6 +281,25 @@ void main() {
     expect(find.text(l10n.encyAddPreviewTitle), findsOneWidget);
   });
 
+  testWidgets('erva: não reconhecendo nada, a caixa se desmarca sozinha',
+      (tester) async {
+    final ia = await montar(tester, UserEntryCategory.herb,
+        ia0: _IaDeMentira(candidatos: 0));
+    final l10n = l10nDe(tester);
+
+    await tocar(tester, l10n.encyAddTakePhoto);
+    await alternarNaoSeiONome(tester);
+    await tocar(tester, l10n.encyAddGenerateCta);
+
+    expect(ia.identificacoes, 1);
+    expect(ia.geracoes, 0);
+    expect(find.text(l10n.encyAddNotIdentified), findsOneWidget);
+    // Sem isto ela ficaria num beco: campo travado, sem nome, e um botão
+    // que só repetiria a identificação que acabou de falhar.
+    expect(naoSeiONome(tester).value, isFalse);
+    expect(campoNome(tester).readOnly, isFalse);
+  });
+
   testWidgets('erva: "nenhuma dessas" desmarca a caixa e devolve o campo',
       (tester) async {
     final ia = await montar(tester, UserEntryCategory.herb,
@@ -294,7 +313,7 @@ void main() {
 
     expect(ia.geracoes, 0, reason: 'sem nome, nada a gerar ainda');
     expect(naoSeiONome(tester).value, isFalse);
-    expect(campoNome(tester).enabled, isTrue);
+    expect(campoNome(tester).readOnly, isFalse);
     expect(campoNome(tester).controller!.text, isEmpty);
   });
 
