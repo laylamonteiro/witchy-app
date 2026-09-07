@@ -7,9 +7,12 @@ import 'package:grimorio_de_bolso/core/widgets/photo_source_buttons.dart';
 // da galeria quebrava em duas linhas (três em inglês), o ícone era empurrado
 // para a borda e os dois botões ficavam com pesos visuais diferentes.
 //
-// O teste monta COM O TEMA DO APP de propósito: a quebra depende do
-// preenchimento e da fonte do tema, então um MaterialApp pelado mediria
-// outro botão que não o da tela.
+// O teste monta com o tema do app (é dele que vêm o preenchimento e a
+// borda dos botões), mas NÃO afirma quantas linhas cada rótulo ocupa:
+// `flutter test` desenha com a fonte de teste, de largura fixa, e não com a
+// Nunito do aparelho — uma conta de caracteres aqui provaria a fonte errada.
+// O que dá para garantir, e é o que a usuária pediu, é que os dois ladrilhos
+// tenham sempre o mesmo tamanho e que nada estoure.
 void main() {
   // Largura útil dentro do MagicalCard: a tela desconta a margem (16 de cada
   // lado) e o preenchimento (16 de cada lado).
@@ -57,46 +60,6 @@ void main() {
         ),
       );
 
-  double alturaDoRotulo(WidgetTester tester, String rotulo) =>
-      tester.getSize(find.text(rotulo)).height;
-
-  /// Altura do mesmo rótulo com largura de sobra — a referência de UMA linha.
-  Future<double> alturaDeUmaLinha(
-    WidgetTester tester,
-    String rotulo, {
-    required bool naGaleria,
-  }) async {
-    await montar(
-      tester,
-      largura: 1200,
-      camera: naGaleria ? 'x' : rotulo,
-      galeria: naGaleria ? rotulo : 'x',
-    );
-    return alturaDoRotulo(tester, rotulo);
-  }
-
-  Future<void> cabeNumaLinha(
-    WidgetTester tester,
-    String rotulo, {
-    required double aparelho,
-    required bool naGaleria,
-    String outro = 'Tirar foto',
-  }) async {
-    final umaLinha =
-        await alturaDeUmaLinha(tester, rotulo, naGaleria: naGaleria);
-    await montar(
-      tester,
-      largura: dentroDoCard(aparelho),
-      camera: naGaleria ? outro : rotulo,
-      galeria: naGaleria ? rotulo : outro,
-    );
-    expect(
-      alturaDoRotulo(tester, rotulo),
-      moreOrLessEquals(umaLinha, epsilon: 0.5),
-      reason: '"$rotulo" quebrou em mais de uma linha a $aparelho dp',
-    );
-  }
-
   testWidgets('num aparelho de 360 dp os dois botões ficam do mesmo tamanho',
       (tester) async {
     await montar(tester, largura: dentroDoCard(360));
@@ -106,21 +69,42 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('a 360 dp cada rótulo cabe numa linha nos três idiomas',
+  testWidgets('rótulo comprido em qualquer um dos dois: continuam iguais',
       (tester) async {
-    await cabeNumaLinha(tester, 'Tirar foto',
-        aparelho: 360, naGaleria: false, outro: 'Da galeria');
-    await cabeNumaLinha(tester, 'Da galeria', aparelho: 360, naGaleria: true);
+    // Se um rótulo quebrar em duas linhas — outro idioma, fonte ampliada, um
+    // aparelho mais estreito —, os dois ladrilhos crescem JUNTOS. Quantos
+    // caracteres cabem por linha não dá para afirmar aqui: `flutter test`
+    // desenha com a fonte de teste, não com a Nunito do aparelho.
+    for (final par in [
+      ('Tirar foto', 'Da galeria'),
+      ('Take photo', 'From gallery'),
+      ('Tomar foto', 'De la galería'),
+      ('Tirar foto', 'Escolher uma foto da galeria do aparelho'),
+    ]) {
+      await montar(
+        tester,
+        largura: dentroDoCard(360),
+        camera: par.$1,
+        galeria: par.$2,
+      );
+      expect(tamanhoDoBotao(tester, par.$1), tamanhoDoBotao(tester, par.$2),
+          reason: '${par.$1} × ${par.$2}');
+      expect(tester.takeException(), isNull);
+    }
+  });
 
-    await cabeNumaLinha(tester, 'Take photo',
-        aparelho: 360, naGaleria: false, outro: 'From gallery');
-    await cabeNumaLinha(tester, 'From gallery',
-        aparelho: 360, naGaleria: true, outro: 'Take photo');
+  testWidgets('o rótulo fica centralizado, e não colado no ícone',
+      (tester) async {
+    await montar(tester, largura: dentroDoCard(360));
 
-    await cabeNumaLinha(tester, 'Tomar foto',
-        aparelho: 360, naGaleria: false, outro: 'De la galería');
-    await cabeNumaLinha(tester, 'De la galería',
-        aparelho: 360, naGaleria: true, outro: 'Tomar foto');
+    final rotulo = tester.widget<Text>(find.text('Da galeria'));
+    expect(rotulo.textAlign, TextAlign.center);
+    expect(rotulo.maxLines, 2, reason: 'teto de duas linhas, sem cortar');
+
+    // O ícone fica ACIMA do rótulo: é o que devolve a largura inteira do
+    // ladrilho para o texto.
+    final icone = tester.getCenter(find.byIcon(Icons.photo_library_outlined));
+    expect(icone.dy, lessThan(tester.getCenter(find.text('Da galeria')).dy));
   });
 
   testWidgets('numa tela estreita continuam do mesmo tamanho, sem estourar',

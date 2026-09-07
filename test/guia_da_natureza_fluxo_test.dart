@@ -176,6 +176,10 @@ void main() {
 
   /// Marca/desmarca "não sei o nome" tocando no rótulo, como a pessoa faz.
   Future<void> alternarNaoSeiONome(WidgetTester tester) async {
+    // Com a prévia da foto na tela, a caixa nasce abaixo da dobra do palco
+    // de teste: sem rolar até ela, o toque erra o alvo e o Flutter só avisa.
+    await tester.ensureVisible(find.byType(CheckboxListTile));
+    await tester.pump();
     await tester.tap(find.byType(CheckboxListTile));
     await tester.pump();
     await tester.pumpAndSettle();
@@ -348,7 +352,8 @@ void main() {
     expect(campoNome(tester).controller!.text, 'Manjericao',
         reason: 'o que a pessoa digitou continua valendo');
 
-    await tocar(tester, l10n.encyAddIdentifyCta);
+    await alternarNaoSeiONome(tester);
+    await tocar(tester, l10n.encyAddGenerateCta);
     expect(campoNome(tester).controller!.text, 'Alecrim');
 
     await tocar(tester, l10n.encyAddFromGallery);
@@ -362,20 +367,25 @@ void main() {
   // posição da árvore perde o foco — e o teclado fecha. Dois cards entram
   // ACIMA ou DENTRO do card do nome sem aviso: a prévia Premium e o título
   // "Encontrei!". Com chaves, o campo é o mesmo antes e depois.
-  testWidgets('identificar não recria o campo do nome: o teclado fica aberto',
+  testWidgets('marcar a caixa e identificar não recriam o campo do nome',
       (tester) async {
     await montar(tester, UserEntryCategory.herb);
     final l10n = l10nDe(tester);
     await tocar(tester, l10n.encyAddTakePhoto);
 
     final antes = await focarNome(tester);
-    await tocar(tester, l10n.encyAddIdentifyCta);
 
+    // Marcar tira o campo das mãos dela de propósito — o teclado fechar aqui
+    // é o comportamento pedido, não o bug. O que não pode é o campo renascer.
+    await alternarNaoSeiONome(tester);
+    expect(campoNome(tester).readOnly, isTrue);
+    expect(identical(antes, tester.element(find.byType(TextField))), isTrue,
+        reason: 'mesmo campo, só que fora de uso');
+
+    await tocar(tester, l10n.encyAddGenerateCta);
     expect(find.text(l10n.encyAddIdentifiedAs), findsOneWidget);
     expect(identical(antes, tester.element(find.byType(TextField))), isTrue,
         reason: 'o título entrou antes do campo, mas o campo é o mesmo');
-    expect(tester.testTextInput.hasAnyClients, isTrue,
-        reason: 'o teclado continua aberto');
   });
 
   testWidgets('sem Premium, a prévia entra acima e o nome continua no mesmo '
