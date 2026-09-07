@@ -46,7 +46,7 @@ Future<Uint8List?> reduzirImagemNoNavegador(
     );
     // data URL em vez de toBlob: síncrono, sem callback, e o base64 de um
     // JPEG de algumas centenas de KB é barato.
-    final dataUrl = canvas.toDataUrl('image/jpeg', qualidade.toJS);
+    final dataUrl = canvas.toDataUrl('image/jpeg', qualidade);
     final virgula = dataUrl.indexOf(',');
     if (!dataUrl.startsWith('data:image/jpeg') || virgula < 0) return null;
     return base64Decode(dataUrl.substring(virgula + 1));
