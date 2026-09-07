@@ -140,19 +140,12 @@ void main() {
       'cycleReadingSectionInstruction (seal)': (p, g) =>
           p.cycleReadingSectionInstruction('seal'),
       'defaultSpellName': (p, g) => p.defaultSpellName,
-      'encyIdentifySystemPrompt (crystal)': (p, g) =>
-          p.encyIdentifySystemPrompt('crystal'),
-      'encyIdentifySystemPrompt (herb)': (p, g) =>
-          p.encyIdentifySystemPrompt('herb'),
-      'encyIdentifySystemPrompt (color)': (p, g) =>
-          p.encyIdentifySystemPrompt('color'),
+      'encyIdentifySystemPrompt': (p, g) => p.encyIdentifySystemPrompt,
       'encyIdentifyUserMessage': (p, g) => p.encyIdentifyUserMessage,
       'encyGenerateSystemPrompt (crystal)': (p, g) =>
           p.encyGenerateSystemPrompt('crystal', 'Ametista'),
       'encyGenerateSystemPrompt (herb)': (p, g) =>
           p.encyGenerateSystemPrompt('herb', 'Alecrim'),
-      'encyGenerateSystemPrompt (color)': (p, g) =>
-          p.encyGenerateSystemPrompt('color', 'Verde'),
       'encyGenerateUserMessage': (p, g) =>
           p.encyGenerateUserMessage('Alecrim'),
       'errorInvalidRequest': (p, g) => p.errorInvalidRequest,
