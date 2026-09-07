@@ -19,24 +19,32 @@ class PhotoSourceButtons extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: OutlinedButton.icon(
-            onPressed: onCamera,
-            icon: const Icon(Icons.photo_camera_outlined),
-            label: Text(cameraLabel),
+    // Cada botão ocupa metade da largura (Expanded), mas a altura era a do
+    // próprio rótulo: "Escolher da galeria" quebra em duas linhas numa tela
+    // estreita e ficava mais alto que "Tirar foto". O IntrinsicHeight mede o
+    // mais alto dos dois e o stretch estica o outro até lá — mesma largura,
+    // mesma altura, sem cortar texto.
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Expanded(
+            child: OutlinedButton.icon(
+              onPressed: onCamera,
+              icon: const Icon(Icons.photo_camera_outlined),
+              label: Text(cameraLabel, textAlign: TextAlign.center),
+            ),
           ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: OutlinedButton.icon(
-            onPressed: onGallery,
-            icon: const Icon(Icons.photo_library_outlined),
-            label: Text(galleryLabel),
+          const SizedBox(width: 12),
+          Expanded(
+            child: OutlinedButton.icon(
+              onPressed: onGallery,
+              icon: const Icon(Icons.photo_library_outlined),
+              label: Text(galleryLabel, textAlign: TextAlign.center),
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
