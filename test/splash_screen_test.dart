@@ -77,9 +77,12 @@ void main() {
     await tester.pump();
     expect(toques, 0);
 
-    // 2,5 s de logo + fade de saída.
+    // 2,5 s de logo + fade de saída. O controller só se dá por concluído
+    // num tick DEPOIS do fim da duração (isDone é `t > duração`), daí o
+    // quadro extra antes do rebuild que tira a camada.
     await tester.pump(SplashScreen.duracao);
     await tester.pump(SplashScreen.saida);
+    await tester.pump(const Duration(milliseconds: 50));
     await tester.pump();
     expect(find.byType(Image), findsNothing, reason: 'logo saiu');
 
