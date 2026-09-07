@@ -282,7 +282,11 @@ void main() {
     await tester.enterText(find.byType(TextField), 'Ametista');
     await tester.pump();
 
-    await tocar(tester, l10n.encyAddTakePhoto);
+    // Sem pumpAndSettle: a prévia traz o VeuVivo, que anima em loop e nunca
+    // "assenta" — quadros contados bastam para a prévia aparecer.
+    await tester.tap(find.text(l10n.encyAddTakePhoto));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
     expect(find.text(l10n.encyLockedSaved), findsOneWidget,
         reason: 'a prévia dos campos apareceu');
     expect(identical(antes, tester.element(find.byType(TextField))), isTrue);
