@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:image_picker/image_picker.dart';
@@ -11,6 +12,7 @@ import '../../../../core/services/debug_log_service.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/utils/image_compression.dart';
+import '../../../../core/utils/reducao_de_imagem.dart';
 import '../../../../core/widgets/magical_button.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/widgets/photo_source_buttons.dart';
@@ -68,23 +70,35 @@ class _IaDoApp implements GuiaDaNaturezaIa {
 /// A foto do aparelho: picker (já reduzida a 1600 px) + compressão, que
 /// corrige o EXIF e remove metadados — mesmo pipeline da quiromancia.
 Future<Uint8List?> _fotoDoAparelho(ImageSource source) async {
+  // Na web a redução fica toda com compressPickedImage: o redimensionador
+  // do image_picker é cego ao formato (devolve o arquivo original quando o
+  // navegador não decodifica, e reexporta PNG como PNG). No celular o
+  // picker já entrega ≤ 1600 px e o compressor nativo faz o resto.
   final picked = await ImagePicker().pickImage(
     source: source,
-    maxWidth: 1600,
-    maxHeight: 1600,
+    maxWidth: kIsWeb ? null : 1600,
+    maxHeight: kIsWeb ? null : 1600,
   );
   if (picked == null) return null;
-  // A compressão pode falhar (formato que o navegador não decodifica, plugin
-  // sem suporte) ou não voltar: aí segue com os bytes originais, como a
-  // quiromancia já faz — o limite de tamanho, logo adiante, decide.
-  Uint8List? comprimida;
+  Uint8List? reduzida;
   try {
-    comprimida = await compressPickedImage(picked)
+    reduzida = await compressPickedImage(picked)
         .timeout(const Duration(seconds: 20));
   } catch (e) {
-    unawaited(debugLog('ENCY', 'Compressão da foto falhou: $e'));
+    unawaited(debugLog('ENCY', 'Redução da foto falhou: $e'));
   }
-  return comprimida ?? await picked.readAsBytes();
+  if (reduzida != null) return reduzida;
+  if (kIsWeb) {
+    // Sem redução na web = o navegador não abriu a imagem (HEIC/HEIF…):
+    // nem a tela conseguiria mostrá-la. Diz o formato, em vez de seguir com
+    // bytes crus que só iam estourar o limite de tamanho.
+    final formato = formatoDaFoto(mime: picked.mimeType, nome: picked.name);
+    unawaited(debugLog('ENCY', 'Navegador não decodificou a foto ($formato)'));
+    throw FotoNaoSuportadaException(formato);
+  }
+  // No celular a compressão pode falhar por outros motivos: segue com os
+  // bytes originais, como a quiromancia faz — o limite de tamanho decide.
+  return picked.readAsBytes();
 }
 
 /// Adicionar entrada pessoal à enciclopédia (Premium): erva ou cristal.
@@ -202,6 +216,13 @@ class _AddEntryPageState extends State<AddEntryPage> {
     final Uint8List? bytes;
     try {
       bytes = await widget.escolherFoto(source);
+    } on FotoNaoSuportadaException catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _escolhendoFoto = false;
+        _erroDaFoto = l10n.encyAddPhotoUnsupported(e.formato);
+      });
+      return;
     } catch (e) {
       unawaited(debugLog('ENCY', 'Falha ao abrir a foto ($source): $e'));
       if (!mounted) return;

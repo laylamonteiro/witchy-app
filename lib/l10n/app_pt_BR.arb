@@ -1532,6 +1532,14 @@
   "encyAddImageTooLarge": "Imagem muito grande. Tente outra foto",
   "encyAddOpeningPhoto": "Abrindo a foto…",
   "encyAddPhotoFailed": "Não consegui abrir essa foto. Tente outra ou tire uma nova",
+  "encyAddPhotoUnsupported": "Esse formato ({formato}) o navegador não abre. Converta para JPG ou tire uma foto nova",
+  "@encyAddPhotoUnsupported": {
+    "placeholders": {
+      "formato": {
+        "type": "String"
+      }
+    }
+  },
   "encyAddNameRequired": "Digite um nome para gerar a página",
   "encyAddFabTooltip": "Adicionar com foto",
   "encyDeleteEntryTitle": "Excluir página?",

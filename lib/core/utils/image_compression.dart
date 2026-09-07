@@ -4,45 +4,54 @@ import 'package:flutter/foundation.dart' show debugPrint, kIsWeb;
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:image_picker/image_picker.dart';
 
-/// Comprime a imagem escolhida: corrige a rotação do EXIF, remove metadados
-/// e limita o tamanho do envio.
+import 'reducao_de_imagem.dart';
+import 'reducao_de_imagem_stub.dart'
+    if (dart.library.js_interop) 'reducao_de_imagem_web.dart';
+
+/// Reduz a imagem escolhida: corrige a rotação do EXIF, remove metadados e
+/// limita o tamanho do envio. A ÚNICA porta de redução do app — verbete,
+/// quiromancia e diagnóstico passam por aqui.
 ///
-/// Existe porque a API por CAMINHO de arquivo do flutter_image_compress não
-/// funciona na web — lá não há filesystem, e o "path" de um XFile é um blob do
-/// navegador. Só a variante por bytes serve. Concentrar a diferença aqui evita
-/// espalhar `if (kIsWeb)` por cada tela que aceita foto.
+/// Na web o app reduz por conta própria (canvas do navegador, ver
+/// `reducao_de_imagem_web.dart`): os plugins são cegos ao formato — o
+/// redimensionador do image_picker devolve o arquivo original quando o
+/// navegador não decodifica, e a compressão por bytes depende da versão do
+/// plugin. No celular, o `flutter_image_compress` nativo (que decodifica
+/// HEIC) continua.
 ///
-/// Devolve null quando a compressão falha; quem chama decide o que fazer
-/// (normalmente seguir com os bytes originais).
+/// Devolve null quando a redução falha; quem chama decide o que fazer
+/// (no celular, seguir com os bytes originais; na web, null quer dizer que o
+/// navegador não abre a imagem — nem a tela conseguiria mostrá-la).
 Future<Uint8List?> compressPickedImage(
   XFile picked, {
   int minWidth = 1024,
   int minHeight = 1024,
   int quality = 82,
+  int ladoMaximoWeb = ladoMaximoDaFoto,
+  double qualidadeWeb = qualidadeDaFoto,
 }) async {
   if (kIsWeb) {
     try {
-      return await FlutterImageCompress.compressWithList(
+      return await reduzirImagemNoNavegador(
         await picked.readAsBytes(),
-        minWidth: minWidth,
-        minHeight: minHeight,
-        quality: quality,
-        format: CompressFormat.jpeg,
+        ladoMaximo: ladoMaximoWeb,
+        qualidade: qualidadeWeb,
       );
     } catch (e) {
-      // Na web `compressWithList` LANÇA (não devolve null) quando o
-      // navegador não decodifica a imagem ou o plugin não está pronto.
-      // Honra o contrato desta função: null, e quem chama segue com os
-      // bytes originais.
       debugPrint('compressPickedImage: falha na web: $e');
       return null;
     }
   }
-  return FlutterImageCompress.compressWithFile(
-    picked.path,
-    minWidth: minWidth,
-    minHeight: minHeight,
-    quality: quality,
-    format: CompressFormat.jpeg,
-  );
+  try {
+    return await FlutterImageCompress.compressWithFile(
+      picked.path,
+      minWidth: minWidth,
+      minHeight: minHeight,
+      quality: quality,
+      format: CompressFormat.jpeg,
+    );
+  } catch (e) {
+    debugPrint('compressPickedImage: falha no aparelho: $e');
+    return null;
+  }
 }

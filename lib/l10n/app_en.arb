@@ -1532,6 +1532,14 @@
   "encyAddImageTooLarge": "Image too large. Try another photo",
   "encyAddOpeningPhoto": "Opening the photo…",
   "encyAddPhotoFailed": "Couldn't open that photo. Try another one or take a new picture",
+  "encyAddPhotoUnsupported": "The browser can't open this format ({formato}). Convert it to JPG or take a new picture",
+  "@encyAddPhotoUnsupported": {
+    "placeholders": {
+      "formato": {
+        "type": "String"
+      }
+    }
+  },
   "encyAddNameRequired": "Type a name to generate the page",
   "encyAddFabTooltip": "Add with a photo",
   "encyDeleteEntryTitle": "Delete page?",

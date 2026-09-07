@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:grimorio_de_bolso/core/services/data_sync_service.dart';
+import 'package:grimorio_de_bolso/core/utils/reducao_de_imagem.dart';
 import 'package:grimorio_de_bolso/core/widgets/magical_button.dart';
 import 'package:grimorio_de_bolso/features/auth/data/models/feature_access.dart';
 import 'package:grimorio_de_bolso/features/auth/presentation/providers/auth_provider.dart';
@@ -349,6 +350,26 @@ void main() {
     expect(find.text(l10n.encyAddOpeningPhoto), findsNothing);
     expect(botaoDaGaleria(tester, l10n).onPressed, isNotNull);
     expect(gerar(tester).enabled, isFalse, reason: 'continua sem foto');
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('formato que o navegador não abre: a mensagem diz qual é',
+      (tester) async {
+    await montar(
+      tester,
+      UserEntryCategory.crystal,
+      escolherFoto: (_) async => throw const FotoNaoSuportadaException('HEIC'),
+    );
+    final l10n = l10nDe(tester);
+
+    await tester.tap(find.text(l10n.encyAddFromGallery));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+
+    expect(find.text(l10n.encyAddPhotoUnsupported('HEIC')), findsOneWidget);
+    expect(find.text(l10n.encyAddPhotoFailed), findsNothing);
+    expect(botaoDaGaleria(tester, l10n).onPressed, isNotNull);
+    expect(gerar(tester).enabled, isFalse);
     expect(tester.takeException(), isNull);
   });
 
