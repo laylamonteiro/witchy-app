@@ -1,14 +1,13 @@
 import 'dart:async';
 import 'dart:typed_data';
 
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart' show FilteringTextInputFormatter;
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../core/ai/ai_service.dart';
+import '../../../../core/services/debug_log_service.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/utils/image_compression.dart';
@@ -75,7 +74,17 @@ Future<Uint8List?> _fotoDoAparelho(ImageSource source) async {
     maxHeight: 1600,
   );
   if (picked == null) return null;
-  return compressPickedImage(picked);
+  // A compressão pode falhar (formato que o navegador não decodifica, plugin
+  // sem suporte) ou não voltar: aí segue com os bytes originais, como a
+  // quiromancia já faz — o limite de tamanho, logo adiante, decide.
+  Uint8List? comprimida;
+  try {
+    comprimida = await compressPickedImage(picked)
+        .timeout(const Duration(seconds: 20));
+  } catch (e) {
+    unawaited(debugLog('ENCY', 'Compressão da foto falhou: $e'));
+  }
+  return comprimida ?? await picked.readAsBytes();
 }
 
 /// Adicionar entrada pessoal à enciclopédia (Premium): erva ou cristal.
@@ -139,11 +148,21 @@ class _AddEntryPageState extends State<AddEntryPage> {
   bool _saving = false;
   String? _error;
 
+  /// O seletor está aberto ou a foto está sendo comprimida: botões travados
+  /// e um aviso no card. Antes não havia estado nenhum aqui — uma falha caía
+  /// na zona (só log) e a pessoa via "nada acontecer".
+  bool _escolhendoFoto = false;
+
+  /// Falha ao abrir/aceitar a foto, mostrada DENTRO do card da foto (o erro
+  /// geral fica no fim da página, fora da vista).
+  String? _erroDaFoto;
+
   /// Pediu a foto sem ter Premium: a tela mostra os campos que o verbete
   /// traria, em vez de bater a porta na entrada.
   bool _mostrarPrevia = false;
 
-  bool get _ocupado => _identifying || _generating || _saving;
+  bool get _ocupado =>
+      _escolhendoFoto || _identifying || _generating || _saving;
 
   @override
   void dispose() {
@@ -152,8 +171,12 @@ class _AddEntryPageState extends State<AddEntryPage> {
   }
 
   Future<void> _pick(ImageSource source) async {
+    if (_ocupado) return;
     final l10n = AppLocalizations.of(context);
-    setState(() => _error = null);
+    setState(() {
+      _error = null;
+      _erroDaFoto = null;
+    });
 
     // Sem Premium nada acontece: a foto não é escolhida, não sai do aparelho
     // e nenhuma chamada de IA é feita. O que aparece é a lista dos campos
@@ -175,17 +198,40 @@ class _AddEntryPageState extends State<AddEntryPage> {
       return;
     }
 
-    final bytes = await widget.escolherFoto(source);
-    if (bytes == null || !mounted) return;
-    if (bytes.length > _maxUploadBytes) {
-      setState(() => _error = l10n.encyAddImageTooLarge);
+    setState(() => _escolhendoFoto = true);
+    final Uint8List? bytes;
+    try {
+      bytes = await widget.escolherFoto(source);
+    } catch (e) {
+      unawaited(debugLog('ENCY', 'Falha ao abrir a foto ($source): $e'));
+      if (!mounted) return;
+      setState(() {
+        _escolhendoFoto = false;
+        _erroDaFoto = l10n.encyAddPhotoFailed;
+      });
       return;
     }
+    if (!mounted) return;
+    if (bytes == null) {
+      // Desistiu no seletor: nada a dizer.
+      setState(() => _escolhendoFoto = false);
+      return;
+    }
+    if (bytes.length > _maxUploadBytes) {
+      unawaited(debugLog('ENCY', 'Foto grande demais: ${bytes.length} bytes'));
+      setState(() {
+        _escolhendoFoto = false;
+        _erroDaFoto = l10n.encyAddImageTooLarge;
+      });
+      return;
+    }
+    unawaited(debugLog('ENCY', 'Foto pronta: ${bytes.length} bytes ($source)'));
 
     // Foto nova, verbete novo: o que a IA disse da foto anterior não vale
     // mais. O nome só é limpo se veio da identificação — o que a pessoa
     // digitou por conta própria continua valendo.
     setState(() {
+      _escolhendoFoto = false;
       _jpegBytes = bytes;
       _generated = null;
       _candidates = const [];
@@ -503,6 +549,34 @@ class _AddEntryPageState extends State<AddEntryPage> {
             cameraLabel: l10n.encyAddTakePhoto,
             galleryLabel: l10n.encyAddFromGallery,
           ),
+          if (_escolhendoFoto) ...[
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                const SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    l10n.encyAddOpeningPhoto,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: context.gc.textSecondary,
+                        ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+          if (_erroDaFoto != null) ...[
+            const SizedBox(height: 12),
+            Text(
+              _erroDaFoto!,
+              style: TextStyle(color: context.gc.alert),
+            ),
+          ],
         ],
       ),
     );
@@ -677,17 +751,6 @@ class _AddEntryPageState extends State<AddEntryPage> {
             key: const ValueKey('campo-do-nome'),
             controller: _nameController,
             textCapitalization: TextCapitalization.sentences,
-            // NA WEB, no Chrome do Android, este campo abria o teclado e ele
-            // fechava sozinho. Os campos de texto que funcionam lá (pergunta
-            // do pêndulo, pergunta do Tarô) são de duas linhas — no
-            // navegador, um <textarea>; este era o único <input> de uma
-            // linha do fluxo. O tipo `multiline` faz o engine da web criar o
-            // mesmo <textarea>, e o campo continua de UMA linha na tela:
-            // Enter é "concluir" (fecha o teclado) e quebra de linha não
-            // entra. Fora da web nada muda.
-            keyboardType: kIsWeb ? TextInputType.multiline : TextInputType.text,
-            textInputAction: TextInputAction.done,
-            inputFormatters: [FilteringTextInputFormatter.singleLineFormatter],
             decoration: InputDecoration(
               labelText: l10n.encyAddNameLabel,
               hintText: l10n.encyAddNameHint,
@@ -791,6 +854,29 @@ class _AddEntryPageState extends State<AddEntryPage> {
           ...chips('ritualUses', context.gc.mint),
           ...chips('safetyWarnings', context.gc.alert),
           const SizedBox(height: 16),
+          // Salvar é quando a foto SOBE para a nuvem: além do rótulo do
+          // botão, um indicador de que há trabalho em curso.
+          if (_saving) ...[
+            Row(
+              children: [
+                const SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    l10n.encyAddSaving,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: context.gc.textSecondary,
+                        ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+          ],
           MagicalButton(
             text: _saving ? l10n.encyAddSaving : l10n.encyAddSaveCta,
             icon: Icons.bookmark_add_outlined,

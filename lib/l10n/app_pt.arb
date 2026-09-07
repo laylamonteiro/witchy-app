@@ -2189,6 +2189,8 @@
     }
   },
   "encyAddImageTooLarge": "Imagem muito grande. Tente outra foto",
+  "encyAddOpeningPhoto": "Abrindo a foto…",
+  "encyAddPhotoFailed": "Não consegui abrir essa foto. Tente outra ou tire uma nova",
   "encyAddNameRequired": "Digite um nome para gerar a página",
   "encyAddFabTooltip": "Adicionar com foto",
   "encyDeleteEntryTitle": "Excluir página?",

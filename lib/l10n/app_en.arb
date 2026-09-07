@@ -1530,6 +1530,8 @@
   "encyAddSaved": "Page saved to your encyclopedia! ✨",
   "encyAddDailyLimit": "You have already created {count} pages today — come back tomorrow to keep feeding your encyclopedia",
   "encyAddImageTooLarge": "Image too large. Try another photo",
+  "encyAddOpeningPhoto": "Opening the photo…",
+  "encyAddPhotoFailed": "Couldn't open that photo. Try another one or take a new picture",
   "encyAddNameRequired": "Type a name to generate the page",
   "encyAddFabTooltip": "Add with a photo",
   "encyDeleteEntryTitle": "Delete page?",

@@ -1,6 +1,6 @@
 import 'dart:typed_data';
 
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show debugPrint, kIsWeb;
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -21,13 +21,22 @@ Future<Uint8List?> compressPickedImage(
   int quality = 82,
 }) async {
   if (kIsWeb) {
-    return FlutterImageCompress.compressWithList(
-      await picked.readAsBytes(),
-      minWidth: minWidth,
-      minHeight: minHeight,
-      quality: quality,
-      format: CompressFormat.jpeg,
-    );
+    try {
+      return await FlutterImageCompress.compressWithList(
+        await picked.readAsBytes(),
+        minWidth: minWidth,
+        minHeight: minHeight,
+        quality: quality,
+        format: CompressFormat.jpeg,
+      );
+    } catch (e) {
+      // Na web `compressWithList` LANÇA (não devolve null) quando o
+      // navegador não decodifica a imagem ou o plugin não está pronto.
+      // Honra o contrato desta função: null, e quem chama segue com os
+      // bytes originais.
+      debugPrint('compressPickedImage: falha na web: $e');
+      return null;
+    }
   }
   return FlutterImageCompress.compressWithFile(
     picked.path,

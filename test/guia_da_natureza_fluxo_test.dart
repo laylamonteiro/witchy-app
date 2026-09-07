@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 
@@ -150,12 +151,13 @@ void main() {
     WidgetTester tester,
     UserEntryCategory category, {
     AuthProvider Function()? auth,
+    EscolherFoto? escolherFoto,
   }) async {
     final ia = _IaDeMentira();
     await tester.pumpWidget(app(
       AddEntryPage(
         category: category,
-        escolherFoto: (_) async => png,
+        escolherFoto: escolherFoto ?? (_) async => png,
         ia: ia,
       ),
       auth: auth,
@@ -294,16 +296,77 @@ void main() {
     expect(tester.testTextInput.hasAnyClients, isTrue);
   });
 
-  testWidgets('o campo do nome é de uma linha: Enter conclui e não quebra',
-      (tester) async {
-    await montar(tester, UserEntryCategory.crystal);
-    final campo = campoNome(tester);
-    expect(campo.maxLines, 1);
-    expect(campo.textInputAction, TextInputAction.done);
+  // O relato da web: "não aparece nenhum ícone ou mensagem de que está
+  // fazendo upload; da galeria a foto não aparece". O fluxo não tinha estado
+  // de ocupado nem caminho de erro — qualquer falha era silêncio.
+  OutlinedButton botaoDaGaleria(WidgetTester tester, AppLocalizations l10n) =>
+      tester.widget<OutlinedButton>(find.ancestor(
+        of: find.text(l10n.encyAddFromGallery),
+        matching: find.bySubtype<OutlinedButton>(),
+      ));
 
-    await tester.enterText(find.byType(TextField), 'Quartzo\nrosa');
+  testWidgets('enquanto a foto abre: aviso e botões travados; ao chegar, a '
+      'prévia', (tester) async {
+    final foto = Completer<Uint8List?>();
+    await montar(
+      tester,
+      UserEntryCategory.crystal,
+      escolherFoto: (_) => foto.future,
+    );
+    final l10n = l10nDe(tester);
+
+    await tester.tap(find.text(l10n.encyAddTakePhoto));
     await tester.pump();
-    expect(campoNome(tester).controller!.text, 'Quartzorosa',
-        reason: 'quebra de linha não entra no nome');
+    expect(find.text(l10n.encyAddOpeningPhoto), findsOneWidget);
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    expect(botaoDaGaleria(tester, l10n).onPressed, isNull,
+        reason: 'sem segundo seletor por cima do primeiro');
+    expect(gerar(tester).enabled, isFalse);
+
+    foto.complete(png);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+    expect(find.text(l10n.encyAddOpeningPhoto), findsNothing);
+    expect(find.byType(Image), findsOneWidget, reason: 'a prévia da foto');
+    expect(botaoDaGaleria(tester, l10n).onPressed, isNotNull);
+    expect(gerar(tester).enabled, isTrue);
+  });
+
+  testWidgets('a foto não abre: mensagem dentro do card e botões de volta',
+      (tester) async {
+    await montar(
+      tester,
+      UserEntryCategory.crystal,
+      escolherFoto: (_) async => throw StateError('navegador não decodificou'),
+    );
+    final l10n = l10nDe(tester);
+
+    await tester.tap(find.text(l10n.encyAddFromGallery));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+
+    expect(find.text(l10n.encyAddPhotoFailed), findsOneWidget);
+    expect(find.text(l10n.encyAddOpeningPhoto), findsNothing);
+    expect(botaoDaGaleria(tester, l10n).onPressed, isNotNull);
+    expect(gerar(tester).enabled, isFalse, reason: 'continua sem foto');
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('desistir no seletor não muda nada', (tester) async {
+    await montar(
+      tester,
+      UserEntryCategory.crystal,
+      escolherFoto: (_) async => null,
+    );
+    final l10n = l10nDe(tester);
+
+    await tester.tap(find.text(l10n.encyAddFromGallery));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+
+    expect(find.text(l10n.encyAddPhotoFailed), findsNothing);
+    expect(find.text(l10n.encyAddOpeningPhoto), findsNothing);
+    expect(find.byType(Image), findsNothing);
+    expect(botaoDaGaleria(tester, l10n).onPressed, isNotNull);
   });
 }
