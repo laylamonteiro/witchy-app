@@ -105,10 +105,12 @@ Future<Uint8List?> _fotoDoAparelho(ImageSource source) async {
 ///
 /// A jornada é a mesma para as duas: foto obrigatória (câmera ou galeria),
 /// nome, "Gerar conteúdo" — a IA monta a página no formato da categoria e
-/// tudo é salvo com a foto. A única diferença é o botão secundário "Não sei
-/// o nome — identificar pela foto", que só a erva tem: a identificação
-/// visual de cristais errava demais para ser a porta de entrada, e cores não
-/// têm mais verbete pessoal (o catálogo fixo da aba Cores basta).
+/// tudo é salvo com a foto. A única diferença é a caixa "Não sei o nome —
+/// identificar pela foto", que só a erva tem: marcada, o campo do nome fica
+/// para a identificação e o mesmo "Gerar conteúdo" descobre o nome antes de
+/// montar a página. A identificação visual de cristais errava demais para
+/// entrar aqui, e cores não têm mais verbete pessoal (o catálogo fixo da
+/// aba Cores basta).
 ///
 /// Privacidade: a foto é enviada à IA em memória (identificação e geração).
 /// A cópia comprimida vai para o armazenamento privado da conta (Supabase
@@ -170,6 +172,11 @@ class _AddEntryPageState extends State<AddEntryPage> {
   /// Falha ao abrir/aceitar a foto, mostrada DENTRO do card da foto (o erro
   /// geral fica no fim da página, fora da vista).
   String? _erroDaFoto;
+
+  /// "Não sei o nome": o campo do nome fica desabilitado e quem descobre o
+  /// nome é a identificação por foto, disparada pelo próprio "Gerar
+  /// conteúdo". Só existe para erva (`identificavelPorFoto`).
+  bool _naoSeiONome = false;
 
   /// Pediu a foto sem ter Premium: a tela mostra os campos que o verbete
   /// traria, em vez de bater a porta na entrada.
@@ -299,6 +306,9 @@ class _AddEntryPageState extends State<AddEntryPage> {
         // foto decide — o modelo não tem como saber qual espécie é. Sem
         // nenhum, o que a pessoa já digitou fica onde está.
         _chosen = candidates.length == 1 ? 0 : null;
+        // Não reconheci nada: com a caixa marcada o campo ficaria travado e
+        // sem nome nenhum — um beco. Ela volta a poder digitar.
+        if (candidates.isEmpty) _naoSeiONome = false;
         _confidence =
             candidates.length == 1 ? '${candidates.first['confidence']}' : null;
         if (candidates.length == 1) {
@@ -336,6 +346,18 @@ class _AddEntryPageState extends State<AddEntryPage> {
     return '${candidate['scientific'] ?? ''}'.trim();
   }
 
+  /// Toque num candidato: além de fixar o nome, retoma a jornada que a
+  /// pessoa pediu ao tocar em "Gerar conteúdo" — escolher qual era a planta
+  /// era a única pergunta em aberto.
+  void _escolherCandidatoEContinuar(int index) {
+    // `_generated == null` fecha o laço do "ver as outras possibilidades":
+    // com a página já montada, trocar de candidato só troca o nome — não
+    // dispara outra geração a cada toque.
+    final continuar = index >= 0 && _naoSeiONome && _generated == null;
+    _chooseCandidate(index);
+    if (continuar) unawaited(_generate());
+  }
+
   /// [index] negativo é "nenhuma dessas": abre o campo em branco.
   void _chooseCandidate(int index) {
     setState(() {
@@ -345,6 +367,9 @@ class _AddEntryPageState extends State<AddEntryPage> {
         _identified = false;
         _confidence = null;
         _nameController.clear();
+        // Nenhum candidato serve: quem vai dizer o nome é ela, então o campo
+        // precisa voltar a aceitar digitação.
+        _naoSeiONome = false;
       } else {
         final candidate = _candidates[index];
         _identified = true;
@@ -352,6 +377,22 @@ class _AddEntryPageState extends State<AddEntryPage> {
         _nameController.text = _candidateName(candidate);
       }
     });
+  }
+
+  /// "Não sei o nome" marcada: o botão "Gerar conteúdo" primeiro descobre o
+  /// nome pela foto e só então monta a página. Com um candidato só, tudo
+  /// acontece num toque; com vários, o card de candidatos assume e a jornada
+  /// continua quando ela escolher.
+  Future<void> _identificarEGerar() async {
+    await _identify();
+    // `_generate` lê o `context` na primeira linha: sem esta guarda, sair da
+    // tela durante a identificação (que é uma ida à rede) daria erro.
+    if (!mounted) return;
+    // `_error` cobre o teto de requisições e a falha genérica. Nenhum
+    // candidato já desmarcou a caixa lá dentro, para ela poder digitar.
+    if (_error != null || _candidates.length != 1) return;
+    if (_nameController.text.trim().isEmpty) return;
+    await _generate();
   }
 
   Future<void> _generate() async {
@@ -679,7 +720,7 @@ class _AddEntryPageState extends State<AddEntryPage> {
     final votes = candidate['votes'] is int ? candidate['votes'] as int : 1;
 
     return InkWell(
-      onTap: () => _chooseCandidate(index),
+      onTap: () => _escolherCandidatoEContinuar(index),
       borderRadius: BorderRadius.circular(12),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -771,10 +812,20 @@ class _AddEntryPageState extends State<AddEntryPage> {
             // (foco e teclado perdidos).
             key: const ValueKey('campo-do-nome'),
             controller: _nameController,
+            // Com "não sei o nome" marcada, quem preenche é a identificação.
+            // `readOnly` e não `enabled: false` por dois motivos: desabilitar
+            // um campo com foco derruba o foco (foi o que fechava o teclado
+            // do pêndulo no meio da consulta), e o tema não tem borda de
+            // campo desabilitado — o nome ENCONTRADO sairia esmaecido, logo
+            // ele, que é o que ela precisa ler e conferir.
+            readOnly: _naoSeiONome,
+            canRequestFocus: !_naoSeiONome,
             textCapitalization: TextCapitalization.sentences,
             decoration: InputDecoration(
               labelText: l10n.encyAddNameLabel,
-              hintText: l10n.encyAddNameHint,
+              hintText: _naoSeiONome
+                  ? l10n.encyAddNameFromPhoto
+                  : l10n.encyAddNameHint,
               border: const OutlineInputBorder(),
             ),
           ),
@@ -795,28 +846,43 @@ class _AddEntryPageState extends State<AddEntryPage> {
                   ),
             ),
           ],
-          const SizedBox(height: 16),
+          if (widget.category.identificavelPorFoto) ...[
+            const SizedBox(height: 4),
+            // Mesma interação do "não sei a hora do nascimento" do mapa
+            // astral: marcar tira o campo ao lado das mãos dela e passa o
+            // trabalho para quem sabe descobrir. Era um segundo botão, e
+            // dois CTAs empilhados faziam escolher entre caminhos que, no
+            // fim, são o mesmo — muda só de onde vem o nome.
+            CheckboxListTile(
+              value: _naoSeiONome,
+              onChanged: _ocupado
+                  ? null
+                  : (marcada) => setState(() {
+                        _naoSeiONome = marcada ?? false;
+                        // O teclado não fica aberto sobre um campo que
+                        // acabou de sair de uso.
+                        if (_naoSeiONome) {
+                          FocusManager.instance.primaryFocus?.unfocus();
+                        }
+                      }),
+              title: Text(
+                l10n.encyAddIdentifyCta,
+                style: TextStyle(color: context.gc.softWhite),
+              ),
+              activeColor: context.gc.lilac,
+              contentPadding: EdgeInsets.zero,
+            ),
+          ],
+          const SizedBox(height: 8),
           MagicalButton(
             text: _generating
                 ? l10n.encyAddGenerating
                 : l10n.encyAddGenerateCta,
             icon: Icons.auto_awesome,
             enabled: temFoto && !_ocupado,
-            onPressed: _generate,
+            larguraTotal: true,
+            onPressed: _naoSeiONome ? _identificarEGerar : _generate,
           ),
-          if (widget.category.identificavelPorFoto) ...[
-            const SizedBox(height: 8),
-            // Secundário de propósito: identificar é o atalho de quem não
-            // sabe o nome, não a porta de entrada.
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton.icon(
-                onPressed: temFoto && !_ocupado ? _identify : null,
-                icon: const Icon(Icons.image_search, size: 18),
-                label: Text(l10n.encyAddIdentifyCta),
-              ),
-            ),
-          ],
         ],
       ),
     );
@@ -902,6 +968,7 @@ class _AddEntryPageState extends State<AddEntryPage> {
             text: _saving ? l10n.encyAddSaving : l10n.encyAddSaveCta,
             icon: Icons.bookmark_add_outlined,
             enabled: !_saving,
+            larguraTotal: true,
             onPressed: _save,
           ),
         ],

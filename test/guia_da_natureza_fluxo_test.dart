@@ -55,6 +55,13 @@ class _CheckinFake extends DailyCheckinProvider {
 }
 
 class _IaDeMentira implements GuiaDaNaturezaIa {
+  _IaDeMentira({this.candidatos = 1, this.reconhece = true});
+
+  /// Quantos nomes a identificação devolve: um segue a jornada sozinha,
+  /// mais de um abre o card de candidatos e espera a escolha.
+  final int candidatos;
+  final bool reconhece;
+
   int identificacoes = 0;
   int geracoes = 0;
   Uint8List? bytesGerados;
@@ -64,14 +71,16 @@ class _IaDeMentira implements GuiaDaNaturezaIa {
     required Uint8List jpegBytes,
   }) async {
     identificacoes++;
+    const nomes = ['Alecrim', 'Lavanda', 'Camomila'];
     return {
-      'identified': true,
+      'identified': reconhece,
       'candidates': [
-        {
-          'name': 'Alecrim',
-          'scientific': 'Salvia rosmarinus',
-          'confidence': 'high',
-        },
+        for (var i = 0; i < candidatos; i++)
+          {
+            'name': nomes[i % nomes.length],
+            'scientific': 'Especime $i',
+            'confidence': 'high',
+          },
       ],
     };
   }
@@ -130,11 +139,8 @@ void main() {
   MagicalButton gerar(WidgetTester tester) =>
       tester.widget<MagicalButton>(find.byType(MagicalButton).first);
 
-  OutlinedButton identificar(WidgetTester tester, AppLocalizations l10n) =>
-      tester.widget<OutlinedButton>(find.ancestor(
-        of: find.text(l10n.encyAddIdentifyCta),
-        matching: find.bySubtype<OutlinedButton>(),
-      ));
+  CheckboxListTile naoSeiONome(WidgetTester tester) =>
+      tester.widget<CheckboxListTile>(find.byType(CheckboxListTile));
 
   TextField campoNome(WidgetTester tester) =>
       tester.widget<TextField>(find.byType(TextField));
@@ -153,8 +159,9 @@ void main() {
     UserEntryCategory category, {
     AuthProvider Function()? auth,
     EscolherFoto? escolherFoto,
+    _IaDeMentira? ia0,
   }) async {
-    final ia = _IaDeMentira();
+    final ia = ia0 ?? _IaDeMentira();
     await tester.pumpWidget(app(
       AddEntryPage(
         category: category,
@@ -165,6 +172,13 @@ void main() {
     ));
     await tester.pumpAndSettle();
     return ia;
+  }
+
+  /// Marca/desmarca "não sei o nome" tocando no rótulo, como a pessoa faz.
+  Future<void> alternarNaoSeiONome(WidgetTester tester) async {
+    await tester.tap(find.byType(CheckboxListTile));
+    await tester.pump();
+    await tester.pumpAndSettle();
   }
 
   /// Toca no campo do nome (abre o teclado) e devolve o Element dele — a
@@ -185,34 +199,103 @@ void main() {
     expect(find.text(l10n.encyAddPhotoFirstHint), findsOneWidget);
     expect(gerar(tester).enabled, isFalse);
     expect(find.text(l10n.encyAddIdentifyCta), findsOneWidget);
-    expect(identificar(tester, l10n).onPressed, isNull);
+    expect(naoSeiONome(tester).value, isFalse);
 
-    // Tocar no botão desabilitado não gasta IA nenhuma.
+    // Tocar no botão desabilitado não gasta IA nenhuma, marcada ou não.
+    await tocar(tester, l10n.encyAddGenerateCta);
+    await alternarNaoSeiONome(tester);
     await tocar(tester, l10n.encyAddGenerateCta);
     expect(ia.geracoes, 0);
     expect(ia.identificacoes, 0);
   });
 
-  testWidgets('erva: foto → identificar preenche o nome → gerar leva a foto',
-      (tester) async {
+  testWidgets('erva: com "não sei o nome" marcada, um toque em Gerar '
+      'identifica e monta a página', (tester) async {
     final ia = await montar(tester, UserEntryCategory.herb);
     final l10n = l10nDe(tester);
 
     await tocar(tester, l10n.encyAddTakePhoto);
     expect(find.text(l10n.encyAddPhotoFirstHint), findsNothing);
     expect(gerar(tester).enabled, isTrue);
-    expect(identificar(tester, l10n).onPressed, isNotNull);
 
-    await tocar(tester, l10n.encyAddIdentifyCta);
-    expect(ia.identificacoes, 1);
-    expect(campoNome(tester).controller!.text, 'Alecrim');
-    expect(find.text(l10n.encyAddIdentifiedAs), findsOneWidget);
+    await alternarNaoSeiONome(tester);
+    expect(naoSeiONome(tester).value, isTrue);
+    expect(campoNome(tester).enabled, isFalse,
+        reason: 'quem preenche o nome agora é a identificação');
 
     await tocar(tester, l10n.encyAddGenerateCta);
-    expect(ia.geracoes, 1);
+    expect(ia.identificacoes, 1);
+    expect(ia.geracoes, 1, reason: 'com um candidato só, a jornada segue');
+    expect(campoNome(tester).controller!.text, 'Alecrim');
     expect(ia.bytesGerados, png, reason: 'o verbete considera a foto real');
     expect(find.text(l10n.encyAddPreviewTitle), findsOneWidget);
     expect(find.text('Alecrim'), findsWidgets);
+  });
+
+  testWidgets('erva: sem a caixa marcada, Gerar usa o nome digitado e não '
+      'chama a visão', (tester) async {
+    final ia = await montar(tester, UserEntryCategory.herb);
+    final l10n = l10nDe(tester);
+
+    await tocar(tester, l10n.encyAddTakePhoto);
+    expect(campoNome(tester).enabled, isTrue);
+    await tester.enterText(find.byType(TextField), 'Arruda');
+    await tester.pump();
+    await tocar(tester, l10n.encyAddGenerateCta);
+
+    expect(ia.identificacoes, 0);
+    expect(ia.geracoes, 1);
+    expect(find.text('Arruda'), findsWidgets);
+  });
+
+  testWidgets('erva: nome vazio e caixa desmarcada continua cobrando o nome',
+      (tester) async {
+    final ia = await montar(tester, UserEntryCategory.herb);
+    final l10n = l10nDe(tester);
+
+    await tocar(tester, l10n.encyAddTakePhoto);
+    await tocar(tester, l10n.encyAddGenerateCta);
+
+    expect(find.text(l10n.encyAddNameRequired), findsOneWidget);
+    expect(ia.geracoes, 0);
+    expect(ia.identificacoes, 0);
+  });
+
+  testWidgets('erva: com vários candidatos, a tela pergunta e a escolha '
+      'retoma a jornada', (tester) async {
+    final ia = await montar(tester, UserEntryCategory.herb,
+        ia0: _IaDeMentira(candidatos: 2));
+    final l10n = l10nDe(tester);
+
+    await tocar(tester, l10n.encyAddTakePhoto);
+    await alternarNaoSeiONome(tester);
+    await tocar(tester, l10n.encyAddGenerateCta);
+
+    expect(ia.identificacoes, 1);
+    expect(ia.geracoes, 0, reason: 'qual das duas plantas é? ela decide');
+    expect(find.text('Lavanda'), findsOneWidget);
+
+    await tocar(tester, 'Lavanda');
+    expect(ia.geracoes, 1, reason: 'escolhida a planta, a página vem');
+    expect(campoNome(tester).controller!.text, 'Lavanda');
+    expect(find.text(l10n.encyAddPreviewTitle), findsOneWidget);
+  });
+
+  testWidgets('erva: "nenhuma dessas" desmarca a caixa e devolve o campo',
+      (tester) async {
+    final ia = await montar(tester, UserEntryCategory.herb,
+        ia0: _IaDeMentira(candidatos: 2));
+    final l10n = l10nDe(tester);
+
+    await tocar(tester, l10n.encyAddTakePhoto);
+    await alternarNaoSeiONome(tester);
+    await tocar(tester, l10n.encyAddGenerateCta);
+    await tocar(tester, l10n.encyAddCandidatesNoneOfThese);
+
+    expect(ia.geracoes, 0, reason: 'sem nome, nada a gerar ainda');
+    expect(naoSeiONome(tester).value, isFalse);
+    expect(campoNome(tester).enabled, isTrue);
+    expect(campoNome(tester).controller!.text, isEmpty);
   });
 
   testWidgets('cristal: mesma jornada, sem identificação por foto',
