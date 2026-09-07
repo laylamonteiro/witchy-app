@@ -35,3 +35,7 @@
 # biblioteca não ficar presa atrás do cache de ninguém.
 /heic/*
   Cache-Control: public, max-age=604800
+
+# Cropper.js (recorte da foto na web): mesma lógica.
+/cropper/*
+  Cache-Control: public, max-age=604800

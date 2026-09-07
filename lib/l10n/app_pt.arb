@@ -1966,6 +1966,20 @@
   "journeysHowXpBody": "Trilha encadernada: 100 · Página de lição escrita: 25 · Os três ritos do dia cumpridos: 15 · Ritual guiado concluído: 10 · Registro criado (feitiço, sonho, gratidão, desejo, afirmação, sigilo ou página da enciclopédia): 5 · Cada rito do dia: 3",
   "avatarUseCamera": "Use a câmera do dispositivo",
   "avatarResetDefault": "Voltar ao avatar padrão",
+  "photoStageOpening": "Abrindo a foto…",
+  "photoStageConverting": "Convertendo a foto…",
+  "photoStageCropping": "Ajustando a foto…",
+  "photoStageReducing": "Preparando a foto…",
+  "photoCropTitle": "Ajustar foto",
+  "photoCropConfirm": "Usar esta foto",
+  "photoCropCancel": "Cancelar",
+  "photoCropRotateLeft": "Girar para a esquerda",
+  "photoCropRotateRight": "Girar para a direita",
+  "avatarSheetTitle": "Foto de perfil",
+  "avatarTakePhoto": "Tirar foto",
+  "avatarFromGallery": "Escolher da galeria",
+  "avatarFromGallerySubtitle": "Selecione uma foto existente",
+  "avatarRemovePhoto": "Remover foto",
   "profileAdminOptions": "Opções de Admin",
   "pendulumRemainingToday": "{remaining} de {total} consultas disponíveis hoje",
   "@pendulumRemainingToday": {
@@ -2190,7 +2204,6 @@
     }
   },
   "encyAddImageTooLarge": "Imagem muito grande. Tente outra foto",
-  "encyAddOpeningPhoto": "Abrindo a foto…",
   "encyAddPhotoFailed": "Não consegui abrir essa foto. Tente outra ou tire uma nova",
   "encyAddPhotoUnsupported": "Esse formato ({formato}) o navegador não abre. Converta para JPG ou tire uma foto nova",
   "@encyAddPhotoUnsupported": {

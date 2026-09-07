@@ -61,6 +61,13 @@
        não atrasar o primeiro desenho: quem usa confere se já carregou. -->
   <script src="https://accounts.google.com/gsi/client" async></script>
 
+  <!-- Cropper.js: o recorte da foto na web (plugin image_cropper) usa a
+       global `Cropper` desta biblioteca — sem os dois arquivos o recorte
+       nem abre. Vendorizado em web/cropper/ (MIT, 41 KB) em vez de CDN,
+       como todo o resto do site. -->
+  <link rel="stylesheet" href="cropper/cropper.min.css">
+  <script src="cropper/cropper.min.js"></script>
+
   <!-- HEIC/HEIF: o Chrome não decodifica o formato padrão da câmera de
        muitos Androids e de todo iPhone, então a foto escolhida da galeria
        nem aparecia. Este arquivo é só a ponte (2 KB); ele baixa o

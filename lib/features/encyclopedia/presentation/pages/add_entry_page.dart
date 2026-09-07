@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:typed_data';
 
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:image_picker/image_picker.dart';
@@ -11,7 +10,8 @@ import '../../../../core/ai/ai_service.dart';
 import '../../../../core/services/debug_log_service.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
-import '../../../../core/utils/image_compression.dart';
+import '../../../../core/images/etapa_da_foto.dart';
+import '../../../../core/images/seletor_de_foto.dart';
 import '../../../../core/utils/reducao_de_imagem.dart';
 import '../../../../core/widgets/magical_button.dart';
 import '../../../../core/widgets/magical_card.dart';
@@ -67,42 +67,6 @@ class _IaDoApp implements GuiaDaNaturezaIa {
       );
 }
 
-/// A foto do aparelho: picker (já reduzida a 1600 px) + compressão, que
-/// corrige o EXIF e remove metadados — mesmo pipeline da quiromancia.
-Future<Uint8List?> _fotoDoAparelho(ImageSource source) async {
-  // Na web a redução fica toda com compressPickedImage: o redimensionador
-  // do image_picker é cego ao formato (devolve o arquivo original quando o
-  // navegador não decodifica, e reexporta PNG como PNG). No celular o
-  // picker já entrega ≤ 1600 px e o compressor nativo faz o resto.
-  final picked = await ImagePicker().pickImage(
-    source: source,
-    maxWidth: kIsWeb ? null : 1600,
-    maxHeight: kIsWeb ? null : 1600,
-  );
-  if (picked == null) return null;
-  Uint8List? reduzida;
-  try {
-    // Folga sobre o teto de `compressPickedImage`: quem decide que não deu
-    // é a redução, com a mensagem certa, e não este relógio.
-    reduzida = await compressPickedImage(picked)
-        .timeout(limiteDaReducaoWeb + const Duration(seconds: 15));
-  } catch (e) {
-    unawaited(debugLog('ENCY', 'Redução da foto falhou: $e'));
-  }
-  if (reduzida != null) return reduzida;
-  if (kIsWeb) {
-    // Sem redução na web = o navegador não abriu a imagem (HEIC/HEIF…):
-    // nem a tela conseguiria mostrá-la. Diz o formato, em vez de seguir com
-    // bytes crus que só iam estourar o limite de tamanho.
-    final formato = formatoDaFoto(mime: picked.mimeType, nome: picked.name);
-    unawaited(debugLog('ENCY', 'Navegador não decodificou a foto ($formato)'));
-    throw FotoNaoSuportadaException(formato);
-  }
-  // No celular a compressão pode falhar por outros motivos: segue com os
-  // bytes originais, como a quiromancia faz — o limite de tamanho decide.
-  return picked.readAsBytes();
-}
-
 /// Adicionar entrada pessoal à enciclopédia (Premium): erva ou cristal.
 ///
 /// A jornada é a mesma para as duas: foto obrigatória (câmera ou galeria),
@@ -122,14 +86,15 @@ Future<Uint8List?> _fotoDoAparelho(ImageSource source) async {
 class AddEntryPage extends StatefulWidget {
   final UserEntryCategory category;
 
-  /// Trocáveis em teste; em produção, o picker do aparelho e o AIService.
-  final EscolherFoto escolherFoto;
+  /// Trocáveis em teste; em produção, o [SeletorDeFoto] (picker, conversão,
+  /// recorte quadrado, redução) e o AIService.
+  final EscolherFoto? escolherFoto;
   final GuiaDaNaturezaIa ia;
 
   const AddEntryPage({
     super.key,
     required this.category,
-    this.escolherFoto = _fotoDoAparelho,
+    this.escolherFoto,
     this.ia = const _IaDoApp(),
   }) : assert(
           category != UserEntryCategory.color,
@@ -175,6 +140,11 @@ class _AddEntryPageState extends State<AddEntryPage> {
   /// geral fica no fim da página, fora da vista).
   String? _erroDaFoto;
 
+  /// Em que passo a foto está enquanto [_escolhendoFoto]: é o texto ao lado
+  /// do spinner ("Convertendo…" numa HEIC leva segundos, e silêncio parece
+  /// travamento).
+  EtapaDaFoto _etapa = EtapaDaFoto.abrindo;
+
   /// "Não sei o nome": o campo do nome fica desabilitado e quem descobre o
   /// nome é a identificação por foto, disparada pelo próprio "Gerar
   /// conteúdo". Só existe para erva (`identificavelPorFoto`).
@@ -192,6 +162,25 @@ class _AddEntryPageState extends State<AddEntryPage> {
     _nameController.dispose();
     super.dispose();
   }
+
+  Future<Uint8List?> _escolher(ImageSource source) {
+    final dubl = widget.escolherFoto;
+    if (dubl != null) return dubl(source);
+    return const SeletorDeFoto().escolher(
+      context,
+      origem: source,
+      aoMudarEtapa: (etapa) {
+        if (mounted) setState(() => _etapa = etapa);
+      },
+    );
+  }
+
+  String _textoDaEtapa(AppLocalizations l10n) => switch (_etapa) {
+        EtapaDaFoto.abrindo => l10n.photoStageOpening,
+        EtapaDaFoto.convertendo => l10n.photoStageConverting,
+        EtapaDaFoto.recortando => l10n.photoStageCropping,
+        EtapaDaFoto.reduzindo => l10n.photoStageReducing,
+      };
 
   Future<void> _pick(ImageSource source) async {
     if (_ocupado) return;
@@ -221,10 +210,13 @@ class _AddEntryPageState extends State<AddEntryPage> {
       return;
     }
 
-    setState(() => _escolhendoFoto = true);
+    setState(() {
+      _escolhendoFoto = true;
+      _etapa = EtapaDaFoto.abrindo;
+    });
     final Uint8List? bytes;
     try {
-      bytes = await widget.escolherFoto(source);
+      bytes = await _escolher(source);
     } on FotoNaoSuportadaException catch (e) {
       if (!mounted) return;
       setState(() {
@@ -625,7 +617,7 @@ class _AddEntryPageState extends State<AddEntryPage> {
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
-                    l10n.encyAddOpeningPhoto,
+                    _textoDaEtapa(l10n),
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: context.gc.textSecondary,
                         ),

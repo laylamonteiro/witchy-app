@@ -430,7 +430,7 @@ void main() {
 
     await tester.tap(find.text(l10n.encyAddTakePhoto));
     await tester.pump();
-    expect(find.text(l10n.encyAddOpeningPhoto), findsOneWidget);
+    expect(find.text(l10n.photoStageOpening), findsOneWidget);
     expect(find.byType(CircularProgressIndicator), findsOneWidget);
     expect(botaoDaGaleria(tester, l10n).onPressed, isNull,
         reason: 'sem segundo seletor por cima do primeiro');
@@ -439,7 +439,7 @@ void main() {
     foto.complete(png);
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 500));
-    expect(find.text(l10n.encyAddOpeningPhoto), findsNothing);
+    expect(find.text(l10n.photoStageOpening), findsNothing);
     expect(find.byType(Image), findsOneWidget, reason: 'a prévia da foto');
     expect(botaoDaGaleria(tester, l10n).onPressed, isNotNull);
     expect(gerar(tester).enabled, isTrue);
@@ -459,7 +459,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 500));
 
     expect(find.text(l10n.encyAddPhotoFailed), findsOneWidget);
-    expect(find.text(l10n.encyAddOpeningPhoto), findsNothing);
+    expect(find.text(l10n.photoStageOpening), findsNothing);
     expect(botaoDaGaleria(tester, l10n).onPressed, isNotNull);
     expect(gerar(tester).enabled, isFalse, reason: 'continua sem foto');
     expect(tester.takeException(), isNull);
@@ -498,7 +498,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 500));
 
     expect(find.text(l10n.encyAddPhotoFailed), findsNothing);
-    expect(find.text(l10n.encyAddOpeningPhoto), findsNothing);
+    expect(find.text(l10n.photoStageOpening), findsNothing);
     expect(find.byType(Image), findsNothing);
     expect(botaoDaGaleria(tester, l10n).onPressed, isNotNull);
   });
