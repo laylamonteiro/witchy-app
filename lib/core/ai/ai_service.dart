@@ -103,8 +103,22 @@ class AIService {
 
   // ====================================================================
 
-  /// O Gemini está configurado? (Sem a chave, tudo roda no Groq.)
-  static bool get _hasGemini => GeminiCredentials.apiKey.isNotEmpty;
+  /// Há Gemini disponível? Com a IA pelo servidor a chave mora na Edge
+  /// Function e a local é vazia DE PROPÓSITO (Etapa 4 de docs/CHAVES_DE_IA.md).
+  /// Olhar só a chave local faria o app achar que não tem Gemini e degradar
+  /// visão e sonhos para Groq em silêncio — com a chave lá no servidor.
+  static bool get _hasGemini => temGeminiDisponivel(
+        peloServidor: IaPeloServidor.ativo,
+        chaveLocal: GeminiCredentials.apiKey.isNotEmpty,
+      );
+
+  /// Regra pura e testável: pelo servidor OU com chave local presente.
+  /// Público (sem @visibleForTesting) porque é chamado em produção.
+  static bool temGeminiDisponivel({
+    required bool peloServidor,
+    required bool chaveLocal,
+  }) =>
+      peloServidor || chaveLocal;
 
   final Dio _dio = Dio();
   Locale _locale = const Locale('pt', 'BR');
@@ -1289,8 +1303,9 @@ class AIService {
     }
   }
 
-  /// Identifica um item da enciclopédia pessoal por foto (visão, Premium).
-  /// [categoryKey]: `crystal` | `herb` | `color` (invariante).
+  /// Identifica uma ERVA por foto (visão, Premium). Só ervas: cristais e
+  /// cores perderam a identificação por imagem — a pessoa dá o nome e a
+  /// foto vai junto do verbete.
   /// Retorna `{"identified": bool, "candidates": [{name, scientific,
   /// confidence, votes}]}`, do mais provável ao menos provável.
   /// A imagem é enviada em memória e não é armazenada pelo serviço.
@@ -1301,17 +1316,13 @@ class AIService {
   /// vira certeza, e a DIVERGÊNCIA vira a lista de candidatos em vez de
   /// virar um "não consegui identificar" — as opiniões descartadas eram
   /// justamente as alternativas que ajudam quem tirou a foto a decidir.
-  Future<Map<String, dynamic>> identifyEncyclopediaItem({
+  Future<Map<String, dynamic>> identifyHerb({
     required List<int> jpegBytes,
-    required String categoryKey,
   }) async {
     Object? lastError;
     Future<Map<String, dynamic>?> vote() async {
       try {
-        return await _identifyOnce(
-          jpegBytes: jpegBytes,
-          categoryKey: categoryKey,
-        );
+        return await _identifyOnce(jpegBytes: jpegBytes);
       } catch (e) {
         // 503/429 transitórios não derrubam a identificação inteira: o voto
         // perdido é reposto pela rodada extra abaixo.
@@ -1466,12 +1477,11 @@ class AIService {
 
   Future<Map<String, dynamic>> _identifyOnce({
     required List<int> jpegBytes,
-    required String categoryKey,
   }) async {
     try {
       final content = await _visionRequest(
         systemPrompt: '${_localizedInstruction()}\n\n'
-            '${_prompts.encyIdentifySystemPrompt(categoryKey)}',
+            '${_prompts.encyIdentifySystemPrompt}',
         userText: _prompts.encyIdentifyUserMessage,
         jpegBytes: jpegBytes,
         temperature: 0.2,

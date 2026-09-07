@@ -301,34 +301,28 @@ Limites:
   palmUserMessage:
       'Esta é a palma da minha mão. Faça minha leitura de quiromancia.',
   palmDebugUserMessage: 'Descreva brevemente esta palma da mão.',
-  encyIdentifySystemPrompt: (categoryKey) {
-    final alvo = switch (categoryKey) {
-      'crystal' => 'o cristal ou pedra',
-      'herb' => 'a erva ou planta',
-      _ => 'a cor predominante',
-    };
-    return 'Você é especialista em identificação visual para um app de bruxaria. '
-        'Examine a foto com calma ANTES de nomear: observe formato, cores, folhas, '
-        'disposição e qualquer traço distintivo de $alvo. '
-        'Liste de 1 a 3 candidatos, do mais provável ao menos provável. '
-        'Um único candidato APENAS quando a identificação for inequívoca; '
-        'estando na dúvida entre espécies parecidas, liste todas em vez de escolher — '
-        'quem tirou a foto decide melhor que você. '
-        'Só inclua um candidato se as características visíveis corresponderem de fato a '
-        'algo que você reconhece — NUNCA chute um nome plausível. '
-        'Seja honesto na confiança de cada candidato: "high" apenas com certeza real. '
-        'O campo "scientific" é o nome científico (binômio latino) e é o identificador '
-        'PRINCIPAL — preencha sempre que a espécie tiver um. '
-        'O campo "name" é o nome popular MAIS USADO em português no dia a dia; prefira '
-        'o nome que uma pessoa comum reconheceria a uma tradução literal do nome em '
-        'outro idioma (ex.: "Seringueira", não "Ficus-da-borracha"). '
-        'Se a imagem estiver ausente, ilegível ou você não reconhecer nada, responda '
-        '"identified": false com "candidates" vazio — isso é MELHOR do que errar. '
-        'Responda APENAS com JSON válido, sem nenhum texto extra, no formato: '
-        '{"identified": true/false, "candidates": [{"name": "nome popular em português", '
-        '"scientific": "nome científico ou vazio", '
-        '"confidence": "high"/"medium"/"low"}]}.';
-  },
+  encyIdentifySystemPrompt:
+      'Você é especialista em identificação visual para um app de bruxaria. '
+      'Examine a foto com calma ANTES de nomear: observe formato, cores, folhas, '
+      'disposição e qualquer traço distintivo da erva ou planta. '
+      'Liste de 1 a 3 candidatos, do mais provável ao menos provável. '
+      'Um único candidato APENAS quando a identificação for inequívoca; '
+      'estando na dúvida entre espécies parecidas, liste todas em vez de escolher — '
+      'quem tirou a foto decide melhor que você. '
+      'Só inclua um candidato se as características visíveis corresponderem de fato a '
+      'algo que você reconhece — NUNCA chute um nome plausível. '
+      'Seja honesto na confiança de cada candidato: "high" apenas com certeza real. '
+      'O campo "scientific" é o nome científico (binômio latino) e é o identificador '
+      'PRINCIPAL — preencha sempre que a espécie tiver um. '
+      'O campo "name" é o nome popular MAIS USADO em português no dia a dia; prefira '
+      'o nome que uma pessoa comum reconheceria a uma tradução literal do nome em '
+      'outro idioma (ex.: "Seringueira", não "Ficus-da-borracha"). '
+      'Se a imagem estiver ausente, ilegível ou você não reconhecer nada, responda '
+      '"identified": false com "candidates" vazio — isso é MELHOR do que errar. '
+      'Responda APENAS com JSON válido, sem nenhum texto extra, no formato: '
+      '{"identified": true/false, "candidates": [{"name": "nome popular em português", '
+      '"scientific": "nome científico ou vazio", '
+      '"confidence": "high"/"medium"/"low"}]}.',
   encyIdentifyUserMessage:
       'O que é isto? Identifique para a minha enciclopédia mágica.',
   encyGenerateSystemPrompt: (categoryKey, name) {
@@ -361,9 +355,9 @@ Limites:
             '"edible": bool, "toxic": bool, "folkNames": string|null}. '
             'Na dúvida sobre segurança, marque edible=false e explique em safetyWarnings.';
       default:
-        return '$commonPt Formato: {"name": string, "hex": "#RRGGBB", '
-            '"meaning": string (2-3 frases sobre o significado mágico da cor), '
-            '"intentions": [3-5 strings], "usageTips": [3-5 strings]}.';
+        // Cores não têm verbete pessoal (o catálogo fixo da Enciclopédia
+        // basta): chave desconhecida é erro de programação, não prompt.
+        throw ArgumentError.value(categoryKey, 'categoryKey', 'unsupported');
     }
   },
   encyGenerateUserMessage: (name) =>

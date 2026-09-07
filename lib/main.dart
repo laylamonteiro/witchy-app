@@ -25,6 +25,7 @@ import 'core/services/ad_service.dart';
 import 'core/services/payment_service.dart';
 import 'core/services/debug_log_service.dart';
 import 'core/services/data_sync_service.dart';
+import 'core/services/user_image_cache.dart';
 import 'core/navigation/app_deep_link.dart';
 import 'core/navigation/app_router.dart';
 import 'core/navigation/section_reset_notifier.dart';
@@ -278,6 +279,9 @@ Future<SharedPreferences> _initializeApp() async {
     // Initialize DataSyncService after Supabase
     DataSyncService().initialize();
     await debugLog('SYNC', 'DataSyncService inicializado');
+    // Espelho local das fotos do Storage (só celular): resolvido uma vez
+    // aqui para as telas decidirem sem esperar se a foto já está no disco.
+    await UserImageCache.instance.preparar();
 
     // O retorno do link de "esqueci minha senha": o supabase_flutter troca
     // o token da URL (web) ou do deep link (celular) por uma sessão de
