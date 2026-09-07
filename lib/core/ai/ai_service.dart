@@ -85,10 +85,20 @@ class AIService {
 
   // ===== Configuração de provedores (edite AQUI para trocar a IA) =====
 
-  /// Provedor de TEXTO padrão. O Groq responde mais rápido (sem etapa de
-  /// "pensamento" do Gemini, que deixava análises longas lentas e
-  /// truncadas).
-  static const AiProvider defaultTextProvider = AiProvider.groq;
+  /// Provedor de TEXTO padrão.
+  ///
+  /// Era o Groq, que responde mais rápido (sem a etapa de "pensamento" do
+  /// Gemini, que deixava análises longas lentas e truncadas). Só que o
+  /// [_textModel] saiu do catálogo e a Groq devolve **404** para ele: toda
+  /// chamada de texto gastava uma ida à rede antes de cair no Gemini. O
+  /// log da Edge Function mostra o par, minuto a minuto —
+  /// `groq/llama-3.3-70b-versatile -> 404` seguido de `gemini -> 503`.
+  ///
+  /// Para voltar ao Groq quando houver um modelo vigente: atualize
+  /// [_textModel], acrescente o nome novo a `MODELOS_PADRAO` em
+  /// `supabase/functions/ia/index.ts` (a função recusa modelo fora da
+  /// lista) e troque esta constante de volta.
+  static const AiProvider defaultTextProvider = AiProvider.gemini;
 
   /// Exceções por funcionalidade — a chave é a mesma `tag` que aparece nos
   /// logs [AI] ('sonho', 'feitiço', 'perfil mágico', 'clima do dia',
@@ -727,7 +737,7 @@ class AIService {
     var respondeu = primary;
     String texto;
     try {
-      texto = await _textCall(
+      texto = await _textCallComTentativas(
         primary,
         systemPrompt: systemPrompt,
         userText: userText,
@@ -747,7 +757,7 @@ class AIService {
                   '— usando ${fallback.name}'
               : '$tag: ${primary.name} falhou ($e) — usando ${fallback.name}'));
       respondeu = fallback;
-      texto = await _textCall(
+      texto = await _textCallComTentativas(
         fallback,
         systemPrompt: systemPrompt,
         userText: userText,
@@ -851,6 +861,54 @@ class AIService {
       RegExp(r'^\s*#{1,6} ', multiLine: true).allMatches(texto).length;
 
   /// Despacha a chamada de texto para o provedor pedido.
+  /// [_textCall] com novas tentativas para falha transitória (429/503),
+  /// o mesmo que a visão já fazia. Sem isto, um 503 do Gemini — que é
+  /// "modelo sobrecarregado", passa em segundos — virava erro na cara da
+  /// pessoa: foi o que aconteceu com a página do cristal, com o Groq em 404
+  /// e o Gemini em 503 logo atrás, sem ninguém tentar de novo.
+  Future<String> _textCallComTentativas(
+    AiProvider provider, {
+    required String systemPrompt,
+    required String userText,
+    required String tag,
+    required double temperature,
+    required int maxTokens,
+    required bool jsonResponse,
+    required Duration receiveTimeout,
+  }) async {
+    for (final espera in _quotaRetryDelays) {
+      try {
+        return await _textCall(
+          provider,
+          systemPrompt: systemPrompt,
+          userText: userText,
+          tag: tag,
+          temperature: temperature,
+          maxTokens: maxTokens,
+          jsonResponse: jsonResponse,
+          receiveTimeout: receiveTimeout,
+        );
+      } on DioException catch (e) {
+        if (!_ehTransitorio(e)) rethrow;
+        unawaited(debugLog(
+            'AI',
+            '$tag: ${provider.name} ${e.response?.statusCode} — nova '
+            'tentativa em ${espera.inSeconds}s'));
+        await Future.delayed(espera);
+      }
+    }
+    return _textCall(
+      provider,
+      systemPrompt: systemPrompt,
+      userText: userText,
+      tag: tag,
+      temperature: temperature,
+      maxTokens: maxTokens,
+      jsonResponse: jsonResponse,
+      receiveTimeout: receiveTimeout,
+    );
+  }
+
   Future<String> _textCall(
     AiProvider provider, {
     required String systemPrompt,
@@ -1103,17 +1161,29 @@ class AIService {
     );
   }
 
+  /// Vale a pena tentar de novo? 429 é o teto de requisições por minuto
+  /// (deslizante: segundos depois costuma passar) e 503 é "modelo
+  /// sobrecarregado" do Gemini — os dois somem sozinhos. 404 (modelo fora
+  /// do catálogo) e 4xx de pedido NÃO: repetir só demora mais.
+  static bool _ehTransitorio(DioException e) =>
+      ehStatusTransitorio(e.response?.statusCode);
+
+  /// A regra pura, para poder ser provada em teste. Pública porque é usada
+  /// em produção logo acima.
+  static bool ehStatusTransitorio(int? status) =>
+      status == 429 || status == 503;
+
   /// Espera curta com backoff entre novas tentativas quando o provedor
-  /// devolve 429. O teto de RPM é por minuto e deslizante — segundos depois
-  /// a mesma chamada costuma passar, e quem fotografou nem percebe.
+  /// devolve 429 ou 503. O teto de RPM é por minuto e deslizante — segundos
+  /// depois a mesma chamada costuma passar, e quem fotografou nem percebe.
   static const List<Duration> _quotaRetryDelays = [
     Duration(seconds: 2),
     Duration(seconds: 4),
   ];
 
-  /// [_visionCall] com novas tentativas APENAS para 429 (limite de
-  /// requisições, compartilhado por todas as usuárias do app). Qualquer
-  /// outro erro sobe na hora — a troca de provedor é papel do chamador.
+  /// [_visionCall] com novas tentativas apenas para falha transitória
+  /// (429 e 503, ver [_ehTransitorio]). Qualquer outro erro sobe na hora —
+  /// a troca de provedor é papel do chamador.
   Future<String> _visionCallWithRetry(
     AiProvider provider, {
     required String systemPrompt,
@@ -1135,11 +1205,11 @@ class AIService {
           tag: tag,
         );
       } on DioException catch (e) {
-        if (e.response?.statusCode != 429) rethrow;
+        if (!_ehTransitorio(e)) rethrow;
         unawaited(debugLog(
             'AI',
-            '$tag: ${provider.name} 429 — nova tentativa '
-            'em ${delay.inSeconds}s'));
+            '$tag: ${provider.name} ${e.response?.statusCode} — nova '
+            'tentativa em ${delay.inSeconds}s'));
         await Future.delayed(delay);
       }
     }

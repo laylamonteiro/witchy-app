@@ -200,8 +200,15 @@ Future<String?> _recortarQuadrado(
         context: context,
         presentStyle: WebPresentStyle.dialog,
         size: CropperSize(width: lado, height: lado),
-        viewwMode: WebViewMode.mode_1,
+        // mode_3: a imagem SEMPRE cobre a área do recorte. No mode_1 ela
+        // podia encolher além disso e sobrava o fundo quadriculado em
+        // volta — dava para confirmar um recorte com pedaço de nada
+        // dentro. Aqui o zoom para de sair quando a imagem enche o quadro.
+        viewwMode: WebViewMode.mode_3,
         dragMode: WebDragMode.move,
+        // Sem o xadrez de transparência do Cropper.js: com o mode_3 ele
+        // não aparece, e num diálogo escuro só faria sujeira num piscar.
+        background: false,
         translations: WebTranslations(
           title: l10n.photoCropTitle,
           rotateLeftTooltip: l10n.photoCropRotateLeft,
