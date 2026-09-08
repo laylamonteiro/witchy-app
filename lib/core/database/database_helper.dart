@@ -7,6 +7,7 @@ import '../services/data_sync_service.dart';
 
 class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._init();
+
   /// A ABERTURA, não o banco aberto.
   ///
   /// Guardar só o resultado deixava uma janela: `_database` só era preenchido
@@ -15,7 +16,7 @@ class DatabaseHelper {
   /// SQLite vive num sistema de arquivos sobre IndexedDB com índice único no
   /// nome, a segunda conexão é `ConstraintError` na cara. Acontecia no
   /// caminho de retomada do boot (BootErrorApp → _boot de novo). Guardando o
-  /// Future, o segundo chamador espera o mesmo trabalho em vez de repetí-lo —
+  /// Future, o segundo chamador espera o mesmo trabalho em vez de repeti-lo —
   /// a mesma trava que a sincronização usa em `_varreduraEmVoo`.
   static Future<Database>? _abertura;
 
