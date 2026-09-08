@@ -154,11 +154,15 @@ void main() {
       for (final item in itens) {
         final texto = item.trim();
         if (texto.isEmpty) continue;
+        // A régua é "não começa em MINÚSCULA", e não "começa em maiúscula":
+        // o espanhol abre com '¡' ("¡Puede oxidarse - evita el agua!"), que
+        // não é letra nenhuma. É a mesma regra de `fraseDoVerbete`, que só
+        // capitaliza quando o primeiro caractere é uma letra minúscula.
         final primeira = texto[0];
         expect(
-          primeira == primeira.toUpperCase() &&
-              primeira != primeira.toLowerCase(),
-          isTrue,
+          primeira == primeira.toLowerCase() &&
+              primeira != primeira.toUpperCase(),
+          isFalse,
           reason: '$onde começa em minúscula: "$texto"',
         );
         expect(
