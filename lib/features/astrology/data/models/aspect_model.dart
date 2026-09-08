@@ -80,14 +80,17 @@ class Aspect {
     };
   }
 
+  /// Mesma tolerância de PlanetPosition.fromJson. Aqui o ângulo exato tem
+  /// um padrão perfeito: é o ângulo do próprio tipo de aspecto.
   factory Aspect.fromJson(Map<String, dynamic> json) {
+    final type = AspectType.values.firstWhere((e) => e.name == json['type']);
     return Aspect(
       planet1: Planet.values.firstWhere((e) => e.name == json['planet1']),
       planet2: Planet.values.firstWhere((e) => e.name == json['planet2']),
-      type: AspectType.values.firstWhere((e) => e.name == json['type']),
-      exactAngle: json['exactAngle'],
-      orb: json['orb'],
-      isApplying: json['isApplying'] ?? true,
+      type: type,
+      exactAngle: (json['exactAngle'] as num?)?.toDouble() ?? type.angle,
+      orb: (json['orb'] as num?)?.toDouble() ?? 0.0,
+      isApplying: json['isApplying'] as bool? ?? true,
     );
   }
 }

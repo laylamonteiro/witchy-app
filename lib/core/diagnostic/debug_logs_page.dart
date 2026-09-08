@@ -18,9 +18,11 @@ class _DebugLogsPageState extends State<DebugLogsPage> {
   String _filterTag = 'ALL';
 
   // FOTO, ENCY e STORAGE são os tags da foto do verbete (abrir, converter,
-  // subir): sem chip próprio só apareciam em ALL, no meio de tudo.
+  // subir); AI e ASTRO são a geração de conteúdo e o mapa natal. Sem chip
+  // próprio só apareciam em ALL, no meio de tudo.
   final List<String> _tags = [
-    'ALL', 'AUTH', 'SYSTEM', 'NAV', 'ERROR', 'FOTO', 'ENCY', 'STORAGE', //
+    'ALL', 'AUTH', 'SYSTEM', 'NAV', 'ERROR', //
+    'AI', 'ASTRO', 'FOTO', 'ENCY', 'STORAGE', //
   ];
 
   @override
