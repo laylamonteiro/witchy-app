@@ -83,7 +83,7 @@ class _ColorsListPageState extends State<ColorsListPage>
   void didChangeDependencies() {
     super.didChangeDependencies();
     // Céu parado para quem pediu menos movimento (acessibilidade).
-    final reduced = MediaQuery.of(context).disableAnimations;
+    final reduced = MediaQuery.disableAnimationsOf(context);
     if (reduced != _reducedMotion) {
       _reducedMotion = reduced;
       if (reduced) {

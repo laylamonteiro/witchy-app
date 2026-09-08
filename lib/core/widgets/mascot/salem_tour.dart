@@ -246,7 +246,7 @@ class _SalemTourOverlayState extends State<SalemTourOverlay>
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final size = MediaQuery.of(context).size;
+    final size = MediaQuery.sizeOf(context);
 
     return Material(
       color: Colors.transparent,

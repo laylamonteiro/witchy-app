@@ -22,7 +22,7 @@ class _DebugLogsPageState extends State<DebugLogsPage> {
   // próprio só apareciam em ALL, no meio de tudo.
   final List<String> _tags = [
     'ALL', 'AUTH', 'SYSTEM', 'NAV', 'ERROR', //
-    'AI', 'ASTRO', 'FOTO', 'ENCY', 'STORAGE', //
+    'AI', 'ASTRO', 'FOTO', 'ENCY', 'STORAGE', 'PENDULO', //
   ];
 
   @override
