@@ -372,7 +372,13 @@ Límites:
         'Los nombres populares, cuando exista campo para ellos, van en ese campo. '
         'Si hay una foto adjunta, ancla la descripción en el ejemplar REAL fotografiado — '
         'colores, formas y rasgos visibles — manteniendo las propiedades mágicas de la especie. '
-        'Responde SOLO con JSON válido, sin texto extra. Las CLAVES del JSON y los valores de enum son SIEMPRE en inglés; los TEXTOS, en español.';
+        'Responde SOLO con JSON válido, sin texto extra. Las CLAVES del JSON y los valores de enum son SIEMPRE en inglés; los TEXTOS, en español. '
+        'ESTILO DE ESCRITURA, igual al del catálogo de la app: cada elemento de lista empieza con MAYÚSCULA y NUNCA termina en punto. '
+        '"intentions"/"magicalProperties" son expresiones cortas SUSTANTIVADAS ("Protección suave", "Claridad mental"), no frases con verbo. '
+        '"usageTips"/"ritualUses" son instrucciones en IMPERATIVO ("Llévala en el bolsillo para protección diaria", "Quema como incienso purificador"). '
+        'El "method" de limpieza y recarga es un sustantivo corto ("Agua corriente", "Luz de la luna"). '
+        'Los avisos ("warning" y "safetyWarnings") son frases cortas con mayúscula inicial y sin punto final. '
+        'La "description" empieza con mayúscula y no termina en punto.';
     switch (categoryKey) {
       case 'crystal':
         return '$commonEs Formato: {"name": string, "description": string (2-3 frases), '

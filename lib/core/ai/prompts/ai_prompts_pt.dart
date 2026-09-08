@@ -335,7 +335,16 @@ Limites:
         'Os nomes populares, quando houver campo para eles, vão no campo próprio. '
         'Se uma foto estiver anexada, ancore a descrição no exemplar REAL fotografado — '
         'cores, formas e traços visíveis — mantendo as propriedades mágicas da espécie. '
-        'Responda APENAS com JSON válido, sem texto extra. As CHAVES do JSON e os valores de enum são SEMPRE em inglês; os TEXTOS, em português.';
+        'Responda APENAS com JSON válido, sem texto extra. As CHAVES do JSON e os valores de enum são SEMPRE em inglês; os TEXTOS, em português. '
+        // O padrão veio do catálogo do app (crystals_data_*.dart,
+        // herbs_data_*.dart), que a tela do verbete mostra lado a lado com o
+        // que é gerado aqui. Sem esta parte, a IA devolvia tudo em minúscula.
+        'PADRÃO DE ESCRITA, igual ao do catálogo: cada item de lista começa com letra MAIÚSCULA e NUNCA termina com ponto final. '
+        '"intentions"/"magicalProperties" são expressões curtas SUBSTANTIVADAS ("Proteção suave", "Clareza mental"), não frases com verbo. '
+        '"usageTips"/"ritualUses" são instruções no IMPERATIVO ("Carregue no bolso para proteção diária", "Queime como incenso purificador"). '
+        'O "method" de limpeza e recarga é um substantivo curto ("Água corrente", "Luz da lua"). '
+        'Avisos ("warning" e "safetyWarnings") são frases curtas capitalizadas, sem ponto final. '
+        'A "description" começa com maiúscula e não termina com ponto.';
     switch (categoryKey) {
       case 'crystal':
         return '$commonPt Formato: {"name": string, "description": string (2-3 frases), '

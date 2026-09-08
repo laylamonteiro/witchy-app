@@ -141,4 +141,65 @@ void main() {
       checkNames([for (final s in list) s.name], 'sacred symbols');
     }
   });
+
+  // A RÉGUA que os verbetes gerados pela IA imitam. A tela de detalhe é a
+  // mesma para o cristal do catálogo e para o que a usuária cria com foto, e
+  // não transforma texto nenhum — então o padrão do catálogo É o padrão do
+  // app. Ele valia de fato nos seis arquivos (pt/en/es de cristais e ervas) e
+  // nada o protegia: quem acrescentasse um item em minúscula ou com ponto
+  // final passaria batido, e a régua deixaria de valer para o
+  // `fraseDoVerbete` imitar.
+  test('todo item de lista começa com maiúscula e não termina em ponto', () {
+    void conferir(Iterable<String> itens, String onde) {
+      for (final item in itens) {
+        final texto = item.trim();
+        if (texto.isEmpty) continue;
+        final primeira = texto[0];
+        expect(
+          primeira == primeira.toUpperCase() &&
+              primeira != primeira.toLowerCase(),
+          isTrue,
+          reason: '$onde começa em minúscula: "$texto"',
+        );
+        expect(
+          texto.endsWith('.') && !texto.endsWith('..'),
+          isFalse,
+          reason: '$onde termina em ponto: "$texto"',
+        );
+      }
+    }
+
+    for (final list in [crystalsPt, crystalsEn, crystalsEs]) {
+      for (final c in list) {
+        conferir(c.intentions, 'crystal ${c.name} intentions');
+        conferir(c.usageTips, 'crystal ${c.name} usageTips');
+        conferir(c.safetyWarnings, 'crystal ${c.name} safetyWarnings');
+        conferir(
+          [for (final m in c.cleaningMethods) m.method],
+          'crystal ${c.name} cleaningMethods',
+        );
+        conferir(
+          [for (final m in c.chargingMethods) m.method],
+          'crystal ${c.name} chargingMethods',
+        );
+        conferir(
+          [
+            for (final m in [...c.cleaningMethods, ...c.chargingMethods])
+              if (m.warning != null) m.warning!
+          ],
+          'crystal ${c.name} warning',
+        );
+        conferir([c.description], 'crystal ${c.name} description');
+      }
+    }
+
+    for (final list in [herbsPt, herbsEn, herbsEs]) {
+      for (final h in list) {
+        conferir(h.magicalProperties, 'herb ${h.name} magicalProperties');
+        conferir(h.ritualUses, 'herb ${h.name} ritualUses');
+        conferir(h.safetyWarnings, 'herb ${h.name} safetyWarnings');
+        conferir([h.description], 'herb ${h.name} description');
+      }
+    }
+  });
 }

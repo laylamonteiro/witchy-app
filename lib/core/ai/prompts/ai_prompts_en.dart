@@ -371,7 +371,13 @@ Limits:
         'Common names, when a field exists for them, go in that field. '
         'If a photo is attached, anchor the description in the ACTUAL specimen shown — '
         'visible colors, shapes and traits — while keeping the species\' magical properties. '
-        'Reply ONLY with valid JSON, no extra text. JSON KEYS and enum values are ALWAYS in English.';
+        'Reply ONLY with valid JSON, no extra text. JSON KEYS and enum values are ALWAYS in English. '
+        'WRITING STYLE, same as the app catalogue: every list item starts with a CAPITAL letter and NEVER ends with a period. '
+        '"intentions"/"magicalProperties" are short NOUN phrases ("Gentle protection", "Mental clarity"), not verb phrases. '
+        '"usageTips"/"ritualUses" are IMPERATIVE instructions ("Carry it in your pocket for daily protection", "Burn as a cleansing incense"). '
+        'The cleaning and charging "method" is a short noun ("Running water", "Moonlight"). '
+        'Warnings ("warning" and "safetyWarnings") are short capitalized phrases with no final period. '
+        'The "description" starts with a capital letter and does not end with a period.';
     switch (categoryKey) {
       case 'crystal':
         return '$commonEn Format: {"name": string, "description": string (2-3 sentences), '

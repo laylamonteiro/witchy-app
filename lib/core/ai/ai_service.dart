@@ -11,6 +11,7 @@ import '../config/supabase_config.dart';
 import '../services/debug_log_service.dart';
 import 'ia_pelo_servidor.dart';
 import '../utils/accents.dart';
+import '../utils/padrao_do_verbete.dart';
 import '../../features/astrology/data/models/birth_chart_model.dart';
 import '../../features/astrology/data/models/aspect_model.dart';
 import '../../features/astrology/data/models/enums.dart';
@@ -1720,7 +1721,10 @@ class AIService {
           maxTokens: 1600,
           tag: 'página com foto',
         );
-        return _extractJsonObject(content);
+        // O texto sai daqui já no padrão do catálogo (maiúscula inicial, sem
+        // ponto final): a tela do verbete é a MESMA dos cristais e ervas
+        // pré-carregados, e mostra o que vier sem transformar nada.
+        return verbeteNoPadrao(_extractJsonObject(content));
       }
 
       final content = await _textRequest(
@@ -1732,7 +1736,7 @@ class AIService {
         maxTokens: 1200,
         jsonResponse: true,
       );
-      return _extractJsonObject(content);
+      return verbeteNoPadrao(_extractJsonObject(content));
     } on DioException catch (e) {
       if (e.response?.statusCode == 429) {
         throw const AiRateLimitException();

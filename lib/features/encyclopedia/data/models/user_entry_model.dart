@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart' show Color;
 
+import '../../../../core/utils/padrao_do_verbete.dart';
 import 'color_model.dart';
 import 'crystal_model.dart';
 import 'herb_model.dart';
@@ -102,16 +103,23 @@ class UserEncyclopediaEntry {
 
   // ---- Conversões para os modelos das páginas existentes ----
 
-  static List<String> _stringList(dynamic value) =>
-      value is List ? value.map((e) => '$e').toList() : const [];
+  // Todo texto do verbete pessoal passa por aqui a caminho da tela — e a tela
+  // é a MESMA dos cristais e ervas do catálogo. Por isso a régua de escrita
+  // (`fraseDoVerbete`) é aplicada na LEITURA também, e não só na geração:
+  // assim os verbetes criados antes desta regra aparecem no padrão sem
+  // precisar ser gerados de novo nem migrados no banco.
+  static List<String> _stringList(dynamic value) => value is List
+      ? value.map((e) => fraseDoVerbete('$e')).toList()
+      : const [];
 
   static List<CrystalMethod> _methods(dynamic value) {
     if (value is! List) return const [];
     return value.whereType<Map>().map((m) {
+      final aviso = m['warning'];
       return CrystalMethod(
-        method: '${m['method'] ?? ''}',
+        method: fraseDoVerbete('${m['method'] ?? ''}'),
         isSafe: m['isSafe'] == true,
-        warning: m['warning'] == null ? null : '${m['warning']}',
+        warning: aviso == null ? null : fraseDoVerbete('$aviso'),
       );
     }).toList();
   }
@@ -126,7 +134,7 @@ class UserEncyclopediaEntry {
 
   CrystalModel toCrystalModel() => CrystalModel(
         name: name,
-        description: '${data['description'] ?? ''}',
+        description: fraseDoVerbete('${data['description'] ?? ''}'),
         element: _element(),
         intentions: _stringList(data['intentions']),
         usageTips: _stringList(data['usageTips']),
@@ -141,8 +149,8 @@ class UserEncyclopediaEntry {
     final planetRaw = '${data['planet'] ?? ''}';
     return HerbModel(
       name: name,
-      scientificName: '${data['scientificName'] ?? ''}',
-      description: '${data['description'] ?? ''}',
+      scientificName: fraseDoVerbete('${data['scientificName'] ?? ''}'),
+      description: fraseDoVerbete('${data['description'] ?? ''}'),
       element: HerbElement.values.firstWhere(
         (e) => e.name == elementRaw,
         orElse: () => HerbElement.earth,
@@ -156,7 +164,9 @@ class UserEncyclopediaEntry {
       safetyWarnings: _stringList(data['safetyWarnings']),
       edible: data['edible'] == true,
       toxic: data['toxic'] == true,
-      folkNames: data['folkNames'] == null ? null : '${data['folkNames']}',
+      folkNames: data['folkNames'] == null
+          ? null
+          : fraseDoVerbete('${data['folkNames']}'),
       imageUrl: imagePath,
     );
   }
