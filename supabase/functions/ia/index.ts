@@ -52,8 +52,14 @@ type Provedor = keyof typeof PROVEDORES
 // no primeiro deploy sem configuração extra; `MODELOS_PERMITIDOS` (separados
 // por vírgula) sobrepõe. Lista vazia NÃO libera geral — recusa tudo.
 const MODELOS_PADRAO = [
-  'llama-3.3-70b-versatile',
+  // Texto. O `llama-3.3-70b-versatile` saiu daqui em 07/09/2026: virou
+  // Enterprise ("Contact Sales") no catálogo da Groq e passou a devolver
+  // 404 para esta conta. O `gpt-oss-120b` é o modelo de texto de PRODUÇÃO
+  // disponível no plano.
+  'openai/gpt-oss-120b',
+  // Visão (reserva; a principal é o Gemini).
   'qwen/qwen3.6-27b',
+  // Texto e visão do Google.
   'gemini-3.6-flash',
 ]
 
@@ -95,6 +101,25 @@ function cabecalhosDeCors(origem: string | null): Record<string, string> {
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
     Vary: 'Origin',
   }
+}
+
+// O corpo de SUCESSO nunca entra no log: ele carrega o mapa astral e o texto
+// que a pessoa escreveu. O corpo de ERRO entra — só a mensagem do provedor,
+// cortada. Sem ela, um 400 é indistinguível de outro: em 07/09/2026 a Groq
+// passou a recusar um pedido e o log dizia apenas "-> 400", sem nada que
+// apontasse o parâmetro culpado.
+function motivoDoErro(corpo: string): string {
+  try {
+    const json = JSON.parse(corpo)
+    const erro = json?.error ?? json
+    const partes = [erro?.message, erro?.type ?? erro?.code, erro?.status]
+      .filter((p) => typeof p === 'string' && p.length > 0)
+    if (partes.length > 0) return partes.join(' | ').slice(0, 300)
+  } catch (_) {
+    // Não é JSON (HTML de gateway, corpo vazio): cai no corte abaixo.
+  }
+  const cru = corpo.replace(/\s+/g, ' ').trim()
+  return cru.length > 0 ? cru.slice(0, 200) : '(sem corpo)'
 }
 
 function resposta(
@@ -153,6 +178,11 @@ Deno.serve(async (req: Request) => {
   }
   const modelo = (pedido.modelo ?? '').trim()
   if (!modelo || !modelosPermitidos().includes(modelo)) {
+    // Registrado porque a recusa acontece ANTES de qualquer chamada ao
+    // provedor: sem esta linha, um modelo novo no app e uma lista velha aqui
+    // (ou um `MODELOS_PERMITIDOS` desatualizado) davam um 400 mudo, sem
+    // nada nos logs para apontar o culpado.
+    console.log(`ia: modelo recusado: ${modelo}`)
     return resposta({ erro: 'modelo' }, 400, cors)
   }
   if (pedido.corpo === null || typeof pedido.corpo !== 'object') {
@@ -168,7 +198,8 @@ Deno.serve(async (req: Request) => {
   //    da Groq alimenta a espera curta do Perfil Mágico).
   //
   //    NADA DE LOG DO CONTEÚDO: o corpo carrega o mapa astral e o texto que
-  //    a pessoa escreveu. O que se registra é provedor, modelo e status.
+  //    a pessoa escreveu. O que se registra é provedor, modelo e status — e,
+  //    quando o provedor recusa, a mensagem de erro DELE (ver motivoDoErro).
   try {
     const upstream = await fetch(config.url(modelo), {
       method: 'POST',
@@ -178,8 +209,11 @@ Deno.serve(async (req: Request) => {
       },
       body: JSON.stringify(pedido.corpo),
     })
-    console.log(`ia: ${provedor}/${modelo} -> ${upstream.status}`)
     const texto = await upstream.text()
+    console.log(
+      `ia: ${provedor}/${modelo} -> ${upstream.status}` +
+        (upstream.ok ? '' : ` · ${motivoDoErro(texto)}`),
+    )
     return new Response(texto, {
       status: upstream.status,
       headers: { 'Content-Type': 'application/json', ...cors },

@@ -46,8 +46,8 @@ class _EsperandoASessao extends StatelessWidget {
 /// A janela de login que fez o trabalho e não conseguiu se fechar (o COOP
 /// do Google corta o direito de fechar-se): diz que o Grimório já abriu na
 /// aba original e convida a fechar esta.
-class _JanelaDeLoginConcluida extends StatelessWidget {
-  const _JanelaDeLoginConcluida();
+class JanelaDeLoginConcluida extends StatelessWidget {
+  const JanelaDeLoginConcluida({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -117,7 +117,7 @@ class PortalDeEntrada extends StatelessWidget {
         debugLog('NAV', 'PortalDeEntrada: janela de login fechada');
         return const _EsperandoASessao();
       }
-      return const _JanelaDeLoginConcluida();
+      return const JanelaDeLoginConcluida();
     }
 
     // Sessão do OAuth pronta pelo caminho de página inteira: DESCARTAR este

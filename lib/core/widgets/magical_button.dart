@@ -13,6 +13,16 @@ class MagicalButton extends StatefulWidget {
   /// de um `onPressed` vazio que finge que aconteceu.
   final bool enabled;
 
+  /// Ocupa a largura inteira de quem o contém, em vez de encolher até o
+  /// texto. Opcional porque o `Stack` do build passa restrições FROUXAS ao
+  /// botão: mesmo numa coluna esticada a pílula nasce do tamanho do rótulo,
+  /// e os usos que já existem contam com isso. Ligue onde o CTA deve casar
+  /// com outro botão de largura total.
+  ///
+  /// Só dentro de um pai com largura limitada: numa `Row` ou `ListView`
+  /// horizontal, largura infinita dentro de restrição infinita estoura.
+  final bool larguraTotal;
+
   const MagicalButton({
     super.key,
     required this.text,
@@ -20,6 +30,7 @@ class MagicalButton extends StatefulWidget {
     this.isOutlined = false,
     this.icon,
     this.enabled = true,
+    this.larguraTotal = false,
   });
 
   /// Decoração dos CTAs primários do app: gradiente lilac→pink com um halo
@@ -164,7 +175,7 @@ class _MagicalButtonState extends State<MagicalButton>
             );
           }),
           // Botão
-          widget.isOutlined
+          _talvezLargo(widget.isOutlined
               ? OutlinedButton.icon(
                   onPressed: widget.enabled ? _handleTap : null,
                   icon: widget.icon != null
@@ -197,11 +208,19 @@ class _MagicalButtonState extends State<MagicalButton>
                       label: Text(widget.text),
                     ),
                   ),
-                ),
+                )),
         ],
       ),
     );
   }
+
+  /// O `Stack` acima entrega restrições frouxas ao botão, então ele encolhe
+  /// até o rótulo. Com [MagicalButton.larguraTotal], uma largura infinita
+  /// force o botão a ocupar tudo — e o Stack, que se dimensiona pelo maior
+  /// filho não posicionado, acompanha.
+  Widget _talvezLargo(Widget botao) => widget.larguraTotal
+      ? SizedBox(width: double.infinity, child: botao)
+      : botao;
 }
 
 class _Particle {

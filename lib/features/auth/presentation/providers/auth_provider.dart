@@ -912,7 +912,10 @@ class AuthProvider extends ChangeNotifier {
         await debugLog(
             'AUTH', 'Logout remoto falhou; continuando limpeza local: $e');
       } finally {
-        authRepository.dispose();
+        // Aguardado: o `dispose` cancela a assinatura do `onAuthStateChange`
+        // antes de fechar o controlador. Sem o await, o fechar corria junto
+        // com o cancelar.
+        await authRepository.dispose();
       }
     }
 

@@ -75,7 +75,15 @@ class _EncyclopediaPageState extends State<EncyclopediaPage>
   }
 
   /// Trocar de aba guarda o teclado — a busca da aba anterior já era.
+  ///
+  /// SÓ na troca de aba de fato: o controller também notifica em animações
+  /// e arrastes, e desfocar aí fecharia o teclado de uma página empurrada
+  /// por cima desta (o verbete novo, por exemplo).
+  late int _abaAnterior = _tabController.index;
   void _dismissKeyboard() {
+    final aba = _tabController.index;
+    if (aba == _abaAnterior) return;
+    _abaAnterior = aba;
     FocusManager.instance.primaryFocus?.unfocus();
   }
 

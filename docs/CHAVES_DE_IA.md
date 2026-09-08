@@ -86,7 +86,7 @@ supabase functions deploy ia --project-ref <ref>
 
 supabase secrets set GROQ_API_KEY=... GEMINI_API_KEY=...
 # opcionais (têm padrão no código):
-supabase secrets set MODELOS_PERMITIDOS='llama-3.3-70b-versatile,qwen/qwen3.6-27b,gemini-3.6-flash'
+supabase secrets set MODELOS_PERMITIDOS='openai/gpt-oss-120b,qwen/qwen3.6-27b,gemini-3.6-flash'
 supabase secrets set ORIGENS_PERMITIDAS='https://grimoriodebolso.app,https://staging.grimorio-de-bolso.pages.dev'
 ```
 
@@ -98,8 +98,8 @@ Conferência, com um token de sessão de verdade:
 curl -i -X POST "$SUPABASE_URL/functions/v1/ia" \
   -H "Authorization: Bearer $ACCESS_TOKEN" \
   -H "apikey: $ANON" -H 'Content-Type: application/json' \
-  -d '{"provedor":"groq","modelo":"llama-3.3-70b-versatile","corpo":{
-        "model":"llama-3.3-70b-versatile",
+  -d '{"provedor":"groq","modelo":"openai/gpt-oss-120b","corpo":{
+        "model":"openai/gpt-oss-120b",
         "messages":[{"role":"user","content":"diga ok"}],
         "max_tokens":10}}'
 ```

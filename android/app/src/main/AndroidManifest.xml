@@ -49,6 +49,15 @@
             </intent-filter>
         </activity>
 
+        <!-- Recorte da foto (image_cropper → uCrop). O plugin só declara a
+             própria variante "shrink-only"; a atividade padrão do uCrop
+             precisa estar aqui, senão o recorte cai com
+             ActivityNotFoundException no aparelho. -->
+        <activity
+            android:name="com.yalantis.ucrop.UCropActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar"/>
+
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />

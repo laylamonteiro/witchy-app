@@ -181,7 +181,7 @@ class CrystalDetailPage extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Limpeza',
+                    AppLocalizations.of(context).encySectionCleaning,
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
                   const SizedBox(height: 12),
@@ -249,7 +249,7 @@ class CrystalDetailPage extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Recarga',
+                    AppLocalizations.of(context).encySectionCharging,
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
                   const SizedBox(height: 12),

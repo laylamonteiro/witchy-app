@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
@@ -9,6 +10,7 @@ import '../../data/repositories/astrology_repository.dart';
 import '../../data/services/chart_calculator.dart';
 import '../../data/services/magical_interpreter.dart';
 import '../../../../core/content/content_locale.dart';
+import '../../../../core/services/debug_log_service.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 
 /// O texto de falha que chega à tela sai daqui, e não de string cravada: as
@@ -160,7 +162,12 @@ class AstrologyProvider with ChangeNotifier {
         _magicalProfile = await _repository.getMagicalProfile(effectiveUserId);
       }
     } catch (e) {
+      // No log persistente, e não só no console: este erro chega à tela como
+      // "erro genérico", e sem a linha aqui não há como saber se foi o parse
+      // do mapa gravado, o banco ou a rede. (Ver a tolerância a campo ausente
+      // em PlanetPosition.fromJson.)
       debugPrint('Mapa natal: falha ao carregar: $e');
+      unawaited(debugLog('ASTRO', 'Mapa natal: falha ao carregar: $e'));
       _error = _l10n.errorsGeneric;
     } finally {
       _isLoading = false;
@@ -191,6 +198,7 @@ class AstrologyProvider with ChangeNotifier {
       _birthChart = updated;
     } catch (e) {
       debugPrint('Falha ao recalcular mapa desatualizado: $e');
+      unawaited(debugLog('ASTRO', 'Falha ao recalcular mapa: $e'));
     }
   }
 

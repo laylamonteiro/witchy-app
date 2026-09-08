@@ -1,14 +1,17 @@
 import 'dart:io';
-import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
+import 'dart:typed_data';
+
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:image_cropper/image_cropper.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:flutter_image_compress/flutter_image_compress.dart';
+
+import '../../../../core/images/seletor_de_foto.dart';
 import '../../../../core/services/image_storage_service.dart';
 import '../../../../core/theme/grimoire_colors.dart';
+import '../../../../core/utils/reducao_de_imagem.dart';
 import '../../../../core/widgets/stored_image.dart';
 
 /// Widget para selecionar e exibir foto de perfil
@@ -46,7 +49,9 @@ class ProfileAvatarPicker extends StatefulWidget {
 }
 
 class _ProfileAvatarPickerState extends State<ProfileAvatarPicker> {
-  final ImagePicker _picker = ImagePicker();
+  /// Lado da foto guardada: um avatar não precisa dos 1600 px do verbete.
+  static const int _ladoDoAvatar = 800;
+
   String? _currentPhotoPath;
   bool _isLoading = false;
 
@@ -203,7 +208,7 @@ class _ProfileAvatarPickerState extends State<ProfileAvatarPicker> {
               const SizedBox(height: 20),
               // Título
               Text(
-                'Foto de Perfil',
+                AppLocalizations.of(context).avatarSheetTitle,
                 style: Theme.of(context).textTheme.titleLarge,
               ),
               const SizedBox(height: 20),
@@ -217,7 +222,7 @@ class _ProfileAvatarPickerState extends State<ProfileAvatarPicker> {
                   ),
                   child: Icon(Icons.camera_alt, color: context.gc.lilac),
                 ),
-                title: const Text('Tirar Foto'),
+                title: Text(AppLocalizations.of(context).avatarTakePhoto),
                 subtitle: Text(AppLocalizations.of(context).avatarUseCamera),
                 onTap: () {
                   Navigator.pop(context);
@@ -233,8 +238,10 @@ class _ProfileAvatarPickerState extends State<ProfileAvatarPicker> {
                   ),
                   child: Icon(Icons.photo_library, color: context.gc.mint),
                 ),
-                title: const Text('Escolher da Galeria'),
-                subtitle: const Text('Selecione uma foto existente'),
+                title: Text(AppLocalizations.of(context).avatarFromGallery),
+                subtitle: Text(
+                  AppLocalizations.of(context).avatarFromGallerySubtitle,
+                ),
                 onTap: () {
                   Navigator.pop(context);
                   _pickImage(ImageSource.gallery);
@@ -250,8 +257,12 @@ class _ProfileAvatarPickerState extends State<ProfileAvatarPicker> {
                     ),
                     child: Icon(Icons.delete, color: context.gc.alert),
                   ),
-                  title: const Text('Remover Foto'),
-                  subtitle: Text(AppLocalizations.of(context).avatarResetDefault),
+                  title: Text(
+                    AppLocalizations.of(context).avatarRemovePhoto,
+                  ),
+                  subtitle: Text(
+                    AppLocalizations.of(context).avatarResetDefault,
+                  ),
                   onTap: () {
                     Navigator.pop(context);
                     _removePhoto();
@@ -264,160 +275,77 @@ class _ProfileAvatarPickerState extends State<ProfileAvatarPicker> {
     );
   }
 
+  /// Pegar → converter → recortar em quadrado → reduzir: o mesmo caminho do
+  /// verbete ([SeletorDeFoto]). Antes o avatar tinha pipeline próprio, sem
+  /// HEIC na web e com recorte só no celular.
   Future<void> _pickImage(ImageSource source) async {
+    final l10n = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    setState(() => _isLoading = true);
+
+    final Uint8List? bytes;
     try {
-      setState(() => _isLoading = true);
-
-      final XFile? pickedFile = await _picker.pickImage(
-        source: source,
-        maxWidth: 800,
-        maxHeight: 800,
-        imageQuality: 85,
+      bytes = await const SeletorDeFoto().escolher(
+        context,
+        origem: source,
+        ladoMaximo: _ladoDoAvatar,
       );
-
-      if (pickedFile == null) {
-        setState(() => _isLoading = false);
-        return;
-      }
-
-      // Na web não há arquivo: o recorte (image_cropper) e a compressão por
-      // caminho não se aplicam. Trabalha com os bytes e envia ao Storage.
-      if (kIsWeb) {
-        await _uploadPickedImage(pickedFile);
-        return;
-      }
-
-      // Fazer crop da imagem
-      final croppedFile = await _cropImage(pickedFile.path);
-
-      if (croppedFile != null) {
-        // Comprimir imagem para evitar crashes por arquivos grandes
-        final compressedFile = await _compressImage(croppedFile.path);
-
-        // Salvar no diretório do app
-        final savedPath = await _saveImage(compressedFile);
-
-        setState(() {
-          _currentPhotoPath = savedPath;
-          _isLoading = false;
-        });
-
-        // Notificar mudança
-        widget.onPhotoChanged?.call(savedPath);
-
-        // Salvar referência
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('profile_photo_path', savedPath);
-      } else {
-        setState(() => _isLoading = false);
-      }
+    } on FotoNaoSuportadaException catch (e) {
+      debugPrint('Foto de perfil: formato não suportado: ${e.formato}');
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+      _avisar(messenger, l10n.encyAddPhotoUnsupported(e.formato));
+      return;
     } catch (e) {
       debugPrint('Foto de perfil: falha ao selecionar: $e');
+      if (!mounted) return;
       setState(() => _isLoading = false);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(AppLocalizations.of(context).profileErrPickPhoto),
-            backgroundColor: context.gc.alert,
-          ),
-        );
-      }
+      _avisar(messenger, l10n.profileErrPickPhoto);
+      return;
     }
-  }
-
-  /// Caminho da web: bytes → compressão (API de bytes, a única que funciona no
-  /// navegador) → Supabase Storage. O banco guarda a referência do Storage.
-  Future<void> _uploadPickedImage(XFile pickedFile) async {
-    final messenger = ScaffoldMessenger.of(context);
+    if (!mounted) return;
+    if (bytes == null) {
+      // Desistiu no seletor ou no recorte: nada a dizer.
+      setState(() => _isLoading = false);
+      return;
+    }
 
     try {
-      final original = await pickedFile.readAsBytes();
-      final compressed = await FlutterImageCompress.compressWithList(
-        original,
-        minWidth: 800,
-        minHeight: 800,
-        quality: 75,
-        format: CompressFormat.jpeg,
-      );
-
-      final reference = await ImageStorageService.instance.uploadJpeg(
-        compressed,
-        folder: 'avatar',
-      );
-
+      // Na web não há arquivo: a foto vai direto ao Storage e o banco guarda
+      // a referência. No celular fica no diretório do app.
+      final String novo = kIsWeb
+          ? await ImageStorageService.instance.uploadJpeg(
+              bytes,
+              folder: 'avatar',
+            )
+          : await _saveImage(bytes);
       if (!mounted) return;
       setState(() {
-        _currentPhotoPath = reference;
+        _currentPhotoPath = novo;
         _isLoading = false;
       });
-
-      widget.onPhotoChanged?.call(reference);
-
+      widget.onPhotoChanged?.call(novo);
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('profile_photo_path', reference);
+      await prefs.setString('profile_photo_path', novo);
     } catch (e) {
-      debugPrint('Foto de perfil: falha ao enviar: $e');
+      debugPrint('Foto de perfil: falha ao guardar: $e');
       if (!mounted) return;
       setState(() => _isLoading = false);
-      messenger.showSnackBar(
-        SnackBar(
-          content: Text(AppLocalizations.of(context).profileErrUploadPhoto),
-          backgroundColor: context.gc.alert,
-        ),
-      );
+      _avisar(messenger, l10n.profileErrUploadPhoto);
     }
   }
 
-  Future<CroppedFile?> _cropImage(String sourcePath) async {
-    return await ImageCropper().cropImage(
-      sourcePath: sourcePath,
-      aspectRatio: const CropAspectRatio(ratioX: 1, ratioY: 1),
-      uiSettings: [
-        AndroidUiSettings(
-          toolbarTitle: 'Ajustar Foto',
-          toolbarColor: context.gc.surface,
-          toolbarWidgetColor: context.gc.lilac,
-          backgroundColor: context.gc.background,
-          activeControlsWidgetColor: context.gc.lilac,
-          cropFrameColor: context.gc.lilac,
-          cropGridColor: context.gc.surfaceBorder,
-          initAspectRatio: CropAspectRatioPreset.square,
-          lockAspectRatio: true,
-        ),
-        IOSUiSettings(
-          title: 'Ajustar Foto',
-          aspectRatioLockEnabled: true,
-          resetAspectRatioEnabled: false,
-        ),
-      ],
+  void _avisar(ScaffoldMessengerState messenger, String texto) {
+    messenger.showSnackBar(
+      SnackBar(content: Text(texto), backgroundColor: context.gc.alert),
     );
   }
 
-  Future<File> _compressImage(String sourcePath) async {
-    final tempDir = await getTemporaryDirectory();
-    final targetPath = '${tempDir.path}/profile_compressed_${DateTime.now().millisecondsSinceEpoch}.jpg';
-
-    final XFile? compressed = await FlutterImageCompress.compressAndGetFile(
-      sourcePath,
-      targetPath,
-      quality: 75,
-      minWidth: 800,
-      minHeight: 800,
-      format: CompressFormat.jpeg,
-    );
-
-    return File(compressed?.path ?? sourcePath);
-  }
-
-  Future<String> _saveImage(File file) async {
+  Future<String> _saveImage(Uint8List bytes) async {
     final appDir = await getApplicationDocumentsDirectory();
     final fileName = 'profile_${DateTime.now().millisecondsSinceEpoch}.jpg';
     final savedPath = '${appDir.path}/$fileName';
-
-    // Copiar arquivo para o diretório do app
-    final bytes = await file.readAsBytes();
-    final savedFile = File(savedPath);
-    await savedFile.writeAsBytes(bytes);
+    await File(savedPath).writeAsBytes(bytes);
 
     // Remover foto antiga se existir
     if (_currentPhotoPath != null &&

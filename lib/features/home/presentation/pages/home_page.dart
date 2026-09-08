@@ -1,4 +1,6 @@
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'dart:async';
+
+import 'package:flutter/foundation.dart' show debugPrint, kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
@@ -162,12 +164,19 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   }
 
   void _finishTour() {
+    if (!mounted) return;
     final mascot = context.read<MascotProvider>();
     final userId = context.read<AuthProvider>().currentUser.id;
-    mascot.markTourSeen(userId);
+    // A tela responde primeiro; gravar a preferência vem depois e não pode
+    // segurar o toque (na web é localStorage, que pode estar bloqueado).
+    setState(() => _showTour = false);
     // O Salem-guia sai de cena e o mascote real entra em fumaça no lugar.
     mascot.materializeNext();
-    setState(() => _showTour = false);
+    unawaited(
+      mascot.markTourSeen(userId).catchError(
+            (Object e) => debugPrint('Tour: falha ao gravar como visto: $e'),
+          ),
+    );
   }
 
   /// Salem escondido volta em fumaça com 5 toques rápidos no mesmo ponto.
@@ -351,8 +360,13 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     // (e o contador de toques para trazê-lo de volta) fica fora de cena.
     final showMascot = !mascot.isHidden && !_showTour;
     final showReturnTapCounter = mascot.isHidden && !_showTour;
-    final mascotLeft =
-        (MediaQuery.of(context).size.width - _mascotSize) / 2;
+    // `sizeOf` e não `MediaQuery.of`: com o acesso sem aspecto, esta Home
+    // inteira dependia de TODO o MediaQuery — inclusive do `viewInsets`, que
+    // muda a cada quadro da animação do teclado do Android. Era o app inteiro
+    // sendo reconstruído enquanto alguém digita, em qualquer tela, e a página
+    // empilhada só sobrevivia a isso por o `navigationShell` chegar como a
+    // mesma instância. O teclado que abre e some no Pêndulo nasceu aí.
+    final mascotLeft = (MediaQuery.sizeOf(context).width - _mascotSize) / 2;
 
     return Scaffold(
       body: Stack(
