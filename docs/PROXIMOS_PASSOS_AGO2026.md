@@ -8,15 +8,22 @@
 
 ## Sumário executivo
 
-| # | Ideia | Viabilidade | Esforço | Ganho cliente | Ganho app | Onda |
-|---|---|---|---|---|---|---|
-| 1 | Voltar robusto na web | Alta (caminho conhecido) | Alto (3–5 sem) | Alto | Alto | 1 |
-| 2 | Notificações no webapp | Alta (Web Push + Supabase) | Médio-alto (MVP 1,5–2,5 sem) | Alto | Alto | 1 |
-| 3 | Ciclo Menstrual em Ciclos | Alta (manual); Flo direto inviável | Médio (MVP 2–3 sem) | Alto | Alto | 2 |
-| 4 | Acessibilidade visual | Alta | Baixo-médio (incremental) | Médio (essencial p/ quem precisa) | Médio | 2 (contínuo) |
-| 5 | Vibrar capa + Salem | Alta (Android); iOS web não vibra | Baixo (1–2 dias) | Baixo | Baixo-médio | 3 |
-| 6 | Influencers recomendadas | Alta | Baixo (2–4 dias) | Médio | Médio | 3 |
-| 7 | Feed do Instagram | Parcial (só conta própria) | Médio | Baixo-médio | Médio | 4 (estudo) |
+> **Status (verificado em set/2026, direto no código da `main`):** só o item 5
+> está pronto. O item 1 avançou muito mais do que o esperado — go_router já
+> está em produção — mas parou na Fase 1; os itens 2, 3, 6 e 7 não começaram;
+> o item 4 tem só 1 de 4 etapas, e essa etapa já estava pronta ANTES deste
+> documento existir (não é progresso do plano). Detalhe de cada um logo
+> abaixo do resumo da própria ideia.
+
+| # | Ideia | Viabilidade | Esforço | Ganho cliente | Ganho app | Onda | Status (set/2026) |
+|---|---|---|---|---|---|---|---|
+| 1 | Voltar robusto na web | Alta (caminho conhecido) | Alto (3–5 sem) | Alto | Alto | 1 | 🟡 Parcial — Fases 0-1 prontas (e superadas); Fase 2-3 pendentes |
+| 2 | Notificações no webapp | Alta (Web Push + Supabase) | Médio-alto (MVP 1,5–2,5 sem) | Alto | Alto | 1 | ⬜ Não iniciado |
+| 3 | Ciclo Menstrual em Ciclos | Alta (manual); Flo direto inviável | Médio (MVP 2–3 sem) | Alto | Alto | 2 | ⬜ Não iniciado |
+| 4 | Acessibilidade visual | Alta | Baixo-médio (incremental) | Médio (essencial p/ quem precisa) | Médio | 2 (contínuo) | 🟡 Parcial — só o contraste (já resolvido antes do plano) |
+| 5 | Vibrar capa + Salem | Alta (Android); iOS web não vibra | Baixo (1–2 dias) | Baixo | Baixo-médio | 3 | ✅ Pronto |
+| 6 | Influencers recomendadas | Alta | Baixo (2–4 dias) | Médio | Médio | 3 | ⬜ Não iniciado |
+| 7 | Feed do Instagram | Parcial (só conta própria) | Médio | Baixo-médio | Médio | 4 (estudo) | ⬜ Não iniciado |
 
 **Sequência sugerida:** Onda 1 = fundação da web (itens 1 e 2, nessa ordem — o
 clique de uma notificação precisa de uma URL de destino, que só o item 1 cria).
@@ -26,7 +33,20 @@ que depende de decisão de conta e não de código.
 
 ---
 
-## 1. Voltar robusto no web app
+## 1. Voltar robusto no web app 🟡 (parcial — Fases 0-1 prontas, verificado set/2026)
+
+> A migração aconteceu de verdade, e foi além do que este plano recomendava:
+> `lib/core/navigation/app_router.dart` já roda go_router em produção
+> (`StatefulShellRoute.indexedStack` de 4 branches), o corrimão JS e o
+> `PorteiroDoVoltar` foram **removidos** (não só desligados), e uma revisão
+> adversarial (commit `647803d`) já achou e corrigiu 2 regressões reais da
+> migração. **Desvio do plano:** foi para path strategy (`usePathUrlStrategy`)
+> em vez da hash strategy que este documento pedia explicitamente para manter
+> — vale confirmar que o Cloudflare Pages tem fallback SPA (`_redirects`/
+> `404.html`) para F5 não quebrar numa URL interna. **Falta:** a Fase 2 (dar
+> URL às ~20 telas de pilha profunda — `app_deep_link.dart` ainda navega por
+> índice, não por rota) e a Fase 3 contínua (ainda há 131 `Navigator.push` em
+> 28 arquivos, de 447 originais).
 
 ### O que já existe
 
@@ -91,7 +111,14 @@ subsistema paliativo caro de manter. **Esforço total: 3–5 semanas.**
 
 ---
 
-## 2. Notificações no webapp
+## 2. Notificações no webapp ⬜ (não iniciado, verificado set/2026)
+
+> Nada do Web Push foi construído: sem tabelas (`push_subscriptions` etc.),
+> sem edge function, sem `web/push_sw.js`. O único movimento foi na direção
+> oposta ao plano — `settings_page.dart` agora **esconde** a opção de
+> Notificações inteira na web, com comentário explícito reconhecendo o gap em
+> vez de fechá-lo ("Notificações são agendadas localmente... que não existe
+> na web. Esconder a opção evita prometer lembretes que nunca chegariam").
 
 ### O que já existe
 
@@ -149,7 +176,13 @@ onde usa o app. **Ganho pro app:** alto — retenção e canal de ofertas.
 
 ---
 
-## 3. Ciclo Menstrual na aba Ciclos (premium + vitalício)
+## 3. Ciclo Menstrual na aba Ciclos (premium + vitalício) ⬜ (não iniciado, verificado set/2026)
+
+> A aba Ciclos continua com só os 3 cartões de antes (Leitura do Ciclo, Eras,
+> céu do mês) — nenhum cartão, tabela ou página nova. A infraestrutura que
+> este plano citava como pré-requisito (`UserModel.gender`,
+> `isPremiumEffective`, sync com tombstones) segue disponível e inalterada,
+> pronta para ser conectada quando este item for priorizado.
 
 ### O que já existe (tudo a favor)
 
@@ -219,7 +252,14 @@ recorrência diária.
 
 ---
 
-## 4. Acessibilidade visual (leitura das páginas)
+## 4. Acessibilidade visual (leitura das páginas) 🟡 (parcial — 1 de 4 etapas, verificado set/2026)
+
+> Só a etapa 1 (contraste do `starYellow`) está resolvida — e ela já tinha
+> sido corrigida em 23/ago, **4 dias antes** deste documento existir (27/ago);
+> não é progresso feito a partir do plano. As etapas 2-4 (labels nos fluxos
+> principais, semântica do Salem/tour, teste real com leitor de tela) não
+> avançaram nada: o número de `Semantics(label:)` no app é o mesmo de antes
+> do plano, e a aba Ciclos e o Salem continuam com zero semântica.
 
 ### Resposta à dúvida ("o OS nativo já faz isso?")
 
@@ -294,7 +334,7 @@ app já tem (poeira da capa, partículas do Salem). Quick win clássico.
 
 ---
 
-## 6. Influencers de bruxaria recomendadas
+## 6. Influencers de bruxaria recomendadas ⬜ (não iniciado, verificado set/2026)
 
 ### Viabilidade e formato
 
@@ -324,7 +364,12 @@ pro app:** médio — comunidade e possível canal de parceria/divulgação.
 
 ---
 
-## 7. Feed do Instagram no app
+## 7. Feed do Instagram no app ⬜ (não iniciado, verificado set/2026)
+
+> As únicas menções a "Instagram" no código são o link "Seguir nas redes" nas
+> Configurações (sai do app) e o `ShareCard` (a direção oposta: exporta
+> conteúdo do app PARA o Instagram). Nenhum dos 3 caminhos do plano foi
+> tocado.
 
 ### O que é possível hoje (checado em ago/2026)
 
