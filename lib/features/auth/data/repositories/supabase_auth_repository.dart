@@ -48,13 +48,29 @@ class SupabaseAuthRepository implements AuthRepository {
     _setupAuthListener();
   }
 
+  /// Publica no controlador SÓ se ele ainda estiver aberto.
+  ///
+  /// O logout fechava o controlador (`dispose`) enquanto este listener estava
+  /// suspenso num `await` de rede — `cancel()` NÃO aborta um corpo assíncrono
+  /// já em andamento —, e a consulta ao voltar caía num
+  /// `Bad state: Cannot add new events after calling close`. A guarda vale
+  /// para qualquer disposer, hoje ou amanhã.
+  @visibleForTesting
+  static void publicarSeAberto(
+    StreamController<UserModel?> controlador,
+    UserModel? usuario,
+  ) {
+    if (controlador.isClosed) return;
+    controlador.add(usuario);
+  }
+
   void _setupAuthListener() {
     _authSubscription = _supabase.auth.onAuthStateChange.listen((data) async {
       if (data.session?.user != null) {
         final user = await _userFromSupabaseUser(data.session!.user);
-        _authStateController.add(user);
+        publicarSeAberto(_authStateController, user);
       } else {
-        _authStateController.add(null);
+        publicarSeAberto(_authStateController, null);
       }
     }, onError: (Object e) {
       // A recuperação da sessão a partir da URL falhou (na web, o caso
@@ -64,7 +80,7 @@ class SupabaseAuthRepository implements AuthRepository {
       // quem esperava a sessão ficava 15s num spinner antes de a tela de
       // entrada aparecer. Propaga para quem espera decidir na hora.
       unawaited(debugLog('AUTH', 'Falha no fluxo de auth: $e'));
-      _authStateController.addError(e);
+      if (!_authStateController.isClosed) _authStateController.addError(e);
     });
   }
 
@@ -568,7 +584,7 @@ class SupabaseAuthRepository implements AuthRepository {
       await debugLog('AUTH', 'Erro ao encerrar sessão do Google: $e');
     }
 
-    _authStateController.add(null);
+    publicarSeAberto(_authStateController, null);
     if (supabaseError != null) {
       throw supabaseError;
     }
@@ -968,8 +984,13 @@ class SupabaseAuthRepository implements AuthRepository {
     return AuthResult.error(message, code);
   }
 
-  void dispose() {
-    _authSubscription?.cancel();
-    _authStateController.close();
+  /// Fecha a assinatura ANTES do controlador, e espera por ela: quem chama
+  /// (só o logout, `AuthProvider.signOut`) precisa aguardar, senão o cancelar
+  /// e o fechar correm juntos. Mesmo assim um callback já suspenso num
+  /// `await` volta depois — por isso a guarda de [publicarSeAberto].
+  Future<void> dispose() async {
+    await _authSubscription?.cancel();
+    _authSubscription = null;
+    await _authStateController.close();
   }
 }
