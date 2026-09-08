@@ -182,7 +182,9 @@ onde usa o app. **Ganho pro app:** alto — retenção e canal de ofertas.
 > céu do mês) — nenhum cartão, tabela ou página nova. A infraestrutura que
 > este plano citava como pré-requisito (`UserModel.gender`,
 > `isPremiumEffective`, sync com tombstones) segue disponível e inalterada,
-> pronta para ser conectada quando este item for priorizado.
+> pronta para ser conectada quando este item for priorizado. **Priorizado
+> em set/2026** — visão de produto e pesquisa de fundamentação em
+> [`brainstorm_ciclo_menstrual.md`](brainstorm_ciclo_menstrual.md).
 
 ### O que já existe (tudo a favor)
 
