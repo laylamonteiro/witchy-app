@@ -103,6 +103,25 @@ function cabecalhosDeCors(origem: string | null): Record<string, string> {
   }
 }
 
+// O corpo de SUCESSO nunca entra no log: ele carrega o mapa astral e o texto
+// que a pessoa escreveu. O corpo de ERRO entra — só a mensagem do provedor,
+// cortada. Sem ela, um 400 é indistinguível de outro: em 07/09/2026 a Groq
+// passou a recusar um pedido e o log dizia apenas "-> 400", sem nada que
+// apontasse o parâmetro culpado.
+function motivoDoErro(corpo: string): string {
+  try {
+    const json = JSON.parse(corpo)
+    const erro = json?.error ?? json
+    const partes = [erro?.message, erro?.type ?? erro?.code, erro?.status]
+      .filter((p) => typeof p === 'string' && p.length > 0)
+    if (partes.length > 0) return partes.join(' | ').slice(0, 300)
+  } catch (_) {
+    // Não é JSON (HTML de gateway, corpo vazio): cai no corte abaixo.
+  }
+  const cru = corpo.replace(/\s+/g, ' ').trim()
+  return cru.length > 0 ? cru.slice(0, 200) : '(sem corpo)'
+}
+
 function resposta(
   corpo: unknown,
   status: number,
@@ -179,7 +198,8 @@ Deno.serve(async (req: Request) => {
   //    da Groq alimenta a espera curta do Perfil Mágico).
   //
   //    NADA DE LOG DO CONTEÚDO: o corpo carrega o mapa astral e o texto que
-  //    a pessoa escreveu. O que se registra é provedor, modelo e status.
+  //    a pessoa escreveu. O que se registra é provedor, modelo e status — e,
+  //    quando o provedor recusa, a mensagem de erro DELE (ver motivoDoErro).
   try {
     const upstream = await fetch(config.url(modelo), {
       method: 'POST',
@@ -189,8 +209,11 @@ Deno.serve(async (req: Request) => {
       },
       body: JSON.stringify(pedido.corpo),
     })
-    console.log(`ia: ${provedor}/${modelo} -> ${upstream.status}`)
     const texto = await upstream.text()
+    console.log(
+      `ia: ${provedor}/${modelo} -> ${upstream.status}` +
+        (upstream.ok ? '' : ` · ${motivoDoErro(texto)}`),
+    )
     return new Response(texto, {
       status: upstream.status,
       headers: { 'Content-Type': 'application/json', ...cors },

@@ -748,11 +748,14 @@ class AIService {
       );
     } catch (e) {
       if (fallback == null) rethrow;
+      final motivo =
+          e is DioException ? motivoDoProvedor(e.response?.data) : null;
       unawaited(debugLog(
           'AI',
           e is DioException
               ? '$tag: ${primary.name} falhou '
-                  '(HTTP ${e.response?.statusCode ?? e.message}) '
+                  '(HTTP ${e.response?.statusCode ?? e.message}'
+                  '${motivo == null ? '' : ' · $motivo'}) '
                   '— usando ${fallback.name}'
               : '$tag: ${primary.name} falhou ($e) — usando ${fallback.name}'));
       respondeu = fallback;
@@ -1017,6 +1020,85 @@ class AIService {
     }
   }
 
+  /// A Groq já recusou o modo JSON nesta sessão?
+  ///
+  /// Em 07/09/2026 as chamadas com `response_format: {"type":"json_object"}`
+  /// passaram a voltar 400 — o `llama-3.3-70b-versatile` aceitava, o
+  /// `gpt-oss-120b` que o substituiu não. Sem esta memória, TODA página de
+  /// enciclopédia (e todo feitiço) pagaria uma chamada perdida antes de
+  /// repetir sem o parâmetro. O prompt já exige "APENAS JSON válido", e
+  /// [_extractJsonObject] já lê JSON embrulhado em texto — é assim que os
+  /// caminhos de visão, que nunca mandam `response_format`, funcionam.
+  static bool _groqRecusouModoJson = false;
+
+  /// Vale repetir a MESMA chamada sem `response_format`?
+  ///
+  /// Só num 400 com o modo JSON ligado: é a resposta de "não aceito este
+  /// parâmetro". 429/503 são passageiros (ver [ehStatusTransitorio]), 404 é
+  /// modelo fora do catálogo, e repetir sem o modo JSON não conserta nenhum
+  /// dos dois.
+  @visibleForTesting
+  static bool devePedirDeNovoSemModoJson({
+    required bool modoJson,
+    required int? status,
+  }) =>
+      modoJson && status == 400;
+
+  /// O corpo do pedido de texto da Groq. Separado para o teste poder provar
+  /// que `response_format` entra com o modo JSON e some sem ele.
+  @visibleForTesting
+  static Map<String, dynamic> corpoDeTextoDaGroq({
+    required String modelo,
+    required String systemPrompt,
+    required String userText,
+    required double temperature,
+    required int maxTokens,
+    required bool modoJson,
+  }) =>
+      {
+        'model': modelo,
+        'messages': [
+          if (systemPrompt.isNotEmpty)
+            {'role': 'system', 'content': systemPrompt},
+          {'role': 'user', 'content': userText},
+        ],
+        'temperature': temperature,
+        'max_tokens': maxTokens,
+        if (modoJson) 'response_format': {'type': 'json_object'},
+      };
+
+  /// A mensagem que o PROVEDOR devolveu no corpo do erro, curta.
+  ///
+  /// A função `ia` devolve o corpo do provedor como veio, então ele chega
+  /// aqui inteiro. Sem isto o log dizia só "HTTP 400", e um 400 é
+  /// indistinguível de outro — foi o que escondeu o modo JSON recusado.
+  @visibleForTesting
+  static String? motivoDoProvedor(Object? corpo) {
+    Object? dados = corpo;
+    if (dados is String) {
+      final texto = dados;
+      try {
+        dados = jsonDecode(texto);
+      } catch (_) {
+        return _cortar(texto.trim());
+      }
+    }
+    if (dados is! Map) return null;
+    final erro = dados['error'] ?? dados['erro'] ?? dados;
+    if (erro is String) return _cortar(erro);
+    if (erro is! Map) return null;
+    final partes = [erro['message'], erro['type'] ?? erro['code']]
+        .whereType<String>()
+        .where((p) => p.isNotEmpty)
+        .toList();
+    return partes.isEmpty ? null : _cortar(partes.join(' | '));
+  }
+
+  static String? _cortar(String texto) {
+    if (texto.isEmpty) return null;
+    return texto.length <= 200 ? texto : '${texto.substring(0, 200)}…';
+  }
+
   Future<String> _groqText({
     required String systemPrompt,
     required String userText,
@@ -1026,6 +1108,53 @@ class AIService {
     required bool jsonResponse,
     required Duration receiveTimeout,
   }) async {
+    final modoJson = jsonResponse && !_groqRecusouModoJson;
+    try {
+      return await _postarTextoNaGroq(
+        systemPrompt: systemPrompt,
+        userText: userText,
+        tag: tag,
+        temperature: temperature,
+        maxTokens: maxTokens,
+        modoJson: modoJson,
+        receiveTimeout: receiveTimeout,
+      );
+    } on DioException catch (e) {
+      if (!devePedirDeNovoSemModoJson(
+        modoJson: modoJson,
+        status: e.response?.statusCode,
+      )) {
+        rethrow;
+      }
+      // Recusa do parâmetro, não do pedido: repete SEM ele em vez de cair no
+      // outro provedor (que anda instável) por causa de um `response_format`.
+      _groqRecusouModoJson = true;
+      final motivo = motivoDoProvedor(e.response?.data);
+      unawaited(debugLog(
+          'AI',
+          '$tag: groq recusou o modo JSON'
+              '${motivo == null ? '' : ' ($motivo)'} — repetindo sem ele'));
+      return _postarTextoNaGroq(
+        systemPrompt: systemPrompt,
+        userText: userText,
+        tag: tag,
+        temperature: temperature,
+        maxTokens: maxTokens,
+        modoJson: false,
+        receiveTimeout: receiveTimeout,
+      );
+    }
+  }
+
+  Future<String> _postarTextoNaGroq({
+    required String systemPrompt,
+    required String userText,
+    required String tag,
+    required double temperature,
+    required int maxTokens,
+    required bool modoJson,
+    required Duration receiveTimeout,
+  }) async {
     final response = await _postarNoProvedor(
       provedor: AiProvider.groq,
       modelo: _textModel,
@@ -1033,17 +1162,14 @@ class AIService {
         receiveTimeout: receiveTimeout,
         sendTimeout: const Duration(seconds: 30),
       ),
-      corpo: {
-        'model': _textModel,
-        'messages': [
-          if (systemPrompt.isNotEmpty)
-            {'role': 'system', 'content': systemPrompt},
-          {'role': 'user', 'content': userText},
-        ],
-        'temperature': temperature,
-        'max_tokens': maxTokens,
-        if (jsonResponse) 'response_format': {'type': 'json_object'},
-      },
+      corpo: corpoDeTextoDaGroq(
+        modelo: _textModel,
+        systemPrompt: systemPrompt,
+        userText: userText,
+        temperature: temperature,
+        maxTokens: maxTokens,
+        modoJson: modoJson,
+      ),
     );
     unawaited(debugLog('AI', '$tag: groq'));
     return _contentFromResponse(response);
