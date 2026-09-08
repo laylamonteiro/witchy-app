@@ -76,9 +76,11 @@ void main() {
     expect(sonho.single['user_id'], conta,
         reason: 'a adoção não pode ser desfeita por um perfil que colide');
 
-    // Nada se perde: a linha que colidiu continua lá, com o id antigo.
+    // Nada se perde: a linha que colidiu continua com o id antigo
+    // ('perfil-1' quis virar 'mapa-1', que ainda era de outra linha), e a
+    // outra foi renomeada normalmente ('mapa-1' virou 'mapa-2').
     final perfis = await db.query('magical_profiles');
-    expect(perfis.map((p) => p['id']).toSet(), {'perfil-1', 'mapa-1'});
+    expect(perfis.map((p) => p['id']).toSet(), {'perfil-1', 'mapa-2'});
   });
 
   test('sem colisão, o id do perfil vira o do mapa', () async {

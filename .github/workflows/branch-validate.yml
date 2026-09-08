@@ -147,11 +147,12 @@ jobs:
         # introduzir uma nova é barrado; quem consertar uma antiga vê o
         # aviso pedindo para baixar o teto.
         #
-        # O teto veio da auditoria (26) e nunca foi conferido com o Dart
-        # rodando — a primeira execução deste passo diz o número real. Se
-        # ele vier menor, baixe o TETO aqui no mesmo commit.
+        # O teto veio da auditoria (26); a primeira execução confirmou 26. Em
+        # 08/09/2026 desceu para 25: o `_saveConsultation` do pêndulo passou a
+        # ler o `context` ANTES do await (o uso depois dele estourava de
+        # verdade quando a pessoa recomeçava a consulta ou saía da tela).
         run: |
-          TETO=26
+          TETO=25
           atual=$(grep -c 'use_build_context_synchronously' /tmp/analyze.txt || true)
           echo "use_build_context_synchronously: $atual (teto $TETO)"
           if [ "$atual" -gt "$TETO" ]; then

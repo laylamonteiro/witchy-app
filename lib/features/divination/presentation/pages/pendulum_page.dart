@@ -417,21 +417,30 @@ class _PendulumPageState extends State<PendulumPage>
     }
   }
 
+  /// Grava a consulta que ACABOU de sair — e é chamada sem await (o
+  /// `_showAnswer` não espera por ela). Por isso tudo o que depende da tela é
+  /// lido ANTES do await do banco: no instante em que ele volta, a pessoa já
+  /// pode ter começado outra consulta (o `onChanged` do campo zera `_answer`)
+  /// ou saído da página (e aí o `context` já não existe). Ler depois era
+  /// "Null check operator used on a null value" e "widget has been unmounted".
   Future<void> _saveConsultation() async {
-    if (_answer == null) return;
+    final resposta = _answer;
+    if (resposta == null) return;
+    final pergunta = _perguntaConsultada;
+    final userId = context.read<AuthProvider>().currentUser.id;
 
     final db = await DatabaseHelper.instance.database;
     final consultation = PendulumConsultation(
       id: const Uuid().v4(),
-      question: _perguntaConsultada,
-      answer: _answer!,
+      question: pergunta,
+      answer: resposta,
       date: DateTime.now(),
     );
 
     final now = DateTime.now().millisecondsSinceEpoch;
     final data = {
       'id': consultation.id,
-      'user_id': context.read<AuthProvider>().currentUser.id,
+      'user_id': userId,
       'question': consultation.question,
       'answer': consultation.answer.name,
       'date': consultation.date.millisecondsSinceEpoch,
