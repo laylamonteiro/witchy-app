@@ -147,11 +147,12 @@ jobs:
         # introduzir uma nova é barrado; quem consertar uma antiga vê o
         # aviso pedindo para baixar o teto.
         #
-        # O teto veio da auditoria (26) e nunca foi conferido com o Dart
-        # rodando — a primeira execução deste passo diz o número real. Se
-        # ele vier menor, baixe o TETO aqui no mesmo commit.
+        # O teto veio da auditoria (26); a primeira execução confirmou 26. Em
+        # 08/09/2026 desceu para 25: o `_saveConsultation` do pêndulo passou a
+        # ler o `context` ANTES do await (o uso depois dele estourava de
+        # verdade quando a pessoa recomeçava a consulta ou saía da tela).
         run: |
-          TETO=26
+          TETO=25
           atual=$(grep -c 'use_build_context_synchronously' /tmp/analyze.txt || true)
           echo "use_build_context_synchronously: $atual (teto $TETO)"
           if [ "$atual" -gt "$TETO" ]; then
@@ -193,6 +194,26 @@ jobs:
         # é que um teste instável barra a publicação do site — se isso
         # incomodar na prática, rebaixar a informativo é reverter esta linha.
         run: flutter test
+
+      - name: 🧪 Ponte de HEIC (Node)
+        # A ponte JavaScript que decodifica HEIC/HEIF só existe no navegador,
+        # e `flutter test` roda na VM — então este é o único gate que a
+        # exercita. Ele prova o que cerca a decodificação: o encadeamento de
+        # promessas, o limite de tempo (a chamada de volta do libheif pode
+        # nunca vir) e a liberação da memória do wasm, que o coletor de lixo
+        # do JavaScript não alcança. O runner já traz Node.
+        run: node test/ponte_heic_test.mjs
+
+      - name: 🧪 Ponte de HEIC num Chrome de verdade
+        # O teste em Node usa um libheif de mentira. Foi o libheif DE VERDADE
+        # que quebrou na primeira publicação (a variante compilada não busca
+        # o .wasm sozinha), e só um navegador pega isso: este passo serve
+        # web/ num servidor local e decodifica um HEIC real pela ponte, no
+        # Chrome que o runner já traz. Sem Chrome, o passo FALHA — nunca
+        # pula em silêncio, senão o gate fingiria que verificou.
+        run: |
+          npm install --no-save --no-audit --no-fund playwright-core@1.63.0 > /dev/null
+          node test/ponte_heic_navegador_test.mjs
 
       - name: 🔤 ARB key parity
         run: bash scripts/check_arb_sync.sh

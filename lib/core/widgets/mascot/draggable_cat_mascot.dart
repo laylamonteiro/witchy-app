@@ -649,7 +649,9 @@ class _DraggableCatMascotState extends State<DraggableCatMascot>
 
   @override
   Widget build(BuildContext context) {
-    final screenSize = MediaQuery.of(context).size;
+    // Só o tamanho: sem aspecto, o mascote se reconstruía a cada quadro do
+    // teclado abrindo.
+    final screenSize = MediaQuery.sizeOf(context);
 
     return Stack(
       children: [

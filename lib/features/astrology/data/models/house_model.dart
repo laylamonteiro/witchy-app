@@ -44,13 +44,20 @@ class House {
     };
   }
 
+  /// Mesma tolerância de PlanetPosition.fromJson: campo ausente ou inteiro
+  /// no JSON não pode derrubar o mapa inteiro, e a cúspide se reconstrói do
+  /// signo + grau + minuto.
   factory House.fromJson(Map<String, dynamic> json) {
+    final sign = ZodiacSign.values.firstWhere((e) => e.name == json['sign']);
+    final degree = (json['degree'] as num?)?.toInt() ?? 0;
+    final minute = (json['minute'] as num?)?.toInt() ?? 0;
     return House(
-      number: json['number'],
-      sign: ZodiacSign.values.firstWhere((e) => e.name == json['sign']),
-      degree: json['degree'],
-      minute: json['minute'],
-      cuspLongitude: json['cuspLongitude'],
+      number: (json['number'] as num?)?.toInt() ?? 1,
+      sign: sign,
+      degree: degree,
+      minute: minute,
+      cuspLongitude: (json['cuspLongitude'] as num?)?.toDouble() ??
+          (sign.index * 30 + degree + minute / 60),
     );
   }
 }

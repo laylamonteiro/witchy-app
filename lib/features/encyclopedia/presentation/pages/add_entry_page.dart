@@ -7,9 +7,12 @@ import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../core/ai/ai_service.dart';
+import '../../../../core/services/debug_log_service.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
-import '../../../../core/utils/image_compression.dart';
+import '../../../../core/images/etapa_da_foto.dart';
+import '../../../../core/images/seletor_de_foto.dart';
+import '../../../../core/utils/reducao_de_imagem.dart';
 import '../../../../core/widgets/magical_button.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/widgets/photo_source_buttons.dart';
@@ -34,11 +37,14 @@ abstract class GuiaDaNaturezaIa {
   /// [UserEntryCategory.identificavelPorFoto]).
   Future<Map<String, dynamic>> identificarErva({required Uint8List jpegBytes});
 
-  /// O verbete completo a partir do nome, com a foto anexada.
+  /// O verbete completo a partir do nome. A foto vai junto SÓ para erva
+  /// (a descrição se ancora no exemplar real); cristal vai sem foto, pelo
+  /// caminho de texto — o de visão é mais lento e tem cota apertada, e a
+  /// pedra não precisa dele.
   Future<Map<String, dynamic>> gerar({
     required String name,
     required String categoryKey,
-    required Uint8List jpegBytes,
+    Uint8List? jpegBytes,
   });
 }
 
@@ -55,7 +61,7 @@ class _IaDoApp implements GuiaDaNaturezaIa {
   Future<Map<String, dynamic>> gerar({
     required String name,
     required String categoryKey,
-    required Uint8List jpegBytes,
+    Uint8List? jpegBytes,
   }) =>
       AIService.instance.generateEncyclopediaEntry(
         name: name,
@@ -64,26 +70,16 @@ class _IaDoApp implements GuiaDaNaturezaIa {
       );
 }
 
-/// A foto do aparelho: picker (já reduzida a 1600 px) + compressão, que
-/// corrige o EXIF e remove metadados — mesmo pipeline da quiromancia.
-Future<Uint8List?> _fotoDoAparelho(ImageSource source) async {
-  final picked = await ImagePicker().pickImage(
-    source: source,
-    maxWidth: 1600,
-    maxHeight: 1600,
-  );
-  if (picked == null) return null;
-  return compressPickedImage(picked);
-}
-
 /// Adicionar entrada pessoal à enciclopédia (Premium): erva ou cristal.
 ///
 /// A jornada é a mesma para as duas: foto obrigatória (câmera ou galeria),
 /// nome, "Gerar conteúdo" — a IA monta a página no formato da categoria e
-/// tudo é salvo com a foto. A única diferença é o botão secundário "Não sei
-/// o nome — identificar pela foto", que só a erva tem: a identificação
-/// visual de cristais errava demais para ser a porta de entrada, e cores não
-/// têm mais verbete pessoal (o catálogo fixo da aba Cores basta).
+/// tudo é salvo com a foto. A única diferença é a caixa "Não sei o nome —
+/// identificar pela foto", que só a erva tem: marcada, o campo do nome fica
+/// para a identificação e o mesmo "Gerar conteúdo" descobre o nome antes de
+/// montar a página. A identificação visual de cristais errava demais para
+/// entrar aqui, e cores não têm mais verbete pessoal (o catálogo fixo da
+/// aba Cores basta).
 ///
 /// Privacidade: a foto é enviada à IA em memória (identificação e geração).
 /// A cópia comprimida vai para o armazenamento privado da conta (Supabase
@@ -93,14 +89,15 @@ Future<Uint8List?> _fotoDoAparelho(ImageSource source) async {
 class AddEntryPage extends StatefulWidget {
   final UserEntryCategory category;
 
-  /// Trocáveis em teste; em produção, o picker do aparelho e o AIService.
-  final EscolherFoto escolherFoto;
+  /// Trocáveis em teste; em produção, o [SeletorDeFoto] (picker, conversão,
+  /// recorte quadrado, redução) e o AIService.
+  final EscolherFoto? escolherFoto;
   final GuiaDaNaturezaIa ia;
 
   const AddEntryPage({
     super.key,
     required this.category,
-    this.escolherFoto = _fotoDoAparelho,
+    this.escolherFoto,
     this.ia = const _IaDoApp(),
   }) : assert(
           category != UserEntryCategory.color,
@@ -137,11 +134,31 @@ class _AddEntryPageState extends State<AddEntryPage> {
   bool _saving = false;
   String? _error;
 
+  /// O seletor está aberto ou a foto está sendo comprimida: botões travados
+  /// e um aviso no card. Antes não havia estado nenhum aqui — uma falha caía
+  /// na zona (só log) e a pessoa via "nada acontecer".
+  bool _escolhendoFoto = false;
+
+  /// Falha ao abrir/aceitar a foto, mostrada DENTRO do card da foto (o erro
+  /// geral fica no fim da página, fora da vista).
+  String? _erroDaFoto;
+
+  /// Em que passo a foto está enquanto [_escolhendoFoto]: é o texto ao lado
+  /// do spinner ("Convertendo…" numa HEIC leva segundos, e silêncio parece
+  /// travamento).
+  EtapaDaFoto _etapa = EtapaDaFoto.abrindo;
+
+  /// "Não sei o nome": o campo do nome fica desabilitado e quem descobre o
+  /// nome é a identificação por foto, disparada pelo próprio "Gerar
+  /// conteúdo". Só existe para erva (`identificavelPorFoto`).
+  bool _naoSeiONome = false;
+
   /// Pediu a foto sem ter Premium: a tela mostra os campos que o verbete
   /// traria, em vez de bater a porta na entrada.
   bool _mostrarPrevia = false;
 
-  bool get _ocupado => _identifying || _generating || _saving;
+  bool get _ocupado =>
+      _escolhendoFoto || _identifying || _generating || _saving;
 
   @override
   void dispose() {
@@ -149,9 +166,32 @@ class _AddEntryPageState extends State<AddEntryPage> {
     super.dispose();
   }
 
+  Future<Uint8List?> _escolher(ImageSource source) {
+    final dubl = widget.escolherFoto;
+    if (dubl != null) return dubl(source);
+    return const SeletorDeFoto().escolher(
+      context,
+      origem: source,
+      aoMudarEtapa: (etapa) {
+        if (mounted) setState(() => _etapa = etapa);
+      },
+    );
+  }
+
+  String _textoDaEtapa(AppLocalizations l10n) => switch (_etapa) {
+        EtapaDaFoto.abrindo => l10n.photoStageOpening,
+        EtapaDaFoto.convertendo => l10n.photoStageConverting,
+        EtapaDaFoto.recortando => l10n.photoStageCropping,
+        EtapaDaFoto.reduzindo => l10n.photoStageReducing,
+      };
+
   Future<void> _pick(ImageSource source) async {
+    if (_ocupado) return;
     final l10n = AppLocalizations.of(context);
-    setState(() => _error = null);
+    setState(() {
+      _error = null;
+      _erroDaFoto = null;
+    });
 
     // Sem Premium nada acontece: a foto não é escolhida, não sai do aparelho
     // e nenhuma chamada de IA é feita. O que aparece é a lista dos campos
@@ -173,17 +213,50 @@ class _AddEntryPageState extends State<AddEntryPage> {
       return;
     }
 
-    final bytes = await widget.escolherFoto(source);
-    if (bytes == null || !mounted) return;
-    if (bytes.length > _maxUploadBytes) {
-      setState(() => _error = l10n.encyAddImageTooLarge);
+    setState(() {
+      _escolhendoFoto = true;
+      _etapa = EtapaDaFoto.abrindo;
+    });
+    final Uint8List? bytes;
+    try {
+      bytes = await _escolher(source);
+    } on FotoNaoSuportadaException catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _escolhendoFoto = false;
+        _erroDaFoto = l10n.encyAddPhotoUnsupported(e.formato);
+      });
+      return;
+    } catch (e) {
+      unawaited(debugLog('ENCY', 'Falha ao abrir a foto ($source): $e'));
+      if (!mounted) return;
+      setState(() {
+        _escolhendoFoto = false;
+        _erroDaFoto = l10n.encyAddPhotoFailed;
+      });
       return;
     }
+    if (!mounted) return;
+    if (bytes == null) {
+      // Desistiu no seletor: nada a dizer.
+      setState(() => _escolhendoFoto = false);
+      return;
+    }
+    if (bytes.length > _maxUploadBytes) {
+      unawaited(debugLog('ENCY', 'Foto grande demais: ${bytes.length} bytes'));
+      setState(() {
+        _escolhendoFoto = false;
+        _erroDaFoto = l10n.encyAddImageTooLarge;
+      });
+      return;
+    }
+    unawaited(debugLog('ENCY', 'Foto pronta: ${bytes.length} bytes ($source)'));
 
     // Foto nova, verbete novo: o que a IA disse da foto anterior não vale
     // mais. O nome só é limpo se veio da identificação — o que a pessoa
     // digitou por conta própria continua valendo.
     setState(() {
+      _escolhendoFoto = false;
       _jpegBytes = bytes;
       _generated = null;
       _candidates = const [];
@@ -230,6 +303,9 @@ class _AddEntryPageState extends State<AddEntryPage> {
         // foto decide — o modelo não tem como saber qual espécie é. Sem
         // nenhum, o que a pessoa já digitou fica onde está.
         _chosen = candidates.length == 1 ? 0 : null;
+        // Não reconheci nada: com a caixa marcada o campo ficaria travado e
+        // sem nome nenhum — um beco. Ela volta a poder digitar.
+        if (candidates.isEmpty) _naoSeiONome = false;
         _confidence =
             candidates.length == 1 ? '${candidates.first['confidence']}' : null;
         if (candidates.length == 1) {
@@ -267,6 +343,18 @@ class _AddEntryPageState extends State<AddEntryPage> {
     return '${candidate['scientific'] ?? ''}'.trim();
   }
 
+  /// Toque num candidato: além de fixar o nome, retoma a jornada que a
+  /// pessoa pediu ao tocar em "Gerar conteúdo" — escolher qual era a planta
+  /// era a única pergunta em aberto.
+  void _escolherCandidatoEContinuar(int index) {
+    // `_generated == null` fecha o laço do "ver as outras possibilidades":
+    // com a página já montada, trocar de candidato só troca o nome — não
+    // dispara outra geração a cada toque.
+    final continuar = index >= 0 && _naoSeiONome && _generated == null;
+    _chooseCandidate(index);
+    if (continuar) unawaited(_generate());
+  }
+
   /// [index] negativo é "nenhuma dessas": abre o campo em branco.
   void _chooseCandidate(int index) {
     setState(() {
@@ -276,6 +364,9 @@ class _AddEntryPageState extends State<AddEntryPage> {
         _identified = false;
         _confidence = null;
         _nameController.clear();
+        // Nenhum candidato serve: quem vai dizer o nome é ela, então o campo
+        // precisa voltar a aceitar digitação.
+        _naoSeiONome = false;
       } else {
         final candidate = _candidates[index];
         _identified = true;
@@ -283,6 +374,22 @@ class _AddEntryPageState extends State<AddEntryPage> {
         _nameController.text = _candidateName(candidate);
       }
     });
+  }
+
+  /// "Não sei o nome" marcada: o botão "Gerar conteúdo" primeiro descobre o
+  /// nome pela foto e só então monta a página. Com um candidato só, tudo
+  /// acontece num toque; com vários, o card de candidatos assume e a jornada
+  /// continua quando ela escolher.
+  Future<void> _identificarEGerar() async {
+    await _identify();
+    // `_generate` lê o `context` na primeira linha: sem esta guarda, sair da
+    // tela durante a identificação (que é uma ida à rede) daria erro.
+    if (!mounted) return;
+    // `_error` cobre o teto de requisições e a falha genérica. Nenhum
+    // candidato já desmarcou a caixa lá dentro, para ela poder digitar.
+    if (_error != null || _candidates.length != 1) return;
+    if (_nameController.text.trim().isEmpty) return;
+    await _generate();
   }
 
   Future<void> _generate() async {
@@ -306,9 +413,12 @@ class _AddEntryPageState extends State<AddEntryPage> {
       final data = await widget.ia.gerar(
         name: name,
         categoryKey: widget.category.key,
-        // O verbete considera a foto real: a descrição fala do exemplar
-        // fotografado, não de uma versão genérica da espécie.
-        jpegBytes: bytes,
+        // Erva: o verbete considera a foto real — a descrição fala do
+        // exemplar fotografado, não de uma versão genérica da espécie.
+        // Cristal: sem foto. O caminho de visão é mais lento (Gemini
+        // estourava 60 s) e tem cota apertada (Groq 429), e a pedra não
+        // precisa dele; a foto fica só na página.
+        jpegBytes: widget.category.identificavelPorFoto ? bytes : null,
       );
       if (!mounted) return;
       setState(() {
@@ -419,18 +529,38 @@ class _AddEntryPageState extends State<AddEntryPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            _buildPhotoCard(context, l10n),
+            // Chaves nos cards: sem elas, um card que aparece ANTES do card do
+            // nome (a prévia Premium) era casado por posição com ele, e o
+            // campo do nome renascia — perdia o foco, o teclado fechava.
+            KeyedSubtree(
+              key: const ValueKey('card-da-foto'),
+              child: _buildPhotoCard(context, l10n),
+            ),
             if (_mostrarPrevia && _jpegBytes == null)
               MagicalCard(
+                key: const ValueKey('card-da-previa'),
                 child: PremiumLockedPreview(titles: _camposDoVerbete(l10n)),
               ),
             if (_identifying)
-              _buildIdentifying(context, l10n)
+              KeyedSubtree(
+                key: const ValueKey('card-identificando'),
+                child: _buildIdentifying(context, l10n),
+              )
             else if (candidatosAbertos)
-              _buildCandidates(context, l10n)
+              KeyedSubtree(
+                key: const ValueKey('card-dos-candidatos'),
+                child: _buildCandidates(context, l10n),
+              )
             else
-              _buildNameCard(context, l10n),
-            if (_generated != null) _buildPreview(context, l10n),
+              KeyedSubtree(
+                key: const ValueKey('card-do-nome'),
+                child: _buildNameCard(context, l10n),
+              ),
+            if (_generated != null)
+              KeyedSubtree(
+                key: const ValueKey('card-do-verbete'),
+                child: _buildPreview(context, l10n),
+              ),
             if (_error != null)
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -481,6 +611,34 @@ class _AddEntryPageState extends State<AddEntryPage> {
             cameraLabel: l10n.encyAddTakePhoto,
             galleryLabel: l10n.encyAddFromGallery,
           ),
+          if (_escolhendoFoto) ...[
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                const SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    _textoDaEtapa(l10n),
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: context.gc.textSecondary,
+                        ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+          if (_erroDaFoto != null) ...[
+            const SizedBox(height: 12),
+            Text(
+              _erroDaFoto!,
+              style: TextStyle(color: context.gc.alert),
+            ),
+          ],
         ],
       ),
     );
@@ -562,7 +720,7 @@ class _AddEntryPageState extends State<AddEntryPage> {
     final votes = candidate['votes'] is int ? candidate['votes'] as int : 1;
 
     return InkWell(
-      onTap: () => _chooseCandidate(index),
+      onTap: () => _escolherCandidatoEContinuar(index),
       borderRadius: BorderRadius.circular(12),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -649,11 +807,25 @@ class _AddEntryPageState extends State<AddEntryPage> {
             const SizedBox(height: 12),
           ],
           TextField(
+            // Chave própria: o título "Encontrei!" entra ANTES do campo depois
+            // da identificação, e sem chave o campo renascia noutra posição
+            // (foco e teclado perdidos).
+            key: const ValueKey('campo-do-nome'),
             controller: _nameController,
+            // Com "não sei o nome" marcada, quem preenche é a identificação.
+            // `readOnly` e não `enabled: false` por dois motivos: desabilitar
+            // um campo com foco derruba o foco (foi o que fechava o teclado
+            // do pêndulo no meio da consulta), e o tema não tem borda de
+            // campo desabilitado — o nome ENCONTRADO sairia esmaecido, logo
+            // ele, que é o que ela precisa ler e conferir.
+            readOnly: _naoSeiONome,
+            canRequestFocus: !_naoSeiONome,
             textCapitalization: TextCapitalization.sentences,
             decoration: InputDecoration(
               labelText: l10n.encyAddNameLabel,
-              hintText: l10n.encyAddNameHint,
+              hintText: _naoSeiONome
+                  ? l10n.encyAddNameFromPhoto
+                  : l10n.encyAddNameHint,
               border: const OutlineInputBorder(),
             ),
           ),
@@ -674,28 +846,43 @@ class _AddEntryPageState extends State<AddEntryPage> {
                   ),
             ),
           ],
-          const SizedBox(height: 16),
+          if (widget.category.identificavelPorFoto) ...[
+            const SizedBox(height: 4),
+            // Mesma interação do "não sei a hora do nascimento" do mapa
+            // astral: marcar tira o campo ao lado das mãos dela e passa o
+            // trabalho para quem sabe descobrir. Era um segundo botão, e
+            // dois CTAs empilhados faziam escolher entre caminhos que, no
+            // fim, são o mesmo — muda só de onde vem o nome.
+            CheckboxListTile(
+              value: _naoSeiONome,
+              onChanged: _ocupado
+                  ? null
+                  : (marcada) => setState(() {
+                        _naoSeiONome = marcada ?? false;
+                        // O teclado não fica aberto sobre um campo que
+                        // acabou de sair de uso.
+                        if (_naoSeiONome) {
+                          FocusManager.instance.primaryFocus?.unfocus();
+                        }
+                      }),
+              title: Text(
+                l10n.encyAddIdentifyCta,
+                style: TextStyle(color: context.gc.softWhite),
+              ),
+              activeColor: context.gc.lilac,
+              contentPadding: EdgeInsets.zero,
+            ),
+          ],
+          const SizedBox(height: 8),
           MagicalButton(
             text: _generating
                 ? l10n.encyAddGenerating
                 : l10n.encyAddGenerateCta,
             icon: Icons.auto_awesome,
             enabled: temFoto && !_ocupado,
-            onPressed: _generate,
+            larguraTotal: true,
+            onPressed: _naoSeiONome ? _identificarEGerar : _generate,
           ),
-          if (widget.category.identificavelPorFoto) ...[
-            const SizedBox(height: 8),
-            // Secundário de propósito: identificar é o atalho de quem não
-            // sabe o nome, não a porta de entrada.
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton.icon(
-                onPressed: temFoto && !_ocupado ? _identify : null,
-                icon: const Icon(Icons.image_search, size: 18),
-                label: Text(l10n.encyAddIdentifyCta),
-              ),
-            ),
-          ],
         ],
       ),
     );
@@ -754,10 +941,34 @@ class _AddEntryPageState extends State<AddEntryPage> {
           ...chips('ritualUses', context.gc.mint),
           ...chips('safetyWarnings', context.gc.alert),
           const SizedBox(height: 16),
+          // Salvar é quando a foto SOBE para a nuvem: além do rótulo do
+          // botão, um indicador de que há trabalho em curso.
+          if (_saving) ...[
+            Row(
+              children: [
+                const SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    l10n.encyAddSaving,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: context.gc.textSecondary,
+                        ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+          ],
           MagicalButton(
             text: _saving ? l10n.encyAddSaving : l10n.encyAddSaveCta,
             icon: Icons.bookmark_add_outlined,
             enabled: !_saving,
+            larguraTotal: true,
             onPressed: _save,
           ),
         ],

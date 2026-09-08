@@ -86,7 +86,7 @@ class _LivingEmblemState extends State<LivingEmblem>
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    final reduced = MediaQuery.of(context).disableAnimations;
+    final reduced = MediaQuery.disableAnimationsOf(context);
     if (reduced != _reduced) {
       _reduced = reduced;
       if (reduced) {
@@ -558,7 +558,7 @@ class _CrystalGlyphState extends State<CrystalGlyph>
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    final reduced = MediaQuery.of(context).disableAnimations;
+    final reduced = MediaQuery.disableAnimationsOf(context);
     if (reduced != _reduced) {
       _reduced = reduced;
       if (reduced) {

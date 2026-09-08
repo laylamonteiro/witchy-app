@@ -1565,6 +1565,14 @@ class DataSyncService {
     }
   }
 
+  /// NÃO PENDURE ISTO NO LOGOUT. Este serviço é singleton e sobrevive à saída
+  /// da conta (o app não reinicia): controlador fechado aqui nunca mais é
+  /// recriado, e a primeira sincronização depois do próximo login estouraria
+  /// com "Cannot add new events after calling close" — exatamente o defeito
+  /// que o logout tinha no repositório de auth. Quem consome o
+  /// [statusStream] cancela a PRÓPRIA assinatura (ver `SyncProvider.dispose`,
+  /// `DailyCheckinProvider` e `EncyclopediaProvider`); é assim que se limpa.
+  /// Fica aqui só para quem, um dia, criar uma instância de teste.
   void dispose() {
     _statusController.close();
     _conflictsController.close();

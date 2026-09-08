@@ -11,6 +11,7 @@ import '../config/supabase_config.dart';
 import '../services/debug_log_service.dart';
 import 'ia_pelo_servidor.dart';
 import '../utils/accents.dart';
+import '../utils/padrao_do_verbete.dart';
 import '../../features/astrology/data/models/birth_chart_model.dart';
 import '../../features/astrology/data/models/aspect_model.dart';
 import '../../features/astrology/data/models/enums.dart';
@@ -66,7 +67,16 @@ class AIService {
   AIService._();
 
   /// Modelo de texto do Groq.
-  static const String _textModel = 'llama-3.3-70b-versatile';
+  ///
+  /// Era o `llama-3.3-70b-versatile`, que em 07/09/2026 apareceu no catálogo
+  /// como Enterprise ("Contact Sales") e passou a devolver **404** para esta
+  /// conta — toda chamada de texto morria nele. O `gpt-oss-120b` é o modelo
+  /// de texto de PRODUÇÃO do plano (250 mil tokens/min, mil pedidos/min).
+  ///
+  /// Trocar aqui exige trocar também em `MODELOS_PADRAO` de
+  /// `supabase/functions/ia/index.ts`: a função recusa modelo fora da lista,
+  /// e agora registra a recusa no log.
+  static const String _textModel = 'openai/gpt-oss-120b';
 
   /// Modelo de texto do Google Gemini — o mesmo GA da visão.
   static const String _geminiTextModel = 'gemini-3.6-flash';
@@ -85,9 +95,9 @@ class AIService {
 
   // ===== Configuração de provedores (edite AQUI para trocar a IA) =====
 
-  /// Provedor de TEXTO padrão. O Groq responde mais rápido (sem etapa de
+  /// Provedor de TEXTO padrão. O Groq responde mais rápido (sem a etapa de
   /// "pensamento" do Gemini, que deixava análises longas lentas e
-  /// truncadas).
+  /// truncadas) — com o [_textModel] vigente, ~500 tokens/s.
   static const AiProvider defaultTextProvider = AiProvider.groq;
 
   /// Exceções por funcionalidade — a chave é a mesma `tag` que aparece nos
@@ -727,7 +737,7 @@ class AIService {
     var respondeu = primary;
     String texto;
     try {
-      texto = await _textCall(
+      texto = await _textCallComTentativas(
         primary,
         systemPrompt: systemPrompt,
         userText: userText,
@@ -739,15 +749,18 @@ class AIService {
       );
     } catch (e) {
       if (fallback == null) rethrow;
+      final motivo =
+          e is DioException ? motivoDoProvedor(e.response?.data) : null;
       unawaited(debugLog(
           'AI',
           e is DioException
               ? '$tag: ${primary.name} falhou '
-                  '(HTTP ${e.response?.statusCode ?? e.message}) '
+                  '(HTTP ${e.response?.statusCode ?? e.message}'
+                  '${motivo == null ? '' : ' · $motivo'}) '
                   '— usando ${fallback.name}'
               : '$tag: ${primary.name} falhou ($e) — usando ${fallback.name}'));
       respondeu = fallback;
-      texto = await _textCall(
+      texto = await _textCallComTentativas(
         fallback,
         systemPrompt: systemPrompt,
         userText: userText,
@@ -851,6 +864,54 @@ class AIService {
       RegExp(r'^\s*#{1,6} ', multiLine: true).allMatches(texto).length;
 
   /// Despacha a chamada de texto para o provedor pedido.
+  /// [_textCall] com novas tentativas para falha transitória (429/503),
+  /// o mesmo que a visão já fazia. Sem isto, um 503 do Gemini — que é
+  /// "modelo sobrecarregado", passa em segundos — virava erro na cara da
+  /// pessoa: foi o que aconteceu com a página do cristal, com o Groq em 404
+  /// e o Gemini em 503 logo atrás, sem ninguém tentar de novo.
+  Future<String> _textCallComTentativas(
+    AiProvider provider, {
+    required String systemPrompt,
+    required String userText,
+    required String tag,
+    required double temperature,
+    required int maxTokens,
+    required bool jsonResponse,
+    required Duration receiveTimeout,
+  }) async {
+    for (final espera in _quotaRetryDelays) {
+      try {
+        return await _textCall(
+          provider,
+          systemPrompt: systemPrompt,
+          userText: userText,
+          tag: tag,
+          temperature: temperature,
+          maxTokens: maxTokens,
+          jsonResponse: jsonResponse,
+          receiveTimeout: receiveTimeout,
+        );
+      } on DioException catch (e) {
+        if (!_ehTransitorio(e)) rethrow;
+        unawaited(debugLog(
+            'AI',
+            '$tag: ${provider.name} ${e.response?.statusCode} — nova '
+            'tentativa em ${espera.inSeconds}s'));
+        await Future.delayed(espera);
+      }
+    }
+    return _textCall(
+      provider,
+      systemPrompt: systemPrompt,
+      userText: userText,
+      tag: tag,
+      temperature: temperature,
+      maxTokens: maxTokens,
+      jsonResponse: jsonResponse,
+      receiveTimeout: receiveTimeout,
+    );
+  }
+
   Future<String> _textCall(
     AiProvider provider, {
     required String systemPrompt,
@@ -960,6 +1021,85 @@ class AIService {
     }
   }
 
+  /// A Groq já recusou o modo JSON nesta sessão?
+  ///
+  /// Em 07/09/2026 as chamadas com `response_format: {"type":"json_object"}`
+  /// passaram a voltar 400 — o `llama-3.3-70b-versatile` aceitava, o
+  /// `gpt-oss-120b` que o substituiu não. Sem esta memória, TODA página de
+  /// enciclopédia (e todo feitiço) pagaria uma chamada perdida antes de
+  /// repetir sem o parâmetro. O prompt já exige "APENAS JSON válido", e
+  /// [_extractJsonObject] já lê JSON embrulhado em texto — é assim que os
+  /// caminhos de visão, que nunca mandam `response_format`, funcionam.
+  static bool _groqRecusouModoJson = false;
+
+  /// Vale repetir a MESMA chamada sem `response_format`?
+  ///
+  /// Só num 400 com o modo JSON ligado: é a resposta de "não aceito este
+  /// parâmetro". 429/503 são passageiros (ver [ehStatusTransitorio]), 404 é
+  /// modelo fora do catálogo, e repetir sem o modo JSON não conserta nenhum
+  /// dos dois.
+  @visibleForTesting
+  static bool devePedirDeNovoSemModoJson({
+    required bool modoJson,
+    required int? status,
+  }) =>
+      modoJson && status == 400;
+
+  /// O corpo do pedido de texto da Groq. Separado para o teste poder provar
+  /// que `response_format` entra com o modo JSON e some sem ele.
+  @visibleForTesting
+  static Map<String, dynamic> corpoDeTextoDaGroq({
+    required String modelo,
+    required String systemPrompt,
+    required String userText,
+    required double temperature,
+    required int maxTokens,
+    required bool modoJson,
+  }) =>
+      {
+        'model': modelo,
+        'messages': [
+          if (systemPrompt.isNotEmpty)
+            {'role': 'system', 'content': systemPrompt},
+          {'role': 'user', 'content': userText},
+        ],
+        'temperature': temperature,
+        'max_tokens': maxTokens,
+        if (modoJson) 'response_format': {'type': 'json_object'},
+      };
+
+  /// A mensagem que o PROVEDOR devolveu no corpo do erro, curta.
+  ///
+  /// A função `ia` devolve o corpo do provedor como veio, então ele chega
+  /// aqui inteiro. Sem isto o log dizia só "HTTP 400", e um 400 é
+  /// indistinguível de outro — foi o que escondeu o modo JSON recusado.
+  @visibleForTesting
+  static String? motivoDoProvedor(Object? corpo) {
+    Object? dados = corpo;
+    if (dados is String) {
+      final texto = dados;
+      try {
+        dados = jsonDecode(texto);
+      } catch (_) {
+        return _cortar(texto.trim());
+      }
+    }
+    if (dados is! Map) return null;
+    final erro = dados['error'] ?? dados['erro'] ?? dados;
+    if (erro is String) return _cortar(erro);
+    if (erro is! Map) return null;
+    final partes = [erro['message'], erro['type'] ?? erro['code']]
+        .whereType<String>()
+        .where((p) => p.isNotEmpty)
+        .toList();
+    return partes.isEmpty ? null : _cortar(partes.join(' | '));
+  }
+
+  static String? _cortar(String texto) {
+    if (texto.isEmpty) return null;
+    return texto.length <= 200 ? texto : '${texto.substring(0, 200)}…';
+  }
+
   Future<String> _groqText({
     required String systemPrompt,
     required String userText,
@@ -969,6 +1109,53 @@ class AIService {
     required bool jsonResponse,
     required Duration receiveTimeout,
   }) async {
+    final modoJson = jsonResponse && !_groqRecusouModoJson;
+    try {
+      return await _postarTextoNaGroq(
+        systemPrompt: systemPrompt,
+        userText: userText,
+        tag: tag,
+        temperature: temperature,
+        maxTokens: maxTokens,
+        modoJson: modoJson,
+        receiveTimeout: receiveTimeout,
+      );
+    } on DioException catch (e) {
+      if (!devePedirDeNovoSemModoJson(
+        modoJson: modoJson,
+        status: e.response?.statusCode,
+      )) {
+        rethrow;
+      }
+      // Recusa do parâmetro, não do pedido: repete SEM ele em vez de cair no
+      // outro provedor (que anda instável) por causa de um `response_format`.
+      _groqRecusouModoJson = true;
+      final motivo = motivoDoProvedor(e.response?.data);
+      unawaited(debugLog(
+          'AI',
+          '$tag: groq recusou o modo JSON'
+              '${motivo == null ? '' : ' ($motivo)'} — repetindo sem ele'));
+      return _postarTextoNaGroq(
+        systemPrompt: systemPrompt,
+        userText: userText,
+        tag: tag,
+        temperature: temperature,
+        maxTokens: maxTokens,
+        modoJson: false,
+        receiveTimeout: receiveTimeout,
+      );
+    }
+  }
+
+  Future<String> _postarTextoNaGroq({
+    required String systemPrompt,
+    required String userText,
+    required String tag,
+    required double temperature,
+    required int maxTokens,
+    required bool modoJson,
+    required Duration receiveTimeout,
+  }) async {
     final response = await _postarNoProvedor(
       provedor: AiProvider.groq,
       modelo: _textModel,
@@ -976,17 +1163,14 @@ class AIService {
         receiveTimeout: receiveTimeout,
         sendTimeout: const Duration(seconds: 30),
       ),
-      corpo: {
-        'model': _textModel,
-        'messages': [
-          if (systemPrompt.isNotEmpty)
-            {'role': 'system', 'content': systemPrompt},
-          {'role': 'user', 'content': userText},
-        ],
-        'temperature': temperature,
-        'max_tokens': maxTokens,
-        if (jsonResponse) 'response_format': {'type': 'json_object'},
-      },
+      corpo: corpoDeTextoDaGroq(
+        modelo: _textModel,
+        systemPrompt: systemPrompt,
+        userText: userText,
+        temperature: temperature,
+        maxTokens: maxTokens,
+        modoJson: modoJson,
+      ),
     );
     unawaited(debugLog('AI', '$tag: groq'));
     return _contentFromResponse(response);
@@ -1103,17 +1287,29 @@ class AIService {
     );
   }
 
+  /// Vale a pena tentar de novo? 429 é o teto de requisições por minuto
+  /// (deslizante: segundos depois costuma passar) e 503 é "modelo
+  /// sobrecarregado" do Gemini — os dois somem sozinhos. 404 (modelo fora
+  /// do catálogo) e 4xx de pedido NÃO: repetir só demora mais.
+  static bool _ehTransitorio(DioException e) =>
+      ehStatusTransitorio(e.response?.statusCode);
+
+  /// A regra pura, para poder ser provada em teste. Pública porque é usada
+  /// em produção logo acima.
+  static bool ehStatusTransitorio(int? status) =>
+      status == 429 || status == 503;
+
   /// Espera curta com backoff entre novas tentativas quando o provedor
-  /// devolve 429. O teto de RPM é por minuto e deslizante — segundos depois
-  /// a mesma chamada costuma passar, e quem fotografou nem percebe.
+  /// devolve 429 ou 503. O teto de RPM é por minuto e deslizante — segundos
+  /// depois a mesma chamada costuma passar, e quem fotografou nem percebe.
   static const List<Duration> _quotaRetryDelays = [
     Duration(seconds: 2),
     Duration(seconds: 4),
   ];
 
-  /// [_visionCall] com novas tentativas APENAS para 429 (limite de
-  /// requisições, compartilhado por todas as usuárias do app). Qualquer
-  /// outro erro sobe na hora — a troca de provedor é papel do chamador.
+  /// [_visionCall] com novas tentativas apenas para falha transitória
+  /// (429 e 503, ver [_ehTransitorio]). Qualquer outro erro sobe na hora —
+  /// a troca de provedor é papel do chamador.
   Future<String> _visionCallWithRetry(
     AiProvider provider, {
     required String systemPrompt,
@@ -1135,11 +1331,11 @@ class AIService {
           tag: tag,
         );
       } on DioException catch (e) {
-        if (e.response?.statusCode != 429) rethrow;
+        if (!_ehTransitorio(e)) rethrow;
         unawaited(debugLog(
             'AI',
-            '$tag: ${provider.name} 429 — nova tentativa '
-            'em ${delay.inSeconds}s'));
+            '$tag: ${provider.name} ${e.response?.statusCode} — nova '
+            'tentativa em ${delay.inSeconds}s'));
         await Future.delayed(delay);
       }
     }
@@ -1525,7 +1721,10 @@ class AIService {
           maxTokens: 1600,
           tag: 'página com foto',
         );
-        return _extractJsonObject(content);
+        // O texto sai daqui já no padrão do catálogo (maiúscula inicial, sem
+        // ponto final): a tela do verbete é a MESMA dos cristais e ervas
+        // pré-carregados, e mostra o que vier sem transformar nada.
+        return verbeteNoPadrao(_extractJsonObject(content));
       }
 
       final content = await _textRequest(
@@ -1537,7 +1736,7 @@ class AIService {
         maxTokens: 1200,
         jsonResponse: true,
       );
-      return _extractJsonObject(content);
+      return verbeteNoPadrao(_extractJsonObject(content));
     } on DioException catch (e) {
       if (e.response?.statusCode == 429) {
         throw const AiRateLimitException();

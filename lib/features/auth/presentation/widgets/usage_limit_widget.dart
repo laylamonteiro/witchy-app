@@ -227,7 +227,7 @@ class FeatureGate extends StatelessWidget {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) {
-        final bottomPadding = MediaQuery.of(context).viewPadding.bottom;
+        final bottomPadding = MediaQuery.viewPaddingOf(context).bottom;
         return Container(
           padding: EdgeInsets.fromLTRB(24, 24, 24, 24 + bottomPadding),
           decoration: const BoxDecoration(

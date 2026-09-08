@@ -487,7 +487,7 @@ class _GratitudeSheetState extends State<_GratitudeSheet> {
         left: 24,
         right: 24,
         top: 24,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+        bottom: MediaQuery.viewInsetsOf(context).bottom + 24,
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,

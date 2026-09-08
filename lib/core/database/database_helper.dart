@@ -7,14 +7,33 @@ import '../services/data_sync_service.dart';
 
 class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._init();
-  static Database? _database;
+
+  /// A ABERTURA, não o banco aberto.
+  ///
+  /// Guardar só o resultado deixava uma janela: `_database` só era preenchido
+  /// DEPOIS do await, então dois chamadores concorrentes antes da primeira
+  /// resolução abriam duas conexões sobre o mesmo arquivo — e na web, onde o
+  /// SQLite vive num sistema de arquivos sobre IndexedDB com índice único no
+  /// nome, a segunda conexão é `ConstraintError` na cara. Acontecia no
+  /// caminho de retomada do boot (BootErrorApp → _boot de novo). Guardando o
+  /// Future, o segundo chamador espera o mesmo trabalho em vez de repeti-lo —
+  /// a mesma trava que a sincronização usa em `_varreduraEmVoo`.
+  static Future<Database>? _abertura;
 
   DatabaseHelper._init();
 
-  Future<Database> get database async {
-    if (_database != null) return _database!;
-    _database = await _initDB('grimorio_de_bolso.db');
-    return _database!;
+  Future<Database> get database => _abertura ??= _abrirLimpandoEmFalha();
+
+  /// Abertura que FALHOU não pode ficar guardada: a retomada do boot
+  /// (BootErrorApp → _boot de novo) precisa poder tentar outra vez, senão o
+  /// primeiro erro condenaria a sessão inteira.
+  Future<Database> _abrirLimpandoEmFalha() async {
+    try {
+      return await _initDB('grimorio_de_bolso.db');
+    } catch (_) {
+      _abertura = null;
+      rethrow;
+    }
   }
 
   Future<Database> _initDB(String filePath) async {
@@ -1389,11 +1408,18 @@ class DatabaseHelper {
           data['userId'] = userId;
           profileData = jsonEncode(data);
         } catch (_) {}
+        // A CHAVE PRIMÁRIA é reescrita aqui, e isso pode colidir: dois
+        // perfis do mesmo mapa, ou um perfil cujo id já é o birth_chart_id
+        // de outro. Sem tolerância, a colisão derrubava a TRANSAÇÃO INTEIRA
+        // da adoção — a cada login, e levando junto tudo o que já tinha sido
+        // adotado. Descartar a linha que colide é o mesmo que o laço das
+        // tabelas de um-dia-só faz logo acima.
         await txn.update(
           'magical_profiles',
           {'id': birthChartId, 'profile_data': profileData, 'synced': 0},
           where: 'id = ?',
           whereArgs: [row['id']],
+          conflictAlgorithm: ConflictAlgorithm.ignore,
         );
       }
     });

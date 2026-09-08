@@ -20,6 +20,7 @@ import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/theme/grimoire_motion.dart';
 import '../../../../core/database/database_helper.dart';
 import '../../../../core/services/data_sync_service.dart';
+import '../../../../core/services/debug_log_service.dart';
 import '../../../auth/auth.dart';
 import '../../data/models/pendulum_model.dart';
 import '../../domain/inclinacao_do_pendulo.dart';
@@ -41,6 +42,30 @@ class PendulumPage extends StatefulWidget {
 class _PendulumPageState extends State<PendulumPage>
     with TickerProviderStateMixin, WidgetsBindingObserver {
   final _questionController = TextEditingController();
+
+  /// O foco do campo pertence ao STATE, não ao TextField.
+  ///
+  /// Com o nó interno do TextField, uma reconstrução que re-infle a subárvore
+  /// leva o foco junto e o teclado fecha — e é assim que o defeito aparece no
+  /// Android: toca no campo, o teclado sobe e desce sozinho. Com o nó aqui, o
+  /// foco tem dono estável, e o listener abaixo registra no log quando ele vai
+  /// embora, para o diagnóstico não depender de adivinhação.
+  final _focoDaPergunta = FocusNode(debugLabel: 'pendulum question');
+
+  /// Quantas vezes esta tela foi montada nesta sessão. Se o número subir
+  /// quando o teclado abre, a subárvore está sendo re-inflada — que é a
+  /// diferença entre "o campo perdeu o foco" e "o campo deixou de existir".
+  static int _montagens = 0;
+  late final int _numeroDaMontagem;
+
+  /// Última altura do teclado vista, para registrar só a travessia (abriu /
+  /// fechou) em vez de cada quadro da animação.
+  double _tecladoAnterior = 0;
+
+  /// Tudo o que move o cristal, num Listenable só. Criado UMA vez: dentro do
+  /// `builder` ele nascia a cada quadro, e o AnimatedBuilder desassinava e
+  /// reassinava os cinco a cada vez.
+  late final Listenable _oQueMoveOCristal;
 
   late AnimationController _swingController;
 
@@ -100,6 +125,14 @@ class _PendulumPageState extends State<PendulumPage>
   final _mola = MolaDoPendulo();
   double _alvoDaInclinacao = 0;
 
+  /// A orientação em que a pessoa segura o celular é o "centro": deitada de
+  /// lado na cama, a gravidade já cai no eixo x da tela e o cristal ia todo
+  /// para a direita. A pose é capturada ao ligar o sensor e refeita a cada
+  /// Perguntar (ver [PoseNeutraDoPendulo]).
+  final _pose = PoseNeutraDoPendulo();
+  final _relogioDoSensor = Stopwatch();
+  Duration? _ultimaLeitura;
+
   /// Quadro a quadro, a mola anda rumo ao alvo — só enquanto o sensor está
   /// ligado (celular, em primeiro plano) e mudo com a aba escondida
   /// (TickerMode), como todo ticker deste State.
@@ -128,11 +161,22 @@ class _PendulumPageState extends State<PendulumPage>
   void _assinarSensor() {
     _sensorSub ??= (widget.acelerometro ?? _acelerometroDoAparelho)().listen(
       (e) {
-        // x é a inclinação lateral — e também o tranco da mão, que chega no
-        // mesmo eixo. Normaliza (fundo de escala em ~30°), tira o ruído e
-        // entrega como ALVO da mola: quem balança é a corrente, no ticker.
+        // A leitura é girada para o referencial da pose neutra: o x que sobra
+        // é a inclinação lateral EM RELAÇÃO a como a pessoa segura o celular
+        // — e também o tranco da mão, que chega no mesmo eixo. Normaliza
+        // (fundo de escala em ~30°), tira o ruído e entrega como ALVO da
+        // mola: quem balança é a corrente, no ticker. Antes da pose existir
+        // (meio segundo), o cristal fica no centro.
+        final agora = _relogioDoSensor.elapsed;
+        final anterior = _ultimaLeitura;
+        _ultimaLeitura = agora;
+        final dt = anterior == null
+            ? 0.0
+            : (agora - anterior).inMicroseconds /
+                Duration.microsecondsPerSecond;
+        final xNaPose = _pose.atualizar(Vetor3(e.x, e.y, e.z), dt: dt);
         _alvoDaInclinacao =
-            _filtro.atualizar(InclinacaoDoPendulo.normalizar(e.x));
+            _filtro.atualizar(InclinacaoDoPendulo.normalizar(xNaPose ?? 0));
       },
       onError: (_) {
         // Sensor indisponível (MissingPluginException em teste/desktop): o
@@ -142,6 +186,9 @@ class _PendulumPageState extends State<PendulumPage>
       cancelOnError: true,
     );
     _tickerDaMola ??= createTicker(_avancarMola)..start();
+    _relogioDoSensor
+      ..reset()
+      ..start();
   }
 
   void _desassinarSensor() {
@@ -150,6 +197,13 @@ class _PendulumPageState extends State<PendulumPage>
     _tickerDaMola?.dispose();
     _tickerDaMola = null;
     _ultimoQuadro = null;
+    _relogioDoSensor
+      ..stop()
+      ..reset();
+    _ultimaLeitura = null;
+    // Sensor religado = pose capturada de novo: a pessoa pode ter mudado de
+    // posição enquanto o app estava em segundo plano.
+    _pose.reiniciar();
     _filtro.zerar();
     _mola.zerar();
     _alvoDaInclinacao = 0;
@@ -170,6 +224,9 @@ class _PendulumPageState extends State<PendulumPage>
   @override
   void initState() {
     super.initState();
+    _numeroDaMontagem = ++_montagens;
+    unawaited(debugLog('PENDULO', 'tela montada (#$_numeroDaMontagem)'));
+    _focoDaPergunta.addListener(_registrarFoco);
     WidgetsBinding.instance.addObserver(this);
     _swingController = AnimationController(
       duration: const Duration(seconds: 3),
@@ -190,6 +247,13 @@ class _PendulumPageState extends State<PendulumPage>
       duration: const Duration(milliseconds: 300),
       vsync: this,
     );
+    _oQueMoveOCristal = Listenable.merge([
+      _swingController,
+      _settleController,
+      _revealController,
+      _amortecimento,
+      _inclinacao,
+    ]);
   }
 
   @override
@@ -206,8 +270,37 @@ class _PendulumPageState extends State<PendulumPage>
     }
   }
 
+  void _registrarFoco() {
+    unawaited(debugLog(
+      'PENDULO',
+      _focoDaPergunta.hasFocus
+          ? 'campo ganhou foco (#$_numeroDaMontagem)'
+          : 'campo PERDEU o foco (#$_numeroDaMontagem)',
+    ));
+  }
+
+  /// O relógio contra o qual as outras linhas são lidas: sem saber a hora em
+  /// que o teclado subiu, "o campo perdeu o foco" não diz nada.
+  @override
+  void didChangeMetrics() {
+    super.didChangeMetrics();
+    if (!mounted) return;
+    final agora = MediaQuery.viewInsetsOf(context).bottom;
+    final abriu = agora > 0 && _tecladoAnterior == 0;
+    final fechou = agora == 0 && _tecladoAnterior > 0;
+    _tecladoAnterior = agora;
+    if (abriu) {
+      unawaited(debugLog('PENDULO', 'teclado abriu (${agora.round()} px)'));
+    } else if (fechou) {
+      unawaited(debugLog('PENDULO', 'teclado fechou'));
+    }
+  }
+
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    // Registrado porque alguns teclados de fábrica jogam o app em `inactive`
+    // ao abrir — e isso explicaria o foco indo embora sem ninguém pedir.
+    unawaited(debugLog('PENDULO', 'ciclo de vida: ${state.name}'));
     if (!(_sensorLigado ?? false)) return;
     // Em segundo plano o acelerômetro só gasta bateria.
     if (state == AppLifecycleState.resumed) {
@@ -219,9 +312,12 @@ class _PendulumPageState extends State<PendulumPage>
 
   @override
   void dispose() {
+    unawaited(debugLog('PENDULO', 'tela descartada (#$_numeroDaMontagem)'));
     WidgetsBinding.instance.removeObserver(this);
     _desassinarSensor();
     _inclinacao.dispose();
+    _focoDaPergunta.removeListener(_registrarFoco);
+    _focoDaPergunta.dispose();
     _questionController.dispose();
     _swingController.dispose();
     _settle.dispose();
@@ -271,6 +367,9 @@ class _PendulumPageState extends State<PendulumPage>
       _targetAngle = 0;
       _perguntaConsultada = pergunta;
     });
+    // Quem pergunta está na pose de consulta: ela vira o centro do pêndulo
+    // (deitada de lado, sentada, com o celular na mesa — tanto faz).
+    _pose.recalibrar();
     // Zera a fase antes de tudo: no modo "reduzir movimento" (que não gira o
     // controller) o cristal fica reto durante a pausa, em vez de travado num
     // ângulo herdado da consulta anterior.
@@ -385,21 +484,30 @@ class _PendulumPageState extends State<PendulumPage>
     }
   }
 
+  /// Grava a consulta que ACABOU de sair — e é chamada sem await (o
+  /// `_showAnswer` não espera por ela). Por isso tudo o que depende da tela é
+  /// lido ANTES do await do banco: no instante em que ele volta, a pessoa já
+  /// pode ter começado outra consulta (o `onChanged` do campo zera `_answer`)
+  /// ou saído da página (e aí o `context` já não existe). Ler depois era
+  /// "Null check operator used on a null value" e "widget has been unmounted".
   Future<void> _saveConsultation() async {
-    if (_answer == null) return;
+    final resposta = _answer;
+    if (resposta == null) return;
+    final pergunta = _perguntaConsultada;
+    final userId = context.read<AuthProvider>().currentUser.id;
 
     final db = await DatabaseHelper.instance.database;
     final consultation = PendulumConsultation(
       id: const Uuid().v4(),
-      question: _perguntaConsultada,
-      answer: _answer!,
+      question: pergunta,
+      answer: resposta,
       date: DateTime.now(),
     );
 
     final now = DateTime.now().millisecondsSinceEpoch;
     final data = {
       'id': consultation.id,
-      'user_id': context.read<AuthProvider>().currentUser.id,
+      'user_id': userId,
       'question': consultation.question,
       'answer': consultation.answer.name,
       'date': consultation.date.millisecondsSinceEpoch,
@@ -426,6 +534,11 @@ class _PendulumPageState extends State<PendulumPage>
         backgroundColor: context.gc.darkBackground,
       ),
       backgroundColor: context.gc.darkBackground,
+      // Quem desconta o teclado é o Scaffold da Home, que está por fora deste.
+      // Com os dois descontando, a área rolável perdia a altura do teclado
+      // DUAS vezes — num aparelho com teclado alto sobrava quase nada, e a
+      // sensação era de não conseguir escrever mesmo com o campo vivo.
+      resizeToAvoidBottomInset: false,
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -524,7 +637,12 @@ class _PendulumPageState extends State<PendulumPage>
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   TextField(
+                    // Chave e nó de foco próprios: se a árvore for
+                    // reconstruída com forma diferente, é a chave que faz o
+                    // Flutter reaproveitar ESTE campo em vez de inflar outro.
+                    key: const ValueKey('campo-da-pergunta-do-pendulo'),
                     controller: _questionController,
+                    focusNode: _focoDaPergunta,
                     // SEMPRE editável. Desabilitar o campo durante a consulta
                     // derrubava o foco: o teclado fechava sozinho enquanto o
                     // pêndulo balançava e, com a resposta na tela, tocar no
@@ -614,142 +732,143 @@ class _PendulumPageState extends State<PendulumPage>
             const SizedBox(height: 16),
 
             // Visualização do pêndulo
+            //
+            // RepaintBoundary: no aparelho, a mola do sensor publica um ângulo
+            // novo a cada quadro e o pintor redesenha. Sem esta fronteira o
+            // `markNeedsPaint` subia até a rota e a PÁGINA INTEIRA era
+            // repintada 60×/s — inclusive o texto que a pessoa está digitando.
             MagicalCard(
-              child: SizedBox(
-                height: 300,
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    final w = constraints.maxWidth;
-                    const h = 300.0;
-                    final anchor = Offset(w / 2, 20);
-                    final cordLength = h * 0.5;
-                    // O cristal é o MESMO ícone dos emblemas (SectionEmblem
-                    // .crystals), de cabeça para baixo. viewBox 120x130; o topo
-                    // achatado fica em y=118 → invertido em y=12. A corrente
-                    // prende nesse topo, e o cristal gira em torno dele.
-                    const crystalH = 54.0;
-                    const flatTopFrac = 12 / 130;
-                    const attachTop = flatTopFrac * crystalH;
-                    const alignY = flatTopFrac * 2 - 1;
-                    final crystalBoxW = crystalH * 120 / 130;
-                    // Ponta do cristal a partir da fixação: a corda mais o
-                    // corpo visível do cristal (110/130 do viewBox). Os rótulos
-                    // ficam logo além dessa ponta, no arco que ela percorre —
-                    // por isso o cristal aponta exatamente para a palavra.
-                    final pointerR = cordLength + crystalH * 110 / 130;
-                    final labelR = pointerR + 18;
-                    Offset onArc(double a) => Offset(
-                          anchor.dx + sin(a) * labelR,
-                          anchor.dy + cos(a) * labelR,
-                        );
-                    final yesPos = onArc(-_kSwingTarget);
-                    final noPos = onArc(_kSwingTarget);
-                    final maybePos = onArc(0);
-                    // Até onde a inclinação pode levar o cristal NESTA
-                    // largura sem a ponta sair do card (InclinacaoDoPendulo).
-                    final tetoDaInclinacao = InclinacaoDoPendulo.anguloMaximo(
-                      larguraDaArea: w,
-                      raioDaPonta: pointerR,
-                      larguraDoCristal: crystalBoxW,
-                    );
-                    return AnimatedBuilder(
-                      animation: Listenable.merge([
-                        _swingController,
-                        _settleController,
-                        _revealController,
-                        _amortecimento,
-                        _inclinacao,
-                      ]),
-                      builder: (context, _) {
-                        // Ângulo do cristal: converge para _targetAngle (aponta
-                        // para a resposta) enquanto a oscilação amortecida some —
-                        // o ricocheteio de um pêndulo pousando na diagonal. Fora
-                        // da consulta, repousa no alvo + a inclinação do aparelho.
-                        // Enfeite: o sorteio não vê nada disto.
-                        final settleV = _settle.value;
-                        // Inclinação: alcance cheio em repouso; consultando
-                        // ou respondido, só o sopro do teto absoluto — o lerp
-                        // evita o pulo na troca. Enfeite: o sorteio não vê
-                        // nada disto.
-                        final tetoAgora = lerpDouble(
-                          tetoDaInclinacao,
-                          InclinacaoDoPendulo.tetoAmortecido,
-                          _amortecimento.value,
-                        )!;
-                        final inclinacao = InclinacaoDoPendulo.angulo(
-                          _inclinacao.value,
-                          anguloMaximo: tetoAgora,
-                        );
-                        final swing = _targetAngle * settleV +
-                            (_isSwinging
-                                ? sin(_swingController.value * 2 * pi) *
-                                    0.6 *
-                                    (1 - settleV)
-                                : 0.0) +
-                            inclinacao;
-                        // Órbita circular (sem achatamento): a ponta do cristal
-                        // segue a linha da corda, então apontar para o alvo é
-                        // apontar para o rótulo.
-                        final bob = Offset(
-                          anchor.dx + sin(swing) * cordLength,
-                          anchor.dy + cos(swing) * cordLength,
-                        );
-                        return Stack(
-                          clipBehavior: Clip.none,
-                          children: [
-                            // Corrente dourada + rótulos + fixação.
-                            Positioned.fill(
-                              child: CustomPaint(
-                                painter: PendulumPainter(
-                                  anchor: anchor,
-                                  bob: bob,
-                                  swing: swing,
-                                  tilt: _inclinacao.value.clamp(-1.0, 1.0),
-                                  successColor: context.gc.success,
-                                  alertColor: context.gc.alert,
-                                  starColor: context.gc.starYellow,
-                                  yesLabel:
-                                      AppLocalizations.of(context).pendulumYes,
-                                  noLabel:
-                                      AppLocalizations.of(context).pendulumNo,
-                                  maybeLabel:
-                                      AppLocalizations.of(context).pendulumMaybe,
-                                  yesPos: yesPos,
-                                  noPos: noPos,
-                                  maybePos: maybePos,
-                                  answer: _answer,
-                                  revealProgress: _revealController.value,
-                                ),
-                              ),
-                            ),
-                            // O cristal pendurado: mesmo ícone dos emblemas,
-                            // invertido, girando junto da corda em torno do topo
-                            // (onde a corrente prende).
-                            Positioned(
-                              left: bob.dx - crystalBoxW / 2,
-                              top: bob.dy - attachTop,
-                              width: crystalBoxW,
-                              height: crystalH,
-                              child: Transform.rotate(
-                                // O cristal é espelhado na vertical (flip), e
-                                // espelho inverte o sentido do giro: girar por
-                                // -swing faz a PONTA apontar na direção da
-                                // corrente (= para a resposta), não o contrário.
-                                angle: -swing,
-                                alignment: const Alignment(0, alignY),
-                                child: const IgnorePointer(
-                                  child: CrystalGlyph(
-                                    height: crystalH,
-                                    flipVertical: true,
+              child: RepaintBoundary(
+                child: SizedBox(
+                  height: 300,
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      final w = constraints.maxWidth;
+                      const h = 300.0;
+                      final anchor = Offset(w / 2, 20);
+                      final cordLength = h * 0.5;
+                      // O cristal é o MESMO ícone dos emblemas (SectionEmblem
+                      // .crystals), de cabeça para baixo. viewBox 120x130; o topo
+                      // achatado fica em y=118 → invertido em y=12. A corrente
+                      // prende nesse topo, e o cristal gira em torno dele.
+                      const crystalH = 54.0;
+                      const flatTopFrac = 12 / 130;
+                      const attachTop = flatTopFrac * crystalH;
+                      const alignY = flatTopFrac * 2 - 1;
+                      final crystalBoxW = crystalH * 120 / 130;
+                      // Ponta do cristal a partir da fixação: a corda mais o
+                      // corpo visível do cristal (110/130 do viewBox). Os rótulos
+                      // ficam logo além dessa ponta, no arco que ela percorre —
+                      // por isso o cristal aponta exatamente para a palavra.
+                      final pointerR = cordLength + crystalH * 110 / 130;
+                      final labelR = pointerR + 18;
+                      Offset onArc(double a) => Offset(
+                            anchor.dx + sin(a) * labelR,
+                            anchor.dy + cos(a) * labelR,
+                          );
+                      final yesPos = onArc(-_kSwingTarget);
+                      final noPos = onArc(_kSwingTarget);
+                      final maybePos = onArc(0);
+                      // Até onde a inclinação pode levar o cristal NESTA
+                      // largura sem a ponta sair do card (InclinacaoDoPendulo).
+                      final tetoDaInclinacao = InclinacaoDoPendulo.anguloMaximo(
+                        larguraDaArea: w,
+                        raioDaPonta: pointerR,
+                        larguraDoCristal: crystalBoxW,
+                      );
+                      return AnimatedBuilder(
+                        animation: _oQueMoveOCristal,
+                        builder: (context, _) {
+                          // Ângulo do cristal: converge para _targetAngle (aponta
+                          // para a resposta) enquanto a oscilação amortecida some —
+                          // o ricocheteio de um pêndulo pousando na diagonal. Fora
+                          // da consulta, repousa no alvo + a inclinação do aparelho.
+                          // Enfeite: o sorteio não vê nada disto.
+                          final settleV = _settle.value;
+                          // Inclinação: alcance cheio em repouso; consultando
+                          // ou respondido, só o sopro do teto absoluto — o lerp
+                          // evita o pulo na troca. Enfeite: o sorteio não vê
+                          // nada disto.
+                          final tetoAgora = lerpDouble(
+                            tetoDaInclinacao,
+                            InclinacaoDoPendulo.tetoAmortecido,
+                            _amortecimento.value,
+                          )!;
+                          final inclinacao = InclinacaoDoPendulo.angulo(
+                            _inclinacao.value,
+                            anguloMaximo: tetoAgora,
+                          );
+                          final swing = _targetAngle * settleV +
+                              (_isSwinging
+                                  ? sin(_swingController.value * 2 * pi) *
+                                      0.6 *
+                                      (1 - settleV)
+                                  : 0.0) +
+                              inclinacao;
+                          // Órbita circular (sem achatamento): a ponta do cristal
+                          // segue a linha da corda, então apontar para o alvo é
+                          // apontar para o rótulo.
+                          final bob = Offset(
+                            anchor.dx + sin(swing) * cordLength,
+                            anchor.dy + cos(swing) * cordLength,
+                          );
+                          return Stack(
+                            clipBehavior: Clip.none,
+                            children: [
+                              // Corrente dourada + rótulos + fixação.
+                              Positioned.fill(
+                                child: CustomPaint(
+                                  painter: PendulumPainter(
+                                    anchor: anchor,
+                                    bob: bob,
+                                    swing: swing,
+                                    tilt: _inclinacao.value.clamp(-1.0, 1.0),
+                                    successColor: context.gc.success,
+                                    alertColor: context.gc.alert,
+                                    starColor: context.gc.starYellow,
+                                    yesLabel:
+                                        AppLocalizations.of(context).pendulumYes,
+                                    noLabel:
+                                        AppLocalizations.of(context).pendulumNo,
+                                    maybeLabel:
+                                        AppLocalizations.of(context).pendulumMaybe,
+                                    yesPos: yesPos,
+                                    noPos: noPos,
+                                    maybePos: maybePos,
+                                    answer: _answer,
+                                    revealProgress: _revealController.value,
                                   ),
                                 ),
                               ),
-                            ),
-                          ],
-                        );
-                      },
-                    );
-                  },
+                              // O cristal pendurado: mesmo ícone dos emblemas,
+                              // invertido, girando junto da corda em torno do topo
+                              // (onde a corrente prende).
+                              Positioned(
+                                left: bob.dx - crystalBoxW / 2,
+                                top: bob.dy - attachTop,
+                                width: crystalBoxW,
+                                height: crystalH,
+                                child: Transform.rotate(
+                                  // O cristal é espelhado na vertical (flip), e
+                                  // espelho inverte o sentido do giro: girar por
+                                  // -swing faz a PONTA apontar na direção da
+                                  // corrente (= para a resposta), não o contrário.
+                                  angle: -swing,
+                                  alignment: const Alignment(0, alignY),
+                                  child: const IgnorePointer(
+                                    child: CrystalGlyph(
+                                      height: crystalH,
+                                      flipVertical: true,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          );
+                        },
+                      );
+                    },
+                  ),
                 ),
               ),
             ),

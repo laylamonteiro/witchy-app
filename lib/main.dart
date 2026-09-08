@@ -31,6 +31,7 @@ import 'core/navigation/app_router.dart';
 import 'core/navigation/section_reset_notifier.dart';
 import 'core/utils/app_session_policy.dart';
 import 'features/auth/auth.dart';
+import 'features/auth/presentation/pages/janela_de_login_app.dart';
 import 'features/grimoire/presentation/providers/spell_provider.dart';
 import 'features/diary/presentation/providers/dream_provider.dart';
 import 'features/diary/presentation/providers/desire_provider.dart';
@@ -169,7 +170,11 @@ void main() {
     // mantendo o comportamento padrão de apresentação.
     FlutterError.onError = (details) {
       unawaited(
-        debugLog('ERROR', 'FlutterError: ${details.exceptionAsString()}'),
+        debugLog(
+          'ERROR',
+          'FlutterError: ${details.exceptionAsString()}'
+              '${_primeirasLinhasDaPilha(details.stack)}',
+        ),
       );
       FlutterError.presentError(details);
     };
@@ -182,8 +187,30 @@ void main() {
     await _boot();
   }, (error, stackTrace) {
     debugPrint('Erro não capturado (zona): $error\n$stackTrace');
-    unawaited(debugLog('ERROR', 'Erro não capturado (zona): $error'));
+    unawaited(debugLog(
+      'ERROR',
+      'Erro não capturado (zona): $error'
+          '${_primeirasLinhasDaPilha(stackTrace)}',
+    ));
   });
+}
+
+/// As primeiras linhas da pilha, junto da mensagem no log persistente.
+///
+/// A mensagem sozinha não aponta arquivo nenhum: um
+/// `null is not a subtype of double` no log de diagnóstico não diz se veio do
+/// mapa astral, do perfil ou da sincronização, e sem isso a investigação vira
+/// adivinhação. Poucas linhas de propósito — o log guarda 200 entradas, e a
+/// pilha inteira despejaria as outras 199.
+String _primeirasLinhasDaPilha(StackTrace? pilha, {int quadros = 6}) {
+  if (pilha == null) return '';
+  final linhas = pilha
+      .toString()
+      .split('\n')
+      .map((l) => l.trim())
+      .where((l) => l.isNotEmpty)
+      .take(quadros);
+  return linhas.isEmpty ? '' : '\n${linhas.join('\n')}';
 }
 
 /// Executa a inicialização e sobe o app; se qualquer passo do boot estourar,
@@ -192,7 +219,9 @@ void main() {
 Future<void> _boot() async {
   try {
     final prefs = await _initializeApp();
-    runApp(GrimorioDeBolsoApp(prefs: prefs));
+    runApp(AuthProvider.bootNaJanelaDeLogin
+        ? const JanelaDeLoginApp()
+        : GrimorioDeBolsoApp(prefs: prefs));
   } catch (error, stackTrace) {
     debugPrint('Boot falhou: $error\n$stackTrace');
     unawaited(debugLog('ERROR', 'Boot falhou: $error'));
@@ -202,6 +231,26 @@ Future<void> _boot() async {
       onRetry: _boot,
     ));
   }
+}
+
+/// O boot da JANELA DE LOGIN: o mínimo, e nada além.
+///
+/// Este documento voltou do Google, é descartável e vive segundos. O trabalho
+/// dele é um só — deixar o `Supabase.initialize` trocar o `?code=` pela
+/// sessão, que fica no armazenamento da origem e é de lá que a aba principal
+/// a recolhe. Banco, sincronização, migrações e pagamentos ficam de fora: o
+/// banco porque na web ele é um SQLite sobre IndexedDB e um segundo dono
+/// derruba a transação da aba de verdade (`ConstraintError`), e o resto
+/// porque seria trabalho jogado fora numa aba que já está se fechando.
+Future<SharedPreferences> _bootDaJanelaDeLogin() async {
+  await debugLog('AUTH', 'Janela de login: boot mínimo (sem banco, sem sync)');
+  if (SupabaseConfig.isConfigured) {
+    await Supabase.initialize(
+      url: SupabaseConfig.url,
+      publishableKey: SupabaseConfig.anonKey,
+    );
+  }
+  return SharedPreferences.getInstance();
 }
 
 /// Todos os passos de inicialização que antecedem o runApp.
@@ -233,15 +282,16 @@ Future<SharedPreferences> _initializeApp() async {
   await initializeDateFormatting('es', null);
   await debugLog('SYSTEM', 'Timezones e formatos de data prontos');
 
-  // Initialize database
-  await DatabaseHelper.instance.database;
-  await debugLog('SYSTEM', 'Banco de dados aberto');
-
   // Registrar AGORA se este boot é a volta de um login social: o
   // Supabase.initialize pode limpar o ?code= da URL enquanto a troca do
   // código ainda está em voo, e depois dele não há mais como saber.
-  // O AuthWrapper usa isso para segurar uma tela de "entrando..." em vez
+  // O PortalDeEntrada usa isso para segurar uma tela de "entrando..." em vez
   // de despejar a pessoa na tela de login com a sessão a caminho.
+  //
+  // ANTES DO BANCO, e é o ponto todo: a janela de login é um documento da
+  // MESMA origem, e abrir o banco nela põe um segundo dono sobre o mesmo
+  // IndexedDB da aba de verdade (índice único no nome do arquivo) — daí o
+  // `ConstraintError`/`IDB transaction error` logo depois do login.
   AuthProvider.bootCameFromOAuthReturn = kIsWeb &&
       (Uri.base.queryParameters.containsKey('code') ||
           Uri.base.fragment.contains('access_token'));
@@ -250,7 +300,6 @@ Future<SharedPreferences> _initializeApp() async {
   // armazenamento da origem porque o COOP do Google apaga o `opener` — sem
   // ela, a janela viraria um segundo app, com as páginas do Google no
   // histórico dela (o defeito do voltar, de volta pela porta dos fundos).
-  // O AuthWrapper mostra então o "pode fechar esta aba".
   if (AuthProvider.bootCameFromOAuthReturn) {
     final prefs = await SharedPreferences.getInstance();
     final marca =
@@ -260,6 +309,12 @@ Future<SharedPreferences> _initializeApp() async {
                 .difference(DateTime.fromMillisecondsSinceEpoch(marca)) <
             validadeDaMarcaDeJanela;
   }
+
+  if (AuthProvider.bootNaJanelaDeLogin) return _bootDaJanelaDeLogin();
+
+  // Initialize database
+  await DatabaseHelper.instance.database;
+  await debugLog('SYSTEM', 'Banco de dados aberto');
 
   // Initialize Supabase
   if (SupabaseConfig.isConfigured) {

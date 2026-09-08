@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -53,6 +54,16 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   sqfliteFfiInit();
   databaseFactory = databaseFactoryFfi;
+
+  setUpAll(() async {
+    // Banco em diretório próprio: o `flutter test` roda os arquivos em
+    // paralelo (um isolate cada) e todos os que usam o caminho padrão
+    // disputam o MESMO grimorio_de_bolso.db no disco — o SQLite trava
+    // ("database is locked"). getDatabasesPath() delega ao databaseFactory,
+    // então basta apontá-lo para cá.
+    final dir = await Directory.systemTemp.createTemp('grimorio_regressoes');
+    await databaseFactory.setDatabasesPath(dir.path);
+  });
 
   group('Feitiços globais multiusuário', () {
     Map<String, dynamic> spellRow({
