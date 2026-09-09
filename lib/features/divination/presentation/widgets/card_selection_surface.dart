@@ -141,9 +141,17 @@ class _CardSelectionSurfaceState extends State<CardSelectionSurface>
           Semantics(
             label: l10n.cardSelectionTitle,
             value: l10n.cardSelectionPosition(_focused + 1, widget.cardIds.length),
+            increasedValue: _canExplore && _focused < widget.cardIds.length - 1
+                ? l10n.cardSelectionPosition(_focused + 2, widget.cardIds.length)
+                : null,
+            decreasedValue: _canExplore && _focused > 0
+                ? l10n.cardSelectionPosition(_focused, widget.cardIds.length)
+                : null,
             enabled: widget.enabled,
-            onIncrease: _canExplore ? () => _move(_focused + 1) : null,
-            onDecrease: _canExplore ? () => _move(_focused - 1) : null,
+            onIncrease: _canExplore && _focused < widget.cardIds.length - 1
+                ? () => _move(_focused + 1) : null,
+            onDecrease: _canExplore && _focused > 0
+                ? () => _move(_focused - 1) : null,
             onTap: widget.enabled ? () => _choose(_focused) : null,
             child: ExcludeSemantics(
               child: LayoutBuilder(builder: (context, constraints) {

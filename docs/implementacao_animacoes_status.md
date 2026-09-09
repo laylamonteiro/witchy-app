@@ -60,6 +60,8 @@ próximas fatias.
   cota consumida pelo Oráculo durante a escolha, Premium, virada do dia,
   isolamento de conta e adoção de resultados antigos.
 - `daily_tarot_migration_test.dart`: banco real v23 preserva registros ao migrar.
+- `daily_tarot_selection_page_test.dart`: toque duplo, bloqueio de voltar
+  durante a gravação, retorno após sucesso, retry e troca de conta na rota.
 - `card_selection_surface_test.dart`: toque, navegação horizontal sem sorteio,
   retirada/cancelamento, extremos por teclado, escolha travada, semântica,
   fonte ampliada e movimento reduzido.
