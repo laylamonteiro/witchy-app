@@ -348,8 +348,8 @@ class _SpreadTabState extends State<_SpreadTab>
     if (session.isCommitted) {
       result = DailyTarotCommit(session, created: false);
     } else {
-      result = await Navigator.of(context).push<DailyTarotCommit>(
-        MaterialPageRoute(builder: (_) => DailyTarotSelectionPage(
+      final selectionRoute = MaterialPageRoute<DailyTarotCommit>(
+        builder: (_) => DailyTarotSelectionPage(
           session: session,
           onCommit: (cardId) => _dailyRepository.selectAndCommit(
             userId: _userId,
@@ -361,8 +361,12 @@ class _SpreadTabState extends State<_SpreadTab>
             isPremium: () => auth.isPremiumEffective,
             freeLimit: UserModel.freeOracleReadingsLimit,
           ),
-        )),
+        ),
       );
+      result = await Navigator.of(context).push(selectionRoute);
+      // push completes when pop starts. Wait for the overlay to leave so
+      // the result's flip is visible from its first frame.
+      await selectionRoute.completed;
     }
     if (!mounted || result == null || auth.currentUser.id != _userId) return;
     final committedResult = result;
