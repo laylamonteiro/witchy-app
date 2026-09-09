@@ -10,7 +10,7 @@ import 'package:sensors_plus/sensors_plus.dart';
 import 'package:uuid/uuid.dart';
 import '../../../diary/data/models/free_writing_model.dart';
 import '../../../diary/data/services/reading_archive_composer.dart';
-import '../../../diary/presentation/widgets/save_to_records_button.dart';
+import '../../../diary/data/services/reading_archive_recorder.dart';
 import 'dart:math';
 import '../../../../core/widgets/magical_button.dart';
 import '../../../../core/widgets/magical_card.dart';
@@ -113,8 +113,8 @@ class _PendulumPageState extends State<PendulumPage>
     }
   }
 
-  /// Última consulta salva — alimenta o botão "Salvar nos Registros".
-  PendulumConsultation? _lastConsultation;
+  /// Escreve a consulta em "Meus Registros" assim que a resposta assenta.
+  final _archive = ReadingArchiveRecorder();
 
   /// A pergunta da consulta em curso, congelada no toque em "Perguntar". O
   /// campo continua editável durante o balanço, então o que se salva é o que
@@ -541,7 +541,19 @@ class _PendulumPageState extends State<PendulumPage>
       data,
     );
     await DataSyncService().syncItem(SyncEntity.pendulumConsultations, data);
-    if (mounted) setState(() => _lastConsultation = consultation);
+    // A consulta já nasce como página do acervo: não há botão de guardar
+    // porque não há nada a decidir — o que ela perguntou é registro dela.
+    // (userId lido lá em cima, antes do await: aqui a tela pode já ter ido.)
+    await _archive.record(
+      readingId: consultation.id,
+      userId: userId,
+      source: FreeWritingSource.pendulum,
+      page: ReadingArchiveComposer.pendulum(consultation),
+    );
+
+    // Sem setState no fim: a consulta guardada não é lida por nada na tela.
+    // Quem desenhava a partir dela era o botão "Salvar nos Registros", e o
+    // que a resposta precisa mostrar já veio do setState do `_showAnswer`.
 
     // Contador já foi incrementado em _askPendulum() antes da animação
     // para prevenir múltiplas consultas simultâneas
@@ -945,22 +957,6 @@ class _PendulumPageState extends State<PendulumPage>
                       ),
                     ),
                     const SizedBox(height: 16),
-                    if (_lastConsultation != null) ...[
-                      SaveToRecordsButton(
-                        key: ValueKey('save_${_lastConsultation!.id}'),
-                        buildEntry: () {
-                          final page =
-                              ReadingArchiveComposer.pendulum(_lastConsultation!);
-                          return FreeWritingModel(
-                            userId: context.read<AuthProvider>().currentUser.id,
-                            title: page.title,
-                            content: page.content,
-                            source: FreeWritingSource.pendulum,
-                          );
-                        },
-                      ),
-                      const SizedBox(height: 8),
-                    ],
                     OutlinedButton.icon(
                       onPressed: _reiniciarConsulta,
                       icon: const Icon(Icons.refresh),
@@ -987,8 +983,9 @@ class _PendulumPageState extends State<PendulumPage>
 ///
 /// A forma da árvore é SEMPRE a mesma (Opacity > Transform > filho): um
 /// atalho que devolvesse o filho puro no fim trocaria o tipo no slot e
-/// re-inflaria o subtree inteiro — o SaveToRecordsButton perderia o estado.
-/// Opacity em 1.0 e translação zero são curto-circuitados pelo render.
+/// re-inflaria o subtree inteiro, zerando o estado de quem estivesse ali
+/// dentro. Opacity em 1.0 e translação zero são curto-circuitados pelo
+/// render, então manter a forma não custa nada.
 class _RevealEntrance extends StatelessWidget {
   final Animation<double> animation;
   final Widget child;
