@@ -109,9 +109,6 @@ class _PendulumPageState extends State<PendulumPage>
   /// Escreve a consulta em "Meus Registros" assim que a resposta assenta.
   final _archive = ReadingArchiveRecorder();
 
-  /// Última consulta — a que já virou página do acervo.
-  PendulumConsultation? _lastConsultation;
-
   /// A pergunta da consulta em curso, congelada no toque em "Perguntar". O
   /// campo continua editável durante o balanço, então o que se salva é o que
   /// foi perguntado — não o que estiver no campo quando a resposta chegar.
@@ -532,7 +529,10 @@ class _PendulumPageState extends State<PendulumPage>
       source: FreeWritingSource.pendulum,
       page: ReadingArchiveComposer.pendulum(consultation),
     );
-    if (mounted) setState(() => _lastConsultation = consultation);
+
+    // Sem setState no fim: a consulta guardada não é lida por nada na tela.
+    // Quem desenhava a partir dela era o botão "Salvar nos Registros", e o
+    // que a resposta precisa mostrar já veio do setState do `_showAnswer`.
 
     // Contador já foi incrementado em _askPendulum() antes da animação
     // para prevenir múltiplas consultas simultâneas

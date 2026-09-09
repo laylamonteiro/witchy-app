@@ -412,22 +412,27 @@ class CycleReadingComposer {
   static String _timeColumnOf(String table) =>
       table.endsWith('_logs') ? 'completed_at' : 'created_at';
 
-  /// Filtro do que NÃO é registro da pessoa: feitiço que já veio no app e
-  /// o relatório da própria Leitura do Ciclo — sem isso, uma leitura
-  /// inflaria o ciclo seguinte.
+  /// Filtro do que NÃO é registro da pessoa: feitiço e afirmação que já
+  /// vieram no app, e as origens de [_fontesQueNaoContam] no acervo.
   static String _ownRecordsFilter(String table) => switch (table) {
         'spells' => ' AND is_preloaded = 0',
         'affirmations' => ' AND is_preloaded = 0',
-        // Fora a Leitura do Ciclo, ficam de fora as páginas das tiragens: a
-        // consulta que as gerou já é contada na tabela da própria ferramenta
-        // (mesmo id). Contar as duas somaria toda leitura em dobro — e é a
-        // contagem que a pessoa vê ANTES de comprar. A quiromancia continua
-        // contando aqui: ela não tem tabela própria.
-        'free_writings' => " AND source NOT IN ("
-            "'${FreeWritingSource.cycleReading}'"
-            "${FreeWritingSource.autoRecorded.map((s) => ", '$s'").join()})",
+        'free_writings' => ' AND source NOT IN ($_fontesQueNaoContam)',
         _ => '',
       };
+
+  /// As origens do acervo que NÃO são registro próprio, prontas para o `IN`.
+  ///
+  /// A Leitura do Ciclo (o relatório da compra, que inflaria o ciclo
+  /// seguinte) e as páginas das tiragens: a consulta que gerou cada uma já é
+  /// contada na tabela da própria ferramenta, com o mesmo id, e contar os
+  /// dois lados somaria toda leitura em dobro — na contagem que a pessoa vê
+  /// ANTES de comprar. A quiromancia fica fora desta lista de propósito: sem
+  /// tabela própria, o acervo é o único lugar onde ela conta.
+  static final String _fontesQueNaoContam = [
+    FreeWritingSource.cycleReading,
+    ...FreeWritingSource.autoRecorded,
+  ].map((source) => "'$source'").join(', ');
 
   /// A assinatura de CONTEÚDO de cada tabela: as colunas que dizem "este
   /// registro é o mesmo que aquele".

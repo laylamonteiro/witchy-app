@@ -1,10 +1,10 @@
-/// A tiragem entra em "Meus Registros" sozinha, no instante em que sai — não
-/// há mais botão "Salvar nos Registros" para a Bruxa lembrar de tocar.
-///
-/// O que este teste protege é a IDEMPOTÊNCIA disso: o gravador é chamado de
-/// novo quando o Conselheiro responde (e, no tarô, quando a mesma mesa é
-/// reaberta). Se cada chamada criasse uma linha, uma leitura interpretada
-/// apareceria duas vezes no acervo e contaria duas vezes na Leitura do Ciclo.
+// A tiragem entra em "Meus Registros" sozinha, no instante em que sai — não
+// há mais botão "Salvar nos Registros" para a Bruxa lembrar de tocar.
+//
+// O que este teste protege é a IDEMPOTÊNCIA disso: o gravador é chamado de
+// novo quando o Conselheiro responde (e, no tarô, quando a mesma mesa é
+// reaberta). Se cada chamada criasse uma linha, uma leitura interpretada
+// apareceria duas vezes no acervo e contaria duas vezes na Leitura do Ciclo.
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
