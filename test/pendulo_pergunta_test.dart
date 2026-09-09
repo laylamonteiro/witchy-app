@@ -152,13 +152,19 @@ void main() {
     expect(find.text(l10n.pendulumAsking), findsOneWidget);
     expect(auth.consultasReservadas, 1);
 
-    // ~3 s de balanço + assentamento: o foco e o texto não podem cair.
+    // ~3 s de balanço + assentamento. ENQUANTO NÃO HÁ RESPOSTA, o foco e o
+    // texto não podem cair — é o bug do teclado que a rodada 1 corrigiu.
+    // Depois que a resposta entra, o campo trava de propósito, e o foco ir
+    // embora é o fim natural da consulta: aí só o texto continua valendo.
     for (var i = 0; i < 7; i++) {
       await tester.pump(const Duration(milliseconds: 500));
+      expect(find.text('Vou viajar em breve?'), findsOneWidget);
+      final respondeu =
+          find.text(l10n.pendulumNewConsult).evaluate().isNotEmpty;
+      if (respondeu) continue;
       expect(campoFocado(tester), isTrue, reason: 'foco caiu no quadro $i');
       expect(tester.testTextInput.hasAnyClients, isTrue,
           reason: 'teclado fechou no quadro $i');
-      expect(find.text('Vou viajar em breve?'), findsOneWidget);
     }
 
     // A resposta chegou: agora o campo e o botão TRAVAM — a consulta acabou,
@@ -167,6 +173,8 @@ void main() {
     expect(find.text(l10n.pendulumNewConsult), findsOneWidget);
     expect(find.text(l10n.pendulumAsk), findsOneWidget);
     expect(tester.widget<TextField>(find.byType(TextField)).enabled, isFalse);
+    expect(campoFocado(tester), isFalse,
+        reason: 'campo travado não fica com o foco preso');
     expect(
       tester
           .widget<ElevatedButton>(find.ancestor(
