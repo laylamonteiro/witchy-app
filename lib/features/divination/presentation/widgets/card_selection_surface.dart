@@ -139,6 +139,8 @@ class _CardSelectionSurfaceState extends State<CardSelectionSurface>
               style: Theme.of(context).textTheme.bodyMedium),
           const SizedBox(height: 12),
           Semantics(
+            key: const ValueKey('card-fan-semantics'),
+            container: true,
             label: l10n.cardSelectionTitle,
             value: l10n.cardSelectionPosition(_focused + 1, widget.cardIds.length),
             increasedValue: _canExplore && _focused < widget.cardIds.length - 1
