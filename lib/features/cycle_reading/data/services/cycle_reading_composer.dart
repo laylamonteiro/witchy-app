@@ -365,6 +365,17 @@ class CycleReadingComposer {
   /// morre no meio do mês.
   static const int _maxTimelineMoments = 40;
 
+  /// Teto das leituras guardadas — mais alto que o das outras fontes.
+  ///
+  /// Desde que a tiragem virou página do acervo sozinha, `savedReadings` é
+  /// por onde passa QUASE toda a divinação do ciclo (o bloco `oracle` só
+  /// guarda as consultas antigas, de antes disso). Com o teto comum de
+  /// [_maxItemsPerSource] uma Bruxa que tira cartas todo dia mandaria menos
+  /// material do que mandava antes — o contrário do que a mudança promete.
+  /// E o corte é por amostragem uniforme, como o da linha do tempo: pegar
+  /// as seis primeiras deixaria a leitura falando só do começo do mês.
+  static const int _maxSavedReadings = 14;
+
   /// Teto de cada nota da linha do tempo: ali o que importa é QUANDO e O
   /// QUÊ; o conteúdo cheio já vai nas listas por fonte.
   static const int _maxTimelineNoteLength = 70;
@@ -407,8 +418,14 @@ class CycleReadingComposer {
   static String _ownRecordsFilter(String table) => switch (table) {
         'spells' => ' AND is_preloaded = 0',
         'affirmations' => ' AND is_preloaded = 0',
-        'free_writings' =>
-          " AND source != '${FreeWritingSource.cycleReading}'",
+        // Fora a Leitura do Ciclo, ficam de fora as páginas das tiragens: a
+        // consulta que as gerou já é contada na tabela da própria ferramenta
+        // (mesmo id). Contar as duas somaria toda leitura em dobro — e é a
+        // contagem que a pessoa vê ANTES de comprar. A quiromancia continua
+        // contando aqui: ela não tem tabela própria.
+        'free_writings' => " AND source NOT IN ("
+            "'${FreeWritingSource.cycleReading}'"
+            "${FreeWritingSource.autoRecorded.map((s) => ", '$s'").join()})",
         _ => '',
       };
 
@@ -708,7 +725,15 @@ class CycleReadingComposer {
         .where((row) =>
             (row['source'] ?? 'free') != FreeWritingSource.cycleReading)
         .toList();
-    recordCount += writings.length;
+    // A página de uma tiragem e a tiragem são o MESMO registro — nascem com
+    // o mesmo id. Só um dos lados pode contar, e é a tabela da ferramenta
+    // que conta: ela existe mesmo para quem nunca abriu o acervo. Sobram
+    // aqui as reflexões, as lições e a quiromancia (que não tem tabela).
+    final writingsContaveis = writings
+        .where((row) =>
+            !FreeWritingSource.autoRecorded.contains(row['source'] ?? ''))
+        .toList();
+    recordCount += writingsContaveis.length;
     final reflections = writings
         .where((row) => (row['source'] ?? 'free') == FreeWritingSource.free)
         .toList();
@@ -726,12 +751,19 @@ class CycleReadingComposer {
       ];
     }
     if (options.includeDivination && archivedReadings.isNotEmpty) {
-      // O que a pessoa GUARDOU no acervo (tarot, oráculo, runas, quiromancia
-      // salvos): agora vai o conteúdo real da leitura, não só o título — é
-      // dele que sai a especificidade.
+      // As leituras dela como páginas do acervo (tarô, oráculo, runas,
+      // pêndulo, quiromancia): o conteúdo real — pergunta, tiragem e
+      // conselho —, não só o título. É daqui que sai a especificidade.
+      //
+      // A tiragem vira página sozinha, no instante em que sai, então este é
+      // o canal por onde passa quase toda a divinação do ciclo; o bloco
+      // `oracle`, mais abaixo, só recolhe as consultas antigas que nunca
+      // ganharam página. A data vai junto porque sem ela a leitura ficaria
+      // solta no período.
       json['savedReadings'] = [
-        for (final row in archivedReadings.take(_maxItemsPerSource))
+        for (final row in _sampleEvenly(archivedReadings, _maxSavedReadings))
           {
+            'date': _dayOf(row['created_at']),
             'type': '${row['source']}',
             if (_isNotBlank(row['title'])) 'title': _excerpt(row['title']),
             'excerpt': _excerpt(row['content']),
@@ -751,8 +783,19 @@ class CycleReadingComposer {
     if (options.includeDivination) {
       // Não só a pergunta — a tiragem inteira: a runa/carta e o que ela
       // respondeu. É a conversa real da pessoa com o oráculo no período.
+      //
+      // Fora as que já estão em `savedReadings`: a página do acervo nasce
+      // com o MESMO id da consulta e carrega o texto inteiro (pergunta,
+      // cartas e conselho), então mandar as duas gastaria o dobro de tokens
+      // dizendo a mesma coisa — e a IA leria uma tiragem como se fossem
+      // duas. Sobram aqui as consultas ANTIGAS, de antes de a tiragem virar
+      // página sozinha, que doutro jeito sumiriam da leitura.
+      final idsComPagina = archivedReadings.map((row) => '${row['id']}').toSet();
+      List<Map<String, Object?>> semPagina(List<Map<String, Object?>> rows) =>
+          rows.where((row) => !idsComPagina.contains('${row['id']}')).toList();
+
       final divinations = <Map<String, dynamic>>[
-        for (final row in runeReadings.take(_maxItemsPerSource))
+        for (final row in semPagina(runeReadings).take(_maxItemsPerSource))
           {
             'date': _dayOf(row['created_at']),
             'tool': 'runes',
@@ -761,7 +804,7 @@ class CycleReadingComposer {
             if (_readingInterpretation(row['reading_data']) case final m?)
               'answer': m,
           },
-        for (final row in pendulumConsults.take(_maxItemsPerSource))
+        for (final row in semPagina(pendulumConsults).take(_maxItemsPerSource))
           {
             'date': _dayOf(row['created_at']),
             'tool': 'pendulum',
@@ -769,14 +812,14 @@ class CycleReadingComposer {
               'question': _excerpt(row['question']),
             if (_isNotBlank(row['answer'])) 'answer': _excerpt(row['answer']),
           },
-        for (final row in oracleReadings.take(_maxItemsPerSource))
+        for (final row in semPagina(oracleReadings).take(_maxItemsPerSource))
           {
             'date': _dayOf(row['created_at']),
             'tool': 'oracle-cards',
             if (_readingInterpretation(row['reading_data']) case final m?)
               'answer': m,
           },
-        for (final row in tarotReadings.take(_maxItemsPerSource))
+        for (final row in semPagina(tarotReadings).take(_maxItemsPerSource))
           {
             'date': _dayOf(row['created_at']),
             'tool': 'tarot',
@@ -1008,7 +1051,9 @@ class CycleReadingComposer {
       ...desires,
       ...createdAffirmations,
       ...sigils,
-      ...writings,
+      // Deduplicado: sem isto, o dia de uma tiragem contaria duas vezes no
+      // mapa de calor e na fase da lua "mais presente".
+      ...writingsContaveis,
       ...runeReadings,
       ...pendulumConsults,
       ...oracleReadings,
@@ -1044,11 +1089,17 @@ class CycleReadingComposer {
           createdAffirmations.length +
           sigils.length +
           (writings.length - archivedReadings.length),
+      // As tabelas das ferramentas contam TODA consulta, salva no acervo ou
+      // não. Das páginas do acervo só entram as que não têm tabela própria
+      // (a quiromancia) — as outras já foram contadas ali em cima.
       NumerosDoCiclo.sourceDivination: runeReadings.length +
           pendulumConsults.length +
           oracleReadings.length +
           tarotReadings.length +
-          archivedReadings.length,
+          archivedReadings
+              .where((row) => !FreeWritingSource.autoRecorded
+                  .contains(row['source'] ?? ''))
+              .length,
       NumerosDoCiclo.sourcePractice:
           ritualLogs.length + guidedLogs.length + spells.length,
     };
