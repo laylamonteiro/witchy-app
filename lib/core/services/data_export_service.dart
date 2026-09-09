@@ -7,6 +7,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../database/database_helper.dart';
+import '../database/reading_session_schema.dart';
 import '../sharing/image_download_stub.dart'
     if (dart.library.js_interop) '../sharing/image_download_web.dart';
 
@@ -25,6 +26,7 @@ class DataExportService {
   /// Tabelas incluídas no backup. Ao criar uma tabela de conteúdo da usuária,
   /// acrescente aqui — senão ela fica de fora da exportação.
   static const List<String> tables = [
+    ...ReadingSessionSchema.tables,
     'spells',
     'dreams',
     'desires',

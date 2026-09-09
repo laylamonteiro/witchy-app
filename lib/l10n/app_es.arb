@@ -1981,5 +1981,37 @@
   "conviteFechamentoLinha": "Los planes están del otro lado de este botón. Nada aquí caduca, y nada desaparece a medianoche",
   "paywallLifetimeCycleReading": "Incluye la Lectura de la Lunación — la lectura más profunda de la app, tejida de lo que viviste, en cada lunación",
   "conviteDescobertaTitulo": "Lo que aún no has visto",
-  "conviteSeloPremium": "Premium"
+  "conviteSeloPremium": "Premium",
+  "cardSelectionTitle": "Elige tu carta",
+  "cardSelectionInstruction": "Desliza para explorar el abanico. Toca una carta o arrástrala hacia arriba para elegirla.",
+  "cardSelectionPosition": "Carta {position} de {total}",
+  "cardSelectionPrevious": "Carta anterior",
+  "cardSelectionNext": "Siguiente carta",
+  "cardSelectionChoose": "Elegir esta carta",
+  "cardSelectionRetry": "Completar mi elección",
+  "cardSelectionDay": "Lectura del {date}",
+  "cardSelectionSaving": "Guardando tu elección…",
+  "cardSelectionError": "No se pudo completar ahora. Intenta confirmar esta misma carta de nuevo.",
+  "cardSelectionResumeHint": "Puedes volver después: el abanico y tu elección permanecen en esta consulta.",
+  "@cardSelectionPosition": {
+    "placeholders": {
+      "position": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "@cardSelectionDay": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "cardSelectionLoadError": "No se pudo abrir la consulta. Inténtalo de nuevo.",
+  "@cardSelectionLoadError": {
+    "description": "Error opening or restoring a reading before selection"
+  }
 }

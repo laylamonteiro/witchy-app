@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:uuid/uuid.dart';
+import 'package:sqflite/sqflite.dart';
 
 import '../../../../core/database/database_helper.dart';
 import '../models/tarot_card_model.dart';
@@ -11,9 +12,8 @@ import '../models/tarot_card_model.dart';
 /// se a pessoa salvasse à mão no acervo — e a Leitura do Ciclo não enxergava
 /// as tiragens do período. Aqui toda mesa revelada vira registro.
 ///
-/// Local-only por enquanto (fora do DataSyncService): espelhar exige a
-/// tabela correspondente no Supabase — quando ela existir, basta adicionar
-/// o SyncEntity e o syncItem no fim de [recordDraw]/[attachInterpretation].
+/// Os resultados entram na sincronização existente de `tarotReadings` como
+/// pendentes (`synced: 0`). Uma seleção ainda não confirmada permanece local.
 class TarotReadingRepository {
   TarotReadingRepository({DatabaseHelper? dbHelper})
       : _dbHelper = dbHelper ?? DatabaseHelper.instance;
@@ -29,8 +29,11 @@ class TarotReadingRepository {
     required String signature,
     required List<TarotDrawnCard> drawn,
     String? question,
+    DatabaseExecutor? executor,
+    String? sessionId,
+    DateTime? date,
   }) async {
-    final db = await _dbHelper.database;
+    final db = executor ?? await _dbHelper.database;
 
     final existing = await db.query(
       'tarot_readings',
@@ -53,6 +56,7 @@ class TarotReadingRepository {
       'signature': signature,
       'reading_data': jsonEncode({
         'spread': spreadName,
+        if (sessionId != null) 'session_id': sessionId,
         'cards': [
           for (final d in drawn)
             {
@@ -66,7 +70,7 @@ class TarotReadingRepository {
             },
         ],
       }),
-      'date': now,
+      'date': date?.millisecondsSinceEpoch ?? now,
       'created_at': now,
       'updated_at': now,
       'synced': 0,

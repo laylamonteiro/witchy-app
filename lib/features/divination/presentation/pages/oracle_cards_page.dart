@@ -77,6 +77,9 @@ class _OracleCardsPageState extends State<OracleCardsPage>
   Future<void> _drawCards() async {
     // Verificar limite diário para usuários free
     final authProvider = context.read<AuthProvider>();
+    final owner = authProvider.currentUser.id;
+    await authProvider.refreshOracleUsage();
+    if (!mounted || authProvider.currentUser.id != owner) return;
     if (!authProvider.canUseOracle) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(

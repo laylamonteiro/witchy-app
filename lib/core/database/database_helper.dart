@@ -4,6 +4,7 @@ import 'package:path/path.dart';
 import 'package:flutter/foundation.dart' show kIsWeb, visibleForTesting;
 import '../../features/grimoire/data/models/spell_model.dart';
 import '../services/data_sync_service.dart';
+import 'reading_session_schema.dart';
 
 class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._init();
@@ -78,7 +79,7 @@ class DatabaseHelper {
     // é no-op — o sqflite envolve os dois numa transação).
     return await openDatabase(
       path,
-      version: 23,
+      version: 24,
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
     );
@@ -422,6 +423,7 @@ class DatabaseHelper {
     await db.execute(_createTarotReadingsSql);
     await db.execute(
         'CREATE INDEX idx_tarot_readings_user_id ON tarot_readings(user_id)');
+    await ReadingSessionSchema.create(db);
 
     // Lápides da sincronização (ver _createSyncTombstonesSql)
     await db.execute(_createSyncTombstonesSql);
@@ -1192,6 +1194,9 @@ class DatabaseHelper {
     if (oldVersion < 23) {
       await db.execute(_createSyncTombstonesSql);
     }
+    if (oldVersion < 24) {
+      await ReadingSessionSchema.create(db);
+    }
   }
 
   /// SQL da tabela de tiragens de Tarô — compartilhado entre onCreate e a
@@ -1340,6 +1345,8 @@ class DatabaseHelper {
           DataSyncService.localTableFor(entity),
         // Não sincroniza, mas também nasce anônima e precisa ser adotada.
         'guided_ritual_logs',
+        'selection_sessions',
+        'tarot_day_state',
         // As lápides também: o que foi apagado antes de entrar na conta
         // precisa ser purgado da nuvem depois do login, senão o download
         // seguinte ressuscita o item sob a conta nova.
@@ -1441,6 +1448,8 @@ class DatabaseHelper {
   Future<void> clearAllTables() async {
     final db = await database;
     final tables = [
+      ...ReadingSessionSchema.tables,
+      'tarot_readings',
       'spells',
       'dreams',
       'desires',

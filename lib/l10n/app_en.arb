@@ -1981,5 +1981,37 @@
   "conviteFechamentoLinha": "The plans are on the other side of this button. Nothing here expires, and nothing vanishes at midnight",
   "paywallLifetimeCycleReading": "Includes the Lunation Reading — the app's deepest reading, woven from what you lived, every lunation",
   "conviteDescobertaTitulo": "What you have not seen yet",
-  "conviteSeloPremium": "Premium"
+  "conviteSeloPremium": "Premium",
+  "cardSelectionTitle": "Choose your card",
+  "cardSelectionInstruction": "Swipe to explore the fan. Tap a card or drag it upward to choose it.",
+  "cardSelectionPosition": "Card {position} of {total}",
+  "cardSelectionPrevious": "Previous card",
+  "cardSelectionNext": "Next card",
+  "cardSelectionChoose": "Choose this card",
+  "cardSelectionRetry": "Complete my choice",
+  "cardSelectionDay": "Reading for {date}",
+  "cardSelectionSaving": "Saving your choice…",
+  "cardSelectionError": "Unable to finish right now. Try confirming this same card again.",
+  "cardSelectionResumeHint": "You can come back later: the fan and your choice stay with this reading.",
+  "@cardSelectionPosition": {
+    "placeholders": {
+      "position": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "@cardSelectionDay": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "cardSelectionLoadError": "Unable to open this reading. Please try again.",
+  "@cardSelectionLoadError": {
+    "description": "Error opening or restoring a reading before selection"
+  }
 }

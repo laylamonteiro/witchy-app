@@ -9,6 +9,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/ai/ai_service.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
+import '../../../../core/theme/grimoire_motion.dart';
+import '../../../auth/data/models/user_model.dart';
+import '../../data/repositories/daily_tarot_repository.dart';
+import '../../data/repositories/tarot_day_repository.dart';
+import '../../domain/daily_tarot_session.dart';
+import 'daily_tarot_selection_page.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../your_day/presentation/providers/daily_checkin_provider.dart';
@@ -63,9 +69,10 @@ class _TarotPageState extends State<TarotPage>
       ),
       body: TabBarView(
         controller: _tabController,
-        children: const [
-          _SpreadTab(),
-          TarotLearnTab(),
+        children: [
+          _SpreadTab(key: ValueKey(context.select<AuthProvider, String>(
+              (auth) => auth.currentUser.id))),
+          const TarotLearnTab(),
         ],
       ),
     );
@@ -112,7 +119,7 @@ extension TarotSpreadX on TarotSpread {
 }
 
 class _SpreadTab extends StatefulWidget {
-  const _SpreadTab();
+  const _SpreadTab({super.key});
 
   @override
   State<_SpreadTab> createState() => _SpreadTabState();
@@ -123,6 +130,9 @@ class _SpreadTabState extends State<_SpreadTab>
   TarotSpread? _activeSpread;
   List<TarotDrawnCard> _drawn = [];
   bool _revealed = false;
+  bool _starting = false;
+  String? _activeDailySignature;
+  final _dailyRepository = DailyTarotRepository();
 
   /// Pergunta de quem consulta — obrigatória, capturada ao iniciar a
   /// tiragem. O foco volta para cá quando alguém tenta tirar sem perguntar.
@@ -164,10 +174,12 @@ class _SpreadTabState extends State<_SpreadTab>
     if (state == AppLifecycleState.resumed) _carregarPerguntaDoDia();
   }
 
-  /// Assinatura única das cartas tiradas (tipo de tiragem + cartas + invertida).
-  /// Serve para reconhecer a MESMA tiragem — inclusive a carta do dia, que é
-  /// determinística — e não deixar regerar a interpretação.
+  /// A carta do dia usa a identidade persistida da sessão. As outras mesas
+  /// mantêm a assinatura legada para restaurar a interpretação existente.
   String _signature(TarotSpread spread, List<TarotDrawnCard> drawn) {
+    if (spread == TarotSpread.daily && _activeDailySignature != null) {
+      return _activeDailySignature!;
+    }
     // Usa (naipe, número) — chaves estáveis entre idiomas — para que a
     // interpretação salva sobreviva à troca de idioma do app.
     // Inclui a pergunta: outra pergunta sobre as mesmas cartas gera outra
@@ -200,26 +212,15 @@ class _SpreadTabState extends State<_SpreadTab>
 
   /// A pergunta que rendeu a carta do dia HOJE (null se ainda não houve).
   ///
-  /// A carta é determinística: a mesma pergunta devolve a mesma carta. Então
+  /// A carta fica persistida: a mesma pergunta devolve a mesma carta. Então
   /// repetir a pergunta não é uma tiragem nova — não gasta a cota do dia nem
   /// esbarra no limite (senão a Bruxa ficaria sem poder rever a própria carta).
-  Future<String?> _perguntaDaCartaDeHoje() async {
-    final prefs = await SharedPreferences.getInstance();
-    return perguntaSeForDeHoje(
-      guardada: prefs.getString('tarot_daily_q_$_userId'),
-      hoje: _todayKey(),
-    );
-  }
+  Future<String?> _perguntaDaCartaDeHoje() async =>
+      (await TarotDayRepository().read(_userId, DateTime.now())).dailyQuestion;
 
   Future<void> _rememberDailyQuestion(String question) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(
-      'tarot_daily_q_$_userId',
-      carimbarPerguntaDoDia(
-        hoje: _todayKey(),
-        pergunta: question.toLowerCase(),
-      ),
-    );
+    await TarotDayRepository().remember(userId: _userId,
+        day: DateTime.now(), question: question, daily: true);
   }
 
   /// A ÚLTIMA pergunta que rendeu uma tiragem (qualquer uma), por conta e
@@ -227,14 +228,9 @@ class _SpreadTabState extends State<_SpreadTab>
   /// outras tiragens sem redigitar. Na Free é, na prática, a da carta do dia
   /// (as demais tiragens gastam a cota); no Premium, a última mesmo. Vira o
   /// dia, some.
-  String get _chaveDaUltimaPergunta => 'tarot_last_q_$_userId';
-
   Future<void> _lembrarUltimaPergunta(String question) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(
-      _chaveDaUltimaPergunta,
-      carimbarPerguntaDoDia(hoje: _todayKey(), pergunta: question),
-    );
+    await TarotDayRepository().remember(userId: _userId,
+        day: DateTime.now(), question: question);
     _perguntaPreenchida = question;
     _diaPreenchido = _todayKey();
   }
@@ -243,13 +239,15 @@ class _SpreadTabState extends State<_SpreadTab>
   /// campo; a de ontem, não. Se o dia virou com a tela aberta e o campo
   /// ainda mostra o que foi preenchido, limpa — o que a pessoa digitou fica.
   Future<void> _carregarPerguntaDoDia() async {
-    final prefs = await SharedPreferences.getInstance();
+    TarotDayState state;
+    try {
+      state = await TarotDayRepository().read(_userId, DateTime.now());
+    } catch (_) {
+      return; // A failed draft lookup must not overwrite typed text.
+    }
     if (!mounted) return;
     final hoje = _todayKey();
-    final deHoje = perguntaSeForDeHoje(
-      guardada: prefs.getString(_chaveDaUltimaPergunta),
-      hoje: hoje,
-    );
+    final deHoje = state.lastQuestion;
     final campo = _questionController.text;
     if (deHoje != null) {
       if (campo.isEmpty || campo == _perguntaPreenchida) {
@@ -262,27 +260,6 @@ class _SpreadTabState extends State<_SpreadTab>
     }
     _perguntaPreenchida = deHoje;
     _diaPreenchido = hoje;
-  }
-
-  /// Carta do dia: determinística pela data E pelo usuário (mesma carta o dia
-  /// todo, mas diferente para cada pessoa — não é a mesma para todo mundo).
-  ///
-  /// A PERGUNTA entra na semente: mudar a pergunta muda a carta (cada
-  /// pergunta merece a sua), mas repetir a MESMA pergunta no mesmo dia
-  /// devolve a mesma carta. Sem pergunta, vale a carta do dia clássica.
-  TarotDrawnCard _dailyCard(String question) {
-    final now = DateTime.now();
-    final asked = question.trim().toLowerCase();
-    var seed =
-        (now.year * 10000 + now.month * 100 + now.day) ^ _userId.hashCode;
-    if (asked.isNotEmpty) seed = seed ^ asked.hashCode;
-    final random = Random(seed);
-    final card = tarotCards[random.nextInt(tarotCards.length)];
-    return TarotDrawnCard(
-      card: card,
-      isReversed: random.nextInt(4) == 0,
-      positionLabel: AppLocalizations.of(context).tarotDailyCard,
-    );
   }
 
   /// Reconstrói a mesa registrada hoje: cada carta pelo naipe + número
@@ -321,6 +298,104 @@ class _SpreadTabState extends State<_SpreadTab>
   }
 
   Future<void> _startSpread(TarotSpread spread) async {
+    if (_starting) return;
+    setState(() => _starting = true);
+    try {
+      if (spread == TarotSpread.daily) {
+        await _startDailySpread();
+      } else {
+        await _startLegacySpread(spread);
+      }
+    } on TarotQuotaExceeded {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(AppLocalizations.of(context).tarotFreeLimitReached)));
+      await showModalBottomSheet<void>(context: context,
+          isScrollControlled: true, backgroundColor: Colors.transparent,
+          builder: (_) => const PremiumUpgradeSheet());
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(AppLocalizations.of(context).cardSelectionLoadError)));
+    } finally {
+      if (mounted) setState(() => _starting = false);
+    }
+  }
+
+  Future<void> _startDailySpread() async {
+    final question = _questionController.text.trim();
+    if (question.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(AppLocalizations.of(context).tarotQuestionRequired)));
+      _questionFocus.requestFocus();
+      return;
+    }
+    final auth = context.read<AuthProvider>();
+    await auth.refreshOracleUsage();
+    if (!mounted || auth.currentUser.id != _userId) return;
+    final session = await _dailyRepository.prepare(
+      userId: _userId,
+      question: question,
+      catalog: tarotCards,
+      premium: auth.isPremiumEffective,
+      legacyOracleUsed: auth.currentUser.oracleReadingsToday,
+      freeLimit: UserModel.freeOracleReadingsLimit,
+    );
+    if (!mounted || auth.currentUser.id != _userId) return;
+    _questionFocus.unfocus();
+    final position = AppLocalizations.of(context).tarotDailyCard;
+    DailyTarotCommit? result;
+    if (session.isCommitted) {
+      result = DailyTarotCommit(session, created: false);
+    } else {
+      result = await Navigator.of(context).push<DailyTarotCommit>(
+        MaterialPageRoute(builder: (_) => DailyTarotSelectionPage(
+          session: session,
+          onCommit: (cardId) => _dailyRepository.selectAndCommit(
+            userId: _userId,
+            sessionId: session.id,
+            cardId: cardId,
+            catalog: tarotCards,
+            positionLabel: position,
+            isCurrentUser: () => mounted && auth.currentUser.id == _userId,
+            isPremium: () => auth.isPremiumEffective,
+            freeLimit: UserModel.freeOracleReadingsLimit,
+          ),
+        )),
+      );
+    }
+    if (!mounted || result == null || auth.currentUser.id != _userId) return;
+    final committedResult = result;
+    final completed = committedResult.session;
+    final entry = completed.card(completed.selectedId!);
+    final card = tarotCards.firstWhere((c) => c.id == entry.id);
+    final saved = await _dailyRepository.interpretation(completed) ??
+        await _savedReadingFor(completed.resultSignature!);
+    await auth.refreshOracleUsage();
+    if (!mounted || auth.currentUser.id != _userId) return;
+    await precacheImage(AssetImage(card.assetPath(TarotDeck.riderWaite)), context,
+        onError: (Object error, StackTrace? stack) {});
+    if (!mounted || auth.currentUser.id != _userId) return;
+    final reduced = GrimoireMotion.reduced(context);
+    setState(() {
+      _activeSpread = TarotSpread.daily;
+      _activeDailySignature = completed.resultSignature;
+      _question = completed.question;
+      _drawn = [TarotDrawnCard(card: card, isReversed: entry.reversed,
+          positionLabel: AppLocalizations.of(context).tarotDailyCard)];
+      _revealed = reduced || !committedResult.created;
+      _aiReading = saved;
+    });
+    if (committedResult.created) {
+      unawaited(context.read<DailyCheckinProvider>().completeRite(DailyRites.divination));
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted || _activeDailySignature != completed.resultSignature) return;
+        setState(() => _revealed = true);
+      });
+    }
+  }
+
+  Future<void> _startLegacySpread(TarotSpread spread) async {
     final question = _questionController.text.trim();
     // Sem pergunta não há tiragem: as cartas respondem a alguma coisa. O
     // toque no card é o que ensina a regra — o aviso vem com o foco no campo.
@@ -341,6 +416,8 @@ class _SpreadTabState extends State<_SpreadTab>
     // gasta a cota (mesmo contador do Oráculo) — no Free, a única do dia.
     // Premium não tem cota. Ver decidirTiragem.
     final authProvider = context.read<AuthProvider>();
+    await authProvider.refreshOracleUsage();
+    if (!mounted || authProvider.currentUser.id != _userId) return;
     final perguntaDoDia = await _perguntaDaCartaDeHoje();
     final registrada = await TarotReadingRepository().drawOfToday(
       userId: _userId,
@@ -400,8 +477,6 @@ class _SpreadTabState extends State<_SpreadTab>
     List<TarotDrawnCard> drawn;
     if (restaurada != null) {
       drawn = restaurada;
-    } else if (spread == TarotSpread.daily) {
-      drawn = [_dailyCard(question)];
     } else {
       final random = Random();
       final deck = List<TarotCard>.from(tarotCards)..shuffle(random);
@@ -435,6 +510,7 @@ class _SpreadTabState extends State<_SpreadTab>
         ));
     setState(() {
       _activeSpread = spread;
+      _activeDailySignature = null;
       _question = question;
       _drawn = drawn;
       _revealed = false;
@@ -594,7 +670,7 @@ class _SpreadTabState extends State<_SpreadTab>
             ),
             for (final spread in TarotSpread.values)
               InkWell(
-                onTap: () => _startSpread(spread),
+                onTap: _starting ? null : () => _startSpread(spread),
                 borderRadius: BorderRadius.circular(12),
                 child: MagicalCard(
                   child: Row(

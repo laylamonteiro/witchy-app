@@ -9,6 +9,7 @@ import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/loading_widget.dart';
 import '../../../../core/database/database_helper.dart';
+import '../../../../core/database/reading_session_schema.dart';
 import '../../../../core/config/supabase_config.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../auth/data/repositories/supabase_auth_repository.dart';
@@ -437,6 +438,8 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
 
         // Tabelas para limpar (exceto dados pré-carregados)
         final tables = [
+          ...ReadingSessionSchema.tables,
+          'tarot_readings',
           'spells',
           'dreams',
           'desires',
