@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -37,13 +38,14 @@ void main() {
     await DatabaseHelper.instance.database;
   });
 
-  Future<void> until(WidgetTester tester, bool Function() ready) async {
+  Future<void> until(WidgetTester tester, bool Function() ready,
+      {required String stage}) async {
     for (var i = 0; i < 150; i++) {
       await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 20)));
       await tester.pump(const Duration(milliseconds: 50));
       if (ready()) return;
     }
-    fail('The reading flow did not reach the expected state');
+    fail('The reading flow did not reach: $stage');
   }
 
   testWidgets('manual daily choice reveals and archives once, including reopening', (tester) async {
@@ -64,20 +66,39 @@ void main() {
     await tester.enterText(find.byType(TextField), 'A fixture question');
     await tester.ensureVisible(find.text(l10n.tarotDailyCard));
     await tester.tap(find.text(l10n.tarotDailyCard));
-    await until(tester, () => find.byType(DailyTarotSelectionPage).evaluate().isNotEmpty);
+    await until(tester, () => find.byType(DailyTarotSelectionPage).evaluate().isNotEmpty,
+        stage: 'selection route');
     await tester.pumpAndSettle();
     await tester.ensureVisible(find.byKey(const ValueKey('fan-select')));
     await tester.tap(find.byKey(const ValueKey('fan-select')));
-    await until(tester, () => find.byType(TarotCardView).evaluate().isNotEmpty);
+    await until(tester, () => find.byType(TarotCardView).evaluate().isNotEmpty,
+        stage: 'first revealed card');
     final selected = tester.widget<TarotCardView>(find.byType(TarotCardView)).card.id;
 
     Future<List<Map<String, Object?>>> rows(String table) async {
-      final db = await DatabaseHelper.instance.database;
-      return db.query(table);
+      List<Map<String, Object?>>? result;
+      Object? error;
+      StackTrace? stack;
+      // Keep the read in the same fake-async zone as the UI transaction.
+      // Awaiting it inside runAsync can wait on a SQLite lock whose owner
+      // needs the next pump to release it. Pump both clocks until it finishes.
+      unawaited(() async {
+        try {
+          final db = await DatabaseHelper.instance.database;
+          result = await db.query(table);
+        } catch (e, trace) {
+          error = e;
+          stack = trace;
+        }
+      }());
+      await until(tester, () => result != null || error != null,
+          stage: 'SQLite snapshot of $table');
+      if (error != null) Error.throwWithStackTrace(error!, stack!);
+      return result!;
     }
 
-    final draws = (await tester.runAsync(() => rows('tarot_readings')))!;
-    final archive = (await tester.runAsync(() => rows('free_writings')))!;
+    final draws = await rows('tarot_readings');
+    final archive = await rows('free_writings');
     expect(draws, hasLength(1));
     expect(archive, hasLength(1));
     expect(archive.single['id'], draws.single['id']);
@@ -89,11 +110,12 @@ void main() {
     await tester.pumpAndSettle();
     await tester.ensureVisible(find.text(l10n.tarotDailyCard));
     await tester.tap(find.text(l10n.tarotDailyCard));
-    await until(tester, () => find.byType(TarotCardView).evaluate().isNotEmpty);
+    await until(tester, () => find.byType(TarotCardView).evaluate().isNotEmpty,
+        stage: 'reopened card');
     expect(find.byType(DailyTarotSelectionPage), findsNothing);
     expect(tester.widget<TarotCardView>(find.byType(TarotCardView)).card.id, selected);
-    expect((await tester.runAsync(() => rows('tarot_readings')))!, hasLength(1));
-    expect((await tester.runAsync(() => rows('free_writings')))!, hasLength(1));
+    expect(await rows('tarot_readings'), hasLength(1));
+    expect(await rows('free_writings'), hasLength(1));
     expect(tester.takeException(), isNull);
-  });
+  }, timeout: const Timeout(Duration(minutes: 1)));
 }
