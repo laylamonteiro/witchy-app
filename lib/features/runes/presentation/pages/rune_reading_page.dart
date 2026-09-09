@@ -13,7 +13,7 @@ import '../../../../core/theme/grimoire_motion.dart';
 import '../../data/models/rune_spread_model.dart';
 import '../../../diary/data/models/free_writing_model.dart';
 import '../../../diary/data/services/reading_archive_composer.dart';
-import '../../../diary/presentation/widgets/save_to_records_button.dart';
+import '../../../diary/data/services/reading_archive_recorder.dart';
 import '../../data/data_sources/runes_data.dart';
 import '../../data/repositories/rune_reading_repository.dart';
 import 'rune_detail_page.dart';
@@ -36,6 +36,9 @@ class _RuneReadingPageState extends State<RuneReadingPage>
     with SingleTickerProviderStateMixin {
   final _questionController = TextEditingController();
   final _repository = RuneReadingRepository();
+
+  /// Escreve a leitura em "Meus Registros" assim que ela sai.
+  final _archive = ReadingArchiveRecorder();
 
   RuneSpreadType _selectedSpread = RuneSpreadType.single;
   List<RunePosition>? _drawnRunes;
@@ -154,7 +157,8 @@ class _RuneReadingPageState extends State<RuneReadingPage>
     }
   }
 
-  /// Última leitura salva — alimenta o botão "Salvar nos Registros".
+  /// Última leitura — o que o Conselheiro lê e o que já virou página do
+  /// acervo.
   RuneReading? _lastReading;
 
   /// Interpretação do Conselheiro Místico (Premium), como no Tarot.
@@ -172,9 +176,15 @@ class _RuneReadingPageState extends State<RuneReadingPage>
       date: DateTime.now(),
     );
 
-    await _repository.saveReading(
-      reading,
-      context.read<AuthProvider>().currentUser.id,
+    final userId = context.read<AuthProvider>().currentUser.id;
+    await _repository.saveReading(reading, userId);
+    // A tiragem já nasce como página do acervo: não há botão de guardar
+    // porque não há nada a decidir — o que ela tirou é registro dela.
+    await _archive.record(
+      readingId: reading.id,
+      userId: userId,
+      source: FreeWritingSource.runes,
+      page: ReadingArchiveComposer.runes(reading),
     );
     if (mounted) setState(() => _lastReading = reading);
   }
@@ -207,6 +217,17 @@ class _RuneReadingPageState extends State<RuneReadingPage>
       );
       if (!mounted) return;
       setState(() => _aiReading = interpretation);
+      // Mesmo id da leitura: reescreve a página que já está no acervo, com
+      // o conselho junto — nunca cria uma segunda.
+      await _archive.record(
+        readingId: reading.id,
+        userId: context.read<AuthProvider>().currentUser.id,
+        source: FreeWritingSource.runes,
+        page: ReadingArchiveComposer.runes(
+          reading,
+          interpretation: interpretation,
+        ),
+      );
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -396,27 +417,7 @@ class _RuneReadingPageState extends State<RuneReadingPage>
             // Resultado
             if (_drawnRunes != null) ...[
               _buildReadingResult(_drawnRunes!),
-              if (_lastReading != null) ...[
-                _buildCounselorCard(),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-                  child: SaveToRecordsButton(
-                    key: ValueKey('save_${_lastReading!.id}'),
-                    buildEntry: () {
-                      final page = ReadingArchiveComposer.runes(
-                        _lastReading!,
-                        interpretation: _aiReading,
-                      );
-                      return FreeWritingModel(
-                        userId: context.read<AuthProvider>().currentUser.id,
-                        title: page.title,
-                        content: page.content,
-                        source: FreeWritingSource.runes,
-                      );
-                    },
-                  ),
-                ),
-              ],
+              if (_lastReading != null) _buildCounselorCard(),
               const SizedBox(height: 16),
               OutlinedButton.icon(
                 onPressed: () {

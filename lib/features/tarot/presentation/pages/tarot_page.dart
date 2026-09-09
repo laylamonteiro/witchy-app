@@ -19,7 +19,7 @@ import '../../data/models/tarot_card_model.dart';
 import '../../data/repositories/tarot_reading_repository.dart';
 import '../../../diary/data/models/free_writing_model.dart';
 import '../../../diary/data/services/reading_archive_composer.dart';
-import '../../../diary/presentation/widgets/save_to_records_button.dart';
+import '../../../diary/data/services/reading_archive_recorder.dart';
 import '../widgets/tarot_card_view.dart';
 import 'tarot_learn_tab.dart';
 import '../../../../core/services/ad_service.dart';
@@ -441,19 +441,25 @@ class _SpreadTabState extends State<_SpreadTab>
       _aiReading = null;
     });
 
+    // O rótulo da mesa é lido AGORA, antes de qualquer await: o registro
+    // roda solto e o context pode não existir mais quando ele chegar.
+    final spreadLabel = spread.displayName(AppLocalizations.of(context));
+
     // Se estas MESMAS cartas já têm uma interpretação salva, restaura — assim
     // o usuário não fica regerando a resposta (ex.: a carta do dia).
     final saved = await _savedReadingFor(_signature(spread, drawn));
 
     // A mesa revelada é registro da jornada (como cada consulta de runas já
-    // era) — é daqui que a Leitura do Ciclo enxerga o tarô do período.
-    // Idempotente por assinatura: reabrir a carta do dia não duplica.
-    unawaited(TarotReadingRepository().recordDraw(
-      userId: _userId,
-      spreadName: spread.name,
-      signature: _signature(spread, drawn),
+    // era) — é daqui que a Leitura do Ciclo enxerga o tarô do período — e já
+    // vira página de "Meus Registros". A interpretação restaurada vai junto:
+    // sem ela, reabrir a carta do dia reescreveria a página SEM o conselho
+    // que ela já tinha.
+    unawaited(_registrarMesa(
+      spread: spread,
+      spreadLabel: spreadLabel,
       drawn: drawn,
       question: question,
+      interpretation: saved,
     ));
 
     // Pequena pausa de "embaralhamento" antes de revelar.
@@ -484,6 +490,55 @@ class _SpreadTabState extends State<_SpreadTab>
     return summary.toString();
   }
 
+  /// Registra a mesa revelada e escreve a sua página em "Meus Registros".
+  ///
+  /// Uma chamada só para as duas coisas porque as duas dependem do mesmo id:
+  /// `recordDraw` é idempotente por assinatura e devolve SEMPRE o mesmo id
+  /// para as mesmas cartas, e é ele que nomeia a entrada do acervo. Assim
+  /// reabrir a carta do dia não cria uma segunda página, e o Conselheiro que
+  /// chega depois reescreve a que já existe.
+  ///
+  /// Roda solta (`unawaited`) e por isso engole a própria falha: a mesa já
+  /// está na tela, e um erro de banco aqui não pode virar exceção sem dono.
+  Future<void> _registrarMesa({
+    required TarotSpread spread,
+    required String spreadLabel,
+    required List<TarotDrawnCard> drawn,
+    required String question,
+    String? interpretation,
+  }) async {
+    try {
+      final signature = _signature(spread, drawn);
+      final id = await TarotReadingRepository().recordDraw(
+        userId: _userId,
+        spreadName: spread.name,
+        signature: signature,
+        drawn: drawn,
+        question: question,
+      );
+      if (interpretation != null && interpretation.trim().isNotEmpty) {
+        await TarotReadingRepository().attachInterpretation(
+          userId: _userId,
+          signature: signature,
+          interpretation: interpretation,
+        );
+      }
+      await ReadingArchiveRecorder().record(
+        readingId: id,
+        userId: _userId,
+        source: FreeWritingSource.tarot,
+        page: ReadingArchiveComposer.tarot(
+          spreadName: spreadLabel,
+          question: question,
+          drawn: drawn,
+          interpretation: interpretation,
+        ),
+      );
+    } catch (e) {
+      debugPrint('tarot: falhou ao registrar a mesa: $e');
+    }
+  }
+
   Future<void> _askCounselor() async {
     if (_drawn.isEmpty || _isReadingAI) return;
 
@@ -498,13 +553,17 @@ class _SpreadTabState extends State<_SpreadTab>
         question: _question.isEmpty ? null : _question,
       );
       if (!mounted) return;
+      final spreadLabel = _activeSpread!.displayName(AppLocalizations.of(context));
       setState(() => _aiReading = reading);
       // Guarda a interpretação atrelada a estas cartas para não regerar.
       await _persistReading(_signature(_activeSpread!, _drawn), reading);
-      // E anexa ao registro da tiragem — a Leitura do Ciclo cita a resposta.
-      unawaited(TarotReadingRepository().attachInterpretation(
-        userId: _userId,
-        signature: _signature(_activeSpread!, _drawn),
+      // E reescreve o registro da tiragem e a sua página no acervo com o
+      // conselho junto — a Leitura do Ciclo cita a resposta.
+      unawaited(_registrarMesa(
+        spread: _activeSpread!,
+        spreadLabel: spreadLabel,
+        drawn: _drawn,
+        question: _question,
         interpretation: reading,
       ));
     } catch (e) {
@@ -796,29 +855,6 @@ class _SpreadTabState extends State<_SpreadTab>
                       ),
                     ],
                   ],
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
-                child: SaveToRecordsButton(
-                  // Uma chave por tiragem: o botão renasce a cada cartas
-                  // novas (a assinatura muda), mas não ao interpretar.
-                  key: ValueKey('save_${_signature(_activeSpread!, _drawn)}'),
-                  buildEntry: () {
-                    final page = ReadingArchiveComposer.tarot(
-                      spreadName: _activeSpread!
-                          .displayName(AppLocalizations.of(context)),
-                      question: _question,
-                      drawn: _drawn,
-                      interpretation: _aiReading,
-                    );
-                    return FreeWritingModel(
-                      userId: _userId,
-                      title: page.title,
-                      content: page.content,
-                      source: FreeWritingSource.tarot,
-                    );
-                  },
                 ),
               ),
             ],

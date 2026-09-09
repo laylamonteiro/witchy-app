@@ -100,6 +100,9 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
 
+    // O card da pergunta vive abaixo do pêndulo: rolar até ele antes de tocar.
+    await tester.ensureVisible(find.byType(TextField));
+    await tester.pump();
     await tester.tap(find.byType(TextField));
     await tester.pump();
     expect(campoFocado(tester), isTrue);

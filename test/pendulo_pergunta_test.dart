@@ -132,6 +132,10 @@ void main() {
       findsOneWidget,
     );
 
+    // O card da pergunta agora fica ABAIXO do pêndulo, fora da dobra do palco
+    // de teste: sem rolar até ele, o toque erra o alvo e o Flutter só avisa.
+    await tester.ensureVisible(find.byType(TextField));
+    await tester.pump();
     await tester.tap(find.byType(TextField));
     await tester.pump();
     expect(campoFocado(tester), isTrue);
@@ -141,33 +145,64 @@ void main() {
     await tester.enterText(find.byType(TextField), 'Vou viajar em breve?');
     await tester.pump();
 
+    await tester.ensureVisible(find.text(l10n.pendulumAsk));
+    await tester.pump();
     await tester.tap(find.text(l10n.pendulumAsk));
     await tester.pump();
     expect(find.text(l10n.pendulumAsking), findsOneWidget);
     expect(auth.consultasReservadas, 1);
 
-    // ~3 s de balanço + assentamento: o foco e o texto não podem cair.
+    // ~3 s de balanço + assentamento. ENQUANTO NÃO HÁ RESPOSTA, o foco e o
+    // texto não podem cair — é o bug do teclado que a rodada 1 corrigiu.
+    // Depois que a resposta entra, o campo trava de propósito, e o foco ir
+    // embora é o fim natural da consulta: aí só o texto continua valendo.
     for (var i = 0; i < 7; i++) {
       await tester.pump(const Duration(milliseconds: 500));
+      expect(find.text('Vou viajar em breve?'), findsOneWidget);
+      final respondeu =
+          find.text(l10n.pendulumNewConsult).evaluate().isNotEmpty;
+      if (respondeu) continue;
       expect(campoFocado(tester), isTrue, reason: 'foco caiu no quadro $i');
       expect(tester.testTextInput.hasAnyClients, isTrue,
           reason: 'teclado fechou no quadro $i');
-      expect(find.text('Vou viajar em breve?'), findsOneWidget);
     }
 
-    // A resposta chegou e o campo continua editável e focado.
+    // A resposta chegou: agora o campo e o botão TRAVAM — a consulta acabou,
+    // e a próxima começa no "Nova consulta". (Durante o balanço, acima, eles
+    // continuam vivos: é o que impede o teclado de fechar no meio.)
     expect(find.text(l10n.pendulumNewConsult), findsOneWidget);
     expect(find.text(l10n.pendulumAsk), findsOneWidget);
-    expect(tester.widget<TextField>(find.byType(TextField)).enabled,
-        isNot(false));
-    expect(campoFocado(tester), isTrue);
+    expect(tester.widget<TextField>(find.byType(TextField)).enabled, isFalse);
+    expect(campoFocado(tester), isFalse,
+        reason: 'campo travado não fica com o foco preso');
+    expect(
+      tester
+          .widget<ElevatedButton>(find.ancestor(
+            of: find.text(l10n.pendulumAsk),
+            matching: find.byType(ElevatedButton),
+          ))
+          .onPressed,
+      isNull,
+      reason: 'com a resposta na tela não há nova consulta a começar daqui',
+    );
 
-    // Editar a pergunta depois da resposta recomeça a consulta.
-    await tester.enterText(find.byType(TextField), 'E no mês que vem?');
+    // "Nova consulta" devolve o campo vazio e habilitado, e o botão ativo.
+    await tester.ensureVisible(find.text(l10n.pendulumNewConsult));
+    await tester.pump();
+    await tester.tap(find.text(l10n.pendulumNewConsult));
     await tester.pump();
     expect(find.text(l10n.pendulumNewConsult), findsNothing);
-    expect(find.text(l10n.pendulumAsk), findsOneWidget);
-    expect(campoFocado(tester), isTrue);
+    expect(tester.widget<TextField>(find.byType(TextField)).enabled, isTrue);
+    expect(find.text('Vou viajar em breve?'), findsNothing);
+    expect(
+      tester
+          .widget<ElevatedButton>(find.ancestor(
+            of: find.text(l10n.pendulumAsk),
+            matching: find.byType(ElevatedButton),
+          ))
+          .onPressed,
+      isNotNull,
+    );
 
     await deixarAGravacaoTerminar(tester);
     await tester.pump(const Duration(seconds: 3));
@@ -183,6 +218,8 @@ void main() {
     await tester.enterText(find.byType(TextField), 'Devo aceitar?');
     await tester.pump();
 
+    await tester.ensureVisible(find.text(l10n.pendulumAsk));
+    await tester.pump();
     await tester.tap(find.text(l10n.pendulumAsk));
     await tester.tap(find.text(l10n.pendulumAsk), warnIfMissed: false);
     await tester.pump();
@@ -202,6 +239,8 @@ void main() {
     final l10n = l10nDe(tester);
 
     await tester.enterText(find.byType(TextField), 'Vai dar certo?');
+    await tester.pump();
+    await tester.ensureVisible(find.text(l10n.pendulumAsk));
     await tester.pump();
     await tester.tap(find.text(l10n.pendulumAsk));
     // 2350 ms de balanço já passaram; o assentamento (650 ms) está em curso.

@@ -5,7 +5,7 @@ import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:uuid/uuid.dart';
 import '../../../diary/data/models/free_writing_model.dart';
 import '../../../diary/data/services/reading_archive_composer.dart';
-import '../../../diary/presentation/widgets/save_to_records_button.dart';
+import '../../../diary/data/services/reading_archive_recorder.dart';
 import '../../../../core/ai/ai_service.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/widgets/magical_card.dart';
@@ -35,8 +35,12 @@ class _OracleCardsPageState extends State<OracleCardsPage>
   OracleSpreadType _selectedSpread = OracleSpreadType.daily;
   List<OracleCardPosition>? _drawnCards;
 
-  /// Última tiragem salva — alimenta o botão "Salvar nos Registros".
+  /// Última tiragem — o que o Conselheiro lê e o que já virou página do
+  /// acervo.
   OracleReading? _lastReading;
+
+  /// Escreve a tiragem em "Meus Registros" assim que ela sai.
+  final _archive = ReadingArchiveRecorder();
 
   /// Interpretação do Conselheiro Místico (Premium), como no Tarot.
   String? _aiReading;
@@ -179,6 +183,14 @@ class _OracleCardsPageState extends State<OracleCardsPage>
       data,
     );
     await DataSyncService().syncItem(SyncEntity.oracleReadings, data);
+    // A tiragem já nasce como página do acervo: não há botão de guardar
+    // porque não há nada a decidir — o que ela tirou é registro dela.
+    await _archive.record(
+      readingId: reading.id,
+      userId: data['user_id'] as String,
+      source: FreeWritingSource.oracle,
+      page: ReadingArchiveComposer.oracle(reading),
+    );
     if (mounted) setState(() => _lastReading = reading);
   }
 
@@ -282,31 +294,7 @@ class _OracleCardsPageState extends State<OracleCardsPage>
               _buildReadingResult(_drawnCards!),
               const SizedBox(height: 16),
               if (_lastReading != null) ...[
-                _EntradaSuave(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      _buildCounselorCard(),
-                      const SizedBox(height: 8),
-                      SaveToRecordsButton(
-                        key: ValueKey('save_${_lastReading!.id}'),
-                        buildEntry: () {
-                          final page = ReadingArchiveComposer.oracle(
-                            _lastReading!,
-                            interpretation: _aiReading,
-                          );
-                          return FreeWritingModel(
-                            userId:
-                                context.read<AuthProvider>().currentUser.id,
-                            title: page.title,
-                            content: page.content,
-                            source: FreeWritingSource.oracle,
-                          );
-                        },
-                      ),
-                    ],
-                  ),
-                ),
+                _EntradaSuave(child: _buildCounselorCard()),
                 const SizedBox(height: 8),
               ],
               OutlinedButton.icon(
@@ -423,6 +411,17 @@ class _OracleCardsPageState extends State<OracleCardsPage>
       );
       if (!mounted) return;
       setState(() => _aiReading = interpretation);
+      // Mesmo id da leitura: reescreve a página que já está no acervo, com
+      // o conselho junto — nunca cria uma segunda.
+      await _archive.record(
+        readingId: reading.id,
+        userId: context.read<AuthProvider>().currentUser.id,
+        source: FreeWritingSource.oracle,
+        page: ReadingArchiveComposer.oracle(
+          reading,
+          interpretation: interpretation,
+        ),
+      );
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
