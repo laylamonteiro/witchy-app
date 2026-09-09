@@ -92,17 +92,20 @@ void main() {
 
   testWidgets('reduced motion, large text and disabled state keep usable semantics', (tester) async {
     final semantics = tester.ensureSemantics();
-    addTearDown(semantics.dispose);
-    await show(tester, reduced: true, scale: 2);
-    expect(tester.takeException(), isNull);
-    expect(find.bySemanticsLabel('Choose your card'), findsOneWidget);
-    await tester.ensureVisible(find.byKey(const ValueKey('fan-select')));
-    await tester.pumpAndSettle();
-    expect(find.byKey(const ValueKey('fan-select')).hitTestable(), findsOneWidget);
-    await tester.tap(find.byKey(const ValueKey('fan-select')));
-    expect(selected, ['card-39']);
-    await show(tester, reduced: true, enabled: false);
-    final button = tester.widget<FilledButton>(find.byKey(const ValueKey('fan-select')));
-    expect(button.onPressed, isNull);
+    try {
+      await show(tester, reduced: true, scale: 2);
+      expect(tester.takeException(), isNull);
+      expect(find.bySemanticsLabel('Choose your card'), findsOneWidget);
+      await tester.ensureVisible(find.byKey(const ValueKey('fan-select')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('fan-select')).hitTestable(), findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey('fan-select')));
+      expect(selected, ['card-39']);
+      await show(tester, reduced: true, enabled: false);
+      final button = tester.widget<FilledButton>(find.byKey(const ValueKey('fan-select')));
+      expect(button.onPressed, isNull);
+    } finally {
+      semantics.dispose();
+    }
   });
 }

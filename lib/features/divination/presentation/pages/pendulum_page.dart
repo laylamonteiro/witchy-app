@@ -10,7 +10,7 @@ import 'package:sensors_plus/sensors_plus.dart';
 import 'package:uuid/uuid.dart';
 import '../../../diary/data/models/free_writing_model.dart';
 import '../../../diary/data/services/reading_archive_composer.dart';
-import '../../../diary/presentation/widgets/save_to_records_button.dart';
+import '../../../diary/data/services/reading_archive_recorder.dart';
 import 'dart:math';
 import '../../../../core/widgets/magical_button.dart';
 import '../../../../core/widgets/magical_card.dart';
@@ -62,6 +62,13 @@ class _PendulumPageState extends State<PendulumPage>
   /// fechou) em vez de cada quadro da animação.
   double _tecladoAnterior = 0;
 
+  /// O botão fica apagado enquanto o pêndulo balança E depois que ele
+  /// respondeu: nos dois casos não há nova consulta a começar dali.
+  bool get _consultaTravada => _isSwinging || _answer != null;
+
+  /// Onde o card do cristal está, para a tela poder rolar até ele.
+  final _chaveDoPendulo = GlobalKey();
+
   /// Tudo o que move o cristal, num Listenable só. Criado UMA vez: dentro do
   /// `builder` ele nascia a cada quadro, e o AnimatedBuilder desassinava e
   /// reassinava os cinco a cada vez.
@@ -106,8 +113,8 @@ class _PendulumPageState extends State<PendulumPage>
     }
   }
 
-  /// Última consulta salva — alimenta o botão "Salvar nos Registros".
-  PendulumConsultation? _lastConsultation;
+  /// Escreve a consulta em "Meus Registros" assim que a resposta assenta.
+  final _archive = ReadingArchiveRecorder();
 
   /// A pergunta da consulta em curso, congelada no toque em "Perguntar". O
   /// campo continua editável durante o balanço, então o que se salva é o que
@@ -367,6 +374,19 @@ class _PendulumPageState extends State<PendulumPage>
       _targetAngle = 0;
       _perguntaConsultada = pergunta;
     });
+    // A pergunta está abaixo do cristal: traz o cristal para a vista, senão a
+    // pessoa consulta e não vê o pêndulo balançar. SEM desfocar o campo — o
+    // teclado fechar sozinho no meio da consulta é o defeito que a rodada 1
+    // corrigiu, e um teste o tranca.
+    final ondeEstaOPendulo = _chaveDoPendulo.currentContext;
+    if (ondeEstaOPendulo != null) {
+      unawaited(Scrollable.ensureVisible(
+        ondeEstaOPendulo,
+        duration: const Duration(milliseconds: 350),
+        curve: Curves.easeOut,
+        alignment: 0.1,
+      ));
+    }
     // Quem pergunta está na pose de consulta: ela vira o centro do pêndulo
     // (deitada de lado, sentada, com o celular na mesa — tanto faz).
     _pose.recalibrar();
@@ -464,16 +484,17 @@ class _PendulumPageState extends State<PendulumPage>
         context.read<DailyCheckinProvider>().completeRite(DailyRites.pendulum));
   }
 
-  /// Volta a tela ao estado de "pergunte": a resposta some e o cristal volta
-  /// ao repouso (reto), pronto para a próxima pergunta. Chamado pelo botão
-  /// "Nova consulta" (que também limpa a pergunta) e por quem edita a
-  /// pergunta depois de uma resposta.
-  void _reiniciarConsulta({required bool limparPergunta}) {
+  /// Volta a tela ao estado de "pergunte": a resposta some, a pergunta é
+  /// apagada e o cristal volta ao repouso (reto), pronto para a próxima.
+  ///
+  /// É o ÚNICO caminho de volta desde que o campo passou a travar com a
+  /// resposta na tela — quem chama é o botão "Nova consulta".
+  void _reiniciarConsulta() {
     setState(() {
       _answer = null;
       _pendingAnswer = null;
       _perguntaConsultada = '';
-      if (limparPergunta) _questionController.clear();
+      _questionController.clear();
       _targetAngle = 0;
       _settleController.value = 0;
     });
@@ -520,7 +541,19 @@ class _PendulumPageState extends State<PendulumPage>
       data,
     );
     await DataSyncService().syncItem(SyncEntity.pendulumConsultations, data);
-    if (mounted) setState(() => _lastConsultation = consultation);
+    // A consulta já nasce como página do acervo: não há botão de guardar
+    // porque não há nada a decidir — o que ela perguntou é registro dela.
+    // (userId lido lá em cima, antes do await: aqui a tela pode já ter ido.)
+    await _archive.record(
+      readingId: consultation.id,
+      userId: userId,
+      source: FreeWritingSource.pendulum,
+      page: ReadingArchiveComposer.pendulum(consultation),
+    );
+
+    // Sem setState no fim: a consulta guardada não é lida por nada na tela.
+    // Quem desenhava a partir dela era o botão "Salvar nos Registros", e o
+    // que a resposta precisa mostrar já veio do setState do `_showAnswer`.
 
     // Contador já foi incrementado em _askPendulum() antes da animação
     // para prevenir múltiplas consultas simultâneas
@@ -629,115 +662,20 @@ class _PendulumPageState extends State<PendulumPage>
 
             const SizedBox(height: 16),
 
-            // Pergunta + Perguntar no MESMO card (como o CTA do card de
-            // Leitura do Ciclo), antes do pêndulo: a pessoa se concentra,
-            // pergunta e só então o cristal balança abaixo e responde.
-            MagicalCard(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  TextField(
-                    // Chave e nó de foco próprios: se a árvore for
-                    // reconstruída com forma diferente, é a chave que faz o
-                    // Flutter reaproveitar ESTE campo em vez de inflar outro.
-                    key: const ValueKey('campo-da-pergunta-do-pendulo'),
-                    controller: _questionController,
-                    focusNode: _focoDaPergunta,
-                    // SEMPRE editável. Desabilitar o campo durante a consulta
-                    // derrubava o foco: o teclado fechava sozinho enquanto o
-                    // pêndulo balançava e, com a resposta na tela, tocar no
-                    // campo não abria mais nada. A pergunta consultada já está
-                    // congelada em _perguntaConsultada.
-                    style: TextStyle(color: context.gc.softWhite),
-                    decoration: InputDecoration(
-                      labelText:
-                          AppLocalizations.of(context).pendulumYourQuestion,
-                      labelStyle: TextStyle(color: context.gc.lilac),
-                      hintText:
-                          AppLocalizations.of(context).pendulumQuestionHint,
-                      hintStyle: TextStyle(
-                        color: context.gc.softWhite.withValues(alpha: 0.5),
-                      ),
-                      prefixIcon: Icon(Icons.help, color: context.gc.lilac),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: context.gc.lilac),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(
-                          color: context.gc.lilac.withValues(alpha: 0.3),
-                        ),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: context.gc.lilac),
-                      ),
-                    ),
-                    maxLines: 2,
-                    onChanged: (_) {
-                      // Mexer na pergunta depois da resposta é começar outra
-                      // consulta: o card de resposta sai e o cristal volta ao
-                      // repouso. Sem setState por tecla fora desse caso.
-                      if (_answer != null && !_isSwinging) {
-                        _reiniciarConsulta(limparPergunta: false);
-                      }
-                    },
-                  ),
-                  const SizedBox(height: 14),
-                  SizedBox(
-                    width: double.infinity,
-                    // Mesmo traje do CTA da Leitura do Ciclo (ver
-                    // MagicalButton.ctaDecoration): o gradiente fica no
-                    // DecoratedBox porque ElevatedButton não aceita gradiente,
-                    // e o botão vai transparente por cima. Enquanto consulta,
-                    // esmaece — e o rótulo diz o que está acontecendo.
-                    child: Opacity(
-                      opacity: _isSwinging ? 0.55 : 1,
-                      child: DecoratedBox(
-                        decoration: MagicalButton.ctaDecoration(context),
-                        child: ElevatedButton.icon(
-                          onPressed: _isSwinging ? null : _askPendulum,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.transparent,
-                            shadowColor: Colors.transparent,
-                            foregroundColor: context.gc.onPrimary,
-                            disabledBackgroundColor: Colors.transparent,
-                            disabledForegroundColor: context.gc.onPrimary,
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                          ),
-                          icon: _isSwinging
-                              ? SizedBox(
-                                  width: 18,
-                                  height: 18,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    valueColor: AlwaysStoppedAnimation<Color>(
-                                      context.gc.onPrimary,
-                                    ),
-                                  ),
-                                )
-                              : const Icon(Icons.help_outline, size: 18),
-                          label: Text(_isSwinging
-                              ? AppLocalizations.of(context).pendulumAsking
-                              : AppLocalizations.of(context).pendulumAsk),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 16),
-
             // Visualização do pêndulo
+            //
+            // A chave serve para a tela rolar até aqui quando a consulta
+            // começa: com a pergunta ABAIXO do cristal, o toque em "Perguntar"
+            // acontece com a página rolada para o campo (e, no celular, com o
+            // teclado aberto) — sem isto, o balanço inteiro aconteceria fora
+            // da vista.
             //
             // RepaintBoundary: no aparelho, a mola do sensor publica um ângulo
             // novo a cada quadro e o pintor redesenha. Sem esta fronteira o
             // `markNeedsPaint` subia até a rota e a PÁGINA INTEIRA era
             // repintada 60×/s — inclusive o texto que a pessoa está digitando.
             MagicalCard(
+              key: _chaveDoPendulo,
               child: RepaintBoundary(
                 child: SizedBox(
                   height: 300,
@@ -875,6 +813,114 @@ class _PendulumPageState extends State<PendulumPage>
 
             const SizedBox(height: 16),
 
+            // Pergunta + Perguntar no MESMO card (como o CTA do card de
+            // Leitura do Ciclo), LOGO ABAIXO do pêndulo: o cristal é o que
+            // esta tela tem de maior, então ele fica no alto e a pergunta vem
+            // em seguida — o olho vai do pêndulo para a pergunta e daí para a
+            // resposta, que entra embaixo.
+            MagicalCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  TextField(
+                    // Chave e nó de foco próprios: se a árvore for
+                    // reconstruída com forma diferente, é a chave que faz o
+                    // Flutter reaproveitar ESTE campo em vez de inflar outro.
+                    key: const ValueKey('campo-da-pergunta-do-pendulo'),
+                    controller: _questionController,
+                    focusNode: _focoDaPergunta,
+                    // Editável até a resposta chegar — inclusive DURANTE o
+                    // balanço, e isso não é detalhe: desabilitar o campo com o
+                    // pêndulo balançando derrubava o foco e fechava o teclado
+                    // (o defeito da rodada 1, trancado por teste). Com a
+                    // resposta na tela a consulta acabou: o campo trava, e
+                    // quem recomeça é o "Nova consulta", que limpa a pergunta.
+                    enabled: _answer == null,
+                    style: TextStyle(color: context.gc.softWhite),
+                    decoration: InputDecoration(
+                      labelText:
+                          AppLocalizations.of(context).pendulumYourQuestion,
+                      labelStyle: TextStyle(color: context.gc.lilac),
+                      hintText:
+                          AppLocalizations.of(context).pendulumQuestionHint,
+                      hintStyle: TextStyle(
+                        color: context.gc.softWhite.withValues(alpha: 0.5),
+                      ),
+                      prefixIcon: Icon(Icons.help, color: context.gc.lilac),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: context.gc.lilac),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(
+                          color: context.gc.lilac.withValues(alpha: 0.3),
+                        ),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: context.gc.lilac),
+                      ),
+                      // Sem esta, o campo travado perdia a borda e a pergunta
+                      // respondida ficava solta no meio do card.
+                      disabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(
+                          color: context.gc.lilac.withValues(alpha: 0.2),
+                        ),
+                      ),
+                    ),
+                    maxLines: 2,
+                  ),
+                  const SizedBox(height: 14),
+                  SizedBox(
+                    width: double.infinity,
+                    // Mesmo traje do CTA da Leitura do Ciclo (ver
+                    // MagicalButton.ctaDecoration): o gradiente fica no
+                    // DecoratedBox porque ElevatedButton não aceita gradiente,
+                    // e o botão vai transparente por cima. Enquanto consulta,
+                    // esmaece — e o rótulo diz o que está acontecendo. Com a
+                    // resposta na tela ele também fica apagado: a consulta
+                    // terminou, e a próxima começa no "Nova consulta".
+                    child: Opacity(
+                      opacity: _consultaTravada ? 0.55 : 1,
+                      child: DecoratedBox(
+                        decoration: MagicalButton.ctaDecoration(context),
+                        child: ElevatedButton.icon(
+                          onPressed: _consultaTravada ? null : _askPendulum,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.transparent,
+                            shadowColor: Colors.transparent,
+                            foregroundColor: context.gc.onPrimary,
+                            disabledBackgroundColor: Colors.transparent,
+                            disabledForegroundColor: context.gc.onPrimary,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                          ),
+                          icon: _isSwinging
+                              ? SizedBox(
+                                  width: 18,
+                                  height: 18,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                      context.gc.onPrimary,
+                                    ),
+                                  ),
+                                )
+                              : const Icon(Icons.help_outline, size: 18),
+                          label: Text(_isSwinging
+                              ? AppLocalizations.of(context).pendulumAsking
+                              : AppLocalizations.of(context).pendulumAsk),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 16),
+
             if (_answer != null)
               // A interpretação entra depois que o pêndulo assentou: fade +
               // subida curta, junto do destaque da resposta no painter.
@@ -911,25 +957,8 @@ class _PendulumPageState extends State<PendulumPage>
                       ),
                     ),
                     const SizedBox(height: 16),
-                    if (_lastConsultation != null) ...[
-                      SaveToRecordsButton(
-                        key: ValueKey('save_${_lastConsultation!.id}'),
-                        buildEntry: () {
-                          final page =
-                              ReadingArchiveComposer.pendulum(_lastConsultation!);
-                          return FreeWritingModel(
-                            userId: context.read<AuthProvider>().currentUser.id,
-                            title: page.title,
-                            content: page.content,
-                            source: FreeWritingSource.pendulum,
-                          );
-                        },
-                      ),
-                      const SizedBox(height: 8),
-                    ],
                     OutlinedButton.icon(
-                      onPressed: () =>
-                          _reiniciarConsulta(limparPergunta: true),
+                      onPressed: _reiniciarConsulta,
                       icon: const Icon(Icons.refresh),
                       label: Text(AppLocalizations.of(context).pendulumNewConsult),
                       style: OutlinedButton.styleFrom(
@@ -954,8 +983,9 @@ class _PendulumPageState extends State<PendulumPage>
 ///
 /// A forma da árvore é SEMPRE a mesma (Opacity > Transform > filho): um
 /// atalho que devolvesse o filho puro no fim trocaria o tipo no slot e
-/// re-inflaria o subtree inteiro — o SaveToRecordsButton perderia o estado.
-/// Opacity em 1.0 e translação zero são curto-circuitados pelo render.
+/// re-inflaria o subtree inteiro, zerando o estado de quem estivesse ali
+/// dentro. Opacity em 1.0 e translação zero são curto-circuitados pelo
+/// render, então manter a forma não custa nada.
 class _RevealEntrance extends StatelessWidget {
   final Animation<double> animation;
   final Widget child;

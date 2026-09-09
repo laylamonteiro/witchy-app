@@ -4,6 +4,11 @@ Iniciada em 09/09/2026, a partir da `main` em
 `69dbc61c7d5d7a40c1dc5d1dc7aff6972ed2b880`.
 Especificação de produto: [plano completo](plano_implementacao_animacoes.md).
 
+Atualizada com a `main` em `2968ed8ca5290337baa10fa1e1c26b20c0348b7b`,
+incluindo o novo salvamento automático de leituras em Meus Registros. A carta
+do dia manual também cria/atualiza essa página, com o mesmo ID do resultado e
+o dia original da sessão; a cópia do acervo segue o gravador best-effort da main.
+
 ## Escopo desta branch
 
 Esta é a primeira fatia vertical de P03, com a infraestrutura mínima de
@@ -62,6 +67,8 @@ próximas fatias.
 - `daily_tarot_migration_test.dart`: banco real v23 preserva registros ao migrar.
 - `daily_tarot_selection_page_test.dart`: toque duplo, bloqueio de voltar
   durante a gravação, retorno após sucesso, retry e troca de conta na rota.
+- `daily_tarot_flow_test.dart`: fluxo completo na tela de Tarot, incluindo
+  escolha, revelação, cópia automática em Meus Registros e reabertura sem duplicar.
 - `card_selection_surface_test.dart`: toque, navegação horizontal sem sorteio,
   retirada/cancelamento, extremos por teclado, escolha travada, semântica,
   fonte ampliada e movimento reduzido.

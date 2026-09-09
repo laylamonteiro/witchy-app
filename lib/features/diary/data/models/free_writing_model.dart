@@ -20,6 +20,15 @@ abstract final class FreeWritingSource {
 
   /// Leituras de adivinhação (filtro "Leituras" do acervo).
   static const readings = {palmistry, runes, pendulum, oracle, tarot};
+
+  /// As leituras que a ferramenta JÁ registra sozinha, cada uma na sua
+  /// tabela de histórico (`rune_readings` e companhia).
+  ///
+  /// A página no acervo nasce com o MESMO id da consulta, então quem CONTA
+  /// registros precisa escolher um lado e ignorar o outro — contar os dois
+  /// somaria toda tiragem em dobro. A quiromancia fica de fora de propósito:
+  /// ela não tem tabela própria, o acervo é o único lugar onde ela existe.
+  static const autoRecorded = {runes, pendulum, oracle, tarot};
 }
 
 /// Uma entrada do acervo de escrita: reflexão livre (sem título) ou página

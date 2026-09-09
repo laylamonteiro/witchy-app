@@ -1,0 +1,99 @@
+import 'dart:io';
+
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:grimorio_de_bolso/core/database/database_helper.dart';
+import 'package:grimorio_de_bolso/features/auth/presentation/providers/auth_provider.dart';
+import 'package:grimorio_de_bolso/features/tarot/presentation/pages/daily_tarot_selection_page.dart';
+import 'package:grimorio_de_bolso/features/tarot/presentation/pages/tarot_page.dart';
+import 'package:grimorio_de_bolso/features/tarot/presentation/widgets/tarot_card_view.dart';
+import 'package:grimorio_de_bolso/features/your_day/presentation/providers/daily_checkin_provider.dart';
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
+import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+
+class _PremiumFixture extends AuthProvider {
+  @override
+  bool get isPremiumEffective => true;
+  @override
+  Future<void> refreshOracleUsage() async {}
+}
+
+class _CheckinFixture extends DailyCheckinProvider {
+  @override
+  Future<void> completeRite(String riteId) async {}
+}
+
+void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
+  setUpAll(() async {
+    SharedPreferences.setMockInitialValues({});
+    sqfliteFfiInit();
+    databaseFactory = databaseFactoryFfiNoIsolate;
+    final dir = await Directory.systemTemp.createTemp('daily_tarot_flow');
+    await databaseFactory.setDatabasesPath(dir.path);
+    await DatabaseHelper.instance.database;
+  });
+
+  Future<void> until(WidgetTester tester, bool Function() ready) async {
+    for (var i = 0; i < 150; i++) {
+      await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 20)));
+      await tester.pump(const Duration(milliseconds: 50));
+      if (ready()) return;
+    }
+    fail('The reading flow did not reach the expected state');
+  }
+
+  testWidgets('manual daily choice reveals and archives once, including reopening', (tester) async {
+    await tester.pumpWidget(MultiProvider(
+      providers: [
+        ChangeNotifierProvider<AuthProvider>(create: (_) => _PremiumFixture()),
+        ChangeNotifierProvider<DailyCheckinProvider>(create: (_) => _CheckinFixture()),
+      ],
+      child: MaterialApp(
+        locale: const Locale('en'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: const TarotPage(),
+      ),
+    ));
+    await tester.pumpAndSettle();
+    final l10n = AppLocalizations.of(tester.element(find.byType(TarotPage)));
+    await tester.enterText(find.byType(TextField), 'A fixture question');
+    await tester.ensureVisible(find.text(l10n.tarotDailyCard));
+    await tester.tap(find.text(l10n.tarotDailyCard));
+    await until(tester, () => find.byType(DailyTarotSelectionPage).evaluate().isNotEmpty);
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.byKey(const ValueKey('fan-select')));
+    await tester.tap(find.byKey(const ValueKey('fan-select')));
+    await until(tester, () => find.byType(TarotCardView).evaluate().isNotEmpty);
+    final selected = tester.widget<TarotCardView>(find.byType(TarotCardView)).card.id;
+
+    Future<List<Map<String, Object?>>> rows(String table) async {
+      final db = await DatabaseHelper.instance.database;
+      return db.query(table);
+    }
+
+    final draws = (await tester.runAsync(() => rows('tarot_readings')))!;
+    final archive = (await tester.runAsync(() => rows('free_writings')))!;
+    expect(draws, hasLength(1));
+    expect(archive, hasLength(1));
+    expect(archive.single['id'], draws.single['id']);
+    expect(archive.single['created_at'], draws.single['date']);
+    expect(archive.single['content'], contains('A fixture question'));
+
+    await tester.ensureVisible(find.text(l10n.tarotNewSpread));
+    await tester.tap(find.text(l10n.tarotNewSpread));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text(l10n.tarotDailyCard));
+    await tester.tap(find.text(l10n.tarotDailyCard));
+    await until(tester, () => find.byType(TarotCardView).evaluate().isNotEmpty);
+    expect(find.byType(DailyTarotSelectionPage), findsNothing);
+    expect(tester.widget<TarotCardView>(find.byType(TarotCardView)).card.id, selected);
+    expect((await tester.runAsync(() => rows('tarot_readings')))!, hasLength(1));
+    expect((await tester.runAsync(() => rows('free_writings')))!, hasLength(1));
+    expect(tester.takeException(), isNull);
+  });
+}

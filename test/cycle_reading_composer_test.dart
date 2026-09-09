@@ -342,6 +342,110 @@ void main() {
     expect(tarot['answer'], 'olhe o que se esconde');
   });
 
+  group('a tiragem e a sua página no acervo são UM registro', () {
+    // Desde que o botão "Salvar nos Registros" saiu, toda tiragem vira
+    // página do acervo sozinha — e passa a existir em DUAS tabelas: a da
+    // ferramenta e `free_writings`. As duas linhas têm o mesmo id de
+    // propósito: é por ele que a contagem sabe que é a mesma consulta.
+    test('conta uma vez só, e vai uma vez só para a IA', () async {
+      await seed('tarot_readings', {
+        'id': 'mesa-1',
+        'question': 'O que preciso ver?',
+        'spread_type': 'three_cards',
+        'signature': 'sig-1',
+        'reading_data':
+            '{"cards":[{"name":"A Lua"}],"interpretation":"olhe o que se esconde"}',
+        'date': inPeriod,
+      });
+      await seed('free_writings', {
+        'id': 'mesa-1',
+        'title': 'Tarot — Três Cartas',
+        'content': '✦ Sua pergunta\nO que preciso ver?',
+        'source': 'tarot',
+      });
+
+      final composer = CycleReadingComposer();
+      final material = await composer.compose(
+        userId: userId,
+        start: periodStart,
+        end: periodEnd,
+      );
+
+      // Uma consulta, um registro — na contagem do material e na contagem
+      // barata que a tela de compra mostra ANTES de cobrar.
+      expect(material.recordCount, 1);
+      expect(material.json['recordCount'], 1);
+      expect(
+        await composer.countPeriodRecords(
+          userId: userId,
+          start: periodStart,
+          end: periodEnd,
+        ),
+        1,
+      );
+
+      // A página do acervo é quem leva o texto; o bloco `oracle` não repete.
+      final saved = (material.json['savedReadings'] as List).cast<Map>();
+      expect(saved, hasLength(1));
+      expect(saved.first['date'], '2026-08-10');
+      expect(saved.first['excerpt'], contains('O que preciso ver?'));
+      expect(material.json.containsKey('oracle'), isFalse);
+    });
+
+    test('consulta antiga, sem página no acervo, ainda entrega a conversa',
+        () async {
+      // Quem já usava o app antes disso tem histórico sem página nenhuma:
+      // essas consultas continuam chegando à IA pelo bloco `oracle`.
+      await seed('rune_readings', {
+        'id': 'antiga-1',
+        'question': 'Devo mudar?',
+        'spread_type': 'single',
+        'reading_data': '{"interpretation":"o caminho pede paciência"}',
+        'date': inPeriod,
+      });
+
+      final material = await CycleReadingComposer().compose(
+        userId: userId,
+        start: periodStart,
+        end: periodEnd,
+      );
+
+      expect(material.recordCount, 1);
+      final oracle = (material.json['oracle'] as List).cast<Map>();
+      expect(oracle.single['question'], 'Devo mudar?');
+      expect(oracle.single['answer'], 'o caminho pede paciência');
+    });
+
+    test('a quiromancia, que só existe no acervo, continua contando',
+        () async {
+      // Ela não tem tabela de histórico: se a regra de dedução pegasse todas
+      // as leituras do acervo, a leitura de mãos sumiria da contagem.
+      await seed('free_writings', {
+        'title': 'Leitura de mãos — 10/08/2026',
+        'content': '◈ Linha da vida\nlonga e funda',
+        'source': 'palmistry',
+      });
+
+      final composer = CycleReadingComposer();
+      final material = await composer.compose(
+        userId: userId,
+        start: periodStart,
+        end: periodEnd,
+      );
+
+      expect(material.recordCount, 1);
+      expect(
+        await composer.countPeriodRecords(
+          userId: userId,
+          start: periodStart,
+          end: periodEnd,
+        ),
+        1,
+      );
+      expect(material.numbers?.topSource, 'divination');
+    });
+  });
+
   test('linha do tempo sai em ordem, com a lua de cada dia', () async {
     final dia1 = DateTime(2026, 8, 3).millisecondsSinceEpoch;
     final dia2 = DateTime(2026, 8, 9).millisecondsSinceEpoch;
