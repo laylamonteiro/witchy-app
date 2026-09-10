@@ -2120,5 +2120,8 @@
         "type": "int"
       }
     }
-  }
+  },
+  "feedbackOriginDesireManifested": "Wish fulfilled ✦ sealed",
+  "feedbackOriginDesireReleased": "Wish released to the wind",
+  "guidedRitualLogFailed": "The ritual completion could not be recorded. Your steps are kept."
 }

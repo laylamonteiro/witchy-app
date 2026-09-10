@@ -244,6 +244,40 @@ Entregue em 10/09.
   nível, marcos e dia na mesma cena; capas distintas por trilha e selo
   reproduzível).
 
+## Rituais, diário, desejos e mascote (P09)
+
+Entregue em 10/09.
+
+- **Gravações aguardadas:** sonho, gratidão, desejo, afirmação e feitiço
+  novos esperam a persistência (`addX` devolve se gravou), registram a ação
+  pelo `ActionRecorder` (que lê os providers antes de qualquer `await` e não
+  quebra sem eles) e só então fecham o formulário; falha mantém a tela e
+  avisa. Editar não conta como criação.
+- **Desejos:** a transição para `manifested` recebe o selo “Desejo realizado”
+  e para `released` o fio de luz “liberado ao vento”, ambos na composição
+  comum (`desireTransitionOrigin`); editar o título de um desejo já realizado
+  não repete a celebração; as etapas de manifestação das jornadas entram
+  pelo mesmo caminho.
+- **Ritual guiado:** `RitualCircle` substitui a barra: um arco por passo,
+  aceso ao concluir; o último fecha o círculo com um brilho. A conclusão só é
+  anunciada depois do sucesso de `logCompletion`; falha oferece “Tentar
+  novamente” sem celebrar; a ocorrência da sessão é única mesmo desmarcando e
+  marcando de novo. O registro entra na jornada e na composição comum (XP,
+  marcos).
+- **Dia completo:** quando o fechamento é apresentado pela composição comum,
+  `DailyCheckinProvider.markDayCelebrationShown` avisa o card de ritos, que
+  assenta o selo em silêncio em vez de celebrar de novo. O card conserva sua
+  própria detecção para o caso em que ele mesmo sela o dia.
+- **Mascote:** as celebrações (marco, nível, dia) pedem `MascotProvider.react`,
+  que já ignora arraste e ocultação. O tour continua com prioridade por
+  construção: o overlay do tour cobre a tela, e a reação é curta.
+- **Autosave:** nenhuma cena por tecla; reflexões livres continuam fora do
+  fluxo de resultados.
+- **Verificação:** `desire_transition_test.dart` e
+  `ritual_player_page_test.dart` (círculo acompanha os passos, gravação
+  falha → retry sem anúncio, sucesso → conclusão anunciada uma vez;
+  desmarcar/marcar não regrava).
+
 ## Dados e compatibilidade
 
 O schema local sobe de 23 para 24 (sessões e ledger), 25 (descobertas do
@@ -321,7 +355,7 @@ pendentes. Os testes automatizados não substituem essa avaliação.
 
 ## Continuação do lote
 
-1. P09–P14: rituais/diário/desejos e mascote, sigilos e demais ações do plano.
+1. P10–P14: sigilos, álbum do Oráculo/quiz/arquétipos, fluxos com foto, numerologia/pêndulo e navegação.
 2. P16/P17: registro menstrual manual Free; dados derivados e análises Premium.
 3. P18: registros menstruais autorizados entram na análise completa do ciclo.
 4. P15: integração e validação final do lote.

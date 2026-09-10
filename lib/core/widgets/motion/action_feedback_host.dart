@@ -149,8 +149,7 @@ class _FeedbackCardState extends State<_FeedbackCard> {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(celebration ? Icons.auto_awesome : Icons.check_circle_outline,
-                        color: accent, size: 22),
+                    Icon(_iconFor(outcome.origin, celebration), color: accent, size: 22),
                     const SizedBox(width: 12),
                     Expanded(child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -172,10 +171,19 @@ class _FeedbackCardState extends State<_FeedbackCard> {
     );
   }
 
+  /// A fulfilled wish is sealed; a released one lets its thread of light go.
+  static IconData _iconFor(ActionOrigin origin, bool celebration) => switch (origin) {
+    ActionOrigin.desireManifested => Icons.verified,
+    ActionOrigin.desireReleased => Icons.air,
+    _ => celebration ? Icons.auto_awesome : Icons.check_circle_outline,
+  };
+
   static String originLabel(AppLocalizations l10n, ActionOrigin origin) => switch (origin) {
     ActionOrigin.dream => l10n.feedbackOriginDream,
     ActionOrigin.gratitude => l10n.feedbackOriginGratitude,
     ActionOrigin.desire => l10n.feedbackOriginDesire,
+    ActionOrigin.desireManifested => l10n.feedbackOriginDesireManifested,
+    ActionOrigin.desireReleased => l10n.feedbackOriginDesireReleased,
     ActionOrigin.affirmation => l10n.feedbackOriginAffirmation,
     ActionOrigin.spell => l10n.feedbackOriginSpell,
     ActionOrigin.sigil => l10n.feedbackOriginSigil,

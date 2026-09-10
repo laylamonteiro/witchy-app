@@ -6,6 +6,8 @@ enum ActionOrigin {
   dream,
   gratitude,
   desire,
+  desireManifested,
+  desireReleased,
   affirmation,
   spell,
   sigil,

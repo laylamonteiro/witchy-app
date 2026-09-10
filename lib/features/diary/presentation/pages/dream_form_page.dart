@@ -5,11 +5,8 @@ import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
 import '../../data/models/dream_model.dart';
 import '../providers/dream_provider.dart';
-import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../journeys/domain/action_outcome.dart';
-import '../../../journeys/domain/progress_coordinator.dart';
-import '../../../learning/presentation/providers/learning_provider.dart';
-import '../../../your_day/presentation/providers/daily_checkin_provider.dart';
+import '../../../journeys/domain/action_recorder.dart';
 import '../../../../core/widgets/magical_button.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
@@ -238,10 +235,7 @@ class _DreamFormPageState extends State<DreamFormPage> {
     if (_saving) return;
     setState(() => _saving = true);
     final provider = context.read<DreamProvider>();
-    final coordinator = context.read<ProgressCoordinator?>();
-    final learning = context.read<LearningProvider?>();
-    final checkin = context.read<DailyCheckinProvider?>();
-    final userId = context.read<AuthProvider?>()?.currentUser.id;
+    final recorder = ActionRecorder.of(context);
     final saved = await provider.addDream(dream);
     if (!mounted) return;
     if (!saved) {
@@ -252,15 +246,7 @@ class _DreamFormPageState extends State<DreamFormPage> {
       ));
       return;
     }
-    if (coordinator != null && learning != null && userId != null) {
-      unawaited(coordinator.record(
-        userId: userId,
-        origin: ActionOrigin.dream,
-        entityId: dream.id,
-        learning: learning,
-        checkin: checkin,
-      ));
-    }
+    unawaited(recorder.record(origin: ActionOrigin.dream, entityId: dream.id));
     Navigator.pop(context);
   }
 

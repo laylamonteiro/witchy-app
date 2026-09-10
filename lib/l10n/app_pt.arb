@@ -2990,5 +2990,8 @@
         "type": "int"
       }
     }
-  }
+  },
+  "feedbackOriginDesireManifested": "Desejo realizado ✦ selo posto",
+  "feedbackOriginDesireReleased": "Desejo liberado ao vento",
+  "guidedRitualLogFailed": "Não foi possível registrar a conclusão do ritual. Seus passos estão preservados."
 }

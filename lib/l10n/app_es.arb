@@ -2120,5 +2120,8 @@
         "type": "int"
       }
     }
-  }
+  },
+  "feedbackOriginDesireManifested": "Deseo cumplido ✦ sellado",
+  "feedbackOriginDesireReleased": "Deseo liberado al viento",
+  "guidedRitualLogFailed": "No se pudo registrar la conclusión del ritual. Tus pasos se conservan."
 }

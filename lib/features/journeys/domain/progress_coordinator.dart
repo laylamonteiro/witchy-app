@@ -131,6 +131,7 @@ class ProgressCoordinator extends ChangeNotifier {
       if (_current == null) _current = _queue.removeFirst();
       notifyListeners();
       if (outcome.isCelebration) onCelebration?.call();
+      if (dayCompleted) checkin?.markDayCelebrationShown();
     }
     return outcome;
   }

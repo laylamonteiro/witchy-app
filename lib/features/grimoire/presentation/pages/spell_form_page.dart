@@ -1,10 +1,15 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
 import '../../data/models/spell_model.dart';
 import '../providers/spell_provider.dart';
+import '../../../journeys/domain/action_outcome.dart';
+import '../../../journeys/domain/action_recorder.dart';
 import '../../../../core/widgets/magical_button.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/theme/grimoire_colors.dart';
 
 class SpellFormPage extends StatefulWidget {
   final SpellModel? spell;
@@ -20,6 +25,7 @@ class SpellFormPage extends StatefulWidget {
 }
 
 class _SpellFormPageState extends State<SpellFormPage> {
+  bool _saving = false;
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _nameController;
   late TextEditingController _purposeController;
@@ -268,12 +274,31 @@ class _SpellFormPageState extends State<SpellFormPage> {
           );
 
       if (widget.spell == null) {
-        context.read<SpellProvider>().addSpell(spell);
-      } else {
-        context.read<SpellProvider>().updateSpell(spell);
+        unawaited(_persistNew(spell));
+        return;
       }
-
+      context.read<SpellProvider>().updateSpell(spell);
       Navigator.pop(context);
     }
+  }
+
+  /// A new spell: wait for the persistence, record the action, then leave.
+  Future<void> _persistNew(SpellModel spell) async {
+    if (_saving) return;
+    setState(() => _saving = true);
+    final provider = context.read<SpellProvider>();
+    final recorder = ActionRecorder.of(context);
+    final saved = await provider.addSpell(spell);
+    if (!mounted) return;
+    if (!saved) {
+      setState(() => _saving = false);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(provider.error ?? AppLocalizations.of(context).errorsGeneric),
+        backgroundColor: context.gc.alert,
+      ));
+      return;
+    }
+    unawaited(recorder.record(origin: ActionOrigin.spell, entityId: spell.id));
+    Navigator.pop(context);
   }
 }
