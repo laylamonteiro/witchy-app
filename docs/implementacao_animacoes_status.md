@@ -1,4 +1,4 @@
-# Implementação das animações — primeira entrega
+# Implementação das animações — Tarot manual
 
 Iniciada em 09/09/2026, a partir da `main` em
 `69dbc61c7d5d7a40c1dc5d1dc7aff6972ed2b880`.
@@ -11,8 +11,8 @@ o dia original da sessão; a cópia do acervo segue o gravador best-effort da ma
 
 ## Escopo desta branch
 
-Esta é a primeira fatia vertical de P03, com a infraestrutura mínima de
-P01/P02. Não encerra esses pacotes nem o lote inteiro.
+Esta entrega cobre a seleção manual de 1, 3 e 5 cartas de P03, com a
+infraestrutura mínima de P01/P02. Os demais pacotes continuam no plano.
 
 - **Carta do dia:** leque com acesso às 78 posições. Arrastar horizontalmente
   explora sem selecionar; toque, retirada para cima, botão ou teclado confirmam
@@ -27,6 +27,12 @@ P01/P02. Não encerra esses pacotes nem o lote inteiro.
   com desenhos no centro e nos cantos visíveis na sobreposição. A sequência
   acompanha a posição original da sessão, inclusive na retomada e na virada
   da carta escolhida; não depende da identidade ou orientação da frente.
+- **Três cartas e cruz de cinco:** cada escolha preenche sua posição e sai
+  do leque. Os versos mantêm seus símbolos originais ao fechar os espaços;
+  as faces só aparecem depois de completar e confirmar a mesa. Resultado
+  em linha de três ou cruz (Tendência acima, Conselho/Situação/Desafio no
+  meio, Raiz abaixo). A entrada de cada carta usa movimento reduzido quando
+  solicitado, e não há pausa artificial antes de revelar.
 - **Retomada:** a ordem do baralho, as orientações e a pergunta ficam em SQLite
   antes de abrir a superfície. Reabrir a mesma pergunta no mesmo dia restaura a
   sessão. Se já existe uma carta do dia legada, ela é adotada, sem nova escolha.
@@ -62,12 +68,30 @@ Premium usa `isPremiumEffective`. O ledger importa o contador antigo uma única
 vez por conta/dia, revalida a cota na confirmação e restaura o espelho do
 `AuthProvider` antes de consultas do Tarot/Oráculo.
 
-As tiragens de três e cinco cartas ainda usam seu fluxo anterior. A nova
-transação completa é exclusiva da carta do dia nesta entrega; os demais
-consumidores passam pelo mesmo ledger, mas serão migrados para sessões nas
-próximas fatias.
+Três cartas e cruz reutilizam `selection_sessions`, sem nova migração. Cada
+escolha parcial é persistida sem consumir; o conjunto completo confirma
+resultado, consumo e vínculo em uma transação. Um comando atrasado não
+preenche outra posição. Falha na confirmação conserva todas as cartas para
+retry e reinício do app. A consulta conserva seu dia e data originais.
+
+Reabrir uma tiragem restaura a sessão/resultado mais recente da pergunta.
+Rascunhos podem atravessar a meia-noite. Free conserva a regra de uma mesa
+por tipo/pergunta do dia; Premium pode iniciar outra consulta pela ação
+explícita “Nova tiragem”. Resultados antigos são adotados com orientação,
+interpretação e data preservadas. Anúncios só são elegíveis depois de uma
+confirmação nova e antes da revelação, respeitando a política existente.
+As assinaturas das três tiragens passam a identificar a sessão, permitindo
+consultas distintas com as mesmas cartas. Oráculo e Runas ainda aguardam
+a migração de seus fluxos para sessões.
 
 ## Verificação
+
+- `tarot_spread_repository_test.dart`: escolhas parciais e ordenadas, comandos
+  concorrentes, rollback, Free/Premium, mudança de acesso, cotas compartilhadas,
+  meia-noite e adoção de resultados legados de três e cinco cartas.
+- `tarot_spread_flow_test.dart`: dois fluxos completos em largura de celular;
+  extremos do leque, reinício após duas escolhas, símbolos preservados,
+  geometria da cruz, acervo, revisita e nova consulta explícita no Premium.
 
 - `daily_tarot_repository_test.dart`: sessão estável, 78 IDs sem repetição,
   confirmação concorrente, rollback, retomada, migração de cota/pergunta,
@@ -96,11 +120,10 @@ pendentes. Os testes automatizados não substituem essa avaliação.
 
 ## Continuação do lote
 
-1. P03: seleção de três cartas e cruz de cinco, com posições e retomada.
-2. P04–P14: runas, Oráculo, Conselheiro e demais ações/rituais do plano.
-3. P16/P17: registro menstrual manual Free; dados derivados e análises Premium.
-4. P18: registros menstruais autorizados entram na análise completa do ciclo.
-5. P15: integração e validação final do lote.
+1. P04–P14: runas, Oráculo, Conselheiro e demais ações/rituais do plano.
+2. P16/P17: registro menstrual manual Free; dados derivados e análises Premium.
+3. P18: registros menstruais autorizados entram na análise completa do ciclo.
+4. P15: integração e validação final do lote.
 
 As decisões mais recentes sobre menstruação estão mantidas no plano:
 registro, leitura dos dados inseridos, edição, exclusão e exportação Free;

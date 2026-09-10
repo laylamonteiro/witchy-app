@@ -18,12 +18,16 @@ class CardSelectionSurface extends StatefulWidget {
     required this.onSelected,
     this.enabled = true,
     this.lockedCardId,
-  }) : assert(cardIds.length > 0);
+    this.deckPositions,
+  }) : assert(cardIds.length > 0),
+       assert(deckPositions == null || deckPositions.length == cardIds.length);
 
   final List<String> cardIds;
   final ValueChanged<String> onSelected;
   final bool enabled;
   final String? lockedCardId;
+  /// Original shuffled slots, preserved when previously chosen cards leave.
+  final List<int>? deckPositions;
 
   @override
   State<CardSelectionSurface> createState() => _CardSelectionSurfaceState();
@@ -43,6 +47,7 @@ class _CardSelectionSurfaceState extends State<CardSelectionSurface>
 
   int get _focused => _position.round().clamp(0, widget.cardIds.length - 1).toInt();
   bool get _canExplore => widget.enabled && widget.lockedCardId == null;
+  int _deckPosition(int index) => widget.deckPositions?[index] ?? index;
 
   @override
   void didChangeDependencies() {
@@ -66,8 +71,14 @@ class _CardSelectionSurfaceState extends State<CardSelectionSurface>
   @override
   void didUpdateWidget(CardSelectionSurface oldWidget) {
     super.didUpdateWidget(oldWidget);
+    final oldIndex = _position.round().clamp(0, oldWidget.cardIds.length - 1).toInt();
+    final retained = widget.cardIds.indexOf(oldWidget.cardIds[oldIndex]);
     final locked = widget.cardIds.indexOf(widget.lockedCardId ?? '');
-    if (locked >= 0) _position = locked.toDouble();
+    if (locked >= 0) {
+      _position = locked.toDouble();
+    } else if (oldWidget.cardIds.length != widget.cardIds.length && retained >= 0) {
+      _position = retained.toDouble();
+    }
     _position = _position.clamp(0, widget.cardIds.length - 1).toDouble();
   }
 
@@ -198,7 +209,7 @@ class _CardSelectionSurfaceState extends State<CardSelectionSurface>
                           children: [
                             for (final i in indices)
                               AnimatedPositioned(
-                                key: ValueKey('fan-position-$i'),
+                                key: ValueKey('fan-position-${_deckPosition(i)}'),
                                 duration: duration,
                                 curve: GrimoireMotion.enter,
                                 left: (width - cardWidth) / 2 +
@@ -210,7 +221,7 @@ class _CardSelectionSurfaceState extends State<CardSelectionSurface>
                                   turns: (i - _position) * .012 * _entrance.value,
                                   duration: duration,
                                   child: GestureDetector(
-                                    key: ValueKey('fan-card-$i'),
+                                    key: ValueKey('fan-card-${_deckPosition(i)}'),
                                     onTap: widget.enabled ? () => _choose(i) : null,
                                     onVerticalDragStart: _canExplore ? (_) {
                                       _focusNode.requestFocus();
@@ -245,7 +256,7 @@ class _CardSelectionSurfaceState extends State<CardSelectionSurface>
                                         ),
                                         child: TarotCardBack(
                                           width: cardWidth,
-                                          deckPosition: i,
+                                          deckPosition: _deckPosition(i),
                                           highlighted: i == _focused,
                                         ),
                                       ),

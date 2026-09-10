@@ -456,7 +456,6 @@
   "tarotPosAdvice": "Conselho",
   "tarotPosTendency": "Tendência",
   "tarotFreeLimitReached": "Você já usou sua pergunta gratuita de hoje. Assine Premium para perguntas ilimitadas!",
-  "tarotRepeatingToday": "Esta é a tiragem que você já fez hoje com esta pergunta",
   "tarotSpreadLabel": "Tiragem",
   "tarotReversed": "invertida",
   "tarotBreathe": "Respire fundo, pense na sua pergunta e escolha a tiragem",
@@ -2011,5 +2010,21 @@
   "cardSelectionLoadError": "Não foi possível abrir a consulta. Tente novamente.",
   "@cardSelectionLoadError": {
     "description": "Error opening or restoring a reading before selection"
+  },
+  "tarotSelectionStep": "Escolha a carta {number} de {total} · {position}",
+  "tarotSelectionReady": "Todas as posições estão preenchidas",
+  "tarotSelectionSaveError": "Não foi possível concluir a tiragem. Tente novamente.",
+  "@tarotSelectionStep": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      },
+      "position": {
+        "type": "String"
+      }
+    }
   }
 }
