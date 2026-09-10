@@ -2075,5 +2075,42 @@
   "advisorRetry": "Try again",
   "advisorPendingNote": "The answer to this question did not arrive. Your question was kept; you can try again whenever you like.",
   "advisorArchiveTitle": "Advice from the Mystic Advisor",
-  "recordsSourceAdvisor": "Advisor"
+  "recordsSourceAdvisor": "Advisor",
+  "feedbackXp": "+{xp} XP",
+  "feedbackMilestones": "{count, plural, =1{Milestone reached} other{{count} milestones reached}}",
+  "feedbackLevelUp": "New title: {title}",
+  "feedbackDayComplete": "All three rites of the day done",
+  "feedbackDismiss": "Tap to close",
+  "feedbackOriginDream": "Dream saved",
+  "feedbackOriginGratitude": "Gratitude saved",
+  "feedbackOriginDesire": "Wish saved",
+  "feedbackOriginAffirmation": "Affirmation saved",
+  "feedbackOriginSpell": "Spell saved",
+  "feedbackOriginSigil": "Sigil saved",
+  "feedbackOriginEncyclopedia": "Entry saved",
+  "feedbackOriginReading": "Reading recorded",
+  "feedbackOriginRitual": "Ritual completed",
+  "feedbackOriginLesson": "Page sealed",
+  "feedbackOriginOther": "Record saved",
+  "@feedbackXp": {
+    "placeholders": {
+      "xp": {
+        "type": "int"
+      }
+    }
+  },
+  "@feedbackMilestones": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@feedbackLevelUp": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  }
 }

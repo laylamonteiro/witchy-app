@@ -2075,5 +2075,42 @@
   "advisorRetry": "Intentar de nuevo",
   "advisorPendingNote": "La respuesta a esta pregunta no llegó. Tu pregunta se conservó; puedes intentarlo de nuevo cuando quieras.",
   "advisorArchiveTitle": "Consejo del Consejero Místico",
-  "recordsSourceAdvisor": "Consejero"
+  "recordsSourceAdvisor": "Consejero",
+  "feedbackXp": "+{xp} XP",
+  "feedbackMilestones": "{count, plural, =1{Hito alcanzado} other{{count} hitos alcanzados}}",
+  "feedbackLevelUp": "Nuevo título: {title}",
+  "feedbackDayComplete": "Los tres ritos del día cumplidos",
+  "feedbackDismiss": "Toca para cerrar",
+  "feedbackOriginDream": "Sueño registrado",
+  "feedbackOriginGratitude": "Gratitud registrada",
+  "feedbackOriginDesire": "Deseo registrado",
+  "feedbackOriginAffirmation": "Afirmación registrada",
+  "feedbackOriginSpell": "Hechizo registrado",
+  "feedbackOriginSigil": "Sigilo guardado",
+  "feedbackOriginEncyclopedia": "Entrada guardada",
+  "feedbackOriginReading": "Lectura registrada",
+  "feedbackOriginRitual": "Ritual completado",
+  "feedbackOriginLesson": "Página sellada",
+  "feedbackOriginOther": "Registro guardado",
+  "@feedbackXp": {
+    "placeholders": {
+      "xp": {
+        "type": "int"
+      }
+    }
+  },
+  "@feedbackMilestones": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@feedbackLevelUp": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  }
 }

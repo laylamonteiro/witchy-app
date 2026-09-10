@@ -183,12 +183,51 @@ Entregue em 10/09.
   guardar uma vez e restaurar, espera real que sobrevive a sair da tela,
   falha com retry explícito, pendente de processo anterior, teclado aberto).
 
+## Progresso e marcos (P07)
+
+Entregue em 10/09.
+
+- **Uma avaliação por ação:** `ProgressCoordinator` (provider global) recebe
+  cada gravação confirmada e produz um `ActionOutcome`: XP antes e depois
+  pela fórmula existente (`LearningProvider.refreshPracticeXp`), nível
+  identificado pelo limiar (nunca pelo título traduzido), marcos das
+  jornadas alcançados pela primeira vez e fechamento do dia. Avaliações são
+  serializadas por conta; nenhuma animação credita pontos.
+- **Marcos estáveis:** `progress_milestones` (schema 27) guarda cada etapa
+  de jornada por pessoa, com a primeira data e a ação de origem. Uma contagem
+  que cai e volta não concede de novo. Ao entrar na conta, as etapas já
+  alcançadas pelo histórico são adotadas em silêncio (origem nula), sem
+  apresentação. `JourneyStatsRepository` concentra as contagens que a tela
+  de Jornadas e a detecção usam, agora com `tarot_readings` no total de
+  leituras.
+- **Dia completo fora da UI:** `DayCompletionService` avalia os três
+  requisitos (gratidão e sonho de hoje, mais o rito em destaque) a partir do
+  banco e sela o dia pelo mesmo `completeRite` idempotente. O card de ritos
+  conserva sua detecção; P09 o faz consumir o evento comum.
+- **Feedback único acima do app:** `ActionFeedbackHost` fica no `builder`
+  do `MaterialApp`, acima do router. Mostra uma composição por ação
+  (confirmação, “+XP”, marcos, novo título, dia completo), uma por vez, com
+  toque ou tempo para sair; uma confirmação que chega com a rota fechando
+  ainda aparece. Só resultados desta sessão são apresentados; carregar
+  histórico ou sincronizar muda números em silêncio. Celebrações (marco,
+  nível, dia) pedem a reação do gatinho por `MascotProvider.react`, que já
+  respeita arraste e ocultação.
+- **Primeira ligação:** salvar um sonho novo aguarda a persistência,
+  registra a ação e só então fecha o formulário; editar não conta. As demais
+  criações, ritos e rituais entram em P08/P09.
+- **Verificação:** `progress_coordinator_test.dart` (décimo sonho gera o
+  marco uma vez; repetir, recarregar e editar não repetem; adoção silenciosa;
+  contagem perdida e recuperada; nível por limiar; ações concorrentes;
+  tarô no total de leituras; dia completo pelo serviço com bônus certo) e
+  `action_feedback_host_test.dart` (uma composição com XP, marcos, nível e
+  dia; fila e saída automática; host sem coordenador).
+
 ## Dados e compatibilidade
 
 O schema local sobe de 23 para 24 (sessões e ledger), 25 (descobertas do
-Oráculo) e 26 (consultas do Conselheiro). As tabelas novas são
+Oráculo), 26 (consultas do Conselheiro) e 27 (marcos). As tabelas novas são
 `selection_sessions`, `tarot_day_state`, `usage_balances`, `usage_operations`,
-`oracle_discoveries` e `advisor_consultations`. Instalação nova e
+`oracle_discoveries`, `advisor_consultations` e `progress_milestones`. Instalação nova e
 migração usam a mesma definição. Exportação e limpeza local incluem as tabelas;
 sessões e memória da pergunta participam da adoção de conteúdo anônimo.
 
@@ -260,7 +299,7 @@ pendentes. Os testes automatizados não substituem essa avaliação.
 
 ## Continuação do lote
 
-1. P07–P14: progresso e marcos, lições, rituais e demais ações do plano.
+1. P08–P14: lições e trilhas, rituais/diário/desejos, sigilos e demais ações do plano.
 2. P16/P17: registro menstrual manual Free; dados derivados e análises Premium.
 3. P18: registros menstruais autorizados entram na análise completa do ciclo.
 4. P15: integração e validação final do lote.

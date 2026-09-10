@@ -79,7 +79,7 @@ class DatabaseHelper {
     // é no-op — o sqflite envolve os dois numa transação).
     return await openDatabase(
       path,
-      version: 26,
+      version: 27,
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
     );
@@ -1199,7 +1199,8 @@ class DatabaseHelper {
     }
     // v25: álbum do Oráculo (oracle_discoveries). Mesma definição idempotente.
     // v26: consultas do Conselheiro (advisor_consultations).
-    if (oldVersion < 26) {
+    // v27: marcos das jornadas (progress_milestones).
+    if (oldVersion < 27) {
       await ReadingSessionSchema.create(db);
     }
   }
@@ -1354,6 +1355,7 @@ class DatabaseHelper {
         'tarot_day_state',
         'oracle_discoveries',
         'advisor_consultations',
+        'progress_milestones',
         // As lápides também: o que foi apagado antes de entrar na conta
         // precisa ser purgado da nuvem depois do login, senão o download
         // seguinte ressuscita o item sob a conta nova.

@@ -4,10 +4,10 @@ import 'package:provider/provider.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/loading_widget.dart';
-import '../../../../core/database/database_helper.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../learning/presentation/providers/learning_provider.dart';
 import '../../data/models/journey_model.dart';
+import '../../data/repositories/journey_stats_repository.dart';
 
 /// Página de Jornadas Mágicas Gamificadas.
 ///
@@ -42,35 +42,10 @@ class _JourneysPageState extends State<JourneysPage> {
 
     try {
       final authProvider = context.read<AuthProvider>();
-      final odUserId = authProvider.currentUser.id;
-      final db = await DatabaseHelper.instance.database;
-
-      // Carregar contagens de cada entidade
-      _userStats = {
-        // Para feitiços, excluir os pré-carregados (is_preloaded = 1)
-        'spells': await _countUserSpells(db, odUserId),
-        'dreams': await _countRecords(db, 'dreams', odUserId),
-        'desires': await _countRecords(db, 'desires', odUserId),
-        'gratitudes': await _countRecords(db, 'gratitudes', odUserId),
-        'affirmations': await _countRecords(db, 'affirmations', odUserId),
-        'sigils': await _countRecords(db, 'sigils', odUserId),
-        'rune_readings': await _countRecords(db, 'rune_readings', odUserId),
-        'oracle_readings': await _countRecords(db, 'oracle_readings', odUserId),
-        'pendulum_consultations':
-            await _countRecords(db, 'pendulum_consultations', odUserId),
-        'birth_charts': await _countRecords(db, 'birth_charts', odUserId),
-        'desires_manifested':
-            await _countDesiresByStatus(db, odUserId, 'manifested'),
-        'gratitude_streak': await _calculateStreak(db, 'gratitudes', odUserId),
-        'guided_rituals':
-            await _countRecords(db, 'guided_ritual_logs', odUserId),
-      };
-
-      // Calcular all_readings
-      _userStats['all_readings'] = (_userStats['rune_readings'] ?? 0) +
-          (_userStats['oracle_readings'] ?? 0) +
-          (_userStats['pendulum_consultations'] ?? 0);
-
+      // Mesmas contagens que o coordenador de progresso usa para os marcos:
+      // a tela e a detecção nunca divergem, e o tarô entra no total.
+      _userStats = await JourneyStatsRepository()
+          .load(authProvider.currentUser.id);
       if (mounted) setState(() => _isLoading = false);
     } catch (e) {
       if (mounted) setState(() => _isLoading = false);
@@ -78,102 +53,8 @@ class _JourneysPageState extends State<JourneysPage> {
     }
   }
 
-  Future<int> _countRecords(dynamic db, String table, String odUserId) async {
-    try {
-      final result = await db.rawQuery(
-        'SELECT COUNT(*) as count FROM $table WHERE user_id = ?',
-        [odUserId],
-      );
-      return result.first['count'] as int? ?? 0;
-    } catch (e) {
-      return 0;
-    }
-  }
-
-  /// Conta apenas feitiços criados pelo usuário (excluindo os pré-carregados)
-  Future<int> _countUserSpells(dynamic db, String odUserId) async {
-    try {
-      final result = await db.rawQuery(
-        'SELECT COUNT(*) as count FROM spells WHERE user_id = ? AND is_preloaded = 0',
-        [odUserId],
-      );
-      return result.first['count'] as int? ?? 0;
-    } catch (e) {
-      return 0;
-    }
-  }
-
-  Future<int> _countDesiresByStatus(
-      dynamic db, String odUserId, String status) async {
-    try {
-      final result = await db.rawQuery(
-        'SELECT COUNT(*) as count FROM desires WHERE user_id = ? AND status = ?',
-        [odUserId, status],
-      );
-      return result.first['count'] as int? ?? 0;
-    } catch (e) {
-      return 0;
-    }
-  }
-
-  Future<int> _calculateStreak(
-      dynamic db, String table, String odUserId) async {
-    try {
-      final result = await db.rawQuery(
-        '''SELECT DISTINCT date(created_at / 1000, 'unixepoch', 'localtime') as day
-           FROM $table
-           WHERE user_id = ?
-           ORDER BY day DESC''',
-        [odUserId],
-      );
-
-      if (result.isEmpty) return 0;
-
-      int streak = 0;
-      DateTime? previousDay;
-
-      for (final row in result) {
-        final dayStr = row['day'] as String?;
-        if (dayStr == null) continue;
-
-        final day = DateTime.parse(dayStr);
-
-        if (previousDay == null) {
-          final today = DateTime.now();
-          final todayDate = DateTime(today.year, today.month, today.day);
-          final yesterdayDate = todayDate.subtract(const Duration(days: 1));
-
-          if (day == todayDate || day == yesterdayDate) {
-            streak = 1;
-            previousDay = day;
-          } else {
-            break;
-          }
-        } else {
-          final expectedDay = previousDay.subtract(const Duration(days: 1));
-          if (day == expectedDay) {
-            streak++;
-            previousDay = day;
-          } else {
-            break;
-          }
-        }
-      }
-
-      return streak;
-    } catch (e) {
-      return 0;
-    }
-  }
-
-  int _getStepProgress(JourneyStep step) {
-    if (step.type == StepType.streak) {
-      return _userStats['${step.targetEntity}_streak'] ??
-          _userStats['gratitude_streak'] ??
-          0;
-    }
-    return _userStats[step.targetEntity] ?? 0;
-  }
+  int _getStepProgress(JourneyStep step) =>
+      JourneyStatsRepository.progressOf(_userStats, step);
 
   @override
   Widget build(BuildContext context) {

@@ -22,7 +22,7 @@ void main() {
         });
     await old.close();
     final upgraded = await DatabaseHelper.instance.database;
-    expect(await upgraded.getVersion(), 26);
+    expect(await upgraded.getVersion(), 27);
     expect((await upgraded.query('tarot_readings')).single['reading_data'], 'preserved');
     final tables = (await upgraded.rawQuery("SELECT name FROM sqlite_master WHERE type = 'table'"))
         .map((row) => row['name']).toSet();
