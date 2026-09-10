@@ -675,7 +675,11 @@ class _SpreadTabState extends State<_SpreadTab>
           ] else ...[
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Row(
+              child: OverflowBar(
+                alignment: MainAxisAlignment.spaceBetween,
+                overflowAlignment: OverflowBarAlignment.start,
+                spacing: 12,
+                overflowSpacing: 4,
                 children: [
                   Text(
                     '${_activeSpread!.emoji} ${_activeSpread!.displayName(AppLocalizations.of(context))}',
@@ -684,7 +688,6 @@ class _SpreadTabState extends State<_SpreadTab>
                           fontWeight: FontWeight.bold,
                         ),
                   ),
-                  const Spacer(),
                   TextButton.icon(
                     onPressed: _isReadingAI ? null : () => setState(() {
                       _newSpreadRequested = true;

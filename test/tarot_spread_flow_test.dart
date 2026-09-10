@@ -74,7 +74,7 @@ void main() {
     return result!;
   }
 
-  Future<void> show(WidgetTester tester) async {
+  Future<void> show(WidgetTester tester, {double textScale = 1}) async {
     await tester.pumpWidget(MultiProvider(
       providers: [
         ChangeNotifierProvider<AuthProvider>(create: (_) => _PremiumFixture()),
@@ -84,6 +84,10 @@ void main() {
         locale: const Locale('en'),
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
+        builder: (context, child) => MediaQuery(
+          data: MediaQuery.of(context).copyWith(textScaler: TextScaler.linear(textScale)),
+          child: child!,
+        ),
         home: const TarotPage(),
       ),
     ));
@@ -96,7 +100,7 @@ void main() {
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
-      await show(tester);
+      await show(tester, textScale: count == 5 ? 1.5 : 1);
       final l10n = AppLocalizations.of(tester.element(find.byType(TarotPage)));
       final title = count == 3 ? l10n.tarotThreeCards : l10n.tarotCross;
       Future<void> open() async {
@@ -133,7 +137,7 @@ void main() {
           final before = await rows(tester, 'selection_sessions');
           expect(await rows(tester, 'tarot_readings'), isEmpty);
           await tester.pumpWidget(const SizedBox.shrink());
-          await show(tester);
+          await show(tester, textScale: count == 5 ? 1.5 : 1);
           await open();
           final after = await rows(tester, 'selection_sessions');
           expect(after.single['id'], before.single['id']);
