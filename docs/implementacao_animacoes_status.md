@@ -102,10 +102,54 @@ Entregue em 10/09, sobre a mesma infraestrutura de sessões do Tarot.
   movimento reduzido). A galeria `motion_gallery.dart` inclui pedras e tecido.
   Analyze e testes rodam no CI; este ambiente não tem Flutter.
 
+## Oráculo manual (P05)
+
+Entregue em 10/09, com o seletor de cartas compartilhado do Tarot.
+
+- **Seleção:** o mesmo leque (`CardSelectionSurface`, versos `TarotCardBack`)
+  com as 44 cartas; mesas de 1, 3 e 5 posições (Segunda/Terça, Quarta,
+  Quinta/Sexta, Fim de Semana e Foco) em `OracleSpreadBoard`, usada na
+  escolha e no resultado. O Oráculo não tem pergunta.
+- **Sessão e cota:** `selection_sessions` com `tool = 'oracle'`; cota na
+  categoria compartilhada Tarot/Oráculo, revalidada na confirmação. Free
+  conserva uma mesa por tiragem no dia e pode revisitá-la; Premium só inicia
+  outra por “Nova Leitura”. Resultado em `oracle_readings` (com `session_id`
+  e o conselho do Conselheiro dentro de `reading_data`), consumo e vínculo
+  na mesma transação.
+- **Arte:** `OracleArtRegistry` resolve os 44 IDs (ID desconhecido recebe a
+  moldura comum). Sem assets ilustrados ainda: `OracleCardFace` desenha a
+  moldura vetorial na paleta ativa com o emoji como figura e o nome renderizado
+  pela UI; quando as frentes estáticas existirem, entram por `assetPath` com
+  o mesmo fallback. As seis cenas iniciais (Vela acende, Caldeirão borbulha,
+  Gato abre os olhos, Semente brota, Chave gira, Porta entreabre) são
+  vetoriais, executam uma vez e só na carta em foco; as demais recebem a
+  revelação comum. Movimento reduzido mostra o quadro final.
+- **Revelação:** o leque fica à frente até a mesa estar pronta; as cartas
+  viram no lugar (teto de 1,2 s); depois entram o palco com a carta em foco e
+  os textos. Tocar na mesa antecipa; tocar numa carta a leva ao palco e
+  destaca sua interpretação.
+- **Descobertas (dados para P11):** tabela local `oracle_discoveries`
+  (schema 25), uma linha por pessoa/carta com a primeira data e a leitura de
+  origem, gravada só na confirmação; carta repetida não adiciona nada e nada
+  gera XP. Ao preparar uma consulta, o histórico local de `oracle_readings`
+  é adotado em silêncio (data mais antiga vence). A confirmação mostra uma
+  linha discreta “Nova(s) carta(s) no seu Oráculo”; revisitas não a mostram.
+  O álbum em si continua em P11; sync das descobertas fica para P15.
+- **Verificação:** `oracle_selection_repository_test.dart` (1/3/5, comandos
+  concorrentes, rollback sem descoberta, cota compartilhada com o Tarot,
+  Premium, meia-noite, descobertas repetidas e adoção do histórico com linha
+  corrompida), `oracle_art_registry_test.dart` (44 IDs, seis cenas nas cartas
+  certas, 44 frentes em todos os progressos, cena única e movimento reduzido),
+  `oracle_reading_flow_test.dart` (guia semanal do leque à revelação, retomada,
+  descoberta, acervo, foco por toque, revisita e “Nova Leitura”; mensagem do
+  dia sob movimento reduzido). `daily_tarot_migration_test.dart` passa a
+  esperar o schema 25.
+
 ## Dados e compatibilidade
 
-O schema local sobe de 23 para 24. As tabelas novas são `selection_sessions`,
-`tarot_day_state`, `usage_balances` e `usage_operations`. Instalação nova e
+O schema local sobe de 23 para 24 (sessões e ledger) e para 25 (descobertas
+do Oráculo). As tabelas novas são `selection_sessions`, `tarot_day_state`,
+`usage_balances`, `usage_operations` e `oracle_discoveries`. Instalação nova e
 migração usam a mesma definição. Exportação e limpeza local incluem as tabelas;
 sessões e memória da pergunta participam da adoção de conteúdo anônimo.
 
@@ -135,8 +179,8 @@ explícita “Nova tiragem”. Resultados antigos são adotados com orientação
 interpretação e data preservadas. Anúncios só são elegíveis depois de uma
 confirmação nova e antes da revelação, respeitando a política existente.
 As assinaturas das três tiragens passam a identificar a sessão, permitindo
-consultas distintas com as mesmas cartas. Runas já usam sessões (P04);
-o Oráculo ainda aguarda a migração de seu fluxo.
+consultas distintas com as mesmas cartas. Runas (P04) e Oráculo (P05) já
+usam sessões.
 
 ## Verificação
 
@@ -177,7 +221,7 @@ pendentes. Os testes automatizados não substituem essa avaliação.
 
 ## Continuação do lote
 
-1. P05–P14: Oráculo, Conselheiro e demais ações/rituais do plano.
+1. P06–P14: Conselheiro, progresso e demais ações/rituais do plano.
 2. P16/P17: registro menstrual manual Free; dados derivados e análises Premium.
 3. P18: registros menstruais autorizados entram na análise completa do ciclo.
 4. P15: integração e validação final do lote.

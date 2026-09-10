@@ -2929,5 +2929,14 @@
         "type": "String"
       }
     }
+  },
+  "oracleTableHint": "Toque em uma carta para vê-la de perto",
+  "oracleNewDiscovery": "{count, plural, =1{Nova carta no seu Oráculo} other{{count} novas cartas no seu Oráculo}}",
+  "@oracleNewDiscovery": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   }
 }

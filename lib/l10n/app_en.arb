@@ -2059,5 +2059,14 @@
         "type": "String"
       }
     }
+  },
+  "oracleTableHint": "Tap a card to see it up close",
+  "oracleNewDiscovery": "{count, plural, =1{New card in your Oracle} other{{count} new cards in your Oracle}}",
+  "@oracleNewDiscovery": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   }
 }

@@ -4,7 +4,10 @@ import 'package:flutter/material.dart';
 import '../core/theme/app_theme.dart';
 import '../core/theme/grimoire_colors.dart';
 import '../core/widgets/motion/tool_scene_frame.dart';
+import '../features/divination/data/data_sources/oracle_cards_data.dart';
+import '../features/divination/presentation/oracle_art_registry.dart';
 import '../features/divination/presentation/widgets/card_selection_surface.dart';
+import '../features/divination/presentation/widgets/oracle_card_face.dart';
 import '../features/runes/data/data_sources/runes_data.dart';
 import '../features/runes/presentation/widgets/rune_selection_surface.dart';
 import '../features/runes/presentation/widgets/rune_stone_view.dart';
@@ -84,6 +87,20 @@ class _GalleryState extends State<_Gallery> {
             const SizedBox(height: 12),
             Text('Chosen: ${_stones.join(', ')}'),
           ],
+          const SizedBox(height: 32),
+          // The six animated Oracle scenes replay from the reset button.
+          Wrap(spacing: 12, runSpacing: 12, alignment: WrapAlignment.center, children: [
+            for (final id in OracleArtRegistry.scenes.keys)
+              OracleSceneCard(
+                key: ValueKey('scene-$id-$_generation'),
+                card: oracleCardsData.firstWhere((c) => c.id == id),
+                width: 96, playToken: _generation,
+              ),
+          ]),
+          const SizedBox(height: 12),
+          Wrap(spacing: 8, runSpacing: 8, alignment: WrapAlignment.center, children: [
+            for (final card in oracleCardsData.take(8)) OracleCardFace(card: card, width: 64),
+          ]),
         ]),
       )),
     ),
