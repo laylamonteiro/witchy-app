@@ -8,6 +8,7 @@ import 'package:grimorio_de_bolso/core/database/reading_session_schema.dart';
 import 'package:grimorio_de_bolso/core/services/usage_coordinator.dart';
 import 'package:grimorio_de_bolso/features/tarot/data/data_sources/tarot_cards_data.dart';
 import 'package:grimorio_de_bolso/features/tarot/data/models/tarot_card_model.dart';
+import 'package:grimorio_de_bolso/features/tarot/data/repositories/daily_tarot_repository.dart';
 import 'package:grimorio_de_bolso/features/tarot/data/repositories/tarot_reading_repository.dart';
 import 'package:grimorio_de_bolso/features/tarot/data/repositories/tarot_spread_repository.dart';
 import 'package:grimorio_de_bolso/features/tarot/domain/daily_tarot_session.dart';
@@ -140,6 +141,17 @@ void main() {
     expect(result.session.selectedIds, expected);
     expect(result.created, isTrue);
     expect(await used(), 1);
+  });
+
+  test('the daily repository cannot commit a multiple-card session', () async {
+    final session = await prepare();
+    await expectLater(DailyTarotRepository().selectAndCommit(
+      userId: user, sessionId: session.id, cardId: session.deck.first.id,
+      catalog: tarotCards, positionLabel: 'Daily', isCurrentUser: () => true,
+      isPremium: () => true, freeLimit: 1,
+    ), throwsA(isA<TarotAccountChanged>()));
+    expect((await prepare()).selectedIds, isEmpty);
+    expect(await used(), 0);
   });
 
   test('three and five cards share the remembered question and one Free debit', () async {

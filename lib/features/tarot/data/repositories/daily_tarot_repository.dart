@@ -217,7 +217,8 @@ class DailyTarotRepository {
   static Future<DailyTarotSession> _read(
       DatabaseExecutor db, String userId, String id) async {
     final rows = await db.query('selection_sessions',
-        where: 'id = ? AND user_id = ?', whereArgs: [id, userId], limit: 1);
+        where: 'id = ? AND user_id = ? AND tool = ? AND spread = ?',
+        whereArgs: [id, userId, 'tarot', 'daily'], limit: 1);
     if (rows.isEmpty) throw const TarotAccountChanged();
     return DailyTarotSession.fromRow(rows.single);
   }
