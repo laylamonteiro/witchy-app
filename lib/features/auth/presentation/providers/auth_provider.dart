@@ -576,15 +576,48 @@ class AuthProvider extends ChangeNotifier {
   /// Quantas leituras de runas restam hoje
   int get remainingRuneReadings => _currentUser.remainingRuneReadings;
 
-  /// Incrementa contador de leituras de runas
+  /// Incrementa contador de leituras de runas.
+  ///
+  /// A escolha manual (P04) debita a cota dentro da transação da mesa; este
+  /// caminho é o espelho, para quem ainda registra fora dela.
   Future<void> incrementRuneReadings() async {
+    final userId = _currentUser.id;
+    await refreshRuneUsage();
+    if (_currentUser.id != userId) return;
     if (_currentUser.isFree) {
-      _currentUser = _currentUser.copyWith(
-        runeReadingsToday: _currentUser.runeReadingsToday + 1,
+      final used = await UsageCoordinator().record(
+        userId: userId,
+        category: UsageCoordinator.runes,
+        legacyUsed: _currentUser.runeReadingsToday,
       );
+      if (_currentUser.id != userId) return;
+      _currentUser = _currentUser.copyWith(runeReadingsToday: used);
       await _saveUser();
       notifyListeners();
     }
+  }
+
+  /// Restore the rune quota committed with a manual table, even if the
+  /// process stopped before the preferences mirror was written.
+  Future<void> refreshRuneUsage() async {
+    final userId = _currentUser.id;
+    final now = DateTime.now();
+    final prefs = await SharedPreferences.getInstance();
+    if (_currentUser.id != userId) return;
+    final reset = DateTime.tryParse(
+        prefs.getString('${_lastDailyLimitsResetKey}_$userId') ?? '');
+    final sameDay = reset == null ||
+        UsageCoordinator.dayKey(reset) == UsageCoordinator.dayKey(now);
+    final used = await UsageCoordinator().used(
+      userId: userId,
+      category: UsageCoordinator.runes,
+      day: now,
+      legacyUsed: sameDay ? _currentUser.runeReadingsToday : 0,
+    );
+    if (_currentUser.id != userId) return;
+    _currentUser = _currentUser.copyWith(runeReadingsToday: used);
+    await _saveUser();
+    notifyListeners();
   }
 
   /// Verifica se pode fazer leitura de oracle hoje

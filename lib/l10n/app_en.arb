@@ -2026,5 +2026,38 @@
         "type": "String"
       }
     }
+  },
+  "runeSelectionTitle": "Choose your stones",
+  "runeSelectionInstruction": "The stones lie face down on the cloth. Tap a stone, or press and lift it, to choose it.",
+  "runeSelectionPosition": "Stone {position} of {total}",
+  "runeSelectionPrevious": "Previous stone",
+  "runeSelectionNext": "Next stone",
+  "runeSelectionChoose": "Choose this stone",
+  "runeSelectionStep": "Choose stone {number} of {total} · {position}",
+  "runeSelectionReady": "Every position is filled",
+  "runeSelectionSaveError": "Unable to finish this reading. Please try again.",
+  "runeTableHint": "Tap a stone to jump to its meaning",
+  "@runeSelectionPosition": {
+    "placeholders": {
+      "position": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "@runeSelectionStep": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      },
+      "position": {
+        "type": "String"
+      }
+    }
   }
 }

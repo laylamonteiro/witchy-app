@@ -53,6 +53,55 @@ infraestrutura mínima de P01/P02. Os demais pacotes continuam no plano.
 - **Acessibilidade:** rótulos de posição, botões alternativos, setas/Home/End e
   Enter/espaço, texto ampliado e conteúdo rolável. Traduções nos quatro ARBs.
 
+## Runas manuais (P04)
+
+Entregue em 10/09, sobre a mesma infraestrutura de sessões do Tarot.
+
+- **Tecido de pedras:** as 24 runas ficam viradas para baixo em quatro
+  fileiras de seis, cada uma no lugar sorteado ao preparar a sessão. Toque,
+  Enter/espaço, setas (inclusive entre fileiras), Home/End e o botão
+  “Escolher esta pedra” confirmam a pedra em foco; segurar e puxar para cima
+  é a alternativa por gesto, e soltar cedo ou fora do tecido devolve a pedra.
+  Pedras escolhidas deixam o lugar vazio, sem reembaralhar as demais. A
+  árvore de acessibilidade descreve “Pedra N de M”, nunca a identidade.
+- **Mesas:** uma pedra; linha de três; cruz nórdica (Resultado acima,
+  Passado/Situação/Futuro no meio, Desafio abaixo); nove mundos em 3×3.
+  A mesma disposição serve à escolha (versos) e ao resultado (glifos).
+- **Sessão:** `selection_sessions` com `tool = 'runes'`, sem migração nova.
+  Identidade e orientação (50% invertida, como antes) ficam fixas antes de
+  abrir o tecido; a animação nunca sorteia. Cada escolha parcial é gravada;
+  a última confirma resultado (`rune_readings`, com `session_id` dentro de
+  `reading_data`), consumo e vínculo em uma transação. Falha na gravação
+  conserva as pedras para retry; confirmação repetida não cobra outra vez.
+- **Cota:** categoria própria `runes` no ledger `usage_balances`/
+  `usage_operations`, importando o contador antigo uma vez por conta/dia.
+  `AuthProvider.refreshRuneUsage` espelha o saldo em preferências;
+  `incrementRuneReadings` passa a gravar no ledger. Free conserva uma mesa
+  por tiragem/pergunta no dia e pode revisitá-la sem consumo; Premium usa
+  `isPremiumEffective` e só inicia outra mesa pela ação explícita “Nova
+  Leitura”. Anúncio apenas numa mesa recém-confirmada, antes da revelação.
+- **Revelação:** o tecido permanece à frente enquanto a mesa é preparada;
+  as pedras viram no lugar (`TarotFlipCard`, passo de até 90 ms, teto de
+  1,2 s) e só depois os significados entram. Tocar na mesa antecipa o texto;
+  tocar numa pedra destaca e rola até a interpretação correspondente.
+  Movimento reduzido mostra glifos e texto de imediato. A interpretação do
+  Conselheiro fica gravada na leitura e volta na revisita.
+- **Conta e retomada:** a tela é recriada por `user_id`; sair no meio
+  preserva o rascunho (inclusive após a meia-noite, no dia original).
+  Pergunta vazia continua gravada com o rótulo “Sem pergunta” do idioma
+  ativo, como antes. Nome e glifo são invariantes; descrição e palavras-chave
+  acompanham o idioma atual ao reabrir.
+- **Verificação:** `rune_selection_repository_test.dart` (1/3/5/9 pedras,
+  comandos concorrentes, rollback, Free/Premium, contador legado, cota
+  alterada durante a escolha, meia-noite, pergunta vazia, isolamento de
+  conta); `rune_selection_surface_test.dart` (toque, lacunas, teclado por
+  fileiras, levantar/cancelar, escolha travada, semântica sem identidade,
+  movimento reduzido e texto ampliado); `rune_reading_flow_test.dart`
+  (nove pedras do tecido à revelação, retomada com três escolhas, acervo,
+  revisita sem nova leitura, “Nova Leitura” no Premium e pedra única sob
+  movimento reduzido). A galeria `motion_gallery.dart` inclui pedras e tecido.
+  Analyze e testes rodam no CI; este ambiente não tem Flutter.
+
 ## Dados e compatibilidade
 
 O schema local sobe de 23 para 24. As tabelas novas são `selection_sessions`,
@@ -86,8 +135,8 @@ explícita “Nova tiragem”. Resultados antigos são adotados com orientação
 interpretação e data preservadas. Anúncios só são elegíveis depois de uma
 confirmação nova e antes da revelação, respeitando a política existente.
 As assinaturas das três tiragens passam a identificar a sessão, permitindo
-consultas distintas com as mesmas cartas. Oráculo e Runas ainda aguardam
-a migração de seus fluxos para sessões.
+consultas distintas com as mesmas cartas. Runas já usam sessões (P04);
+o Oráculo ainda aguarda a migração de seu fluxo.
 
 ## Verificação
 
@@ -128,7 +177,7 @@ pendentes. Os testes automatizados não substituem essa avaliação.
 
 ## Continuação do lote
 
-1. P04–P14: runas, Oráculo, Conselheiro e demais ações/rituais do plano.
+1. P05–P14: Oráculo, Conselheiro e demais ações/rituais do plano.
 2. P16/P17: registro menstrual manual Free; dados derivados e análises Premium.
 3. P18: registros menstruais autorizados entram na análise completa do ciclo.
 4. P15: integração e validação final do lote.

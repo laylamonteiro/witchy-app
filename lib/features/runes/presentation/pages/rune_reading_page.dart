@@ -1,160 +1,290 @@
 import 'dart:async';
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
-import 'package:uuid/uuid.dart';
 import 'package:provider/provider.dart';
-import 'dart:math';
-import '../../../../core/widgets/magical_card.dart';
+
+import '../../../../core/ai/ai_service.dart';
 import '../../../../core/navigation/grimoire_route.dart';
+import '../../../../core/services/ad_service.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/theme/grimoire_motion.dart';
-import '../../data/models/rune_spread_model.dart';
+import '../../../../core/widgets/magical_card.dart';
+import '../../../../core/widgets/motion/tool_scene_frame.dart';
+import '../../../../core/widgets/premium_locked_preview.dart';
+import '../../../auth/data/models/user_model.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../auth/presentation/widgets/premium_blur_widget.dart';
 import '../../../diary/data/models/free_writing_model.dart';
 import '../../../diary/data/services/reading_archive_composer.dart';
 import '../../../diary/data/services/reading_archive_recorder.dart';
-import '../../data/data_sources/runes_data.dart';
-import '../../data/repositories/rune_reading_repository.dart';
-import 'rune_detail_page.dart';
-import '../../../auth/presentation/providers/auth_provider.dart';
-import '../../../auth/presentation/widgets/premium_blur_widget.dart';
-import '../../../auth/data/models/user_model.dart';
-import '../../../../core/services/ad_service.dart';
-import '../../../../core/ai/ai_service.dart';
-import '../../../../core/widgets/premium_locked_preview.dart';
+import '../../../tarot/presentation/widgets/tarot_card_view.dart';
 import '../../../your_day/presentation/providers/daily_checkin_provider.dart';
+import '../../data/data_sources/runes_data.dart';
+import '../../data/models/rune_spread_model.dart';
+import '../../data/repositories/rune_reading_repository.dart';
+import '../../data/repositories/rune_selection_repository.dart';
+import '../../domain/rune_selection_session.dart';
+import '../widgets/rune_spread_board.dart';
+import '../widgets/rune_stone_view.dart';
+import 'rune_detail_page.dart';
+import 'rune_selection_page.dart';
 
-class RuneReadingPage extends StatefulWidget {
+/// Trocar de conta recria a tela: o rascunho, a mesa e a interpretação
+/// pertencem a quem estava logada quando começaram.
+class RuneReadingPage extends StatelessWidget {
   const RuneReadingPage({super.key});
 
   @override
-  State<RuneReadingPage> createState() => _RuneReadingPageState();
+  Widget build(BuildContext context) {
+    final userId = context.select<AuthProvider, String>((auth) => auth.currentUser.id);
+    return _RuneReadingBody(key: ValueKey('runes-$userId'), userId: userId);
+  }
 }
 
-class _RuneReadingPageState extends State<RuneReadingPage>
-    with SingleTickerProviderStateMixin {
+class _RuneReadingBody extends StatefulWidget {
+  const _RuneReadingBody({super.key, required this.userId});
+
+  final String userId;
+
+  @override
+  State<_RuneReadingBody> createState() => _RuneReadingBodyState();
+}
+
+class _RuneReadingBodyState extends State<_RuneReadingBody> {
   final _questionController = TextEditingController();
   final _repository = RuneReadingRepository();
+  final _sessions = RuneSelectionRepository();
 
   /// Escreve a leitura em "Meus Registros" assim que ela sai.
   final _archive = ReadingArchiveRecorder();
 
   RuneSpreadType _selectedSpread = RuneSpreadType.single;
   List<RunePosition>? _drawnRunes;
-  late AnimationController _animController;
   bool _isDrawing = false;
 
-  /// Cadência da queda das runas: cada uma leva [GrimoireMotion.reveal] para
-  /// assentar, com até 90ms entre vizinhas. Nas mesas grandes o passo aperta
-  /// para a entrada inteira caber em [_tetoEntradaMs].
-  static final int _duracaoQuedaMs = GrimoireMotion.reveal.inMilliseconds;
-  static const int _tetoEntradaMs = 1200;
+  /// Mesa em exibição: a sessão confirmada, os lugares originais de cada
+  /// pedra no tecido (para o verso não mudar ao virar) e o estado da cena.
+  RuneSelectionSession? _activeSession;
+  List<int> _backPositions = const [];
+  bool _revealed = false;
+  bool _textVisible = false;
+  int? _highlighted;
+  bool _newReadingRequested = false;
+  Timer? _textTimer;
+  List<GlobalKey> _positionKeys = const [];
 
-  int _passoQuedaMs(int quantas) {
+  String get _userId => widget.userId;
+
+  /// Cadência da virada das pedras: cada uma leva [GrimoireMotion.reveal],
+  /// com até 90ms entre vizinhas; nas mesas grandes o passo aperta para a
+  /// revelação inteira caber em [_tetoRevelacaoMs].
+  static const int _tetoRevelacaoMs = 1200;
+
+  static int _passoRevelacaoMs(int quantas) {
     if (quantas <= 1) return 0;
-    return min(90, (_tetoEntradaMs - _duracaoQuedaMs) ~/ (quantas - 1));
+    return min(90, (_tetoRevelacaoMs - GrimoireMotion.reveal.inMilliseconds) ~/ (quantas - 1));
   }
 
-  int _totalEntradaMs(int quantas) =>
-      (quantas - 1) * _passoQuedaMs(quantas) + _duracaoQuedaMs;
-
-  @override
-  void initState() {
-    super.initState();
-    _animController = AnimationController(
-      duration: const Duration(milliseconds: 800),
-      vsync: this,
-    );
-  }
+  static int _totalRevelacaoMs(int quantas) =>
+      (quantas - 1) * _passoRevelacaoMs(quantas) + GrimoireMotion.reveal.inMilliseconds;
 
   @override
   void dispose() {
     _questionController.dispose();
-    _animController.dispose();
+    _textTimer?.cancel();
     super.dispose();
   }
 
   Future<void> _drawRunes() async {
-    // Verificar limite diário para usuários free
-    final authProvider = context.read<AuthProvider>();
-    if (!authProvider.canUseRunes) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-              AppLocalizations.of(context).oracleDailyLimit),
-          backgroundColor: context.gc.alert,
-          duration: Duration(seconds: 4),
-        ),
-      );
-      showModalBottomSheet(
+    if (_isDrawing) return;
+    setState(() => _isDrawing = true);
+    try {
+      await _startSelection();
+    } on RuneQuotaExceeded {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(AppLocalizations.of(context).oracleDailyLimit),
+        backgroundColor: context.gc.alert,
+        duration: const Duration(seconds: 4),
+      ));
+      await showModalBottomSheet<void>(
         context: context,
         isScrollControlled: true,
         backgroundColor: Colors.transparent,
         builder: (context) => const PremiumUpgradeSheet(),
       );
-      return;
+    } on RuneAccountChanged {
+      // A tela da outra conta já foi recriada; nada a mostrar aqui.
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(AppLocalizations.of(context).cardSelectionLoadError)));
+    } finally {
+      if (mounted) setState(() => _isDrawing = false);
     }
+  }
 
-    setState(() {
-      _isDrawing = true;
-    });
-
-    // Aguardar um momento para efeito dramático
-    await Future.delayed(const Duration(milliseconds: 500));
-
-    // Embaralhar runas
-    final allRunes = List<RuneModel>.from(runesData)..shuffle();
-
-    // Tirar número de runas baseado no spread
-    final count = _selectedSpread.runeCount;
-    final drawn = <RunePosition>[];
-
-    for (int i = 0; i < count; i++) {
-      final rune = allRunes[i];
-      final isReversed = Random().nextBool(); // 50% chance de invertida
-
-      drawn.add(RunePosition(
-        position: i,
-        rune: rune,
-        isReversed: isReversed,
-        positionMeaning: _selectedSpread.getPositionMeaning(i),
-      ));
-    }
-
-    // Incrementar uso de runas
-    await authProvider.incrementRuneReadings();
-
-    // Anúncio ANTES de revelar as runas (free, cooldown interno).
-    await AdService.instance.showBeforeResult();
-    if (!mounted) return;
-
-    setState(() {
-      _drawnRunes = drawn;
-      _isDrawing = false;
-      _aiReading = null;
-    });
-
-    // A leitura acabou de se revelar: um único toque físico marca o momento.
-    HapticFeedback.lightImpact();
-
-    // Sob "reduzir movimento" as runas aparecem já assentadas; senão, a
-    // queda escalonada é dimensionada para a mesa sorteada.
-    if (GrimoireMotion.reduced(context)) {
-      _animController.value = 1.0;
+  /// Prepara (ou retoma) a sessão e abre o tecido. A escolha acontece na
+  /// página de seleção; a mesa só volta para cá confirmada e gravada.
+  Future<void> _startSelection() async {
+    final auth = context.read<AuthProvider>();
+    await auth.refreshRuneUsage();
+    if (!mounted || auth.currentUser.id != _userId) return;
+    final spread = _selectedSpread;
+    final session = await _sessions.prepare(
+      userId: _userId,
+      spread: spread,
+      question: _questionController.text,
+      catalog: runesData,
+      premium: auth.isPremiumEffective,
+      legacyRuneUsed: auth.currentUser.runeReadingsToday,
+      freeLimit: UserModel.freeRuneReadingsLimit,
+      startNew: _newReadingRequested,
+    );
+    if (!mounted || auth.currentUser.id != _userId) return;
+    _newReadingRequested = false;
+    FocusScope.of(context).unfocus();
+    final labels = List.generate(spread.runeCount, spread.getPositionMeaning);
+    final emptyQuestion = AppLocalizations.of(context).runesNoQuestion;
+    RuneSelectionUpdate? result;
+    if (session.isCommitted) {
+      result = RuneSelectionUpdate(session);
+      await _prepareResult(result);
     } else {
-      _animController.duration =
-          Duration(milliseconds: _totalEntradaMs(drawn.length));
-      _animController.forward(from: 0);
+      final route = MaterialPageRoute<RuneSelectionUpdate>(builder: (_) =>
+        RuneSelectionPage(
+          session: session, positionLabels: labels,
+          onSelect: (runeId, expectedCount) async {
+            final update = await _sessions.select(
+              userId: _userId, sessionId: session.id, runeId: runeId,
+              expectedCount: expectedCount, catalog: runesData,
+              positionLabels: labels, emptyQuestionLabel: emptyQuestion,
+              isCurrentUser: () => mounted && auth.currentUser.id == _userId,
+              isPremium: () => auth.isPremiumEffective,
+              freeLimit: UserModel.freeRuneReadingsLimit,
+            );
+            // Keep the cloth in front while the table is prepared: the
+            // destination must already hold the stones when the route pops.
+            if (update.session.isCommitted) await _prepareResult(update);
+            return update;
+          },
+        ));
+      result = await Navigator.of(context).push(route);
+      // Only the flip waits for the overlay to leave, never result preparation.
+      await route.completed;
     }
+    if (!mounted || result == null || auth.currentUser.id != _userId) return;
+    _revealPrepared(result.session.id, created: result.created);
+  }
 
-    // Salvar leitura
-    await _saveReading(drawn);
-    // A tiragem aconteceu: se as runas são o rito de hoje, está cumprido.
-    if (mounted) {
-      unawaited(
-          context.read<DailyCheckinProvider>().completeRite(DailyRites.runes));
+  Future<void> _prepareResult(RuneSelectionUpdate committed) async {
+    if (!mounted) return;
+    final auth = context.read<AuthProvider>();
+    final session = committed.session;
+    if (auth.currentUser.id != session.userId) return;
+    final stored = await _sessions.reading(session);
+    if (stored == null) throw StateError('The confirmed reading is missing');
+    await auth.refreshRuneUsage();
+    if (!mounted || auth.currentUser.id != _userId) return;
+    // Anúncio ANTES de revelar (free, só numa mesa recém-confirmada).
+    if (committed.created && !auth.isPremiumEffective) {
+      await AdService.instance.showBeforeResult();
+      if (!mounted || auth.currentUser.id != _userId) return;
     }
+    // Nome e glifo são invariantes; descrição e palavras-chave acompanham o
+    // idioma atual, não o que estava ativo quando a mesa foi gravada.
+    final catalog = runesData;
+    final positions = [for (final p in stored.positions)
+      RunePosition(
+        position: p.position,
+        rune: catalog.firstWhere((r) => r.name == p.rune.name, orElse: () => p.rune),
+        isReversed: p.isReversed,
+        positionMeaning: p.positionMeaning,
+      )];
+    final reading = RuneReading(
+      id: stored.id, question: stored.question, spreadType: stored.spreadType,
+      positions: positions, interpretation: stored.interpretation,
+      date: stored.date, sessionId: stored.sessionId,
+    );
+    _textTimer?.cancel();
+    setState(() {
+      _activeSession = session;
+      _selectedSpread = session.spread;
+      _backPositions = session.selectedIds.map(session.positionOf).toList();
+      _drawnRunes = positions;
+      _lastReading = reading;
+      _aiReading = reading.interpretation;
+      _revealed = !committed.created;
+      _textVisible = !committed.created;
+      _highlighted = null;
+      _positionKeys = List.generate(positions.length, (_) => GlobalKey());
+    });
+    // A mesa já nasce como página do acervo; reabrir reescreve a mesma linha.
+    unawaited(_archive.record(
+      readingId: reading.id,
+      userId: _userId,
+      source: FreeWritingSource.runes,
+      page: ReadingArchiveComposer.runes(reading, interpretation: reading.interpretation),
+      createdAt: reading.date,
+    ));
+  }
+
+  void _revealPrepared(String sessionId, {required bool created}) {
+    if (!created || !mounted || _activeSession?.id != sessionId) return;
+    // A tiragem aconteceu: se as runas são o rito de hoje, está cumprido.
+    unawaited(context.read<DailyCheckinProvider>().completeRite(DailyRites.runes));
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || _activeSession?.id != sessionId) return;
+      // Um único toque físico marca o momento, também sob "reduzir movimento".
+      HapticFeedback.lightImpact();
+      final reduced = GrimoireMotion.reduced(context);
+      setState(() {
+        _revealed = true;
+        _textVisible = reduced;
+      });
+      if (!reduced) {
+        _textTimer?.cancel();
+        _textTimer = Timer(
+          Duration(milliseconds: _totalRevelacaoMs(_drawnRunes?.length ?? 1)),
+          () {
+            _textTimer = null;
+            if (mounted && _activeSession?.id == sessionId) {
+              setState(() => _textVisible = true);
+            }
+          },
+        );
+      }
+    });
+  }
+
+  /// Antecipar: um toque na mesa durante a virada mostra o texto na hora.
+  void _skipAhead() {
+    if (_textVisible) return;
+    _textTimer?.cancel();
+    _textTimer = null;
+    setState(() => _textVisible = true);
+  }
+
+  void _clearTable({required bool newReading}) {
+    _textTimer?.cancel();
+    _textTimer = null;
+    setState(() {
+      _newReadingRequested = newReading;
+      _activeSession = null;
+      _backPositions = const [];
+      _drawnRunes = null;
+      _lastReading = null;
+      _aiReading = null;
+      _revealed = false;
+      _textVisible = false;
+      _highlighted = null;
+      _positionKeys = const [];
+      if (newReading) _questionController.clear();
+    });
   }
 
   /// Última leitura — o que o Conselheiro lê e o que já virou página do
@@ -164,30 +294,6 @@ class _RuneReadingPageState extends State<RuneReadingPage>
   /// Interpretação do Conselheiro Místico (Premium), como no Tarot.
   String? _aiReading;
   bool _isReadingAI = false;
-
-  Future<void> _saveReading(List<RunePosition> positions) async {
-    final reading = RuneReading(
-      id: const Uuid().v4(),
-      question: _questionController.text.isNotEmpty
-          ? _questionController.text
-          : AppLocalizations.of(context).runesNoQuestion,
-      spreadType: _selectedSpread,
-      positions: positions,
-      date: DateTime.now(),
-    );
-
-    final userId = context.read<AuthProvider>().currentUser.id;
-    await _repository.saveReading(reading, userId);
-    // A tiragem já nasce como página do acervo: não há botão de guardar
-    // porque não há nada a decidir — o que ela tirou é registro dela.
-    await _archive.record(
-      readingId: reading.id,
-      userId: userId,
-      source: FreeWritingSource.runes,
-      page: ReadingArchiveComposer.runes(reading),
-    );
-    if (mounted) setState(() => _lastReading = reading);
-  }
 
   /// Resumo da tiragem — o material que o Conselheiro lê, seja para o
   /// conselho completo ou para a degustação. O compositor do acervo já
@@ -215,18 +321,23 @@ class _RuneReadingPageState extends State<RuneReadingPage>
         summary: _readingSummary(reading),
         question: noQuestion ? null : question,
       );
-      if (!mounted) return;
+      // Uma resposta atrasada não pertence a outra mesa.
+      if (!mounted || _lastReading?.id != reading.id) return;
       setState(() => _aiReading = interpretation);
+      // Fica junto da leitura: reabrir a mesa não pede outra geração.
+      await _repository.attachInterpretation(
+        readingId: reading.id, userId: _userId, interpretation: interpretation);
       // Mesmo id da leitura: reescreve a página que já está no acervo, com
       // o conselho junto — nunca cria uma segunda.
       await _archive.record(
         readingId: reading.id,
-        userId: context.read<AuthProvider>().currentUser.id,
+        userId: _userId,
         source: FreeWritingSource.runes,
         page: ReadingArchiveComposer.runes(
           reading,
           interpretation: interpretation,
         ),
+        createdAt: reading.date,
       );
     } catch (e) {
       if (!mounted) return;
@@ -249,7 +360,7 @@ class _RuneReadingPageState extends State<RuneReadingPage>
         backgroundColor: context.gc.darkBackground,
       ),
       backgroundColor: context.gc.darkBackground,
-      body: SingleChildScrollView(
+      body: ToolSceneFrame(child: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -361,8 +472,9 @@ class _RuneReadingPageState extends State<RuneReadingPage>
               const SizedBox(height: 24),
 
               ElevatedButton.icon(
+                key: const ValueKey('runes-draw'),
                 onPressed: _isDrawing ? null : _drawRunes,
-                // Enquanto o sorteio prepara a mesa, os glifos do cartão de
+                // Enquanto a mesa é preparada, os glifos do cartão de
                 // abertura se revezam no botão; sob "reduzir movimento" fica
                 // o indicador circular de sempre.
                 icon: !_isDrawing
@@ -420,13 +532,8 @@ class _RuneReadingPageState extends State<RuneReadingPage>
               if (_lastReading != null) _buildCounselorCard(),
               const SizedBox(height: 16),
               OutlinedButton.icon(
-                onPressed: () {
-                  setState(() {
-                    _drawnRunes = null;
-                    _animController.reset();
-                    _questionController.clear();
-                  });
-                },
+                key: const ValueKey('runes-new-reading'),
+                onPressed: _isReadingAI ? null : () => _clearTable(newReading: true),
                 icon: const Icon(Icons.refresh),
                 label: Text(AppLocalizations.of(context).oracleNewReading),
                 style: OutlinedButton.styleFrom(
@@ -438,7 +545,7 @@ class _RuneReadingPageState extends State<RuneReadingPage>
             ],
           ],
         ),
-      ),
+      )),
     );
   }
 
@@ -506,7 +613,40 @@ class _RuneReadingPageState extends State<RuneReadingPage>
     );
   }
 
+  /// A pedra da posição [index] na mesa: verso do tecido até a revelação,
+  /// glifo depois. O verso conserva o lugar original da pedra.
+  Widget _stone(int index, double size) {
+    final position = _drawnRunes![index];
+    final slot = index < _backPositions.length ? _backPositions[index] : index;
+    return TarotFlipCard(
+      key: ValueKey('rune-flip-${_activeSession?.id}-$index'),
+      revealed: _revealed,
+      delay: Duration(milliseconds: _passoRevelacaoMs(_drawnRunes!.length) * index),
+      back: RuneStoneView(size: size, deckPosition: slot),
+      front: RuneStoneView(
+        size: size, deckPosition: slot, symbol: position.rune.symbol,
+        reversed: position.isReversed, highlighted: _highlighted == index,
+      ),
+    );
+  }
+
+  void _focusPosition(int index) {
+    if (!_revealed) return;
+    _skipAhead();
+    setState(() => _highlighted = index);
+    final target = index < _positionKeys.length ? _positionKeys[index].currentContext : null;
+    if (target != null) {
+      Scrollable.ensureVisible(target,
+          duration: GrimoireMotion.reduced(context) ? Duration.zero : GrimoireMotion.state,
+          alignment: .1);
+    }
+  }
+
   Widget _buildReadingResult(List<RunePosition> positions) {
+    final l10n = AppLocalizations.of(context);
+    final reduced = GrimoireMotion.reduced(context);
+    final question = _lastReading?.question ?? '';
+    final showQuestion = question.trim().isNotEmpty && question != l10n.runesNoQuestion;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -516,15 +656,15 @@ class _RuneReadingPageState extends State<RuneReadingPage>
               const Text('✨', style: TextStyle(fontSize: 48)),
               const SizedBox(height: 16),
               Text(
-                AppLocalizations.of(context).oracleYourReading,
+                l10n.oracleYourReading,
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                       color: context.gc.lilac,
                     ),
               ),
-              if (_questionController.text.isNotEmpty) ...[
+              if (showQuestion) ...[
                 const SizedBox(height: 8),
                 Text(
-                  _questionController.text,
+                  question,
                   style: TextStyle(
                     color: context.gc.softWhite.withValues(alpha: 0.8),
                     fontStyle: FontStyle.italic,
@@ -538,161 +678,187 @@ class _RuneReadingPageState extends State<RuneReadingPage>
 
         const SizedBox(height: 16),
 
-        // Runas tiradas — cada uma entra como se lançada na mesa: cai de
-        // alguns pixels, assenta rotação e tamanho e acende, uma após a
-        // outra. As variações (altura da queda, lado da inclinação) derivam
-        // do índice da posição, nunca de sorteio novo: o resultado da
-        // tiragem é intocável.
-        ...positions.map((position) {
-          final indice = position.position;
-          final totalMs = _totalEntradaMs(positions.length);
-          final inicioMs = indice * _passoQuedaMs(positions.length);
-          final curva = Interval(
-            inicioMs / totalMs,
-            (inicioMs + _duracaoQuedaMs) / totalMs,
-            curve: GrimoireMotion.enter,
-          );
-          // Queda entre 48 e 72px (visível como "lançada na mesa", não um
-          // nudge); inclinação de 3–5° alternando o lado.
-          final queda = 48.0 + 8.0 * (indice % 4);
-          final angulo =
-              (indice.isEven ? 1 : -1) * (3 + indice % 3) * pi / 180;
+        // A mesa: as pedras viram no lugar em que foram postas. Tocar uma
+        // pedra destaca a interpretação correspondente (e antecipa o texto).
+        GestureDetector(
+          key: const ValueKey('runes-table'),
+          behavior: HitTestBehavior.translucent,
+          onTap: _skipAhead,
+          child: MagicalCard(
+            child: Column(children: [
+              RuneSpreadBoard(
+                spread: _selectedSpread,
+                labels: positions.map((p) => p.positionMeaning).toList(),
+                selectedPosition: _highlighted,
+                onTap: _focusPosition,
+                stoneBuilder: _stone,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                l10n.runeTableHint,
+                textAlign: TextAlign.center,
+                style: TextStyle(color: context.gc.textSecondary, fontSize: 12),
+              ),
+            ]),
+          ),
+        ),
 
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: AnimatedBuilder(
-              animation: _animController,
-              builder: (context, child) {
-                // Reduzir movimento: a runa aparece já assentada no lugar.
-                if (GrimoireMotion.reduced(context)) return child!;
-                final t = curva.transform(_animController.value);
-                if (t >= 1.0) return child!;
-                return Opacity(
-                  opacity: t.clamp(0.0, 1.0).toDouble(),
-                  child: Transform.translate(
-                    offset: Offset(0, -queda * (1 - t)),
-                    child: Transform.rotate(
-                      angle: angulo * (1 - t),
-                      child: Transform.scale(
-                        scale: 0.88 + 0.12 * t,
-                        child: child,
-                      ),
-                    ),
-                  ),
-                );
-              },
-              child: InkWell(
-                onTap: () {
-                  Navigator.of(context).push(
-                    GrimoireRoute(
-                      builder: (_) => RuneDetailPage(rune: position.rune),
-                    ),
-                  );
-                },
-                borderRadius: BorderRadius.circular(12),
-                child: MagicalCard(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Container(
-                            width: 60,
-                            height: 60,
-                            decoration: BoxDecoration(
-                              color: context.gc.lilac.withValues(alpha: 0.2),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Center(
-                              child: Text(
-                                position.rune.symbol,
-                                style: TextStyle(
-                                  fontSize: 32,
-                                  color: context.gc.lilac,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  position.positionMeaning,
-                                  style: TextStyle(
-                                    color: context.gc.softWhite.withValues(alpha: 0.7),
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  position.rune.name,
-                                  style: TextStyle(
-                                    color: context.gc.lilac,
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          if (position.isReversed)
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 4,
-                              ),
-                              decoration: BoxDecoration(
-                                color: context.gc.alert.withValues(alpha: 0.2),
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                              child: Text(
-                                AppLocalizations.of(context).runesReversed,
-                                style: TextStyle(
-                                  color: context.gc.alert,
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      // Palavras-chave, como nos cards da tiragem de Tarot.
-                      Wrap(
-                        spacing: 6,
-                        children: position.rune.keywords
-                            .map((k) => Text(
-                                  '· $k',
-                                  style: TextStyle(
-                                    color: context.gc.textSecondary,
-                                    fontSize: 12,
-                                  ),
-                                ))
-                            .toList(),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        position.isReversed &&
-                                position.rune.reversedMeaning != null
-                            ? position.rune.reversedMeaning!
-                            : position.rune.divination,
-                        style: TextStyle(
-                          color: context.gc.softWhite,
-                          height: 1.5,
-                        ),
-                      ),
-                    ],
-                  ),
+        const SizedBox(height: 16),
+
+        // O texto chega depois das pedras assentarem — nunca junto com elas.
+        AnimatedSlide(
+          offset: _textVisible ? Offset.zero : const Offset(0, .04),
+          duration: reduced ? Duration.zero : GrimoireMotion.state,
+          curve: GrimoireMotion.enter,
+          child: AnimatedOpacity(
+            key: const ValueKey('runes-text'),
+            opacity: _textVisible ? 1 : 0,
+            duration: reduced ? Duration.zero : GrimoireMotion.state,
+            child: IgnorePointer(
+              ignoring: !_textVisible,
+              child: ExcludeSemantics(
+                excluding: !_textVisible,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    for (var i = 0; i < positions.length; i++)
+                      _positionCard(i, positions[i]),
+                  ],
                 ),
               ),
             ),
-          );
-        }).toList(),
+          ),
+        ),
       ],
+    );
+  }
+
+  Widget _positionCard(int index, RunePosition position) {
+    final highlighted = _highlighted == index;
+    return Padding(
+      key: index < _positionKeys.length ? _positionKeys[index] : null,
+      padding: const EdgeInsets.only(bottom: 12),
+      child: InkWell(
+        onTap: () {
+          Navigator.of(context).push(
+            GrimoireRoute(
+              builder: (_) => RuneDetailPage(rune: position.rune),
+            ),
+          );
+        },
+        borderRadius: BorderRadius.circular(12),
+        child: AnimatedContainer(
+          duration: GrimoireMotion.reduced(context) ? Duration.zero : GrimoireMotion.state,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: highlighted ? context.gc.lilac : Colors.transparent,
+              width: 2,
+            ),
+          ),
+          child: MagicalCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      width: 60,
+                      height: 60,
+                      decoration: BoxDecoration(
+                        color: context.gc.lilac.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Center(
+                        child: RotatedBox(
+                          quarterTurns: position.isReversed ? 2 : 0,
+                          child: Text(
+                            position.rune.symbol,
+                            style: TextStyle(
+                              fontSize: 32,
+                              color: context.gc.lilac,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            position.positionMeaning,
+                            style: TextStyle(
+                              color: context.gc.softWhite.withValues(alpha: 0.7),
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            position.rune.name,
+                            style: TextStyle(
+                              color: context.gc.lilac,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (position.isReversed)
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: context.gc.alert.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          AppLocalizations.of(context).runesReversed,
+                          style: TextStyle(
+                            color: context.gc.alert,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                // Palavras-chave, como nos cards da tiragem de Tarot.
+                Wrap(
+                  spacing: 6,
+                  children: position.rune.keywords
+                      .map((k) => Text(
+                            '· $k',
+                            style: TextStyle(
+                              color: context.gc.textSecondary,
+                              fontSize: 12,
+                            ),
+                          ))
+                      .toList(),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  position.isReversed &&
+                          position.rune.reversedMeaning != null
+                      ? position.rune.reversedMeaning!
+                      : position.rune.divination,
+                  style: TextStyle(
+                    color: context.gc.softWhite,
+                    height: 1.5,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 
@@ -766,10 +932,10 @@ Widget _previaDoConselheiro(BuildContext context) {
   );
 }
 
-/// Glifos que se revezam no botão enquanto o sorteio prepara a mesa — os
-/// mesmos caracteres do cartão de abertura ('ᚱᚢᚾᚨ'), acendendo e apagando
-/// um por vez. Puramente decorativo (o rótulo do botão já diz o estado),
-/// por isso fora da árvore de semântica.
+/// Glifos que se revezam no botão enquanto a mesa é preparada — os mesmos
+/// caracteres do cartão de abertura ('ᚱᚢᚾᚨ'), acendendo e apagando um por
+/// vez. Puramente decorativo (o rótulo do botão já diz o estado), por isso
+/// fora da árvore de semântica.
 ///
 /// Quem decide o fallback sob "reduzir movimento" é o chamador; ainda
 /// assim, o loop aqui segue a regra da casa: só começa depois de ler a

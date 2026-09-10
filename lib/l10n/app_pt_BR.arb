@@ -2026,5 +2026,38 @@
         "type": "String"
       }
     }
+  },
+  "runeSelectionTitle": "Escolha suas pedras",
+  "runeSelectionInstruction": "As pedras estão viradas para baixo sobre o tecido. Toque em uma pedra ou segure-a e puxe para cima para escolher.",
+  "runeSelectionPosition": "Pedra {position} de {total}",
+  "runeSelectionPrevious": "Pedra anterior",
+  "runeSelectionNext": "Próxima pedra",
+  "runeSelectionChoose": "Escolher esta pedra",
+  "runeSelectionStep": "Escolha a pedra {number} de {total} · {position}",
+  "runeSelectionReady": "Todas as posições estão preenchidas",
+  "runeSelectionSaveError": "Não foi possível concluir a leitura. Tente novamente.",
+  "runeTableHint": "Toque em uma pedra para ir ao seu significado",
+  "@runeSelectionPosition": {
+    "placeholders": {
+      "position": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "@runeSelectionStep": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      },
+      "position": {
+        "type": "String"
+      }
+    }
   }
 }
