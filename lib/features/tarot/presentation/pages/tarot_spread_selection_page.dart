@@ -55,11 +55,13 @@ class _TarotSpreadSelectionPageState extends State<TarotSpreadSelectionPage> {
       _error = false;
       _quotaError = false;
     });
+    var leaving = false;
     try {
       final update = await widget.onSelect(_pendingId!, _session.selectedIds.length);
       if (!mounted || context.read<AuthProvider>().currentUser.id != _session.userId) return;
       if (update.session.isCommitted) {
         Navigator.of(context).pop(update);
+        leaving = true;
       } else {
         setState(() { _session = update.session; _pendingId = null; });
       }
@@ -68,7 +70,7 @@ class _TarotSpreadSelectionPageState extends State<TarotSpreadSelectionPage> {
     } catch (_) {
       if (mounted) setState(() => _error = true);
     } finally {
-      if (mounted) setState(() => _saving = false);
+      if (mounted && !leaving) setState(() => _saving = false);
     }
   }
 

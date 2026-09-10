@@ -19,10 +19,20 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 class _PremiumFixture extends AuthProvider {
+  Completer<void>? pendingRefresh;
+  bool waitingForRefresh = false;
+
   @override
   bool get isPremiumEffective => true;
   @override
-  Future<void> refreshOracleUsage() async {}
+  Future<void> refreshOracleUsage() async {
+    final pending = pendingRefresh;
+    if (pending == null) return;
+    waitingForRefresh = true;
+    await pending.future;
+    pendingRefresh = null;
+    waitingForRefresh = false;
+  }
 }
 
 class _CheckinFixture extends DailyCheckinProvider {
@@ -48,10 +58,11 @@ void main() {
     }
   });
 
-  Future<void> until(WidgetTester tester, bool Function() ready, String stage) async {
+  Future<void> until(WidgetTester tester, bool Function() ready, String stage,
+      {Duration step = const Duration(milliseconds: 50)}) async {
     for (var i = 0; i < 150; i++) {
       await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 20)));
-      await tester.pump(const Duration(milliseconds: 50));
+      await tester.pump(step);
       if (ready()) return;
     }
     fail('The spread did not reach: $stage');
@@ -114,6 +125,8 @@ void main() {
       await open();
       final chosen = <String>[];
       final originalPositions = <int>[];
+      final refreshGate = Completer<void>();
+      late _PremiumFixture finishingAuth;
       for (var i = 0; i < count; i++) {
         final fan = tester.widget<CardSelectionSurface>(find.byType(CardSelectionSurface));
         final index = i.isEven ? 0 : fan.cardIds.length - 1;
@@ -123,6 +136,11 @@ void main() {
         await tester.pump();
         await tester.sendKeyEvent(i.isEven ? LogicalKeyboardKey.home : LogicalKeyboardKey.end);
         await tester.pumpAndSettle();
+        if (i == count - 1) {
+          finishingAuth = tester.element(find.byType(TarotSpreadSelectionPage))
+              .read<AuthProvider>() as _PremiumFixture;
+          finishingAuth.pendingRefresh = refreshGate;
+        }
         await tester.sendKeyEvent(LogicalKeyboardKey.enter);
         if (i < count - 1) {
           await until(tester, () => find.byKey(ValueKey('spread-selected-$i')).evaluate().isNotEmpty,
@@ -145,7 +163,22 @@ void main() {
           expect(jsonDecode(after.single['selected_json'] as String), chosen);
         }
       }
-      await until(tester, () => find.byType(TarotCardView).evaluate().length == count, 'all revealed faces');
+      await until(tester, () => finishingAuth.waitingForRefresh, 'result preparation');
+      await tester.pump(const Duration(milliseconds: 500));
+      final selection = find.byType(TarotSpreadSelectionPage);
+      expect(selection, findsOneWidget,
+          reason: 'The fan must cover the menu while the result is being prepared');
+      expect(ModalRoute.of(tester.element(selection))!.isCurrent, isTrue);
+      refreshGate.complete();
+      await until(tester, () {
+        expect(find.byType(TextField), findsNothing,
+            reason: 'No frame between the fan and the result may show the spread menu');
+        if (selection.evaluate().isNotEmpty) {
+          expect(find.byType(TarotCardView), findsNothing,
+              reason: 'The flip starts after the fan has left');
+        }
+        return find.byType(TarotCardView).evaluate().length == count;
+      }, 'all revealed faces', step: const Duration(milliseconds: 16));
       await tester.pumpAndSettle();
       final cards = tester.widgetList<TarotCardView>(find.byType(TarotCardView)).toList();
       expect(cards.map((c) => c.card.id).toSet(), chosen.toSet());

@@ -42,17 +42,19 @@ class _DailyTarotSelectionPageState extends State<DailyTarotSelectionPage> {
       _error = false;
       _quotaError = false;
     });
+    var leaving = false;
     try {
       final result = await widget.onCommit(_pendingId!);
       if (!mounted) return;
       if (context.read<AuthProvider>().currentUser.id != widget.session.userId) return;
       Navigator.of(context).pop(result);
+      leaving = true;
     } on TarotQuotaExceeded {
       if (mounted) setState(() { _error = true; _quotaError = true; });
     } catch (_) {
       if (mounted) setState(() => _error = true);
     } finally {
-      if (mounted) setState(() => _saving = false);
+      if (mounted && !leaving) setState(() => _saving = false);
     }
   }
 

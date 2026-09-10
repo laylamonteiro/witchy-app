@@ -7,7 +7,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/ai/ai_service.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
-import '../../../../core/theme/grimoire_motion.dart';
 import '../../../auth/data/models/user_model.dart';
 import '../../data/repositories/daily_tarot_repository.dart';
 import '../../data/repositories/tarot_day_repository.dart';
@@ -291,30 +290,42 @@ class _SpreadTabState extends State<_SpreadTab>
     DailyTarotCommit? result;
     if (session.isCommitted) {
       result = DailyTarotCommit(session, created: false);
+      await _prepareDailyResult(result);
     } else {
       final selectionRoute = MaterialPageRoute<DailyTarotCommit>(
         builder: (_) => DailyTarotSelectionPage(
           session: session,
-          onCommit: (cardId) => _dailyRepository.selectAndCommit(
-            userId: _userId,
-            sessionId: session.id,
-            cardId: cardId,
-            catalog: tarotCards,
-            positionLabel: position,
-            isCurrentUser: () => mounted && auth.currentUser.id == _userId,
-            isPremium: () => auth.isPremiumEffective,
-            freeLimit: UserModel.freeOracleReadingsLimit,
-          ),
+          onCommit: (cardId) async {
+            final committed = await _dailyRepository.selectAndCommit(
+              userId: _userId,
+              sessionId: session.id,
+              cardId: cardId,
+              catalog: tarotCards,
+              positionLabel: position,
+              isCurrentUser: () => mounted && auth.currentUser.id == _userId,
+              isPremium: () => auth.isPremiumEffective,
+              freeLimit: UserModel.freeOracleReadingsLimit,
+            );
+            // Keep the fan in front while loading the result. The destination
+            // must already contain the closed card when the route pops.
+            await _prepareDailyResult(committed);
+            return committed;
+          },
         ),
       );
       result = await Navigator.of(context).push(selectionRoute);
-      // push completes when pop starts. Wait for the overlay to leave so
-      // the result's flip is visible from its first frame.
+      // Only the flip waits for the overlay to leave, never result preparation.
       await selectionRoute.completed;
     }
     if (!mounted || result == null || auth.currentUser.id != _userId) return;
-    final committedResult = result;
+    _revealPreparedResult(result.session.resultSignature, created: result.created);
+  }
+
+  Future<void> _prepareDailyResult(DailyTarotCommit committedResult) async {
+    if (!mounted) return;
+    final auth = context.read<AuthProvider>();
     final completed = committedResult.session;
+    if (auth.currentUser.id != completed.userId) return;
     final entry = completed.card(completed.selectedId!);
     final card = tarotCards.firstWhere((c) => c.id == entry.id);
     final saved = await _dailyRepository.interpretation(completed) ??
@@ -324,7 +335,7 @@ class _SpreadTabState extends State<_SpreadTab>
     await precacheImage(AssetImage(card.assetPath(TarotDeck.riderWaite)), context,
         onError: (Object error, StackTrace? stack) {});
     if (!mounted || auth.currentUser.id != _userId) return;
-    final reduced = GrimoireMotion.reduced(context);
+    final position = AppLocalizations.of(context).tarotDailyCard;
     setState(() {
       _activeSpread = TarotSpread.daily;
       _activeReadingSignature = completed.resultSignature;
@@ -335,7 +346,7 @@ class _SpreadTabState extends State<_SpreadTab>
       _question = completed.question;
       _drawn = [TarotDrawnCard(card: card, isReversed: entry.reversed,
           positionLabel: AppLocalizations.of(context).tarotDailyCard)];
-      _revealed = reduced || !committedResult.created;
+      _revealed = !committedResult.created;
       _aiReading = saved;
     });
     unawaited(_registrarMesa(
@@ -346,13 +357,6 @@ class _SpreadTabState extends State<_SpreadTab>
       interpretation: saved,
       readingDate: completed.dayStart,
     ));
-    if (committedResult.created) {
-      unawaited(context.read<DailyCheckinProvider>().completeRite(DailyRites.divination));
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted || _activeReadingSignature != completed.resultSignature) return;
-        setState(() => _revealed = true);
-      });
-    }
   }
 
   Future<void> _startManualSpread(TarotSpread spread) async {
@@ -379,23 +383,39 @@ class _SpreadTabState extends State<_SpreadTab>
     TarotSpreadUpdate? result;
     if (session.isCommitted) {
       result = TarotSpreadUpdate(session);
+      await _prepareManualResult(spread, result);
     } else {
       final route = MaterialPageRoute<TarotSpreadUpdate>(builder: (_) =>
         TarotSpreadSelectionPage(
           session: session, title: title, positionLabels: labels,
-          onSelect: (cardId, expectedCount) => _spreadRepository.select(
-            userId: _userId, sessionId: session.id, cardId: cardId,
-            expectedCount: expectedCount, catalog: tarotCards, positionLabels: labels,
-            isCurrentUser: () => mounted && auth.currentUser.id == _userId,
-            isPremium: () => auth.isPremiumEffective, freeLimit: UserModel.freeOracleReadingsLimit,
-          ),
+          onSelect: (cardId, expectedCount) async {
+            final update = await _spreadRepository.select(
+              userId: _userId, sessionId: session.id, cardId: cardId,
+              expectedCount: expectedCount, catalog: tarotCards, positionLabels: labels,
+              isCurrentUser: () => mounted && auth.currentUser.id == _userId,
+              isPremium: () => auth.isPremiumEffective, freeLimit: UserModel.freeOracleReadingsLimit,
+            );
+            if (update.session.isCommitted) {
+              await _prepareManualResult(spread, update);
+            }
+            return update;
+          },
         ));
       result = await Navigator.of(context).push(route);
       await route.completed;
     }
     if (!mounted || result == null || auth.currentUser.id != _userId) return;
-    final committedResult = result;
+    _revealPreparedResult(result.session.resultSignature, created: result.created);
+  }
+
+  Future<void> _prepareManualResult(
+      TarotSpread spread, TarotSpreadUpdate committedResult) async {
+    if (!mounted) return;
+    final auth = context.read<AuthProvider>();
     final completed = committedResult.session;
+    if (auth.currentUser.id != completed.userId) return;
+    final labels = spread.positions(AppLocalizations.of(context));
+    final title = spread.displayName(AppLocalizations.of(context));
     final drawn = [for (var i = 0; i < completed.selectedIds.length; i++)
       TarotDrawnCard(
         card: tarotCards.firstWhere((c) => c.id == completed.selectedIds[i]),
@@ -421,19 +441,21 @@ class _SpreadTabState extends State<_SpreadTab>
       _backPositions = completed.selectedIds.map(completed.positionOf).toList();
       _question = completed.question;
       _drawn = drawn;
-      _revealed = GrimoireMotion.reduced(context) || !committedResult.created;
+      _revealed = !committedResult.created;
       _aiReading = saved;
     });
     unawaited(_registrarMesa(spread: spread, spreadLabel: title, drawn: drawn,
         question: completed.question, interpretation: saved, readingDate: completed.startedAt));
-    if (committedResult.created) {
-      unawaited(context.read<DailyCheckinProvider>().completeRite(DailyRites.divination));
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted && _activeReadingSignature == completed.resultSignature) {
-          setState(() => _revealed = true);
-        }
-      });
-    }
+  }
+
+  void _revealPreparedResult(String? signature, {required bool created}) {
+    if (!created || !mounted || _activeReadingSignature != signature) return;
+    unawaited(context.read<DailyCheckinProvider>().completeRite(DailyRites.divination));
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && _activeReadingSignature == signature) {
+        setState(() => _revealed = true);
+      }
+    });
   }
 
   Widget _resultCard(int index, double width) => TarotFlipCard(

@@ -33,6 +33,11 @@ infraestrutura mínima de P01/P02. Os demais pacotes continuam no plano.
   em linha de três ou cruz (Tendência acima, Conselho/Situação/Desafio no
   meio, Raiz abaixo). A entrada de cada carta usa movimento reduzido quando
   solicitado, e não há pausa artificial antes de revelar.
+- **Transição para a revelação:** nas três tiragens, o leque permanece aberto
+  enquanto a mesa é preparada, incluindo a leitura salva e o carregamento das
+  imagens. O retorno já encontra os versos escolhidos, sem um quadro com o menu
+  de tiragens; a virada começa após a saída da seleção. Os controles ficam
+  bloqueados até terminar essa saída.
 - **Retomada:** a ordem do baralho, as orientações e a pergunta ficam em SQLite
   antes de abrir a superfície. Reabrir a mesma pergunta no mesmo dia restaura a
   sessão. Se já existe uma carta do dia legada, ela é adotada, sem nova escolha.
@@ -91,7 +96,9 @@ a migração de seus fluxos para sessões.
   meia-noite e adoção de resultados legados de três e cinco cartas.
 - `tarot_spread_flow_test.dart`: dois fluxos completos em largura de celular;
   extremos do leque, reinício após duas escolhas, símbolos preservados,
-  geometria da cruz, acervo, revisita e nova consulta explícita no Premium.
+  geometria da cruz, fonte a 150%, acervo, revisita e nova consulta explícita
+  no Premium. Preparação retardada e quadros da transição também são verificados:
+  o menu não reaparece e as faces não surgem sob o leque.
 
 - `daily_tarot_repository_test.dart`: sessão estável, 78 IDs sem repetição,
   confirmação concorrente, rollback, retomada, migração de cota/pergunta,
@@ -101,7 +108,8 @@ a migração de seus fluxos para sessões.
 - `daily_tarot_selection_page_test.dart`: toque duplo, bloqueio de voltar
   durante a gravação, retorno após sucesso, retry e troca de conta na rota.
 - `daily_tarot_flow_test.dart`: fluxo completo na tela de Tarot, incluindo
-  escolha, revelação, cópia automática em Meus Registros e reabertura sem duplicar.
+  escolha, preparação retardada e transição sem retorno ao menu, revelação,
+  cópia automática em Meus Registros e reabertura sem duplicar.
 - `card_selection_surface_test.dart`: toque, navegação horizontal sem sorteio,
   retirada/cancelamento, extremos por teclado, escolha travada, semântica,
   fonte ampliada e movimento reduzido.

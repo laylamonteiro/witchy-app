@@ -15,10 +15,20 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 class _PremiumFixture extends AuthProvider {
+  Completer<void>? pendingRefresh;
+  bool waitingForRefresh = false;
+
   @override
   bool get isPremiumEffective => true;
   @override
-  Future<void> refreshOracleUsage() async {}
+  Future<void> refreshOracleUsage() async {
+    final pending = pendingRefresh;
+    if (pending == null) return;
+    waitingForRefresh = true;
+    await pending.future;
+    pendingRefresh = null;
+    waitingForRefresh = false;
+  }
 }
 
 class _CheckinFixture extends DailyCheckinProvider {
@@ -39,10 +49,10 @@ void main() {
   });
 
   Future<void> until(WidgetTester tester, bool Function() ready,
-      {required String stage}) async {
+      {required String stage, Duration step = const Duration(milliseconds: 50)}) async {
     for (var i = 0; i < 150; i++) {
       await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 20)));
-      await tester.pump(const Duration(milliseconds: 50));
+      await tester.pump(step);
       if (ready()) return;
     }
     fail('The reading flow did not reach: $stage');
@@ -69,10 +79,28 @@ void main() {
     await until(tester, () => find.byType(DailyTarotSelectionPage).evaluate().isNotEmpty,
         stage: 'selection route');
     await tester.pumpAndSettle();
+    final auth = tester.element(find.byType(DailyTarotSelectionPage))
+        .read<AuthProvider>() as _PremiumFixture;
+    final refreshGate = Completer<void>();
+    auth.pendingRefresh = refreshGate;
     await tester.ensureVisible(find.byKey(const ValueKey('fan-select')));
     await tester.tap(find.byKey(const ValueKey('fan-select')));
-    await until(tester, () => find.byType(TarotCardView).evaluate().isNotEmpty,
-        stage: 'first revealed card');
+    await until(tester, () => auth.waitingForRefresh, stage: 'result preparation');
+    await tester.pump(const Duration(milliseconds: 500));
+    final selection = find.byType(DailyTarotSelectionPage);
+    expect(selection, findsOneWidget,
+        reason: 'The fan must cover the menu while the result is being prepared');
+    expect(ModalRoute.of(tester.element(selection))!.isCurrent, isTrue);
+    refreshGate.complete();
+    await until(tester, () {
+      expect(find.byType(TextField), findsNothing,
+          reason: 'No frame between the fan and the result may show the spread menu');
+      if (selection.evaluate().isNotEmpty) {
+        expect(find.byType(TarotCardView), findsNothing,
+            reason: 'The flip starts after the fan has left');
+      }
+      return find.byType(TarotCardView).evaluate().isNotEmpty;
+    }, stage: 'first revealed card', step: const Duration(milliseconds: 16));
     final selected = tester.widget<TarotCardView>(find.byType(TarotCardView)).card.id;
 
     Future<List<Map<String, Object?>>> rows(String table) async {
