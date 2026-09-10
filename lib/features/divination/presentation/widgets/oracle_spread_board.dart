@@ -35,7 +35,9 @@ class OracleSpreadBoard extends StatelessWidget {
   Widget build(BuildContext context) => LayoutBuilder(builder: (context, constraints) {
     assert(labels.length == spread.cardCount, 'One label per table position');
     final count = spread.cardCount;
-    final width = math.min((constraints.maxWidth - 8.0 * count) / count,
+    // Each position spends 16 px around its card: 8 of padding and the 8 the
+    // label column adds, so a narrow phone still fits five in one row.
+    final width = math.min((constraints.maxWidth - 16.0 * count) / count,
         compact ? (count > 3 ? 44.0 : 60.0) : (count > 3 ? 64.0 : 100.0));
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
