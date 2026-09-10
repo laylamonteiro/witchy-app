@@ -78,7 +78,8 @@ void main() {
     ));
     await until(tester, () => tester.widget<ElevatedButton>(
         find.byKey(const ValueKey('advisor-consult'))).onPressed == null, 'restored');
-    await tester.pumpAndSettle();
+    // Never pumpAndSettle here: while a request is in flight the mist loops.
+    await tester.pump(const Duration(milliseconds: 400));
   }
 
   Future<void> askQuestion(WidgetTester tester, String question) async {

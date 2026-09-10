@@ -196,7 +196,12 @@ class _AdvisorBodyState extends State<_AdvisorBody> {
       final answered = await _repository.answer(
           id: consultation.id, userId: consultation.userId, answer: answer);
       if (auth.currentUser.id == consultation.userId) {
-        await auth.incrementAdvisorConsultations();
+        try {
+          await auth.incrementAdvisorConsultations();
+        } catch (_) {
+          // A provider torn down meanwhile must not turn a received answer
+          // into a failure; the answer is already persisted.
+        }
       }
       return answered;
     } catch (_) {
