@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import '../../data/models/free_writing_model.dart';
 import '../../data/repositories/free_writing_repository.dart';
+import '../../data/services/reading_archive_recorder.dart';
 
 class FreeWritingProvider with ChangeNotifier {
   final FreeWritingRepository _repository = FreeWritingRepository();
@@ -54,9 +55,24 @@ class FreeWritingProvider with ChangeNotifier {
     }
   }
 
+  /// Apaga uma entrada do acervo — e, se ela for a página de uma tiragem, a
+  /// consulta que a gerou.
+  ///
+  /// As duas são o MESMO registro, com o mesmo id; só a página é visível.
+  /// Deixar a linha da ferramenta para trás significaria um contador do
+  /// Ciclo que não baixa e uma tiragem que volta ao material da IA depois
+  /// de apagada. A leitura da entrada vem ANTES da exclusão, que é a última
+  /// chance de saber de que origem ela era.
   Future<void> delete(String id) async {
     try {
+      final entrada = await _repository.getById(id);
       await _repository.delete(id);
+      if (entrada != null) {
+        await ReadingArchiveRecorder().discardReading(
+          readingId: id,
+          source: entrada.source,
+        );
+      }
       await loadFreeWritings();
     } catch (e) {
       _error = e.toString();
