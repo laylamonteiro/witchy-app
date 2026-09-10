@@ -222,6 +222,28 @@ Entregue em 10/09.
   `action_feedback_host_test.dart` (uma composição com XP, marcos, nível e
   dia; fila e saída automática; host sem coordenador).
 
+## Lições e trilhas (P08)
+
+Entregue em 10/09.
+
+- **Uma cena por lição:** `LessonCelebrationCard` substitui o diálogo
+  anterior. A página selada recebe o selo de cera vetorial (`WaxSealStamp`:
+  desce, assenta e brilha uma vez); a última página de uma trilha fecha o
+  livro (`BoundBookCover`, com as folhas se juntando e a capa descendo). O
+  XP mostrado é o de `LessonReward` (25 por página e o bônus de 100 uma vez);
+  o novo título, os marcos das jornadas e o dia completo avaliados pelo
+  `ProgressCoordinator` (com `present: false`) entram na mesma composição,
+  sem outra caixa. Movimento reduzido mostra o estado final.
+- **Capas por trilha:** `TrailCoverRegistry` associa o acento da capa ao ID
+  da trilha; título e emblema são renderizados pela UI no idioma atual.
+- **Estante:** o Grimório Vivo mostra os volumes encadernados numa fileira
+  derivada do progresso existente (só aparece quando há algum), e o card de
+  trilha concluída usa o mesmo livro em miniatura.
+- **Verificação:** `lesson_celebration_card_test.dart` (página selada com
+  selo e XP da lição; trilha encadernada com livro, bônus contado uma vez,
+  nível, marcos e dia na mesma cena; capas distintas por trilha e selo
+  reproduzível).
+
 ## Dados e compatibilidade
 
 O schema local sobe de 23 para 24 (sessões e ledger), 25 (descobertas do
@@ -299,7 +321,7 @@ pendentes. Os testes automatizados não substituem essa avaliação.
 
 ## Continuação do lote
 
-1. P08–P14: lições e trilhas, rituais/diário/desejos, sigilos e demais ações do plano.
+1. P09–P14: rituais/diário/desejos e mascote, sigilos e demais ações do plano.
 2. P16/P17: registro menstrual manual Free; dados derivados e análises Premium.
 3. P18: registros menstruais autorizados entram na análise completa do ciclo.
 4. P15: integração e validação final do lote.

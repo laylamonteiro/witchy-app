@@ -2982,5 +2982,13 @@
         "type": "String"
       }
     }
+  },
+  "learnShelfTitle": "{count, plural, =1{Estante · 1 volume encadernado} other{Estante · {count} volumes encadernados}}",
+  "@learnShelfTitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   }
 }

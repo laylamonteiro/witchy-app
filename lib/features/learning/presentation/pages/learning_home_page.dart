@@ -6,6 +6,7 @@ import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../data/data_sources/trails_data.dart';
 import '../providers/learning_provider.dart';
+import '../widgets/bound_book_cover.dart';
 import 'trail_page.dart';
 
 /// Grimório Vivo: trilhas de aprendizado em que cada lição termina com uma
@@ -116,6 +117,10 @@ class _LearningHomePageState extends State<LearningHomePage> {
                     ],
                   ),
                 ),
+                // Estante: os volumes já encadernados, derivados do
+                // progresso existente. Só aparece quando há algum.
+                if (learningTrails.any(learning.isTrailComplete))
+                  _buildShelf(context, learning),
                 for (final trail in learningTrails)
                   _buildTrailCard(context, learning, trail),
                 const SizedBox(height: 24),
@@ -218,6 +223,53 @@ class _LearningHomePageState extends State<LearningHomePage> {
   }
 
   /// Capa de livro encadernado: a trilha completa vira um volume do grimório.
+  Widget _buildShelf(BuildContext context, LearningProvider learning) {
+    final bound = learningTrails.where(learning.isTrailComplete).toList();
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            AppLocalizations.of(context).learnShelfTitle(bound.length),
+            style: TextStyle(
+              color: context.gc.starYellow,
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 1.5,
+            ),
+          ),
+          const SizedBox(height: 8),
+          SizedBox(
+            key: const ValueKey('learn-shelf'),
+            height: 110,
+            child: ListView(
+              scrollDirection: Axis.horizontal,
+              children: [
+                for (final trail in bound)
+                  Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: Semantics(
+                      label: trail.title,
+                      button: true,
+                      child: InkWell(
+                        onTap: () => Navigator.of(context).push(
+                          MaterialPageRoute(builder: (_) => TrailPage(trail: trail)),
+                        ),
+                        borderRadius: BorderRadius.circular(8),
+                        child: BoundBookCover(
+                            trailId: trail.id, emblem: trail.emoji, width: 64),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildBoundCover(BuildContext context, trail) {
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
@@ -242,17 +294,8 @@ class _LearningHomePageState extends State<LearningHomePage> {
       ),
       child: Row(
         children: [
-          // Lombada do livro
-          Container(
-            width: 10,
-            height: 64,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(4),
-              color: context.gc.starYellow.withValues(alpha: 0.8),
-            ),
-          ),
-          const SizedBox(width: 14),
-          Text(trail.emoji, style: const TextStyle(fontSize: 30)),
+          // O mesmo livro fechado da cena de encadernação, em miniatura.
+          BoundBookCover(trailId: trail.id, emblem: trail.emoji, width: 44),
           const SizedBox(width: 12),
           Expanded(
             child: Column(

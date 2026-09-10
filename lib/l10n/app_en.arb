@@ -2112,5 +2112,13 @@
         "type": "String"
       }
     }
+  },
+  "learnShelfTitle": "{count, plural, =1{Shelf · 1 bound volume} other{Shelf · {count} bound volumes}}",
+  "@learnShelfTitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   }
 }

@@ -2112,5 +2112,13 @@
         "type": "String"
       }
     }
+  },
+  "learnShelfTitle": "{count, plural, =1{Estante · 1 volumen encuadernado} other{Estante · {count} volúmenes encuadernados}}",
+  "@learnShelfTitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   }
 }
