@@ -86,8 +86,7 @@ void main() {
       var session = await prepare(spread: spread);
       final original = session.deck.map((r) => r.toJson()).toList();
       final chosen = [session.deck.last.id, session.deck.first.id,
-        ...session.deck.skip(5).take(spread.runeCount - 2).map((r) => r.id)]
-          .take(spread.runeCount).toList();
+        ...session.deck.skip(5).map((r) => r.id)].take(spread.runeCount).toList();
       for (var i = 0; i < chosen.length; i++) {
         final update = await choose(session, chosen[i]);
         session = update.session;
@@ -153,7 +152,7 @@ void main() {
     final last = session.deck[10].id;
     final expected = [...session.selectedIds, last];
     final db = await DatabaseHelper.instance.database;
-    await db.execute("CREATE TRIGGER fail_runes BEFORE INSERT ON rune_readings "
+    await db.execute('CREATE TRIGGER fail_runes BEFORE INSERT ON rune_readings '
         "BEGIN SELECT RAISE(ABORT, 'interrupted write'); END");
     await expectLater(choose(session, last), throwsA(isA<DatabaseException>()));
     expect(await used(), 0);
@@ -186,8 +185,13 @@ void main() {
   });
 
   test('the legacy counter is imported once and blocks a second Free table', () async {
+    // The AuthProvider mirror seeds the day before any table is prepared.
+    expect(await UsageCoordinator().used(userId: user, legacyUsed: 1,
+        category: UsageCoordinator.runes, day: day), 1);
     await expectLater(prepare(legacyUsed: 1), throwsA(isA<RuneQuotaExceeded>()));
     expect(await used(), 1);
+    expect(await UsageCoordinator().used(userId: user, legacyUsed: 5,
+        category: UsageCoordinator.runes, day: day), 1, reason: 'Imported once');
     final premium = await prepare(legacyUsed: 1, premium: true);
     await finish(premium, premium: true);
     expect(await used(), 1);
