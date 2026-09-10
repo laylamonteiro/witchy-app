@@ -132,6 +132,7 @@ class _SpreadTabState extends State<_SpreadTab>
   bool _revealed = false;
   bool _starting = false;
   String? _activeDailySignature;
+  int _dailyBackPosition = 0;
   final _dailyRepository = DailyTarotRepository();
 
   /// Pergunta de quem consulta — obrigatória, capturada ao iniciar a
@@ -384,6 +385,8 @@ class _SpreadTabState extends State<_SpreadTab>
     setState(() {
       _activeSpread = TarotSpread.daily;
       _activeDailySignature = completed.resultSignature;
+      _dailyBackPosition = completed.deck.indexWhere(
+          (entry) => entry.id == completed.selectedId);
       _question = completed.question;
       _drawn = [TarotDrawnCard(card: card, isReversed: entry.reversed,
           positionLabel: AppLocalizations.of(context).tarotDailyCard)];
@@ -836,7 +839,8 @@ class _SpreadTabState extends State<_SpreadTab>
                       // Stagger: cada carta começa 90 ms depois da anterior —
                       // a mesa vira em onda, sem esperar ninguém terminar.
                       delay: Duration(milliseconds: 90 * i),
-                      back: const TarotCardBack(),
+                      back: TarotCardBack(deckPosition:
+                          _activeSpread == TarotSpread.daily ? _dailyBackPosition : i),
                       front: TarotCardView(
                         card: _drawn[i].card,
                         reversed: _drawn[i].isReversed,

@@ -234,7 +234,7 @@ class _CardSelectionSurfaceState extends State<CardSelectionSurface>
                                     child: MouseRegion(
                                       cursor: widget.enabled
                                           ? SystemMouseCursors.click : SystemMouseCursors.basic,
-                                      child: Container(
+                                      child: DecoratedBox(
                                         decoration: BoxDecoration(
                                           borderRadius: BorderRadius.circular(10),
                                           boxShadow: [BoxShadow(
@@ -243,17 +243,11 @@ class _CardSelectionSurfaceState extends State<CardSelectionSurface>
                                             blurRadius: i == _focused ? 15 : 4,
                                           )],
                                         ),
-                                        // Paint above the patterned back so overlapping
-                                        // cards keep a visible edge in every theme.
-                                        foregroundDecoration: BoxDecoration(
-                                          borderRadius: BorderRadius.circular(10),
-                                          border: Border.all(
-                                            color: Color.lerp(
-                                                context.gc.lilac, Colors.black, .65)!,
-                                            width: i == _focused ? 2.5 : 1.5,
-                                          ),
+                                        child: TarotCardBack(
+                                          width: cardWidth,
+                                          deckPosition: i,
+                                          highlighted: i == _focused,
                                         ),
-                                        child: TarotCardBack(width: cardWidth),
                                       ),
                                     ),
                                   ),

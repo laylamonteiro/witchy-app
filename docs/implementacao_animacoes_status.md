@@ -21,6 +21,12 @@ P01/P02. Não encerra esses pacotes nem o lote inteiro.
 - **Ajuste visual de 10/09:** contornos sobre o verso separam as cartas
   sobrepostas, com borda mais espessa na carta em foco. Removido o aviso de
   retomada abaixo do botão após o teste visual da Layla na web.
+- **Versos de 10/09:** substituído o padrão claro por arte vetorial na paleta
+  ativa do app: superfície, acento principal e detalhes dourados. Lua, sol,
+  estrela, olho, cristal e ramo se alternam pelas 78 posições (13 de cada),
+  com desenhos no centro e nos cantos visíveis na sobreposição. A sequência
+  acompanha a posição original da sessão, inclusive na retomada e na virada
+  da carta escolhida; não depende da identidade ou orientação da frente.
 - **Retomada:** a ordem do baralho, as orientações e a pergunta ficam em SQLite
   antes de abrir a superfície. Reabrir a mesma pergunta no mesmo dia restaura a
   sessão. Se já existe uma carta do dia legada, ela é adotada, sem nova escolha.

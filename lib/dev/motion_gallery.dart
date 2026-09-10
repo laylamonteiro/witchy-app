@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../core/theme/app_theme.dart';
+import '../core/theme/grimoire_colors.dart';
 import '../core/widgets/motion/tool_scene_frame.dart';
 import '../features/divination/presentation/widgets/card_selection_surface.dart';
 import '../features/tarot/data/data_sources/tarot_cards_data.dart';
@@ -14,7 +15,7 @@ void main() {
   if (kReleaseMode) return;
   runApp(MaterialApp(
     title: 'Motion gallery',
-    theme: AppTheme.darkTheme,
+    theme: AppTheme.build(AppThemes.colorsById(AppThemes.defaultId)),
     localizationsDelegates: AppLocalizations.localizationsDelegates,
     supportedLocales: AppLocalizations.supportedLocales,
     home: const _Gallery(),
@@ -45,6 +46,11 @@ class _GalleryState extends State<_Gallery> {
           TextButton(onPressed: () => setState(() {
               _selected = null; _generation++;
             }), child: const Text('Reset fixture')),
+          Wrap(spacing: 12, runSpacing: 12, children: [
+            for (var i = 0; i < 6; i++)
+              TarotCardBack(width: 72, deckPosition: i),
+          ]),
+          const SizedBox(height: 20),
           CardSelectionSurface(key: ValueKey(_generation),
               cardIds: tarotCards.map((c) => c.id).toList(),
               enabled: _selected == null,

@@ -19,6 +19,8 @@ Esta revisão consolida o registro manual gratuito, reserva os dados derivados e
 | Tema | Decisão |
 |---|---|
 | Tarô | Escolha manual das cartas em leque nas tiragens de 1, 3 e 5 cartas. |
+| Identidade visual | Prioridade em todas as entregas e entradas de Ferramentas: usar os temas e componentes do app; no padrão, índigo, lilás e detalhes dourados. A ambientação de cada ferramenta preserva essa linguagem. |
+| Versos do leque | Seis símbolos alternados por posição original: lua, sol, estrela, olho, cristal e ramo. Cada um aparece 13 vezes no baralho de 78; símbolos no centro e nos cantos permitem acompanhar a passagem das cartas. |
 | Runas | Escolha manual de pedras viradas para baixo, sobre um tecido; mesas de 1, 3, 5 e 9 runas. |
 | Oráculo | Compartilhar a mecânica de seleção de cartas com o tarô; usar arte autoral e cenas de revelação próprias. |
 | Escolha | Embaralhar uma vez por sessão. Cada posição corresponde a um item concreto. Retirar exatamente o item escolhido. |
@@ -302,7 +304,7 @@ Desligar sincronização interrompe novos envios; oferecer separadamente apagar 
 
 - Extrair a lógica de _startSpread para o controlador/repositórios.
 - Renderizar apenas a faixa visível e uma margem do leque. Todas as 78 posições precisam ser alcançáveis.
-- Desenhar verso compartilhado; carregar as frentes escolhidas na resolução necessária.
+- Desenhar verso compartilhado com os seis símbolos alternados por posição original (índice módulo 6), usando `GrimoireColors` para fundo, contorno e ornamentos. Manter os símbolos estáveis ao explorar, retomar e retirar cartas: a janela visível não reinicia a sequência, e a remoção não renumera os versos restantes. Não derivar símbolos do ID/face, significado ou orientação da carta. Preservar o verso escolhido até a virada e carregar as frentes na resolução necessária.
 - Preservar o ID ao animar da origem ao destino. Calcular hit testing com a mesma geometria que posiciona as cartas.
 - Tocar seleciona; exploração horizontal só muda a posição do leque. Retirada vertical confirma quando cruza a zona válida.
 - Remover a carta escolhida sem reembaralhar as restantes. Bloquear a escolha repetida do mesmo ID.
@@ -756,7 +758,7 @@ Separar a produção de arte da implementação dos gestos, para que protótipos
 
 | Conjunto | Entrega mínima | Camadas / estados |
 |---|---|---|
-| Tarô | Artes atuais, verso e mesa | Reutilizar imagens; sombra e brilho por código. |
+| Tarô | Frentes atuais, seis versos temáticos e mesa | Reutilizar as frentes; versos vetoriais, sombra e brilho por código, na paleta ativa. |
 | Oráculo | 44 frentes, verso, moldura | Frente estática para cada ID; camadas extras nas seis cenas iniciais. |
 | Runas | Saquinho, tecido e pequeno conjunto de formatos de pedra | Corpo/sombra separados; glifo vetorial ou texto existente sobreposto. |
 | Conselheiro | Bola de cristal com base | Base, reflexo, névoa e luz; estado parado sempre disponível. |
@@ -769,7 +771,7 @@ Separar a produção de arte da implementação dos gestos, para que protótipos
 
 Regras de produção:
 
-1. Usar a paleta e os temas do app. Não fixar toda a experiência a um único fundo escuro; testar as cores existentes.
+1. Priorizar a identidade visual do app em cada entrega, inclusive nos cards de entrada de Ferramentas. Usar a paleta e os temas existentes via `GrimoireColors`, com tipografia, contornos e ornamentos coerentes. O tema padrão é Clássico (índigo + lilás, dourado nos detalhes); adaptar ao tema escolhido, inclusive o claro. Diferenciar ferramentas por símbolos, materiais e gestos dentro dessa linguagem; revisar contraste e continuidade entre entrada, interação e resultado antes de entregar.
 2. Textos e nomes não ficam embutidos nos bitmaps. Manter português, inglês e espanhol pela infraestrutura de localização.
 3. Toda animação tem um frame final estático. O asset estático também serve para movimento reduzido, erro de carregamento e exportação.
 4. Para imagens em camadas, registrar canvas, pontos de pivô, recortes e ordem de composição. Camadas do mesmo conjunto precisam usar coordenadas compatíveis.

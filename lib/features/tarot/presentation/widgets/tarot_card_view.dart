@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/theme/grimoire_motion.dart';
+import '../../../divination/presentation/widgets/grimoire_card_back.dart';
 import '../../data/models/tarot_card_model.dart';
 
 /// Renderiza uma carta: usa a imagem do baralho quando o asset existir e
@@ -119,53 +120,28 @@ class _Placeholder extends StatelessWidget {
   }
 }
 
-/// Verso da carta (para o embaralhamento/revelação). Usa a arte oficial do
-/// baralho com fallback estilizado.
+/// Verso temático compartilhado entre escolha e revelação. A posição original
+/// no baralho alterna os seis símbolos decorativos sem identificar a frente.
 class TarotCardBack extends StatelessWidget {
   final double width;
-  final TarotDeck deck;
+  final int deckPosition;
+  final bool highlighted;
 
   const TarotCardBack({
     super.key,
     this.width = 110,
-    this.deck = TarotDeck.riderWaite,
+    this.deckPosition = 0,
+    this.highlighted = false,
   });
 
   @override
   Widget build(BuildContext context) {
     final height = width / TarotCardView.aspectRatio;
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(10),
-      child: Image.asset(
-        TarotCard.backAssetPath(deck),
-        width: width,
-        height: height,
-        fit: BoxFit.cover,
-        errorBuilder: (context, _, __) => Container(
-          width: width,
-          height: height,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(10),
-            border:
-                Border.all(color: context.gc.lilac.withValues(alpha: 0.5)),
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                Color.lerp(context.gc.surface, context.gc.lilac, 0.25)!,
-                context.gc.surface,
-              ],
-            ),
-          ),
-          child: Center(
-            child: Text('✦',
-                style: TextStyle(
-                  color: context.gc.starYellow,
-                  fontSize: width * 0.3,
-                )),
-          ),
-        ),
-      ),
+    return GrimoireCardBack(
+      width: width,
+      height: height,
+      deckPosition: deckPosition,
+      highlighted: highlighted,
     );
   }
 }
