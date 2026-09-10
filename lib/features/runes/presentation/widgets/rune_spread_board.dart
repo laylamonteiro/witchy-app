@@ -21,7 +21,7 @@ class RuneSpreadBoard extends StatelessWidget {
     this.nextPosition,
     this.selectedPosition,
     this.onTap,
-  }) : assert(labels.length == spread.runeCount);
+  });
 
   final RuneSpreadType spread;
   final List<String> labels;
@@ -46,6 +46,7 @@ class RuneSpreadBoard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => LayoutBuilder(builder: (context, constraints) {
+    assert(labels.length == spread.runeCount, 'One label per table position');
     final rows = rowsFor(spread);
     final columns = rows.first.length;
     final size = math.min((constraints.maxWidth - 8.0 * columns) / columns,
