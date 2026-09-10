@@ -145,11 +145,50 @@ Entregue em 10/09, com o seletor de cartas compartilhado do Tarot.
   dia sob movimento reduzido). `daily_tarot_migration_test.dart` passa a
   esperar o schema 25.
 
+## Conselheiro Místico (P06)
+
+Entregue em 10/09.
+
+- **Estado da requisição separado da animação:** cada pergunta vira uma
+  linha em `advisor_consultations` (schema 26): pendente antes da chamada,
+  respondida ou falha depois. A bola de cristal vetorial (`CrystalBallView`)
+  enevoa apenas enquanto a requisição real dura e cede espaço ao teclado;
+  não há espera mínima nem typewriter. A resposta entra em parágrafos
+  (`StaggeredParagraphs`, teto de 1,2 s) e está inteira na árvore desde o
+  primeiro quadro; movimento reduzido mostra tudo de imediato.
+- **Pergunta capturada:** o texto enviado vira citação acima da resposta e é
+  exatamente o que a operação usou; o campo continua livre para outra
+  pergunta. Falha mantém a pergunta e oferece “Tentar novamente”, que é uma
+  nova consulta explícita. Uma resposta atrasada de outra consulta não
+  substitui a atual; sair e voltar durante a espera reencontra a mesma
+  requisição em voo e mostra a resposta quando ela chega. Uma consulta que
+  ficou pendente num processo anterior aparece como falha; nada é reenviado
+  ao reabrir a tela.
+- **Guardar conselho:** origem `FreeWritingSource.advisor`, página com o
+  mesmo ID da consulta (idempotente por resposta), título localizado e data
+  da pergunta; a confirmação “Conselho guardado” só aparece após a gravação.
+  “Meus Registros” ganha o selo e o filtro “Conselheiro”. A página não entra
+  em `readings`/`autoRecorded`: não é leitura de adivinhação nem registro
+  automático.
+- **Cota e anúncio:** preservados (contador do Conselheiro em preferências,
+  consumo só após resposta, anúncio antes de revelar). Troca de conta recria
+  a tela.
+- **Painel compacto para outras ferramentas:** o mesmo par (estado persistido
+  + entrada em parágrafos) fica disponível para Tarot/Runas/Oráculo em P12/P13;
+  nesta entrega eles conservam o card atual.
+- **Verificação:** `advisor_consultation_repository_test.dart` (pendente →
+  respondida/falha, resposta atrasada ignorada, abandono de pendentes,
+  salvar idempotente com data da consulta, página apagada, isolamento de
+  conta) e `mystic_advisor_page_test.dart` (resposta imediata inteira,
+  guardar uma vez e restaurar, espera real que sobrevive a sair da tela,
+  falha com retry explícito, pendente de processo anterior, teclado aberto).
+
 ## Dados e compatibilidade
 
-O schema local sobe de 23 para 24 (sessões e ledger) e para 25 (descobertas
-do Oráculo). As tabelas novas são `selection_sessions`, `tarot_day_state`,
-`usage_balances`, `usage_operations` e `oracle_discoveries`. Instalação nova e
+O schema local sobe de 23 para 24 (sessões e ledger), 25 (descobertas do
+Oráculo) e 26 (consultas do Conselheiro). As tabelas novas são
+`selection_sessions`, `tarot_day_state`, `usage_balances`, `usage_operations`,
+`oracle_discoveries` e `advisor_consultations`. Instalação nova e
 migração usam a mesma definição. Exportação e limpeza local incluem as tabelas;
 sessões e memória da pergunta participam da adoção de conteúdo anônimo.
 
@@ -221,7 +260,7 @@ pendentes. Os testes automatizados não substituem essa avaliação.
 
 ## Continuação do lote
 
-1. P06–P14: Conselheiro, progresso e demais ações/rituais do plano.
+1. P07–P14: progresso e marcos, lições, rituais e demais ações do plano.
 2. P16/P17: registro menstrual manual Free; dados derivados e análises Premium.
 3. P18: registros menstruais autorizados entram na análise completa do ciclo.
 4. P15: integração e validação final do lote.

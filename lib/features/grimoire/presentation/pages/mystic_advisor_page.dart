@@ -1,78 +1,143 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
+
 import '../../../../core/ai/ai_service.dart';
-import '../../../../core/widgets/magical_card.dart';
+import '../../../../core/services/ad_service.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
+import '../../../../core/theme/grimoire_motion.dart';
+import '../../../../core/widgets/magical_card.dart';
+import '../../../../core/widgets/motion/staggered_paragraphs.dart';
+import '../../../../core/widgets/motion/tool_scene_frame.dart';
+import '../../../auth/data/models/user_model.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../auth/presentation/widgets/premium_blur_widget.dart';
-import '../../../auth/data/models/user_model.dart';
-import '../../../../core/services/ad_service.dart';
+import '../../data/repositories/advisor_consultation_repository.dart';
+import '../../domain/advisor_consultation.dart';
+import '../widgets/crystal_ball_view.dart';
 
 /// Conselheiro Místico: responde perguntas sobre bruxaria, magia e misticismo.
 ///
-/// Formato pergunta -> resposta única. A resposta é revelada com efeito
-/// "typewriter" para reforçar o ar de sabedoria de um oráculo que fala aos poucos.
-class MysticAdvisorPage extends StatefulWidget {
-  const MysticAdvisorPage({super.key});
+/// Pergunta → resposta única. A espera é a da requisição real (a bola de
+/// cristal enevoa enquanto ela dura); a resposta entra em parágrafos, sem
+/// atraso artificial, e pode ser guardada em "Meus Registros" uma vez.
+/// Trocar de conta recria a tela: a consulta pertence a quem perguntou.
+class MysticAdvisorPage extends StatelessWidget {
+  const MysticAdvisorPage({super.key, this.ask});
+
+  /// Transporte da pergunta; por padrão o serviço de IA. Injetável em testes.
+  final Future<String> Function(String question)? ask;
 
   @override
-  State<MysticAdvisorPage> createState() => _MysticAdvisorPageState();
+  Widget build(BuildContext context) {
+    final userId = context.select<AuthProvider, String>((auth) => auth.currentUser.id);
+    return _AdvisorBody(key: ValueKey('advisor-$userId'), userId: userId, ask: ask);
+  }
 }
 
-class _MysticAdvisorPageState extends State<MysticAdvisorPage>
-    with SingleTickerProviderStateMixin {
-  final _questionController = TextEditingController();
-  String? _answer;
-  bool _isAsking = false;
+class _AdvisorBody extends StatefulWidget {
+  const _AdvisorBody({super.key, required this.userId, this.ask});
 
-  late final AnimationController _typeController;
-  Animation<int>? _typedChars;
+  final String userId;
+  final Future<String> Function(String question)? ask;
+
+  @override
+  State<_AdvisorBody> createState() => _AdvisorBodyState();
+}
+
+class _AdvisorBodyState extends State<_AdvisorBody> {
+  final _questionController = TextEditingController();
+  final _questionFocus = FocusNode();
+  final _repository = AdvisorConsultationRepository();
+
+  /// A consulta em cena: pendente, respondida ou falha. Null antes da
+  /// primeira pergunta desta conta.
+  AdvisorConsultation? _consultation;
+  bool _saving = false;
+  bool _restoring = true;
+
+  /// Uma resposta atrasada de outra consulta não substitui a atual.
+  int _generation = 0;
+
+  String get _userId => widget.userId;
+  bool get _pending => _consultation?.status == AdvisorConsultationStatus.pending;
 
   @override
   void initState() {
     super.initState();
-    // Listener para habilitar/desabilitar botão conforme usuário digita
-    _questionController.addListener(() {
-      setState(() {});
-    });
-    _typeController = AnimationController(vsync: this);
+    _questionController.addListener(() => setState(() {}));
+    unawaited(_restore());
+  }
+
+  /// Requisições em voo por consulta, compartilhadas entre instâncias da
+  /// tela: sair e voltar durante a espera reencontra a mesma promessa, e a
+  /// resposta aparece quando chega. Só uma consulta que ficou pendente num
+  /// processo anterior vira falha, porque dela nada mais pode chegar.
+  static final Map<String, Future<AdvisorConsultation?>> _inFlight = {};
+
+  /// Ao abrir: a última resposta recebida volta sem nova chamada; uma
+  /// consulta pendente sem requisição em voo aparece como falha, e só a
+  /// pessoa decide tentar de novo.
+  Future<void> _restore() async {
+    try {
+      var latest = await _repository.latest(_userId);
+      final inFlight = latest == null ? null : _inFlight[latest.id];
+      if (latest != null && latest.status == AdvisorConsultationStatus.pending &&
+          inFlight == null) {
+        latest = await _repository.fail(id: latest.id, userId: _userId) ?? latest;
+      }
+      if (!mounted) return;
+      setState(() {
+        _consultation = latest;
+        _restoring = false;
+      });
+      if (inFlight != null) {
+        final generation = _generation;
+        try {
+          await inFlight;
+        } catch (_) {
+          // The failure is already persisted; the reload below shows it.
+        }
+        final current = await _repository.byId(latest!.id, _userId);
+        if (!mounted || generation != _generation || _consultation?.id != latest.id) return;
+        setState(() => _consultation = current ?? _consultation);
+      }
+    } catch (_) {
+      if (mounted) setState(() => _restoring = false);
+    }
   }
 
   @override
   void dispose() {
     _questionController.dispose();
-    _typeController.dispose();
+    _questionFocus.dispose();
     super.dispose();
   }
 
-  Future<void> _askAdvisor() async {
-    // Esconder teclado
+  Future<void> _askAdvisor({String? repeat}) async {
+    if (_pending || _saving) return;
+    final question = (repeat ?? _questionController.text).trim();
     FocusScope.of(context).unfocus();
-
-    if (_questionController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(AppLocalizations.of(context).advisorAskFirst),
-          backgroundColor: context.gc.alert,
-        ),
-      );
+    if (question.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(AppLocalizations.of(context).advisorAskFirst),
+        backgroundColor: context.gc.alert,
+      ));
+      _questionFocus.requestFocus();
       return;
     }
 
-    // Verificar limite diário para usuários free
-    final authProvider = context.read<AuthProvider>();
-    if (!authProvider.currentUser.canUseAdvisor) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-              AppLocalizations.of(context).advisorDailyLimit),
-          backgroundColor: context.gc.alert,
-          duration: Duration(seconds: 4),
-        ),
-      );
-      showModalBottomSheet(
+    final auth = context.read<AuthProvider>();
+    if (!auth.currentUser.canUseAdvisor) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(AppLocalizations.of(context).advisorDailyLimit),
+        backgroundColor: context.gc.alert,
+        duration: const Duration(seconds: 4),
+      ));
+      await showModalBottomSheet<void>(
         context: context,
         isScrollControlled: true,
         backgroundColor: Colors.transparent,
@@ -81,91 +146,127 @@ class _MysticAdvisorPageState extends State<MysticAdvisorPage>
       return;
     }
 
-    setState(() {
-      _isAsking = true;
-      _answer = null;
-    });
-
+    final generation = ++_generation;
+    AdvisorConsultation consultation;
     try {
-      final aiService = AIService.instance;
-      final answer = await aiService.answerMysticQuestion(
-        _questionController.text.trim(),
-      );
+      consultation = await _repository.start(userId: _userId, question: question);
+    } catch (_) {
+      if (!mounted || generation != _generation) return;
+      _showError(AppLocalizations.of(context).advisorGenericError);
+      return;
+    }
+    if (!mounted || generation != _generation) return;
+    setState(() => _consultation = consultation);
 
-      // Incrementar uso do Conselheiro
-      await authProvider.incrementAdvisorConsultations();
-
+    final delivery = _deliver(consultation, auth);
+    _inFlight[consultation.id] = delivery;
+    Object? failure;
+    AdvisorConsultation? delivered;
+    try {
+      delivered = await delivery;
+    } catch (e) {
+      failure = e;
+    } finally {
+      _inFlight.remove(consultation.id);
+    }
+    if (!mounted || generation != _generation) return;
+    if (failure != null) {
+      final failed = await _repository.byId(consultation.id, _userId);
+      if (!mounted || generation != _generation) return;
+      setState(() => _consultation = failed ?? consultation);
+      _showError(_messageFor(failure, AppLocalizations.of(context)));
+      return;
+    }
+    if (auth.currentUser.id == _userId) {
       // Anúncio ANTES de revelar a resposta (free, cooldown interno).
       await AdService.instance.showBeforeResult();
-      if (!mounted) return;
+      if (!mounted || generation != _generation) return;
+    }
+    setState(() => _consultation = delivered ?? consultation);
+  }
 
-      setState(() {
-        _answer = answer;
-      });
-      _startTypewriter(answer);
-    } catch (e) {
-      if (!mounted) return;
-
-      String errorMessage =
-          AppLocalizations.of(context).advisorGenericError;
-
-      if (e.toString().contains('limit') ||
-          e.toString().contains('quota') ||
-          e.toString().contains('usage') ||
-          e.toString().contains('429')) {
-        errorMessage =
-            AppLocalizations.of(context).advisorRateLimited;
-      } else if (e.toString().contains('autenticação') ||
-          e.toString().contains('authentication') ||
-          e.toString().contains('401')) {
-        errorMessage =
-            AppLocalizations.of(context).advisorTempError;
-      } else if (e.toString().contains('network') ||
-          e.toString().contains('connection') ||
-          e.toString().contains('timeout')) {
-        errorMessage =
-            AppLocalizations.of(context).advisorConnectionError;
-      } else if (e.toString().contains('503')) {
-        errorMessage =
-            AppLocalizations.of(context).advisorPortalClosed;
+  /// A requisição real e o que ela persiste: independe da tela continuar
+  /// montada. Sucesso grava a resposta e consome a cota; falha grava a
+  /// falha e relança, para a tela mostrar a mensagem certa.
+  Future<AdvisorConsultation?> _deliver(
+      AdvisorConsultation consultation, AuthProvider auth) async {
+    final ask = widget.ask ?? AIService.instance.answerMysticQuestion;
+    try {
+      final answer = await ask(consultation.question);
+      final answered = await _repository.answer(
+          id: consultation.id, userId: consultation.userId, answer: answer);
+      if (auth.currentUser.id == consultation.userId) {
+        await auth.incrementAdvisorConsultations();
       }
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(errorMessage),
-          backgroundColor: context.gc.alert,
-          duration: const Duration(seconds: 5),
-        ),
-      );
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isAsking = false;
-        });
-      }
+      return answered;
+    } catch (_) {
+      await _repository.fail(id: consultation.id, userId: consultation.userId);
+      rethrow;
     }
   }
 
-  /// Revela a resposta letra a letra, como um oráculo que fala aos poucos.
-  void _startTypewriter(String text) {
-    _typeController.stop();
-    _typeController.duration =
-        Duration(milliseconds: (text.length * 18).clamp(800, 6000));
-    _typedChars = StepTween(begin: 0, end: text.length).animate(
-      CurvedAnimation(parent: _typeController, curve: Curves.linear),
-    );
-    _typeController.forward(from: 0);
+  String _messageFor(Object e, AppLocalizations l10n) {
+    final text = e.toString();
+    if (text.contains('limit') || text.contains('quota') ||
+        text.contains('usage') || text.contains('429')) {
+      return l10n.advisorRateLimited;
+    }
+    if (text.contains('autenticação') || text.contains('authentication') ||
+        text.contains('401')) {
+      return l10n.advisorTempError;
+    }
+    if (text.contains('network') || text.contains('connection') ||
+        text.contains('timeout')) {
+      return l10n.advisorConnectionError;
+    }
+    if (text.contains('503')) return l10n.advisorPortalClosed;
+    return l10n.advisorGenericError;
+  }
+
+  void _showError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(message),
+      backgroundColor: context.gc.alert,
+      duration: const Duration(seconds: 5),
+    ));
+  }
+
+  /// "Guardar conselho": uma página por consulta; a confirmação só aparece
+  /// depois que a gravação de fato aconteceu.
+  Future<void> _save() async {
+    final consultation = _consultation;
+    if (consultation == null || !consultation.isAnswered || _saving) return;
+    final l10n = AppLocalizations.of(context);
+    setState(() => _saving = true);
+    try {
+      final saved = await _repository.save(
+        consultation: consultation,
+        title: l10n.advisorArchiveTitle,
+        content: '✦ ${l10n.readingQuestionLabel}\n${consultation.question}'
+            '\n\n✦ ${l10n.advisorAnswers}\n${consultation.answer}',
+      );
+      if (!mounted || _consultation?.id != consultation.id) return;
+      setState(() => _consultation = saved);
+    } catch (_) {
+      if (!mounted) return;
+      _showError(l10n.advisorSaveError);
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final keyboardOpen = MediaQuery.viewInsetsOf(context).bottom > 0;
+    final consultation = _consultation;
     return Scaffold(
       appBar: AppBar(
-        title: ResponsiveAppBarTitle(AppLocalizations.of(context).profileMysticAdvisor),
+        title: ResponsiveAppBarTitle(l10n.profileMysticAdvisor),
         backgroundColor: context.gc.darkBackground,
       ),
       backgroundColor: context.gc.darkBackground,
-      body: SingleChildScrollView(
+      body: ToolSceneFrame(child: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -173,29 +274,31 @@ class _MysticAdvisorPageState extends State<MysticAdvisorPage>
             MagicalCard(
               child: Column(
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const SizedBox(width: 8),
-                      const Text('🔮', style: TextStyle(fontSize: 80)),
-                    ],
+                  // A bola de cristal cede espaço ao teclado e enevoa só
+                  // enquanto a requisição real dura.
+                  CrystalBallView(
+                    key: const ValueKey('advisor-ball'),
+                    size: keyboardOpen ? 64 : 120,
+                    active: _pending,
                   ),
-                  const SizedBox(height: 16),
-                  Text(
-                    AppLocalizations.of(context).advisorWisdomTitle,
-                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                          color: context.gc.lilac,
-                        ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    AppLocalizations.of(context).advisorIntro,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: context.gc.softWhite.withValues(alpha: 0.8),
-                        ),
-                    textAlign: TextAlign.center,
-                  ),
+                  if (!keyboardOpen) ...[
+                    const SizedBox(height: 12),
+                    Text(
+                      l10n.advisorWisdomTitle,
+                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                            color: context.gc.lilac,
+                          ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      l10n.advisorIntro,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: context.gc.softWhite.withValues(alpha: 0.8),
+                          ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -204,10 +307,13 @@ class _MysticAdvisorPageState extends State<MysticAdvisorPage>
 
             MagicalCard(
               child: TextField(
+                key: const ValueKey('advisor-question'),
                 controller: _questionController,
+                focusNode: _questionFocus,
+                enabled: !_pending,
                 style: TextStyle(color: context.gc.softWhite),
                 decoration: InputDecoration(
-                  hintText: AppLocalizations.of(context).advisorQuestionHint,
+                  hintText: l10n.advisorQuestionHint,
                   hintStyle: TextStyle(
                     color: context.gc.softWhite.withValues(alpha: 0.5),
                   ),
@@ -234,11 +340,11 @@ class _MysticAdvisorPageState extends State<MysticAdvisorPage>
             const SizedBox(height: 16),
 
             ElevatedButton.icon(
-              onPressed:
-                  _isAsking || _questionController.text.trim().isEmpty
-                      ? null
-                      : _askAdvisor,
-              icon: _isAsking
+              key: const ValueKey('advisor-consult'),
+              onPressed: _pending || _restoring || _questionController.text.trim().isEmpty
+                  ? null
+                  : _askAdvisor,
+              icon: _pending
                   ? SizedBox(
                       width: 20,
                       height: 20,
@@ -250,8 +356,7 @@ class _MysticAdvisorPageState extends State<MysticAdvisorPage>
                       ),
                     )
                   : const Icon(Icons.auto_stories),
-              label: Text(
-                  _isAsking ? AppLocalizations.of(context).advisorConsultingStars : AppLocalizations.of(context).advisorConsult),
+              label: Text(_pending ? l10n.advisorConsultingStars : l10n.advisorConsult),
               style: ElevatedButton.styleFrom(
                 backgroundColor: context.gc.lilac,
                 foregroundColor: context.gc.darkBackground,
@@ -272,7 +377,7 @@ class _MysticAdvisorPageState extends State<MysticAdvisorPage>
                 return Padding(
                   padding: const EdgeInsets.only(top: 12),
                   child: Text(
-                    AppLocalizations.of(context).advisorRemainingToday('$remaining/${UserModel.freeAdvisorConsultationsLimit}'),
+                    l10n.advisorRemainingToday('$remaining/${UserModel.freeAdvisorConsultationsLimit}'),
                     style: TextStyle(
                       color: remaining > 0
                           ? context.gc.softWhite.withValues(alpha: 0.6)
@@ -285,69 +390,175 @@ class _MysticAdvisorPageState extends State<MysticAdvisorPage>
               },
             ),
 
-            if (_answer != null) ...[
+            if (consultation != null) ...[
               const SizedBox(height: 24),
-              MagicalCard(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        const Text('🌙', style: TextStyle(fontSize: 28)),
-                        const SizedBox(width: 12),
-                        Text(
-                          AppLocalizations.of(context).advisorAnswers,
-                          style: TextStyle(
-                            color: context.gc.lilac,
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                          ),
+              // A pergunta enviada vira citação: é exatamente o texto que a
+              // operação usou, mesmo que o campo mude depois.
+              AnimatedSwitcher(
+                duration: GrimoireMotion.reduced(context) ? Duration.zero : GrimoireMotion.state,
+                child: MagicalCard(
+                  key: ValueKey('advisor-quote-${consultation.id}'),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(Icons.format_quote, color: context.gc.lilac, size: 20),
+                      const SizedBox(width: 8),
+                      Expanded(child: Text(
+                        consultation.question,
+                        style: TextStyle(
+                          color: context.gc.softWhite.withValues(alpha: .85),
+                          fontStyle: FontStyle.italic,
+                          height: 1.4,
                         ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    _buildTypewriterAnswer(_answer!),
-                  ],
+                      )),
+                    ],
+                  ),
                 ),
               ),
+              const SizedBox(height: 12),
+              switch (consultation.status) {
+                AdvisorConsultationStatus.pending => _PendingCard(l10n: l10n),
+                AdvisorConsultationStatus.failed => _FailedCard(
+                    key: ValueKey('advisor-failed-${consultation.id}'),
+                    l10n: l10n,
+                    onRetry: () => _askAdvisor(repeat: consultation.question),
+                  ),
+                AdvisorConsultationStatus.answered => _AnswerCard(
+                    key: ValueKey('advisor-answer-${consultation.id}'),
+                    l10n: l10n,
+                    answer: consultation.answer ?? '',
+                    saved: consultation.isSaved,
+                    saving: _saving,
+                    onSave: _save,
+                  ),
+              },
             ],
           ],
         ),
+      )),
+    );
+  }
+}
+
+class _PendingCard extends StatelessWidget {
+  const _PendingCard({required this.l10n});
+  final AppLocalizations l10n;
+
+  @override
+  Widget build(BuildContext context) => MagicalCard(
+    child: Semantics(
+      liveRegion: true,
+      child: Text(
+        l10n.advisorConsultingStars,
+        textAlign: TextAlign.center,
+        style: TextStyle(color: context.gc.textSecondary),
       ),
-    );
-  }
+    ),
+  );
+}
 
-  /// Resposta com efeito typewriter. A parte ainda não revelada permanece
-  /// transparente no mesmo texto, preservando quebras e altura do layout.
-  Widget _buildTypewriterAnswer(String text) {
-    final style = TextStyle(
-      color: context.gc.softWhite.withValues(alpha: 0.9),
-      fontSize: 15,
-      height: 1.5,
-    );
+class _FailedCard extends StatelessWidget {
+  const _FailedCard({super.key, required this.l10n, required this.onRetry});
+  final AppLocalizations l10n;
+  final VoidCallback onRetry;
 
-    final animation = _typedChars;
-    if (animation == null) {
-      return Text(text, style: style);
-    }
-
-    return AnimatedBuilder(
-      animation: animation,
-      builder: (context, _) {
-        final count = animation.value.clamp(0, text.length);
-        return Text.rich(
-          TextSpan(
-            children: [
-              TextSpan(text: text.substring(0, count)),
-              TextSpan(
-                text: text.substring(count),
-                style: const TextStyle(color: Colors.transparent),
-              ),
-            ],
+  @override
+  Widget build(BuildContext context) => MagicalCard(
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Semantics(
+          liveRegion: true,
+          child: Text(
+            l10n.advisorPendingNote,
+            textAlign: TextAlign.center,
+            style: TextStyle(color: context.gc.softWhite.withValues(alpha: .85), height: 1.4),
           ),
-          style: style,
-        );
-      },
-    );
-  }
+        ),
+        const SizedBox(height: 12),
+        OutlinedButton.icon(
+          key: const ValueKey('advisor-retry'),
+          onPressed: onRetry,
+          icon: const Icon(Icons.refresh),
+          label: Text(l10n.advisorRetry),
+          style: OutlinedButton.styleFrom(
+            foregroundColor: context.gc.lilac,
+            side: BorderSide(color: context.gc.lilac),
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+class _AnswerCard extends StatelessWidget {
+  const _AnswerCard({
+    super.key,
+    required this.l10n,
+    required this.answer,
+    required this.saved,
+    required this.saving,
+    required this.onSave,
+  });
+
+  final AppLocalizations l10n;
+  final String answer;
+  final bool saved;
+  final bool saving;
+  final VoidCallback onSave;
+
+  @override
+  Widget build(BuildContext context) => MagicalCard(
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            const Text('🌙', style: TextStyle(fontSize: 28)),
+            const SizedBox(width: 12),
+            Text(
+              l10n.advisorAnswers,
+              style: TextStyle(
+                color: context.gc.lilac,
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        StaggeredParagraphs(
+          text: answer,
+          style: TextStyle(
+            color: context.gc.softWhite.withValues(alpha: 0.9),
+            fontSize: 15,
+            height: 1.5,
+          ),
+        ),
+        const SizedBox(height: 16),
+        Align(
+          alignment: Alignment.centerRight,
+          child: saved
+              ? Row(
+                  key: const ValueKey('advisor-saved'),
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.bookmark_added, color: context.gc.gold, size: 18),
+                    const SizedBox(width: 6),
+                    Text(l10n.advisorSaved, style: TextStyle(color: context.gc.gold)),
+                  ],
+                )
+              : TextButton.icon(
+                  key: const ValueKey('advisor-save'),
+                  onPressed: saving ? null : onSave,
+                  icon: saving
+                      ? const SizedBox(width: 16, height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2))
+                      : const Icon(Icons.bookmark_add_outlined),
+                  label: Text(l10n.advisorSave),
+                ),
+        ),
+      ],
+    ),
+  );
 }

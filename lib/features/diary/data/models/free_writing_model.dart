@@ -14,6 +14,11 @@ abstract final class FreeWritingSource {
   static const oracle = 'oracle';
   static const tarot = 'tarot';
 
+  /// Conselho guardado pela pessoa a partir do Conselheiro Místico (P06).
+  /// Não é leitura de adivinhação nem registro automático: só existe no
+  /// acervo quando ela toca em "Guardar conselho".
+  static const advisor = 'advisor';
+
   /// Leitura do Ciclo (relatório da compra avulsa): fica no acervo para
   /// sempre — a análise gerada é o recibo permanente da compra.
   static const cycleReading = 'cycle_reading';

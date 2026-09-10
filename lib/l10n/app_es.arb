@@ -2068,5 +2068,12 @@
         "type": "int"
       }
     }
-  }
+  },
+  "advisorSave": "Guardar consejo",
+  "advisorSaved": "Consejo guardado en Mis Registros",
+  "advisorSaveError": "No se pudo guardar el consejo ahora. Inténtalo de nuevo.",
+  "advisorRetry": "Intentar de nuevo",
+  "advisorPendingNote": "La respuesta a esta pregunta no llegó. Tu pregunta se conservó; puedes intentarlo de nuevo cuando quieras.",
+  "advisorArchiveTitle": "Consejo del Consejero Místico",
+  "recordsSourceAdvisor": "Consejero"
 }

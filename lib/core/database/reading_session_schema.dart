@@ -3,7 +3,8 @@ import 'package:sqflite/sqflite.dart';
 /// Local presentation sessions and usage share the result's transaction.
 /// None of these tables is uploaded by the generic content sync.
 /// Oracle discoveries (v25) feed the album of P11; they are local until the
-/// collections sync of P15 and never grant XP.
+/// collections sync of P15 and never grant XP. Advisor consultations (v26)
+/// keep a received answer on the device so reopening never re-sends it.
 abstract final class ReadingSessionSchema {
   static const tables = [
     'selection_sessions',
@@ -11,6 +12,7 @@ abstract final class ReadingSessionSchema {
     'usage_balances',
     'usage_operations',
     'oracle_discoveries',
+    'advisor_consultations',
   ];
 
   static Future<void> create(DatabaseExecutor db) async {
@@ -83,6 +85,23 @@ abstract final class ReadingSessionSchema {
         synced INTEGER NOT NULL DEFAULT 0,
         PRIMARY KEY(user_id, card_id)
       )
+    ''');
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS advisor_consultations (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL,
+        question TEXT NOT NULL,
+        answer TEXT,
+        status TEXT NOT NULL,
+        writing_id TEXT,
+        created_at INTEGER NOT NULL,
+        updated_at INTEGER NOT NULL,
+        synced INTEGER NOT NULL DEFAULT 0
+      )
+    ''');
+    await db.execute('''
+      CREATE INDEX IF NOT EXISTS idx_advisor_by_user
+      ON advisor_consultations(user_id, created_at)
     ''');
   }
 }

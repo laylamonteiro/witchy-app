@@ -2068,5 +2068,12 @@
         "type": "int"
       }
     }
-  }
+  },
+  "advisorSave": "Save advice",
+  "advisorSaved": "Advice saved to My Records",
+  "advisorSaveError": "Unable to save the advice right now. Please try again.",
+  "advisorRetry": "Try again",
+  "advisorPendingNote": "The answer to this question did not arrive. Your question was kept; you can try again whenever you like.",
+  "advisorArchiveTitle": "Advice from the Mystic Advisor",
+  "recordsSourceAdvisor": "Advisor"
 }

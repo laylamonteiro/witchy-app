@@ -88,6 +88,13 @@ class _RecordsArchiveListPageState extends State<RecordsArchiveListPage> {
           label: archiveSourceLabel(l10n, source),
           matches: (FreeWritingModel e) => e.source == source,
         ),
+      if (present.contains(FreeWritingSource.advisor))
+        (
+          id: FreeWritingSource.advisor,
+          label: archiveSourceLabel(l10n, FreeWritingSource.advisor),
+          matches: (FreeWritingModel e) =>
+              e.source == FreeWritingSource.advisor,
+        ),
       if (present.contains(FreeWritingSource.cycleReading))
         (
           id: FreeWritingSource.cycleReading,
