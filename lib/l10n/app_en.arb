@@ -1991,7 +1991,6 @@
   "cardSelectionDay": "Reading for {date}",
   "cardSelectionSaving": "Saving your choice…",
   "cardSelectionError": "Unable to finish right now. Try confirming this same card again.",
-  "cardSelectionResumeHint": "You can come back later: the fan and your choice stay with this reading.",
   "@cardSelectionPosition": {
     "placeholders": {
       "position": {

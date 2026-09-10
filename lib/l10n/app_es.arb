@@ -1991,7 +1991,6 @@
   "cardSelectionDay": "Lectura del {date}",
   "cardSelectionSaving": "Guardando tu elección…",
   "cardSelectionError": "No se pudo completar ahora. Intenta confirmar esta misma carta de nuevo.",
-  "cardSelectionResumeHint": "Puedes volver después: el abanico y tu elección permanecen en esta consulta.",
   "@cardSelectionPosition": {
     "placeholders": {
       "position": {

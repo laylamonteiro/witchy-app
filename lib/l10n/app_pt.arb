@@ -2861,7 +2861,6 @@
   "cardSelectionDay": "Consulta de {date}",
   "cardSelectionSaving": "Guardando sua escolha…",
   "cardSelectionError": "Não foi possível concluir agora. Tente confirmar esta mesma carta novamente.",
-  "cardSelectionResumeHint": "Você pode voltar depois: o leque e a escolha permanecem nesta consulta.",
   "@cardSelectionPosition": {
     "placeholders": {
       "position": {

@@ -98,7 +98,7 @@ class _DailyTarotSelectionPageState extends State<DailyTarotSelectionPage> {
                     lockedCardId: _pendingId,
                     onSelected: _select,
                   ),
-                  const SizedBox(height: 16),
+                  if (_saving || _error) const SizedBox(height: 16),
                   if (_saving) ...[
                     const LinearProgressIndicator(),
                     const SizedBox(height: 8),
@@ -109,10 +109,7 @@ class _DailyTarotSelectionPageState extends State<DailyTarotSelectionPage> {
                       child: Text(_quotaError ? l10n.tarotFreeLimitReached : l10n.cardSelectionError,
                         textAlign: TextAlign.center,
                         style: TextStyle(color: context.gc.alert)),
-                    )
-                  else
-                    Text(l10n.cardSelectionResumeHint, textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.bodySmall),
+                    ),
                 ],
               ),
             ),

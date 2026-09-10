@@ -18,6 +18,9 @@ P01/P02. Não encerra esses pacotes nem o lote inteiro.
   explora sem selecionar; toque, retirada para cima, botão ou teclado confirmam
   a carta correspondente àquela posição. As faces permanecem ocultas durante
   a escolha. Apenas uma janela do leque é renderizada.
+- **Ajuste visual de 10/09:** contornos sobre o verso separam as cartas
+  sobrepostas, com borda mais espessa na carta em foco. Removido o aviso de
+  retomada abaixo do botão após o teste visual da Layla na web.
 - **Retomada:** a ordem do baralho, as orientações e a pergunta ficam em SQLite
   antes de abrir a superfície. Reabrir a mesma pergunta no mesmo dia restaura a
   sessão. Se já existe uma carta do dia legada, ela é adotada, sem nova escolha.
