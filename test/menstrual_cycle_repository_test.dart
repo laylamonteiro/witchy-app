@@ -5,6 +5,7 @@ import 'package:grimorio_de_bolso/core/database/database_helper.dart';
 import 'package:grimorio_de_bolso/core/database/menstrual_cycle_schema.dart';
 import 'package:grimorio_de_bolso/features/cycle_reading/data/services/cycle_reading_composer.dart';
 import 'package:grimorio_de_bolso/features/menstrual_cycle/data/repositories/menstrual_cycle_repository.dart';
+import 'package:grimorio_de_bolso/features/menstrual_cycle/domain/internal_season.dart';
 import 'package:grimorio_de_bolso/features/menstrual_cycle/domain/menstrual_day.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
@@ -128,6 +129,42 @@ void main() {
     final back = await repo.dayOf(userId: user, day: DateTime(2026, 3, 12));
     expect(back!.note, 'again');
     expect(back.revision, greaterThan(saved.revision));
+  });
+
+  test('the chosen season and what she wrote with it travel with the day',
+      () async {
+    await repo.save(day(9).copyWith(
+      season: InternalSeason.spring,
+      seasonNote: 'um primeiro gesto',
+    ));
+    final saved = await repo.dayOf(userId: user, day: DateTime(2026, 3, 9));
+    expect(saved!.season, InternalSeason.spring);
+    expect(saved.seasonNote, 'um primeiro gesto');
+
+    // Desmarcar a estação não apaga o resto do registro.
+    await repo.save(saved.copyWith(clearSeason: true));
+    final cleared = await repo.dayOf(userId: user, day: DateTime(2026, 3, 9));
+    expect(cleared!.season, isNull);
+    expect(cleared.mark, saved.mark);
+    expect(cleared.seasonNote, 'um primeiro gesto');
+  });
+
+  test('erasing a day also erases the season and the writing with it',
+      () async {
+    await repo.save(day(10).copyWith(
+      season: InternalSeason.autumn,
+      seasonNote: 'o que pode ficar mais leve',
+    ));
+    await repo.remove(userId: user, day: DateTime(2026, 3, 10));
+    final db = await DatabaseHelper.instance.database;
+    final row = (await db.query(MenstrualCycleSchema.table,
+            where: 'user_id = ? AND day_key = ?',
+            whereArgs: [user, '2026-03-10']))
+        .single;
+    expect(row['deleted'], 1);
+    expect(row['season'], isNull);
+    expect(row['season_note'], '',
+        reason: 'A lápide não guarda o que ela escreveu');
   });
 
   test('a newer revision from another device wins', () async {

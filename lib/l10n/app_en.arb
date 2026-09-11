@@ -2193,5 +2193,13 @@
   "menstrualPrivacyEraseConfirm": "{count, plural, =1{This erases 1 recorded day and cannot be undone. Your other data stays here.} other{This erases {count} recorded days and cannot be undone. Your other data stays here.}}",
   "menstrualPrivacyErased": "Your cycle records were erased",
   "@menstrualPrivacyEraseCount": {"placeholders": {"count": {"type": "int"}}},
-  "@menstrualPrivacyEraseConfirm": {"placeholders": {"count": {"type": "int"}}}
+  "@menstrualPrivacyEraseConfirm": {"placeholders": {"count": {"type": "int"}}},
+  "menstrualSeasonTitle": "Your season",
+  "menstrualSeasonChoiceNote": "Your own symbolic choice. The app never infers a season from what you recorded, and choosing none is an answer too.",
+  "menstrualSeasonPractices": "Light invitations",
+  "menstrualSeasonWriteLabel": "Write here",
+  "menstrualSeasonPrivate": "This writing stays in this day's record: it does not go to the Diary, to the collection or to the AI.",
+  "menstrualSeasonSaved": "Kept in today's record",
+  "menstrualSeasonCorrespondences": "Symbolic correspondences",
+  "menstrualSeasonWinterInvite": "You recorded bleeding today. If you want, Winter is an invitation — and preferring another season, or none, is just as right."
 }

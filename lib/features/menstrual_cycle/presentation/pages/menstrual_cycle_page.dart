@@ -8,10 +8,12 @@ import '../../../../l10n/generated/app_localizations.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../data/menstrual_consent_store.dart';
 import '../../data/repositories/menstrual_cycle_repository.dart';
+import '../../domain/internal_season.dart';
 import '../../domain/menstrual_access.dart';
 import '../../domain/menstrual_day.dart';
 import '../../domain/menstrual_insights.dart';
 import '../widgets/menstrual_record_form.dart';
+import '../widgets/menstrual_season_card.dart';
 
 /// A roda pessoal: o registro do próprio ciclo.
 ///
@@ -177,6 +179,38 @@ class _MenstrualCyclePageState extends State<MenstrualCyclePage> {
     }
   }
 
+  /// A estação do dia. Escolher já é registrar: um dia sem linha ganha uma,
+  /// com a marca de anotação — que não diz nada sobre sangramento. Tocar de
+  /// novo na estação escolhida a desmarca, e desmarcar não apaga o resto.
+  Future<bool> _chooseSeason(InternalSeason? season) async {
+    final record = _todayRecord().copyWith(
+      season: season,
+      clearSeason: season == null,
+    );
+    return _persist(record);
+  }
+
+  /// A escrita que veio com o convite da estação. Fica no registro íntimo do
+  /// dia: não vai para o Diário, para o acervo nem para a IA.
+  Future<bool> _writeSeason(String text) async =>
+      _persist(_todayRecord().copyWith(seasonNote: text));
+
+  MenstrualDay _todayRecord() =>
+      _days[MenstrualDay.keyOf(_today)] ??
+      MenstrualDay(userId: _userId, day: _today, mark: MenstrualMark.note);
+
+  Future<bool> _persist(MenstrualDay record) async {
+    final l10n = AppLocalizations.of(context);
+    try {
+      await _repository.save(record);
+      await _refresh();
+      return true;
+    } catch (_) {
+      if (mounted) _say(l10n.menstrualSaveError);
+      return false;
+    }
+  }
+
   Future<void> _refresh() async {
     final userId = _userId;
     final days = await _monthOf(userId, _month);
@@ -298,6 +332,16 @@ class _MenstrualCyclePageState extends State<MenstrualCyclePage> {
             ),
           ),
           _calendar(context, l10n),
+          // A estação é escolha simbólica, não resultado — mas é conteúdo
+          // editorial, e por isso mora no Premium.
+          if (access.canChooseSeason)
+            MenstrualSeasonCard(
+              record: todayRecord,
+              invitesWinter: todayRecord?.mark == MenstrualMark.start ||
+                  todayRecord?.mark == MenstrualMark.flow,
+              onChoose: _chooseSeason,
+              onWrite: _writeSeason,
+            ),
           // Só aqui o histórico vira número — e só para quem tem acesso.
           if (access.canSeeDerived) _derived(context, l10n),
           if (access.showsGenericPremiumInvite)

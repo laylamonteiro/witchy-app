@@ -3063,5 +3063,13 @@
   "menstrualPrivacyEraseConfirm": "{count, plural, =1{Isto apaga 1 dia registrado e não pode ser desfeito. Seus outros dados continuam aqui.} other{Isto apaga {count} dias registrados e não pode ser desfeito. Seus outros dados continuam aqui.}}",
   "menstrualPrivacyErased": "Seus registros do ciclo foram apagados",
   "@menstrualPrivacyEraseCount": {"placeholders": {"count": {"type": "int"}}},
-  "@menstrualPrivacyEraseConfirm": {"placeholders": {"count": {"type": "int"}}}
+  "@menstrualPrivacyEraseConfirm": {"placeholders": {"count": {"type": "int"}}},
+  "menstrualSeasonTitle": "Sua estação",
+  "menstrualSeasonChoiceNote": "Escolha sua, simbólica. O app nunca deduz uma estação a partir do que você registrou, e não escolher nenhuma também é uma resposta.",
+  "menstrualSeasonPractices": "Convites leves",
+  "menstrualSeasonWriteLabel": "Escrever aqui",
+  "menstrualSeasonPrivate": "Esta escrita fica no registro deste dia: não vai para o Diário, para o acervo nem para a IA.",
+  "menstrualSeasonSaved": "Guardado no registro de hoje",
+  "menstrualSeasonCorrespondences": "Correspondências simbólicas",
+  "menstrualSeasonWinterInvite": "Você registrou sangramento hoje. Se quiser, o Inverno é um convite — e preferir outra estação, ou nenhuma, está igualmente certo."
 }

@@ -80,7 +80,7 @@ class DatabaseHelper {
     // é no-op — o sqflite envolve os dois numa transação).
     return await openDatabase(
       path,
-      version: 28,
+      version: 29,
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
     );
@@ -1211,6 +1211,11 @@ class DatabaseHelper {
     // XP, das ofertas e da telemetria.
     if (oldVersion < 28) {
       await MenstrualCycleSchema.create(db);
+    }
+    // v29: a Estação Interna escolhida para o dia e a escrita que vem com o
+    // convite dela. Escolha explícita da pessoa, nunca deduzida.
+    if (oldVersion < 29) {
+      await MenstrualCycleSchema.addSeason(db);
     }
   }
 

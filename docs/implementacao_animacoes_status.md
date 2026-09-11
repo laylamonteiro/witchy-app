@@ -521,6 +521,33 @@ Entregue em 11/09.
   respostas de consentimento andam juntos: quem retirou o sim continua
   podendo apagar o que já tinha escrito, sem limpar o aparelho inteiro. A
   limpeza geral do aparelho também leva a tabela junto.
+- **As quatro Estações Internas (Premium):** Inverno, Primavera, Verão e
+  Outono são vocabulário simbólico, escolhido por ela. O app nunca deduz uma
+  estação a partir de data, fluxo, humor ou média, e não escolher nenhuma é
+  uma resposta inteira. Tocar de novo na estação escolhida a desmarca, e
+  desmarcar não apaga o resto do registro. Quando o dia tem marca de
+  sangramento, o Inverno aparece como convite — e preferir outra, ou nenhuma,
+  está igualmente certo.
+- **Escolher já é registrar:** um dia sem linha ganha uma, com a marca de
+  anotação — que não diz nada sobre sangramento.
+- **Conteúdo em três idiomas:** `menstrual_phase_content_pt/en/es.dart` seguem
+  o padrão de LifeErasContent — título, convite, duas ou três práticas leves,
+  pergunta de escrita, correspondências e versão editorial. Nenhum texto
+  prevê humor, afirma fase do corpo, promete hormônio, ovulação, fertilidade
+  ou gravidez, e nada aqui trata dor ou fluxo.
+- **Correspondências simbólicas:** duas ou três entradas da Enciclopédia por
+  estação. Como o modelo de cristal não tem ID, cada correspondência carrega
+  uma chave estável (igual nos três idiomas) ao lado do nome do verbete
+  naquele idioma; o destino é resolvido por `resolveRelatedLink`, preservando
+  as telas que já existem. São ligações por afinidade simbólica: nenhuma
+  promessa de ingestão, elixir, alívio de cólica ou regulação hormonal.
+- **A escrita da estação fica onde foi escrita:** guardada no registro do dia
+  (`season_note`), com um selo discreto. Não vai para o Diário, para o acervo
+  nem para a IA, e apagar o dia leva a escrita junto.
+- **Vinheta por estação:** repouso, broto, flor aberta ou folha, trocando por
+  camadas em 450 ms. Sem laço, sem partícula e sem respiração obrigatória — o
+  estado parado é o estado normal, e com movimento reduzido a troca é
+  imediata.
 - **Verificação:** `menstrual_insights_test.dart` (intervalo entre começos,
   escape que não abre intervalo, episódio que conta as duas pontas e para no
   buraco, resumo com três intervalos, referência só com opt-in, dia do ciclo
@@ -532,13 +559,19 @@ Entregue em 11/09.
   e nada além, escape que continua escape, correção com revisão, ausência de
   registro, lápide que resiste ao aparelho antigo, revisão maior que vence,
   isolamento entre contas, apagar tudo, e a Leitura do Ciclo sem ver nada) e
-  `daily_tarot_migration_test.dart` (um telefone vindo da v23 ganha a tabela).
+  `daily_tarot_migration_test.dart` (um telefone vindo da v23 ganha a tabela),
+  `menstrual_season_content_parity_test.dart` (quatro estações nos três
+  idiomas, mesmas chaves de correspondência na mesma ordem, todo destino
+  existindo no catálogo daquele idioma, e a fronteira do que o texto não pode
+  prometer) e `menstrual_season_migration_test.dart` (um telefone na v28 ganha
+  as colunas da estação sem perder o que já estava escrito).
 
 ## Dados e compatibilidade
 
 O schema local sobe de 23 para 24 (sessões e ledger), 25 (descobertas do
-Oráculo), 26 (consultas do Conselheiro), 27 (marcos) e 28 (registro
-menstrual, em tabela própria). As tabelas novas são
+Oráculo), 26 (consultas do Conselheiro), 27 (marcos), 28 (registro menstrual,
+em tabela própria) e 29 (a estação escolhida e a escrita que vem com ela, duas
+colunas na mesma tabela). As tabelas novas são
 `selection_sessions`, `tarot_day_state`, `usage_balances`, `usage_operations`,
 `oracle_discoveries`, `advisor_consultations` e `progress_milestones`. Instalação nova e
 migração usam a mesma definição. Exportação e limpeza local incluem as tabelas;

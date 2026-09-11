@@ -23,12 +23,18 @@ void main() {
         });
     await old.close();
     final upgraded = await DatabaseHelper.instance.database;
-    expect(await upgraded.getVersion(), 28);
+    expect(await upgraded.getVersion(), 29);
     expect((await upgraded.query('tarot_readings')).single['reading_data'], 'preserved');
     final tables = (await upgraded.rawQuery("SELECT name FROM sqlite_master WHERE type = 'table'"))
         .map((row) => row['name']).toSet();
     expect(tables, containsAll(ReadingSessionSchema.tables));
     expect(tables, contains(MenstrualCycleSchema.table),
         reason: 'A phone coming from v23 also gains the menstrual record');
+    final columns = (await upgraded
+            .rawQuery('PRAGMA table_info(${MenstrualCycleSchema.table})'))
+        .map((row) => row['name'])
+        .toSet();
+    expect(columns, containsAll(['season', 'season_note']),
+        reason: 'The chosen season travels with the record');
   });
 }

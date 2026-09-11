@@ -1,6 +1,7 @@
 import 'package:sqflite/sqflite.dart';
 
-/// O registro menstrual (v28), guardado por conta e por dia.
+/// O registro menstrual (v28, com a estação escolhida desde a v29), guardado
+/// por conta e por dia.
 ///
 /// A tabela guarda apenas o que a pessoa escreveu: a marca escolhida por ela,
 /// e os campos opcionais. Nada derivado mora aqui — dia do ciclo, médias e
@@ -26,6 +27,8 @@ abstract final class MenstrualCycleSchema {
         symptoms TEXT NOT NULL DEFAULT '[]',
         mood TEXT,
         note TEXT NOT NULL DEFAULT '',
+        season TEXT,
+        season_note TEXT NOT NULL DEFAULT '',
         revision INTEGER NOT NULL DEFAULT 1,
         deleted INTEGER NOT NULL DEFAULT 0,
         created_at INTEGER NOT NULL,
@@ -39,5 +42,21 @@ abstract final class MenstrualCycleSchema {
       'CREATE INDEX IF NOT EXISTS idx_${table}_user_day '
       'ON $table (user_id, day_key)',
     );
+  }
+
+  /// v29: a Estação Interna escolhida para o dia e a escrita que veio com o
+  /// convite dela. São escolha e texto da pessoa, não cálculo — e um telefone
+  /// que já estava na v28 ganha as duas colunas vazias, sem perder nada.
+  static Future<void> addSeason(DatabaseExecutor db) async {
+    final columns = await db.rawQuery('PRAGMA table_info($table)');
+    final existing = {for (final column in columns) '${column['name']}'};
+    if (!existing.contains('season')) {
+      await db.execute('ALTER TABLE $table ADD COLUMN season TEXT');
+    }
+    if (!existing.contains('season_note')) {
+      await db.execute(
+        "ALTER TABLE $table ADD COLUMN season_note TEXT NOT NULL DEFAULT ''",
+      );
+    }
   }
 }

@@ -58,6 +58,8 @@ class MenstrualCycleRepository {
           'symptoms': '[]',
           'mood': null,
           'note': '',
+          'season': null,
+          'season_note': '',
           'deleted': 1,
           'revision': current.revision + 1,
           'updated_at': DateTime.now().millisecondsSinceEpoch,
