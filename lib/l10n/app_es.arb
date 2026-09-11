@@ -2187,5 +2187,11 @@
   "@menstrualObservedAverage": {"placeholders": {"days": {"type": "int"}}},
   "@menstrualObservedRange": {"placeholders": {"shortest": {"type": "int"}, "longest": {"type": "int"}}},
   "@menstrualSummaryPending": {"placeholders": {"count": {"type": "int"}}},
-  "@menstrualNextReference": {"placeholders": {"date": {"type": "String"}}}
+  "@menstrualNextReference": {"placeholders": {"date": {"type": "String"}}},
+  "menstrualPrivacyErase": "Borrar mis registros del ciclo",
+  "menstrualPrivacyEraseCount": "{count, plural, =1{1 día registrado en este dispositivo} other{{count} días registrados en este dispositivo}}",
+  "menstrualPrivacyEraseConfirm": "{count, plural, =1{Esto borra 1 día registrado y no se puede deshacer. Tus otros datos siguen aquí.} other{Esto borra {count} días registrados y no se puede deshacer. Tus otros datos siguen aquí.}}",
+  "menstrualPrivacyErased": "Tus registros del ciclo fueron borrados",
+  "@menstrualPrivacyEraseCount": {"placeholders": {"count": {"type": "int"}}},
+  "@menstrualPrivacyEraseConfirm": {"placeholders": {"count": {"type": "int"}}}
 }

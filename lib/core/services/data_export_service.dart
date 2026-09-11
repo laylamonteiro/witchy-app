@@ -7,6 +7,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../database/database_helper.dart';
+import '../database/menstrual_cycle_schema.dart';
 import '../database/reading_session_schema.dart';
 import '../sharing/image_download_stub.dart'
     if (dart.library.js_interop) '../sharing/image_download_web.dart';
@@ -50,6 +51,9 @@ class DataExportService {
     // O relatório em si sai em free_writings; aqui vai o registro da compra
     // e do período coberto — exportar os dados dela é exportar tudo.
     'cycle_readings',
+    // O registro menstrual é dela: levar os próprios dados embora não
+    // depende de assinatura nem de o consentimento continuar de pé.
+    MenstrualCycleSchema.table,
   ];
 
   /// Lê todas as tabelas e devolve o JSON do backup.

@@ -512,6 +512,15 @@ Entregue em 11/09.
   ou ovulação, que estão fora deste trabalho.
 - **No gratuito o histórico nem é lido:** a tela só monta a lista completa
   para quem pode ver o que se calcula dela.
+- **Levar embora:** `menstrual_days` entra na exportação de dados como
+  qualquer outra tabela dela — o arquivo sai completo, sem assinatura e sem
+  depender de o consentimento continuar de pé.
+- **Apagar só isto:** Privacidade ganha uma porta própria para o registro do
+  ciclo, visível apenas quando existe registro, dizendo quantos dias serão
+  apagados antes de confirmar. Apagar de verdade (`purge`) e esquecer as duas
+  respostas de consentimento andam juntos: quem retirou o sim continua
+  podendo apagar o que já tinha escrito, sem limpar o aparelho inteiro. A
+  limpeza geral do aparelho também leva a tabela junto.
 - **Verificação:** `menstrual_insights_test.dart` (intervalo entre começos,
   escape que não abre intervalo, episódio que conta as duas pontas e para no
   buraco, resumo com três intervalos, referência só com opt-in, dia do ciclo

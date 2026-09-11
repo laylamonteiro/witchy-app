@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -9,6 +10,9 @@ import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/loading_widget.dart';
 import '../../../../core/database/database_helper.dart';
+import '../../../../core/database/menstrual_cycle_schema.dart';
+import '../../../menstrual_cycle/data/menstrual_consent_store.dart';
+import '../../../menstrual_cycle/data/repositories/menstrual_cycle_repository.dart';
 import '../../../../core/database/reading_session_schema.dart';
 import '../../../../core/config/supabase_config.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
@@ -35,7 +39,60 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
     _loadSettings();
   }
 
+  /// Quantos dias do ciclo existem nesta conta. É contagem de operação:
+  /// serve para dizer o alcance de apagar, não para analisar nada.
+  int _menstrualDays = 0;
+
+  Future<void> _loadMenstrualCount() async {
+    try {
+      final userId = context.read<AuthProvider>().currentUser.id;
+      final days = await MenstrualCycleRepository().count(userId);
+      if (mounted) setState(() => _menstrualDays = days);
+    } catch (_) {
+      // Sem registro, o bloco simplesmente não aparece.
+    }
+  }
+
+  /// Apaga só o registro do ciclo, e esquece as respostas de consentimento.
+  Future<void> _eraseMenstrualRecord() async {
+    final l10n = AppLocalizations.of(context);
+    final userId = context.read<AuthProvider>().currentUser.id;
+    final messenger = ScaffoldMessenger.of(context);
+    final success = context.gc.success;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: dialogContext.gc.surface,
+        title: Text(l10n.menstrualPrivacyErase,
+            style: TextStyle(color: dialogContext.gc.textPrimary)),
+        content: Text(l10n.menstrualPrivacyEraseConfirm(_menstrualDays),
+            style: TextStyle(color: dialogContext.gc.textSecondary)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: Text(l10n.commonCancel),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            style: TextButton.styleFrom(foregroundColor: dialogContext.gc.alert),
+            child: Text(l10n.commonDelete),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    await MenstrualCycleRepository().purge(userId);
+    await const MenstrualConsentStore().forget(userId);
+    if (!mounted) return;
+    setState(() => _menstrualDays = 0);
+    messenger.showSnackBar(SnackBar(
+      content: Text(l10n.menstrualPrivacyErased),
+      backgroundColor: success,
+    ));
+  }
+
   Future<void> _loadSettings() async {
+    unawaited(_loadMenstrualCount());
     final prefs = await SharedPreferences.getInstance();
     if (!mounted) return;
     setState(() {
@@ -134,6 +191,20 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
                       onTap: _clearLocalData,
                       isDestructive: false,
                     ),
+                    // O registro do ciclo tem porta própria: quem quiser
+                    // apagar só ele não precisa limpar o aparelho inteiro,
+                    // e quem retirou o consentimento continua podendo
+                    // apagar o que já escreveu.
+                    if (_menstrualDays > 0) ...[
+                      _buildDivider(),
+                      _buildActionTile(
+                        icon: Icons.nights_stay_outlined,
+                        title: l10n.menstrualPrivacyErase,
+                        subtitle: l10n.menstrualPrivacyEraseCount(_menstrualDays),
+                        onTap: _eraseMenstrualRecord,
+                        isDestructive: true,
+                      ),
+                    ],
                     _buildDivider(),
                     _buildActionTile(
                       icon: Icons.delete_forever_outlined,
@@ -456,7 +527,10 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
           'learning_progress',
           'guided_ritual_logs',
           'user_encyclopedia_entries',
-          'daily_checkins'
+          'daily_checkins',
+          // O registro menstrual entra aqui como qualquer outro dado dela:
+          // limpar o aparelho limpa também o que ela escreveu do ciclo.
+          MenstrualCycleSchema.table,
         ];
 
         for (final table in tables) {
