@@ -627,6 +627,42 @@ Entregue em 11/09.
   da amostra, a mediana em vez da média na referência, e a referência que
   passou).
 
+## Leitura do Ciclo: o que ela autoriza da fonte íntima (P18, primeira parte)
+
+Entregue em 11/09. Esta parte é o contrato — a seleção na tela e a integração
+ao compositor vêm em seguida.
+
+- **Escopo é lista, não permissão aberta:** `MenstrualReadingScope` guarda a
+  janela da leitura, os dias autorizados UM A UM com a revisão que ela viu,
+  os campos escolhidos e a revisão do consentimento. Autorizar hoje não
+  autoriza o que for escrito amanhã, e a data que vale é a observada, nunca a
+  de digitação.
+- **A nota livre e a escrita da estação começam de fora:** são as palavras
+  dela, e incluí-las é uma escolha à parte.
+- **Corrigir, apagar ou retirar o sim invalida:** a revisão de cada dia entra
+  no contrato, então um registro alterado depois simplesmente não passa pelo
+  recorte, e a geração que dependia dele deixa de valer.
+- **Impressão estável do contrato:** o `fingerprint` é derivado da forma
+  canônica inteira, com um dígito próprio (djb2 com módulo) — não depende de
+  `hashCode`, que pode mudar entre versões, e é igual no aparelho e na web. É
+  detector de mudança, não assinatura.
+- **Cada seção recebe só o que lhe cabe:** a lista é fechada. Retrato e Fios
+  recebem as observações e, se autorizadas, as palavras dela; Céu recebe
+  datas e a Lua calculada; Prática e as três áreas recebem observações sem
+  palavras; O que se anuncia, Rituais, Afirmação e Selo recebem só os temas
+  escolhidos. **Uma chave desconhecida não recebe nada por fallback.**
+- **Marcadores distintos:** o que ela observou vai em `observed`, o que ela
+  escolheu vai em `chosen_by_her`, e o que não foi registrado vai em
+  `not_recorded` — um dia sem sintoma anotado nunca vira "sem sintomas".
+- **Cobertura em bloco próprio:** dias autorizados, janela, campos e a
+  impressão do escopo. Não há streak, constância nem prática aqui: a fonte
+  íntima não vira atividade.
+- **Verificação:** `menstrual_reading_scope_test.dart` (a impressão muda com
+  qualquer parte do contrato; o dia corrigido sai do escopo; nada de fora da
+  janela nem fora da lista; cada seção recebe só o que lhe cabe e chave nova
+  não recebe nada; a nota livre fica de fora enquanto ela não pedir; campo
+  ausente é ausente; a cobertura diz o alcance sem virar atividade).
+
 ## Dados e compatibilidade
 
 O schema local sobe de 23 para 24 (sessões e ledger), 25 (descobertas do

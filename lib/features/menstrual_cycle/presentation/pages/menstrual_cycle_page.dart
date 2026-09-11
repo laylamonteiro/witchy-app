@@ -73,6 +73,9 @@ class _MenstrualCyclePageState extends State<MenstrualCyclePage> {
   /// for tocado.
   late DateTime _focused = _today;
 
+  /// As fases estimadas do mês na tela, prontas antes do desenho.
+  late Map<int, MoonPhase> _moons = _moonsFor(_month);
+
   String get _userId => context.read<AuthProvider>().currentUser.id;
 
   bool get _premium => context.read<AuthProvider>().isPremiumEffective;
@@ -138,6 +141,7 @@ class _MenstrualCyclePageState extends State<MenstrualCyclePage> {
       _focused = _month.year == _today.year && _month.month == _today.month
           ? _today
           : DateTime(month.year, month.month);
+      _moons = _moonsFor(month);
     });
   }
 
@@ -511,11 +515,18 @@ class _MenstrualCyclePageState extends State<MenstrualCyclePage> {
         MenstrualMark.note => l10n.menstrualMarkNote,
       };
 
-  /// A Lua estimada para um dia, pela convenção de cálculo do app: meio-dia
-  /// local do dia observado. O registro não tem hora — o meio-dia é escolha
-  /// de cálculo, não o horário de nada que aconteceu com ela.
-  static MoonPhase _moonOf(DateTime day) =>
-      LunarProvider.phaseOn(DateTime(day.year, day.month, day.day, 12));
+  /// As fases estimadas do mês inteiro, calculadas uma vez quando o mês
+  /// muda. O calendário é redesenhado a cada toque, e refazer a conta de
+  /// trinta dias dentro do build seria trabalho repetido a troco de nada.
+  static Map<int, MoonPhase> _moonsFor(DateTime month) {
+    final total = DateTime(month.year, month.month + 1, 0).day;
+    return {
+      for (var day = 1; day <= total; day++)
+        // O registro não tem hora: o meio-dia local é convenção de cálculo,
+        // não o horário de nada que aconteceu com ela.
+        day: LunarProvider.phaseOn(DateTime(month.year, month.month, day, 12)),
+    };
+  }
 
   /// O mês na tela e os dois botões de virar — os mesmos na roda e no
   /// calendário, para que trocar de visão não mude a navegação.
@@ -615,9 +626,9 @@ class _MenstrualCyclePageState extends State<MenstrualCyclePage> {
                 reduced: reduced,
                 // Cruzar o que ela registrou com a Lua é comparação, e
                 // comparação é Premium: no gratuito a Lua nem é calculada.
-                moon: access.canSeeDerived ? _moonOf(day).emoji : null,
+                moon: access.canSeeDerived ? _moons[day.day]?.emoji : null,
                 moonName:
-                    access.canSeeDerived ? _moonOf(day).displayName : null,
+                    access.canSeeDerived ? _moons[day.day]?.displayName : null,
                 onTap: () => _openDay(day),
               );
             },
@@ -708,8 +719,14 @@ class _DayCell extends StatelessWidget {
               Text('${day.day}',
                   style: TextStyle(
                       color: colors.textPrimary, fontSize: 12, height: 1.1)),
-              if (marked)
-                Container(
+              // A marca só existe depois que a gravação terminou, e ela
+              // chega crescendo de leve — nunca antes do commit, nunca como
+              // simulação de sangue, e a cor não indica gravidade.
+              AnimatedScale(
+                scale: marked ? 1 : 0,
+                duration: reduced ? Duration.zero : GrimoireMotion.state,
+                curve: Curves.easeOutBack,
+                child: Container(
                   width: 6,
                   height: 6,
                   margin: const EdgeInsets.only(top: 2),
@@ -718,6 +735,7 @@ class _DayCell extends StatelessWidget {
                     shape: BoxShape.circle,
                   ),
                 ),
+              ),
             ],
           ),
         ),

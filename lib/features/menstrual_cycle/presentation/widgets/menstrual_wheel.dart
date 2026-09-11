@@ -5,8 +5,8 @@ import 'package:flutter/services.dart';
 
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../l10n/generated/app_localizations.dart';
+import '../../../grimoire/data/models/spell_model.dart';
 import '../../../lunar/presentation/providers/lunar_provider.dart';
-import '../../domain/internal_season.dart';
 import '../../domain/lunar_comparison.dart';
 import '../../domain/menstrual_day.dart';
 
@@ -65,6 +65,24 @@ class _MenstrualWheelState extends State<MenstrualWheel> {
   /// continuar pelas setas sem procurar onde o foco foi parar.
   final FocusNode _node = FocusNode(debugLabel: 'menstrual-wheel');
 
+  /// Quanto da Lua está iluminado em cada dia do mês, de 0 (Nova) a 1
+  /// (Cheia). Fica pronto antes do desenho: a roda é repintada a cada passo
+  /// do dedo, e refazer trinta contas por quadro seria trabalho à toa.
+  late List<double> _lights = _lightsFor(widget.month);
+
+  static List<double> _lightsFor(DateTime month) {
+    final total = DateTime(month.year, month.month + 1, 0).day;
+    return [
+      for (var day = 1; day <= total; day++)
+        (1 -
+                math.cos(2 *
+                    math.pi *
+                    LunarProvider.lunationPositionOn(LunarComparison.noonOf(
+                        DateTime(month.year, month.month, day))))) /
+            2,
+    ];
+  }
+
   @override
   void dispose() {
     _node.dispose();
@@ -84,6 +102,7 @@ class _MenstrualWheelState extends State<MenstrualWheel> {
     if (old.selected != widget.selected || old.month != widget.month) {
       _index = _indexOf(widget.selected);
     }
+    if (old.month != widget.month) _lights = _lightsFor(widget.month);
   }
 
   DateTime _dayAt(int index) =>
@@ -184,6 +203,7 @@ class _MenstrualWheelState extends State<MenstrualWheel> {
                     painter: _WheelPainter(
                       month: widget.month,
                       total: _total,
+                      lights: _lights,
                       days: widget.days,
                       selectedIndex: _index,
                       ring: colors.surfaceBorder,
@@ -241,6 +261,7 @@ class _WheelPainter extends CustomPainter {
   const _WheelPainter({
     required this.month,
     required this.total,
+    required this.lights,
     required this.days,
     required this.selectedIndex,
     required this.ring,
@@ -252,6 +273,10 @@ class _WheelPainter extends CustomPainter {
 
   final DateTime month;
   final int total;
+
+  /// A luz estimada de cada dia do mês, já calculada.
+  final List<double> lights;
+
   final Map<String, MenstrualDay> days;
   final int selectedIndex;
   final Color ring;
@@ -259,14 +284,6 @@ class _WheelPainter extends CustomPainter {
   final Color moonDark;
   final Color mark;
   final Color cursor;
-
-  /// O quanto da Lua está iluminado no dia, entre 0 (Nova) e 1 (Cheia). É a
-  /// mesma posição contínua do calendário lunar, sem os degraus das fases.
-  static double _light(DateTime day) {
-    final position =
-        LunarProvider.lunationPositionOn(LunarComparison.noonOf(day));
-    return (1 - math.cos(2 * math.pi * position)) / 2;
-  }
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -291,7 +308,8 @@ class _WheelPainter extends CustomPainter {
       // Anel externo: a Lua estimada daquele dia, do escuro ao claro.
       final moon = Paint()
         ..style = PaintingStyle.fill
-        ..color = Color.lerp(moonDark, moonLight, _light(day))!;
+        ..color = Color.lerp(moonDark, moonLight,
+            i < lights.length ? lights[i] : 0)!;
       canvas.drawCircle(centre + direction * outer, side * .016, moon);
       canvas.drawCircle(
         centre + direction * outer,
@@ -352,6 +370,7 @@ class _WheelPainter extends CustomPainter {
   @override
   bool shouldRepaint(_WheelPainter old) =>
       old.month != month ||
+      old.lights != lights ||
       old.total != total ||
       old.selectedIndex != selectedIndex ||
       old.days != days ||
