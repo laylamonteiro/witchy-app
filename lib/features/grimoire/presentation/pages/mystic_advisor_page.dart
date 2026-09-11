@@ -18,6 +18,7 @@ import '../../../auth/presentation/widgets/premium_blur_widget.dart';
 import '../../data/repositories/advisor_consultation_repository.dart';
 import '../../domain/advisor_consultation.dart';
 import '../widgets/crystal_ball_view.dart';
+import '../../../../core/widgets/motion/retry_notice.dart';
 
 /// Conselheiro Místico: responde perguntas sobre bruxaria, magia e misticismo.
 ///
@@ -468,32 +469,12 @@ class _FailedCard extends StatelessWidget {
   final VoidCallback onRetry;
 
   @override
-  Widget build(BuildContext context) => MagicalCard(
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Semantics(
-          liveRegion: true,
-          child: Text(
-            l10n.advisorPendingNote,
-            textAlign: TextAlign.center,
-            style: TextStyle(color: context.gc.softWhite.withValues(alpha: .85), height: 1.4),
-          ),
-        ),
-        const SizedBox(height: 12),
-        OutlinedButton.icon(
-          key: const ValueKey('advisor-retry'),
-          onPressed: onRetry,
-          icon: const Icon(Icons.refresh),
-          label: Text(l10n.advisorRetry),
-          style: OutlinedButton.styleFrom(
-            foregroundColor: context.gc.lilac,
-            side: BorderSide(color: context.gc.lilac),
-          ),
-        ),
-      ],
-    ),
-  );
+  Widget build(BuildContext context) => RetryNotice(
+        retryKey: const ValueKey('advisor-retry'),
+        message: l10n.advisorPendingNote,
+        retryLabel: l10n.advisorRetry,
+        onRetry: onRetry,
+      );
 }
 
 class _AnswerCard extends StatelessWidget {

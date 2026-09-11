@@ -15,6 +15,7 @@ import '../widgets/dream_interpretation_text.dart';
 import 'dream_form_page.dart';
 import '../../../journeys/domain/action_outcome.dart';
 import '../../../journeys/domain/action_recorder.dart';
+import '../../../../core/widgets/motion/retry_notice.dart';
 
 /// Interpretação personalizada de sonhos por IA (exclusiva Premium).
 ///
@@ -274,36 +275,10 @@ class _DreamInterpretationPageState extends State<DreamInterpretationPage> {
           ),
           // Falhou: o relato continua escrito e tentar de novo é um toque.
           if (_error != null && !_isInterpreting)
-            MagicalCard(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Icon(Icons.error_outline, color: context.gc.alert, size: 20),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          _error!,
-                          style: TextStyle(color: context.gc.textPrimary),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  OutlinedButton.icon(
-                    key: const ValueKey('dream-retry'),
-                    onPressed: _interpret,
-                    icon: const Icon(Icons.refresh, size: 18),
-                    label: Text(AppLocalizations.of(context).commonTryAgain),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: context.gc.lilac,
-                      side: BorderSide(color: context.gc.lilac),
-                    ),
-                  ),
-                ],
-              ),
+            RetryNotice(
+              retryKey: const ValueKey('dream-retry'),
+              message: _error!,
+              onRetry: _interpret,
             ),
           if (_mostrarPrevia && _interpretation == null)
             MagicalCard(

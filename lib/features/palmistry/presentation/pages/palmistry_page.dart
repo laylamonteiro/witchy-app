@@ -18,6 +18,7 @@ import '../../../diary/data/models/free_writing_model.dart';
 import '../../../grimoire/presentation/pages/record_detail_page.dart';
 import '../../../diary/presentation/providers/free_writing_provider.dart';
 import '../../../your_day/presentation/providers/daily_checkin_provider.dart';
+import '../../../../core/widgets/motion/retry_notice.dart';
 import '../widgets/palm_scan_view.dart';
 
 /// Leitura de Mãos (Quiromancia) — exclusiva Premium.
@@ -331,37 +332,12 @@ class _PalmistryPageState extends State<PalmistryPage> {
           // Falhou: a foto continua aqui e a retomada é uma escolha da
           // pessoa. Nenhum sucesso é anunciado.
           if (_error != null && !_isAnalyzing)
-            MagicalCard(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Icon(Icons.error_outline, color: context.gc.alert, size: 20),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          _error!,
-                          style: TextStyle(color: context.gc.textPrimary),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  if (_bytes != null)
-                    OutlinedButton.icon(
-                      key: const ValueKey('palm-retry'),
-                      onPressed: _retry,
-                      icon: const Icon(Icons.refresh, size: 18),
-                      label: Text(AppLocalizations.of(context).commonTryAgain),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: context.gc.lilac,
-                        side: BorderSide(color: context.gc.lilac),
-                      ),
-                    ),
-                ],
-              ),
+            RetryNotice(
+              retryKey: const ValueKey('palm-retry'),
+              message: _error!,
+              // Sem foto guardada não há o que repetir: pedir outra é o
+              // caminho, e os botões acima continuam ali.
+              onRetry: _bytes == null ? null : _retry,
             ),
           if (_mostrarPrevia && _reading == null)
             MagicalCard(

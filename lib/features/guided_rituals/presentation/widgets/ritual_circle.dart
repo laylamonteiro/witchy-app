@@ -46,10 +46,14 @@ class RitualCircle extends StatelessWidget {
             child: CustomPaint(
               painter: _CirclePainter(
                 colors: context.gc, steps: steps, lit: litNow, closed: closed),
+              // O emblema é decoração: lido em voz alta, ele viraria parte
+              // do rótulo do círculo, que precisa dizer só o progresso.
               child: emblem == null
                   ? null
-                  : Center(child: Text(emblem!,
-                      style: TextStyle(fontSize: size * .3, height: 1))),
+                  : ExcludeSemantics(
+                      child: Center(child: Text(emblem!,
+                          style: TextStyle(fontSize: size * .3, height: 1))),
+                    ),
             ),
           ),
         ),
