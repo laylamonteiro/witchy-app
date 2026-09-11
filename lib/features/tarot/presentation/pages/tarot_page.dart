@@ -5,7 +5,6 @@ import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/ai/ai_service.dart';
-import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../auth/data/models/user_model.dart';
 import '../../data/repositories/daily_tarot_repository.dart';
@@ -30,6 +29,7 @@ import '../widgets/tarot_card_view.dart';
 import 'tarot_learn_tab.dart';
 import '../../../../core/services/ad_service.dart';
 import '../../../../core/widgets/premium_locked_preview.dart';
+import '../../../../core/tools/tool_identity.dart';
 
 /// Tarot: tiragens com significados + tutor de aprendizado.
 class TarotPage extends StatefulWidget {
@@ -54,7 +54,8 @@ class _TarotPageState extends State<TarotPage>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: ResponsiveAppBarTitle(AppLocalizations.of(context).toolTarotTitle),
+        title: ToolHeading(tool: ToolId.tarot,
+            title: AppLocalizations.of(context).toolTarotTitle),
         bottom: TabBar(
           controller: _tabController,
           indicatorColor: context.gc.lilac,

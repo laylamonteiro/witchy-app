@@ -9,7 +9,6 @@ import 'package:provider/provider.dart';
 import '../../../../core/ai/ai_service.dart';
 import '../../../../core/navigation/grimoire_route.dart';
 import '../../../../core/services/ad_service.dart';
-import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/theme/grimoire_motion.dart';
 import '../../../../core/widgets/magical_card.dart';
@@ -32,6 +31,7 @@ import '../widgets/rune_spread_board.dart';
 import '../widgets/rune_stone_view.dart';
 import 'rune_detail_page.dart';
 import 'rune_selection_page.dart';
+import '../../../../core/tools/tool_identity.dart';
 
 /// Trocar de conta recria a tela: o rascunho, a mesa e a interpretação
 /// pertencem a quem estava logada quando começaram.
@@ -356,7 +356,8 @@ class _RuneReadingBodyState extends State<_RuneReadingBody> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: ResponsiveAppBarTitle(AppLocalizations.of(context).runesReadingTitle),
+        title: ToolHeading(tool: ToolId.runes,
+            title: AppLocalizations.of(context).runesReadingTitle),
         backgroundColor: context.gc.darkBackground,
       ),
       backgroundColor: context.gc.darkBackground,

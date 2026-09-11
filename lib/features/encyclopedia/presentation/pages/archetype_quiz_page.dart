@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/theme/grimoire_motion.dart';
 import '../../../../core/widgets/magical_card.dart';
@@ -11,6 +10,7 @@ import '../../data/data_sources/archetypes_data.dart';
 import '../../data/models/arcane_entry_model.dart';
 import '../widgets/archetype_constellation.dart';
 import 'arcane_detail_page.dart';
+import '../../../../core/tools/tool_identity.dart';
 
 /// Teste de Arquétipo: 8 perguntas, resultado abre o verbete da Enciclopédia.
 ///
@@ -136,7 +136,8 @@ class _ArchetypeQuizPageState extends State<ArchetypeQuizPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: ResponsiveAppBarTitle(AppLocalizations.of(context).quizTitle),
+        title: ToolHeading(tool: ToolId.archetypes,
+            title: AppLocalizations.of(context).quizTitle),
       ),
       body: _result != null ? _buildResult(_result!) : _buildQuestion(),
     );

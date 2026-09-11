@@ -8,7 +8,6 @@ import 'package:provider/provider.dart';
 
 import '../../../../core/ai/ai_service.dart';
 import '../../../../core/services/ad_service.dart';
-import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/theme/grimoire_motion.dart';
 import '../../../../core/widgets/magical_card.dart';
@@ -31,6 +30,7 @@ import '../widgets/oracle_card_face.dart';
 import '../widgets/oracle_spread_board.dart';
 import 'oracle_album_page.dart';
 import 'oracle_selection_page.dart';
+import '../../../../core/tools/tool_identity.dart';
 
 /// Trocar de conta recria a tela: rascunho, mesa e conselho pertencem a
 /// quem estava logada quando começaram.
@@ -362,7 +362,8 @@ class _OracleBodyState extends State<_OracleBody> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: ResponsiveAppBarTitle(AppLocalizations.of(context).oracleTitle),
+        title: ToolHeading(tool: ToolId.oracle,
+            title: AppLocalizations.of(context).oracleTitle),
         backgroundColor: context.gc.darkBackground,
         actions: [
           // O álbum só lê o que as tiragens já registraram.

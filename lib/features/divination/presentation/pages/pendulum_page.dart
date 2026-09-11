@@ -15,7 +15,6 @@ import 'dart:math';
 import '../../../../core/widgets/magical_button.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/widgets/living_emblem.dart';
-import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/theme/grimoire_motion.dart';
 import '../../../../core/database/database_helper.dart';
@@ -26,6 +25,7 @@ import '../../data/models/pendulum_model.dart';
 import '../../domain/inclinacao_do_pendulo.dart';
 import '../../../../core/services/ad_service.dart';
 import '../../../your_day/presentation/providers/daily_checkin_provider.dart';
+import '../../../../core/tools/tool_identity.dart';
 
 class PendulumPage extends StatefulWidget {
   /// Fonte do acelerômetro. O teste passa um Stream próprio: no
@@ -568,7 +568,8 @@ class _PendulumPageState extends State<PendulumPage>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: ResponsiveAppBarTitle(AppLocalizations.of(context).pendulumTitle),
+        title: ToolHeading(tool: ToolId.pendulum,
+            title: AppLocalizations.of(context).pendulumTitle),
         backgroundColor: context.gc.darkBackground,
       ),
       backgroundColor: context.gc.darkBackground,

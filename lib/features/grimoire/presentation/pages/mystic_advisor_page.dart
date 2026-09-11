@@ -6,7 +6,6 @@ import 'package:provider/provider.dart';
 
 import '../../../../core/ai/ai_service.dart';
 import '../../../../core/services/ad_service.dart';
-import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/theme/grimoire_motion.dart';
 import '../../../../core/widgets/magical_card.dart';
@@ -19,6 +18,7 @@ import '../../data/repositories/advisor_consultation_repository.dart';
 import '../../domain/advisor_consultation.dart';
 import '../widgets/crystal_ball_view.dart';
 import '../../../../core/widgets/motion/retry_notice.dart';
+import '../../../../core/tools/tool_identity.dart';
 
 /// Conselheiro Místico: responde perguntas sobre bruxaria, magia e misticismo.
 ///
@@ -268,7 +268,7 @@ class _AdvisorBodyState extends State<_AdvisorBody> {
     final consultation = _consultation;
     return Scaffold(
       appBar: AppBar(
-        title: ResponsiveAppBarTitle(l10n.profileMysticAdvisor),
+        title: ToolHeading(tool: ToolId.mysticAdvisor, title: l10n.profileMysticAdvisor),
         backgroundColor: context.gc.darkBackground,
       ),
       backgroundColor: context.gc.darkBackground,

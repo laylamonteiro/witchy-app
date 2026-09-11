@@ -424,6 +424,29 @@ Entregue em 11/09.
   retorno e re-toque de aba. É trabalho de tela, que pede aparelho: os
   testes automatizados não substituem essa avaliação.
 
+## Ferramentas: identidade das entradas (P14, segunda parte)
+
+Entregue em 11/09.
+
+- **Um emblema por ferramenta:** `ToolId` nomeia as doze e `ToolIdentity`
+  guarda o símbolo de cada uma. O card de entrada e o cabeçalho da tela
+  passam a desenhar o MESMO símbolo, pelo mesmo caminho — antes o card tinha
+  um emoji e a tela abria sem nada que a ligasse a ele.
+- **A arte do card continua na cena:** o emblema voa do card para o
+  cabeçalho ao abrir a ferramenta (`Hero`), e volta ao fechar. A etiqueta do
+  voo vem da identidade, nunca do nome traduzido, então trocar de idioma não
+  quebra o par. O Guia da Natureza abre um seletor antes da ficha: lá o
+  emblema aparece parado, porque não há de onde voar.
+- **Título que encolhe, emblema que fica:** o cabeçalho mantém o
+  `ResponsiveAppBarTitle`, agora ao lado do emblema; um nome comprido diminui
+  em vez de empurrar o símbolo para fora.
+- **Navegação preservada:** as entradas continuam em `MaterialPageRoute`, com
+  a transição e o gesto de voltar da plataforma. Nada de rota customizada só
+  para animar.
+- **Verificação:** `tool_identity_test.dart` (doze ferramentas, símbolos e
+  etiquetas distintos, símbolo igual nos três idiomas, o voo do card ao
+  cabeçalho e de volta, título comprido sem estourar).
+
 ## Dados e compatibilidade
 
 O schema local sobe de 23 para 24 (sessões e ledger), 25 (descobertas do
@@ -492,6 +515,8 @@ usam sessões.
   cota gasta só no sucesso e varredura limitada à requisição real.
 - `oracle_album_test.dart` e `archetype_quiz_test.dart`: álbum, retrospectiva
   silenciosa, constelação determinística e revelação depois da gravação.
+- `tool_identity_test.dart`: emblema único por ferramenta e a passagem do
+  card para o cabeçalho.
 - `sigil_trace_test.dart` e `sigil_drawing_page_test.dart`: percurso do
   sigilo, estado final para exportação, interpolação do embaralhamento e
   gravação antes de fechar a tela.
@@ -517,7 +542,8 @@ pendentes. Os testes automatizados não substituem essa avaliação.
 
 ## Continuação do lote
 
-1. P14: artes de entrada, tamanhos e o percurso pelas 12 ferramentas.
+1. P14: revisão de tamanhos e hierarquia e o percurso completo pelas 12
+   entradas em aparelho — o que resta do pacote é avaliação visual.
 2. P16/P17: registro menstrual manual Free; dados derivados e análises Premium.
 3. P18: registros menstruais autorizados entram na análise completa do ciclo.
 4. P15: integração e validação final do lote.

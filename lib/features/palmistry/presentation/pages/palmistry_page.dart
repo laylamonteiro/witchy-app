@@ -6,7 +6,6 @@ import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/ai/ai_service.dart';
 import '../../../../core/utils/image_compression.dart';
-import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/loading_widget.dart';
 import '../../../../core/widgets/magical_card.dart';
@@ -20,6 +19,7 @@ import '../../../diary/presentation/providers/free_writing_provider.dart';
 import '../../../your_day/presentation/providers/daily_checkin_provider.dart';
 import '../../../../core/widgets/motion/retry_notice.dart';
 import '../widgets/palm_scan_view.dart';
+import '../../../../core/tools/tool_identity.dart';
 
 /// Leitura de Mãos (Quiromancia) — exclusiva Premium.
 ///
@@ -221,7 +221,8 @@ class _PalmistryPageState extends State<PalmistryPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: ResponsiveAppBarTitle(AppLocalizations.of(context).toolPalmistryTitle),
+        title: ToolHeading(tool: ToolId.palmistry,
+            title: AppLocalizations.of(context).toolPalmistryTitle),
       ),
       // A tela é a mesma para todo mundo: quem não tem Premium lê como
       // fotografar a mão, escolhe a foto e vê o SUMÁRIO do que a leitura

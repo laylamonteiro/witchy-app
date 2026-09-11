@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
-import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../data/data_sources/trails_data.dart';
 import '../providers/learning_provider.dart';
 import '../widgets/bound_book_cover.dart';
 import 'trail_page.dart';
+import '../../../../core/tools/tool_identity.dart';
 
 /// Grimório Vivo: trilhas de aprendizado em que cada lição termina com uma
 /// página real escrita no Meu Grimório.
@@ -31,7 +31,8 @@ class _LearningHomePageState extends State<LearningHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: ResponsiveAppBarTitle(AppLocalizations.of(context).toolLivingGrimoireTitle),
+        title: ToolHeading(tool: ToolId.livingGrimoire,
+            title: AppLocalizations.of(context).toolLivingGrimoireTitle),
       ),
       body: Consumer<LearningProvider>(
         builder: (context, learning, _) {
