@@ -667,9 +667,18 @@ ao compositor vêm em seguida.
   contagem do que foi incluído aparece ao lado das outras fontes.
 - **As palavras dela são escolha à parte:** a anotação do dia e a escrita da
   estação só vão junto com um segundo sim, desmarcado por padrão.
-- **A tela diz o alcance:** a análise fica guardada no acervo e pode conter o
-  que ela incluir; a autorização vale para esta leitura; registros novos não
-  entram sozinhos e um dia corrigido depois sai da conta.
+- **A tela diz o alcance, inteiro:** a análise fica guardada no acervo e pode
+  conter o que ela incluir — e, se a sincronização com a conta estiver ligada,
+  o acervo vai para a nuvem, com a análise dentro. O registro do ciclo em si
+  não sai do aparelho: ele está fora do `DataSyncService` de propósito. A
+  autorização vale para esta leitura; registros novos não entram sozinhos e um
+  dia corrigido depois sai da conta.
+- **Pendência conhecida:** proteger o relatório com fonte íntima do backup na
+  nuvem exige ou uma coluna local em `free_writings` (excluída do push) ou um
+  filtro no laço de sincronização pelas marcas — e o caminho do `fullDownload`
+  precisa ser conferido antes, para que a proteção não vire perda do
+  relatório. Enquanto isso não existe, a tela diz a verdade em vez de
+  prometer o que o código ainda não faz.
 - **O consentimento ganhou revisão:** dizer sim de novo depois de ter dito
   não é OUTRO consentimento, e a revisão entra no contrato — o que tinha sido
   autorizado antes deixa de valer sozinho.

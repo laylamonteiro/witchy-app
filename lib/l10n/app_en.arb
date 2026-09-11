@@ -2235,7 +2235,7 @@
   "cycleReadingMenstrualNone": "Include none",
   "cycleReadingMenstrualWords": "Also include what I wrote on those days",
   "cycleReadingMenstrualWordsHint": "Your own words: the day’s note and the season writing.",
-  "cycleReadingMenstrualArchive": "The analysis is kept in your collection and may contain whatever you include here.",
+  "cycleReadingMenstrualArchive": "The analysis is kept in your collection and may contain whatever you include here. If syncing with your account is on, the collection goes to the cloud — and this analysis with it. Your cycle record itself never leaves this device.",
   "cycleReadingMenstrualScopeNote": "This authorization is for this reading. New records do not join on their own, and a day corrected afterwards drops out.",
   "cycleReadingMenstrualSymptoms": "{count, plural, =1{1 symptom} other{{count} symptoms}}",
   "cycleReadingMenstrualHasWords": "with your own words",

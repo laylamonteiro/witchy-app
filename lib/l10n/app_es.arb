@@ -2235,7 +2235,7 @@
   "cycleReadingMenstrualNone": "No incluir ninguno",
   "cycleReadingMenstrualWords": "Incluir también lo que escribí esos días",
   "cycleReadingMenstrualWordsHint": "Tus palabras: la nota del día y la escritura de la estación.",
-  "cycleReadingMenstrualArchive": "El análisis se guarda en tu acervo y puede contener lo que incluyas aquí.",
+  "cycleReadingMenstrualArchive": "El análisis se guarda en tu acervo y puede contener lo que incluyas aquí. Si la sincronización con tu cuenta está activada, el acervo va a la nube — y este análisis con él. Tu registro del ciclo, en cambio, no sale de este aparato.",
   "cycleReadingMenstrualScopeNote": "La autorización vale para esta lectura. Los registros nuevos no entran solos, y un día corregido después queda fuera.",
   "cycleReadingMenstrualSymptoms": "{count, plural, =1{1 síntoma} other{{count} síntomas}}",
   "cycleReadingMenstrualHasWords": "con escritura tuya",
