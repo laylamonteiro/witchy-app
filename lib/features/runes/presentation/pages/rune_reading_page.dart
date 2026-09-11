@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
@@ -28,6 +29,7 @@ import '../../data/repositories/rune_reading_repository.dart';
 import '../../data/repositories/rune_selection_repository.dart';
 import '../../domain/rune_selection_session.dart';
 import '../widgets/rune_spread_board.dart';
+import '../../../../core/widgets/reading_focus_panel.dart';
 import '../widgets/rune_stone_view.dart';
 import 'rune_detail_page.dart';
 import 'rune_selection_page.dart';
@@ -73,10 +75,16 @@ class _RuneReadingBodyState extends State<_RuneReadingBody> {
   List<int> _backPositions = const [];
   bool _revealed = false;
   bool _textVisible = false;
-  int? _highlighted;
+  int _focused = 0;
+  int _sceneToken = 0;
   bool _newReadingRequested = false;
   Timer? _textTimer;
-  List<GlobalKey> _positionKeys = const [];
+
+  /// A caixa da pedra em foco — é para ela que a página olha, quando precisa.
+  final GlobalKey _stageKey = GlobalKey();
+
+  /// A tiragem inteira, aberta embaixo do painel. Fechada por padrão.
+  bool _showAll = false;
 
   String get _userId => widget.userId;
 
@@ -221,8 +229,9 @@ class _RuneReadingBodyState extends State<_RuneReadingBody> {
       _aiReading = reading.interpretation;
       _revealed = !committed.created;
       _textVisible = !committed.created;
-      _highlighted = null;
-      _positionKeys = List.generate(positions.length, (_) => GlobalKey());
+      _focused = 0;
+      _sceneToken++;
+      _showAll = false;
     });
     // A mesa já nasce como página do acervo; reabrir reescreve a mesma linha.
     unawaited(_archive.record(
@@ -246,6 +255,7 @@ class _RuneReadingBodyState extends State<_RuneReadingBody> {
       setState(() {
         _revealed = true;
         _textVisible = reduced;
+        if (reduced) _sceneToken++;
       });
       if (!reduced) {
         _textTimer?.cancel();
@@ -254,7 +264,10 @@ class _RuneReadingBodyState extends State<_RuneReadingBody> {
           () {
             _textTimer = null;
             if (mounted && _activeSession?.id == sessionId) {
-              setState(() => _textVisible = true);
+              setState(() {
+                _textVisible = true;
+                _sceneToken++;
+              });
             }
           },
         );
@@ -267,7 +280,10 @@ class _RuneReadingBodyState extends State<_RuneReadingBody> {
     if (_textVisible) return;
     _textTimer?.cancel();
     _textTimer = null;
-    setState(() => _textVisible = true);
+    setState(() {
+      _textVisible = true;
+      _sceneToken++;
+    });
   }
 
   void _clearTable({required bool newReading}) {
@@ -282,8 +298,8 @@ class _RuneReadingBodyState extends State<_RuneReadingBody> {
       _aiReading = null;
       _revealed = false;
       _textVisible = false;
-      _highlighted = null;
-      _positionKeys = const [];
+      _focused = 0;
+      _showAll = false;
       if (newReading) _questionController.clear();
     });
   }
@@ -638,24 +654,54 @@ class _RuneReadingBodyState extends State<_RuneReadingBody> {
       back: RuneStoneView(size: size, deckPosition: slot),
       front: RuneStoneView(
         size: size, deckPosition: slot, symbol: position.rune.symbol,
-        reversed: position.isReversed, highlighted: _highlighted == index,
+        reversed: position.isReversed,
+        highlighted: _drawnRunes!.length > 1 && _focused == index,
       ),
     );
   }
 
+  /// Tocar numa pedra muda o que o painel mostra — e mais nada. A página só
+  /// se mexe se o painel não couber na tela, e aí pelo mínimo.
   void _focusPosition(int index) {
     if (!_revealed) return;
+    final wasVisible = _textVisible;
     _skipAhead();
-    setState(() => _highlighted = index);
-    final target = index < _positionKeys.length ? _positionKeys[index].currentContext : null;
-    if (target != null) {
-      Scrollable.ensureVisible(target,
-          duration: GrimoireMotion.reduced(context) ? Duration.zero : GrimoireMotion.state,
-          alignment: .1);
+    setState(() {
+      if (_focused != index || wasVisible) _sceneToken++;
+      _focused = index;
+    });
+    _bringStageIntoView();
+  }
+
+  /// Traz o palco para a tela — e só se ele não estiver nela.
+  ///
+  /// `ensureVisible` com `keepVisibleAtEnd` encostaria a peça na borda de
+  /// baixo, com o texto dela fora da tela. Aqui a conta é explícita: se o
+  /// palco já cabe inteiro, nada se move; se não cabe, a página anda UMA vez
+  /// até ele ficar no alto, e o que ele diz aparece logo abaixo.
+  void _bringStageIntoView() {
+    final target = _stageKey.currentContext;
+    if (target == null) return;
+    final box = target.findRenderObject();
+    final scrollable = Scrollable.maybeOf(target);
+    if (box is! RenderBox || scrollable == null) return;
+    final position = scrollable.position;
+    final viewport = RenderAbstractViewport.of(box);
+    final atTop = viewport.getOffsetToReveal(box, 0).offset;
+    final atBottom = viewport.getOffsetToReveal(box, 1).offset;
+    if (position.pixels >= atBottom && position.pixels <= atTop) return;
+    final destino = (atTop - 8)
+        .clamp(position.minScrollExtent, position.maxScrollExtent);
+    if (GrimoireMotion.reduced(context)) {
+      position.jumpTo(destino);
+      return;
     }
+    position.animateTo(destino,
+        duration: GrimoireMotion.state, curve: GrimoireMotion.enter);
   }
 
   Widget _buildReadingResult(List<RunePosition> positions) {
+    if (positions.isEmpty) return const SizedBox.shrink();
     final l10n = AppLocalizations.of(context);
     final reduced = GrimoireMotion.reduced(context);
     final question = _lastReading?.question ?? '';
@@ -702,16 +748,21 @@ class _RuneReadingBodyState extends State<_RuneReadingBody> {
               RuneSpreadBoard(
                 spread: _selectedSpread,
                 labels: positions.map((p) => p.positionMeaning).toList(),
-                selectedPosition: _highlighted,
+                selectedPosition: positions.length > 1 ? _focused : null,
                 onTap: _focusPosition,
                 stoneBuilder: _stone,
               ),
-              const SizedBox(height: 8),
-              Text(
-                l10n.runeTableHint,
-                textAlign: TextAlign.center,
-                style: TextStyle(color: context.gc.textSecondary, fontSize: 12),
-              ),
+              // Com uma pedra só não há de perto nem painel: a mesa já é a
+              // pedra, e a dica prometeria o que não acontece.
+              if (positions.length > 1) ...[
+                const SizedBox(height: 8),
+                Text(
+                  l10n.runeTableHint,
+                  textAlign: TextAlign.center,
+                  style:
+                      TextStyle(color: context.gc.textSecondary, fontSize: 12),
+                ),
+              ],
             ]),
           ),
         ),
@@ -734,8 +785,36 @@ class _RuneReadingBodyState extends State<_RuneReadingBody> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    for (var i = 0; i < positions.length; i++)
-                      _positionCard(i, positions[i]),
+                    ReadingFocusPanel(
+                      keyPrefix: 'runes',
+                      index: _focused.clamp(0, positions.length - 1).toInt(),
+                      total: positions.length,
+                      onFocus: _focusPosition,
+                      stage: positions.length > 1
+                          ? _stage(positions[_focused.clamp(0, positions.length - 1).toInt()])
+                          : null,
+                      child: _focusBody(
+                          positions[_focused.clamp(0, positions.length - 1).toInt()]),
+                    ),
+                    if (positions.length > 1) ...[
+                      const SizedBox(height: 4),
+                      Align(
+                        alignment: Alignment.center,
+                        child: TextButton.icon(
+                          key: const ValueKey('runes-show-all'),
+                          onPressed: () => setState(() => _showAll = !_showAll),
+                          icon: Icon(_showAll
+                              ? Icons.keyboard_arrow_up
+                              : Icons.keyboard_arrow_down),
+                          label: Text(_showAll
+                              ? l10n.readingFocusHideAll
+                              : l10n.readingFocusShowAll),
+                        ),
+                      ),
+                      if (_showAll)
+                        for (var i = 0; i < positions.length; i++)
+                          _positionCard(i, positions[i]),
+                    ],
                   ],
                 ),
               ),
@@ -746,10 +825,131 @@ class _RuneReadingBodyState extends State<_RuneReadingBody> {
     );
   }
 
+  /// A pedra em foco, grande, em caixa de tamanho fixo. É a MESMA pedra da
+  /// mesa (mesmo lugar no tecido), só que maior.
+  Widget _stage(RunePosition position) {
+    final reduced = GrimoireMotion.reduced(context);
+    final index = _focused < 0 ? 0 : _focused;
+    final slot =
+        index < _backPositions.length ? _backPositions[index] : index;
+    const size = 140.0;
+    return SizedBox(
+      key: _stageKey,
+      width: size,
+      height: size / RuneStoneView.aspectRatio,
+      child: AnimatedSwitcher(
+        key: const ValueKey('runes-stage'),
+        duration: reduced ? Duration.zero : GrimoireMotion.state,
+        switchInCurve: GrimoireMotion.enter,
+        switchOutCurve: GrimoireMotion.exit,
+        child: RuneStoneStage(
+          key: ValueKey('$_focused-$_sceneToken'),
+          playToken: '${_activeSession?.id}-$_focused-$_sceneToken',
+          deckPosition: slot,
+          symbol: position.rune.symbol,
+          reversed: position.isReversed,
+          size: size,
+        ),
+      ),
+    );
+  }
+
+  /// O que a pedra em foco diz. É o miolo do antigo cartão de posição, sem a
+  /// moldura e sem o glifo pequeno — a pedra já está grande logo acima —, e
+  /// com a porta para a enciclopédia como botão: o painel agora tem arrasto
+  /// horizontal, e uma superfície que navega ao ser tocada em qualquer lugar
+  /// dispararia sem querer.
+  Widget _focusBody(RunePosition position) {
+    final l10n = AppLocalizations.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Semantics(
+          container: true,
+          liveRegion: true,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      position.positionMeaning,
+                      style: TextStyle(
+                        color: context.gc.softWhite.withValues(alpha: 0.7),
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      position.rune.name,
+                      style: TextStyle(
+                        color: context.gc.lilac,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (position.isReversed)
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: context.gc.alert.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    l10n.runesReversed,
+                    style: TextStyle(
+                      color: context.gc.alert,
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 6,
+          children: [
+            for (final keyword in position.rune.keywords)
+              Text('· $keyword',
+                  style: TextStyle(
+                      color: context.gc.textSecondary, fontSize: 12)),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Text(
+          position.isReversed && position.rune.reversedMeaning != null
+              ? position.rune.reversedMeaning!
+              : position.rune.divination,
+          style: TextStyle(color: context.gc.softWhite, height: 1.5),
+        ),
+        const SizedBox(height: 12),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: TextButton.icon(
+            key: const ValueKey('runes-detail-open'),
+            icon: const Icon(Icons.menu_book_outlined, size: 18),
+            label: Text(l10n.runeOpenEntry),
+            onPressed: () => Navigator.of(context).push(
+              GrimoireRoute(builder: (_) => RuneDetailPage(rune: position.rune)),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _positionCard(int index, RunePosition position) {
-    final highlighted = _highlighted == index;
+    final highlighted = _focused == index;
     return Padding(
-      key: index < _positionKeys.length ? _positionKeys[index] : null,
       padding: const EdgeInsets.only(bottom: 12),
       child: InkWell(
         onTap: () {

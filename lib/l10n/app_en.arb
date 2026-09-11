@@ -2036,7 +2036,7 @@
   "runeSelectionStep": "Choose stone {number} of {total} · {position}",
   "runeSelectionReady": "Every position is filled",
   "runeSelectionSaveError": "Unable to finish this reading. Please try again.",
-  "runeTableHint": "Tap a stone to jump to its meaning",
+  "runeTableHint": "Tap a stone to see it up close",
   "@runeSelectionPosition": {
     "placeholders": {
       "position": {
@@ -2245,5 +2245,12 @@
   "@cycleReadingMenstrualSummary": {"placeholders": {"count": {"type": "int"}}},
   "menstrualPrivacyEraseReadings": "{count, plural, =1{1 reading took these records along, and its report will be erased too. Your reading credit stays yours.} other{{count} readings took these records along, and their reports will be erased too. Your reading credits stay yours.}}",
   "@menstrualPrivacyEraseReadings": {"placeholders": {"count": {"type": "int"}}},
-  "cycleReadingMenstrualScopeChanged": "The Menstrual Cycle authorization changed while the reading was being written, so it stopped here. Your credit stays yours: review what you want to include and generate again."
+  "cycleReadingMenstrualScopeChanged": "The Menstrual Cycle authorization changed while the reading was being written, so it stopped here. Your credit stays yours: review what you want to include and generate again.",
+  "readingFocusPrevious": "Previous position",
+  "readingFocusNext": "Next position",
+  "readingFocusCounter": "Position {position} of {total}",
+  "readingFocusShowAll": "See the whole reading",
+  "readingFocusHideAll": "Close the whole reading",
+  "runeOpenEntry": "See the full rune",
+  "@readingFocusCounter": {"placeholders": {"position": {"type": "int"}, "total": {"type": "int"}}}
 }

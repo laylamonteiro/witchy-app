@@ -223,8 +223,23 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('oracle-slot-3')));
     await tester.pumpAndSettle();
-    final stage = tester.widget<OracleSceneCard>(find.byKey(const ValueKey('oracle-stage')));
+    final stage = tester.widget<OracleSceneCard>(find.descendant(
+        of: find.byKey(const ValueKey('oracle-stage')),
+        matching: find.byType(OracleSceneCard)));
     expect('${stage.card.id}', chosen[3]);
+
+    // A queixa que este painel resolve: tocar numa carta NÃO move a página.
+    final scroll = tester.state<ScrollableState>(find.descendant(
+        of: find.byType(OracleCardsPage), matching: find.byType(Scrollable)));
+    final before = scroll.position.pixels;
+    await tester.tap(find.byKey(const ValueKey('oracle-slot-1')));
+    await tester.pumpAndSettle();
+    expect(scroll.position.pixels, before,
+        reason: 'A mesa e o painel já estão à vista: não há para onde rolar');
+    final swapped = tester.widget<OracleSceneCard>(find.descendant(
+        of: find.byKey(const ValueKey('oracle-stage')),
+        matching: find.byType(OracleSceneCard)));
+    expect('${swapped.card.id}', chosen[1]);
 
     // Reopening shows the same table: no fan, no second reading, no popup.
     await tester.pumpWidget(const SizedBox.shrink());

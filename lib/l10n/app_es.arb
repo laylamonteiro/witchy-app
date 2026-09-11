@@ -2036,7 +2036,7 @@
   "runeSelectionStep": "Elige la piedra {number} de {total} · {position}",
   "runeSelectionReady": "Todas las posiciones están completas",
   "runeSelectionSaveError": "No se pudo completar la lectura. Inténtalo de nuevo.",
-  "runeTableHint": "Toca una piedra para ir a su significado",
+  "runeTableHint": "Toca una piedra para verla de cerca",
   "@runeSelectionPosition": {
     "placeholders": {
       "position": {
@@ -2245,5 +2245,12 @@
   "@cycleReadingMenstrualSummary": {"placeholders": {"count": {"type": "int"}}},
   "menstrualPrivacyEraseReadings": "{count, plural, =1{1 lectura llevó estos registros consigo, y su informe también será borrado. Tu crédito de lectura sigue siendo tuyo.} other{{count} lecturas llevaron estos registros consigo, y sus informes también serán borrados. Tus créditos de lectura siguen siendo tuyos.}}",
   "@menstrualPrivacyEraseReadings": {"placeholders": {"count": {"type": "int"}}},
-  "cycleReadingMenstrualScopeChanged": "La autorización del Ciclo Menstrual cambió mientras se escribía la lectura, así que se detuvo aquí. Tu crédito sigue siendo tuyo: revisa lo que quieres incluir y genera de nuevo."
+  "cycleReadingMenstrualScopeChanged": "La autorización del Ciclo Menstrual cambió mientras se escribía la lectura, así que se detuvo aquí. Tu crédito sigue siendo tuyo: revisa lo que quieres incluir y genera de nuevo.",
+  "readingFocusPrevious": "Posición anterior",
+  "readingFocusNext": "Posición siguiente",
+  "readingFocusCounter": "Posición {position} de {total}",
+  "readingFocusShowAll": "Ver la tirada entera",
+  "readingFocusHideAll": "Cerrar la tirada entera",
+  "runeOpenEntry": "Ver la runa completa",
+  "@readingFocusCounter": {"placeholders": {"position": {"type": "int"}, "total": {"type": "int"}}}
 }

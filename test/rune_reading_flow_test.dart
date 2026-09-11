@@ -117,7 +117,8 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  Finder faces() => find.byWidgetPredicate((w) => w is RuneStoneView && w.symbol != null);
+  Finder faces() => find.byWidgetPredicate(
+      (w) => w is RuneStoneView && w.symbol != null && w.size <= 84);
 
   Future<void> open(WidgetTester tester, RuneSpreadType spread) async {
     await tester.ensureVisible(find.text(spread.displayName));
@@ -208,9 +209,26 @@ void main() {
     await until(tester, () => tester.widget<AnimatedOpacity>(text).opacity == 1,
         'meanings after the stones settle');
     await tester.pumpAndSettle();
+    // O painel mostra uma posição por vez: a primeira, ao chegar.
+    expect(find.text(chosen.first), findsWidgets);
+    await tester.ensureVisible(find.byKey(const ValueKey('rune-slot-4')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('rune-slot-4')));
+    await tester.pumpAndSettle();
+    expect(find.text(chosen[4]), findsWidgets,
+        reason: 'Tocar a pedra troca o que o painel mostra');
+    // E a tiragem inteira continua a um toque de distância.
+    await tester.ensureVisible(find.byKey(const ValueKey('runes-show-all')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('runes-show-all')));
+    await tester.pumpAndSettle();
     for (final name in chosen) {
       expect(find.text(name), findsWidgets);
     }
+    await tester.ensureVisible(find.byKey(const ValueKey('runes-show-all')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('runes-show-all')));
+    await tester.pumpAndSettle();
 
     final readings = await rows(tester, 'rune_readings');
     final archive = await rows(tester, 'free_writings');

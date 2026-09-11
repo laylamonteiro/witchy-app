@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/grimoire_colors.dart';
+import '../../../../core/theme/grimoire_motion.dart';
 
 /// A pebble drawn in the active palette. The shape and speckles follow the
 /// original cloth slot ([deckPosition]), never the rune underneath, so a
@@ -63,6 +64,56 @@ class RuneStoneView extends StatelessWidget {
                   ),
                 ),
         ),
+      ),
+    );
+  }
+}
+
+/// A pedra em foco, grande, chegando uma vez.
+///
+/// É a MESMA pedra da mesa — mesmo [deckPosition], mesma silhueta, mesmos
+/// respingos — só que maior: continuidade, não uma segunda pedra. Uma carta
+/// tem cena; uma pedra só assenta, então isto dura 450 ms e para.
+class RuneStoneStage extends StatelessWidget {
+  const RuneStoneStage({
+    super.key,
+    required this.playToken,
+    required this.deckPosition,
+    required this.symbol,
+    this.size = 140,
+    this.reversed = false,
+  });
+
+  /// Muda quando a chegada deve tocar de novo (outra posição, ou a mesma
+  /// tocada outra vez).
+  final String playToken;
+
+  final int deckPosition;
+  final String symbol;
+  final double size;
+  final bool reversed;
+
+  @override
+  Widget build(BuildContext context) {
+    final reduced = GrimoireMotion.reduced(context);
+    return TweenAnimationBuilder<double>(
+      key: ValueKey(playToken),
+      // Com movimento reduzido o quadro final é o primeiro: o ToolSceneFrame
+      // desliga os tickers, e um tween que começasse em 0 ficaria em 0.
+      tween: Tween<double>(begin: reduced ? 1 : 0, end: 1),
+      duration: reduced ? Duration.zero : GrimoireMotion.reveal,
+      curve: GrimoireMotion.emphasis,
+      builder: (context, t, child) => Opacity(
+        // easeOutBack passa de 1: a escala pode exceder, a opacidade não.
+        opacity: t.clamp(0.0, 1.0).toDouble(),
+        child: Transform.scale(scale: .92 + .08 * t, child: child),
+      ),
+      child: RuneStoneView(
+        size: size,
+        deckPosition: deckPosition,
+        symbol: symbol,
+        reversed: reversed,
+        highlighted: true,
       ),
     );
   }

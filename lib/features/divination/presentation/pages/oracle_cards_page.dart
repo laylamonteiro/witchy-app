@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
@@ -12,6 +13,7 @@ import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/theme/grimoire_motion.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/widgets/motion/tool_scene_frame.dart';
+import '../../../../core/widgets/reading_focus_panel.dart';
 import '../../../../core/widgets/premium_locked_preview.dart';
 import '../../../auth/data/models/user_model.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
@@ -83,7 +85,13 @@ class _OracleBodyState extends State<_OracleBody> {
   List<int> _newDiscoveries = const [];
   bool _newReadingRequested = false;
   Timer? _textTimer;
-  List<GlobalKey> _positionKeys = const [];
+  /// A caixa do palco. É uma só: o painel mostra uma posição por vez, e é
+  /// para ela que a página olha quando precisa olhar para alguma coisa.
+  final GlobalKey _stageKey = GlobalKey();
+
+  /// A tiragem inteira, aberta embaixo do painel. Fechada por padrão: quem
+  /// quiser ler tudo de uma vez pede.
+  bool _showAll = false;
 
   String get _userId => widget.userId;
 
@@ -224,7 +232,7 @@ class _OracleBodyState extends State<_OracleBody> {
       _focused = 0;
       _sceneToken++;
       _newDiscoveries = committed.created ? committed.newDiscoveries : const [];
-      _positionKeys = List.generate(positions.length, (_) => GlobalKey());
+      _showAll = false;
     });
     // A mesa já nasce como página do acervo; reabrir reescreve a mesma linha.
     unawaited(_archive.record(
@@ -272,6 +280,12 @@ class _OracleBodyState extends State<_OracleBody> {
     setState(() { _textVisible = true; _sceneToken++; });
   }
 
+  /// Tocar numa carta da mesa muda o que o painel mostra — e mais nada.
+  ///
+  /// A página só se mexe quando o painel não cabe na tela, e aí pelo mínimo:
+  /// `keepVisibleAtEnd` não rola nada se ele já está inteiro à vista. Antes,
+  /// o toque abria a carta grande e ao mesmo tempo levava a página até o
+  /// texto — a carta ia embora justamente enquanto se abria.
   void _focusPosition(int index) {
     if (!_revealed) return;
     final wasVisible = _textVisible;
@@ -280,12 +294,34 @@ class _OracleBodyState extends State<_OracleBody> {
       if (_focused != index || wasVisible) _sceneToken++;
       _focused = index;
     });
-    final target = index < _positionKeys.length ? _positionKeys[index].currentContext : null;
-    if (target != null) {
-      Scrollable.ensureVisible(target,
-          duration: GrimoireMotion.reduced(context) ? Duration.zero : GrimoireMotion.state,
-          alignment: .1);
+    _bringStageIntoView();
+  }
+
+  /// Traz o palco para a tela — e só se ele não estiver nela.
+  ///
+  /// `ensureVisible` com `keepVisibleAtEnd` encostaria a peça na borda de
+  /// baixo, com o texto dela fora da tela. Aqui a conta é explícita: se o
+  /// palco já cabe inteiro, nada se move; se não cabe, a página anda UMA vez
+  /// até ele ficar no alto, e o que ele diz aparece logo abaixo.
+  void _bringStageIntoView() {
+    final target = _stageKey.currentContext;
+    if (target == null) return;
+    final box = target.findRenderObject();
+    final scrollable = Scrollable.maybeOf(target);
+    if (box is! RenderBox || scrollable == null) return;
+    final position = scrollable.position;
+    final viewport = RenderAbstractViewport.of(box);
+    final atTop = viewport.getOffsetToReveal(box, 0).offset;
+    final atBottom = viewport.getOffsetToReveal(box, 1).offset;
+    if (position.pixels >= atBottom && position.pixels <= atTop) return;
+    final destino = (atTop - 8)
+        .clamp(position.minScrollExtent, position.maxScrollExtent);
+    if (GrimoireMotion.reduced(context)) {
+      position.jumpTo(destino);
+      return;
     }
+    position.animateTo(destino,
+        duration: GrimoireMotion.state, curve: GrimoireMotion.enter);
   }
 
   void _clearTable({required bool newReading}) {
@@ -302,7 +338,7 @@ class _OracleBodyState extends State<_OracleBody> {
       _textVisible = false;
       _focused = 0;
       _newDiscoveries = const [];
-      _positionKeys = const [];
+      _showAll = false;
     });
   }
 
@@ -651,15 +687,6 @@ class _OracleBodyState extends State<_OracleBody> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    // O palco existe para destacar UMA carta entre várias.
-                    // Numa tiragem de uma carta só, a mesa já é o palco:
-                    // repeti-la aqui mostrava a mesma carta três vezes.
-                    if (positions.length > 1)
-                      Center(child: OracleSceneCard(
-                        key: const ValueKey('oracle-stage'),
-                        card: focused.card, width: 150,
-                        playToken: '${_activeSession?.id}-$_focused-$_sceneToken',
-                      )),
                     if (_newDiscoveries.isNotEmpty) ...[
                       const SizedBox(height: 10),
                       Center(child: Container(
@@ -678,8 +705,39 @@ class _OracleBodyState extends State<_OracleBody> {
                       )),
                     ],
                     const SizedBox(height: 16),
-                    for (var i = 0; i < positions.length; i++)
-                      _positionCard(i, positions[i]),
+                    // A carta em foco e o que ela diz, no mesmo lugar: o
+                    // palco existe para destacar UMA carta entre várias, e
+                    // numa tiragem de uma carta só a mesa já é o palco.
+                    ReadingFocusPanel(
+                      keyPrefix: 'oracle',
+                      index: _focused.clamp(0, positions.length - 1).toInt(),
+                      total: positions.length,
+                      onFocus: _focusPosition,
+                      stage: positions.length > 1 ? _stage(focused) : null,
+                      child: _focusBody(focused),
+                    ),
+                    // A tiragem inteira continua ali para quem quiser lê-la
+                    // de ponta a ponta — fechada, para a página não voltar a
+                    // ser uma pilha de cartões.
+                    if (positions.length > 1) ...[
+                      const SizedBox(height: 4),
+                      Align(
+                        alignment: Alignment.center,
+                        child: TextButton.icon(
+                          key: const ValueKey('oracle-show-all'),
+                          onPressed: () => setState(() => _showAll = !_showAll),
+                          icon: Icon(_showAll
+                              ? Icons.keyboard_arrow_up
+                              : Icons.keyboard_arrow_down),
+                          label: Text(_showAll
+                              ? l10n.readingFocusHideAll
+                              : l10n.readingFocusShowAll),
+                        ),
+                      ),
+                      if (_showAll)
+                        for (var i = 0; i < positions.length; i++)
+                          _positionCard(i, positions[i]),
+                    ],
                   ],
                 ),
               ),
@@ -690,10 +748,113 @@ class _OracleBodyState extends State<_OracleBody> {
     );
   }
 
+  /// A carta em foco, grande, num box de tamanho fixo — é por ser fixo que o
+  /// texto trocando embaixo nunca a empurra.
+  Widget _stage(OracleCardPosition position) {
+    final reduced = GrimoireMotion.reduced(context);
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth.isFinite
+            ? min(210.0, constraints.maxWidth * .62)
+            : 210.0;
+        return SizedBox(
+          key: _stageKey,
+          width: width,
+          height: width / OracleCardFace.aspectRatio,
+          child: AnimatedSwitcher(
+            key: const ValueKey('oracle-stage'),
+            duration: reduced ? Duration.zero : GrimoireMotion.state,
+            switchInCurve: GrimoireMotion.enter,
+            switchOutCurve: GrimoireMotion.exit,
+            child: OracleSceneCard(
+              key: ValueKey('$_focused-$_sceneToken'),
+              card: position.card,
+              width: width,
+              playToken: '${_activeSession?.id}-$_focused-$_sceneToken',
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  /// O que a carta em foco diz. É o miolo do antigo cartão de posição, sem a
+  /// moldura e sem a miniatura: a figura já está grande logo acima.
+  Widget _focusBody(OracleCardPosition position) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Semantics(
+          container: true,
+          liveRegion: true,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                position.positionMeaning,
+                style: TextStyle(
+                  color: context.gc.softWhite.withValues(alpha: 0.7),
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                position.card.name,
+                style: TextStyle(
+                  color: context.gc.lilac,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          position.card.message,
+          style: TextStyle(
+            color: context.gc.softWhite.withValues(alpha: 0.8),
+            fontSize: 14,
+            fontStyle: FontStyle.italic,
+          ),
+        ),
+        const SizedBox(height: 12),
+        Divider(color: context.gc.lilac),
+        const SizedBox(height: 8),
+        Text(
+          position.card.guidance,
+          style: TextStyle(color: context.gc.softWhite, height: 1.5),
+        ),
+        const SizedBox(height: 12),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            for (final keyword in position.card.keywords)
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: context.gc.lilac.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(16),
+                  border:
+                      Border.all(color: context.gc.lilac.withValues(alpha: 0.5)),
+                ),
+                child: Text(
+                  keyword,
+                  style: TextStyle(color: context.gc.lilac, fontSize: 12),
+                ),
+              ),
+          ],
+        ),
+      ],
+    );
+  }
+
   Widget _positionCard(int index, OracleCardPosition position) {
     final highlighted = _focused == index && _drawnCards!.length > 1;
     return Padding(
-      key: index < _positionKeys.length ? _positionKeys[index] : null,
       padding: const EdgeInsets.only(bottom: 12),
       child: AnimatedContainer(
         duration: GrimoireMotion.reduced(context) ? Duration.zero : GrimoireMotion.state,
