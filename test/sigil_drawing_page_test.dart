@@ -23,6 +23,7 @@ import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'support/short_test_timeout.dart';
 
 class _AuthFixture extends AuthProvider {
   @override
@@ -30,7 +31,7 @@ class _AuthFixture extends AuthProvider {
 }
 
 void main() {
-  TestWidgetsFlutterBinding.ensureInitialized();
+  useShortTestTimeout();
   final sigil = Sigil.fromIntention('PROTECAO');
 
   setUpAll(() async {

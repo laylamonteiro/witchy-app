@@ -8,9 +8,10 @@ import 'package:grimorio_de_bolso/features/grimoire/data/repositories/advisor_co
 import 'package:grimorio_de_bolso/features/grimoire/domain/advisor_consultation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'support/short_test_timeout.dart';
 
 void main() {
-  TestWidgetsFlutterBinding.ensureInitialized();
+  useShortTestTimeout();
   sqfliteFfiInit();
   databaseFactory = databaseFactoryFfi;
   const user = 'advisor-user';

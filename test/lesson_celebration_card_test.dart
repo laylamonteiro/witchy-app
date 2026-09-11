@@ -8,8 +8,10 @@ import 'package:grimorio_de_bolso/features/learning/presentation/widgets/bound_b
 import 'package:grimorio_de_bolso/features/learning/presentation/widgets/lesson_celebration_card.dart';
 import 'package:grimorio_de_bolso/features/learning/presentation/widgets/wax_seal_stamp.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
+import 'support/short_test_timeout.dart';
 
 void main() {
+  useShortTestTimeout();
   final trail = learningTrails.first;
 
   Future<void> show(WidgetTester tester, LessonReward reward,

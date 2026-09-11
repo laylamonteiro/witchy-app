@@ -7,8 +7,10 @@ import 'package:grimorio_de_bolso/features/journeys/domain/progress_coordinator.
 import 'package:grimorio_de_bolso/features/learning/presentation/providers/learning_provider.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
+import 'support/short_test_timeout.dart';
 
 void main() {
+  useShortTestTimeout();
   ActionOutcome outcome(String id, {List<String> milestones = const [], int xp = 5,
       bool day = false, LearningLevel? level}) => ActionOutcome(
     actionId: id, userId: 'u', origin: ActionOrigin.dream, entityId: 'e',

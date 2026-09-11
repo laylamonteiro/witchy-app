@@ -7,6 +7,7 @@ import 'package:grimorio_de_bolso/features/guided_rituals/presentation/pages/rit
 import 'package:grimorio_de_bolso/features/guided_rituals/presentation/widgets/ritual_circle.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
+import 'support/short_test_timeout.dart';
 
 class _PremiumFixture extends AuthProvider {
   @override
@@ -34,6 +35,7 @@ class _LogFake extends GuidedRitualLogRepository {
 }
 
 void main() {
+  useShortTestTimeout();
   final ritual = AllGuidedRituals.all.first;
 
   Future<void> show(WidgetTester tester, _LogFake log) async {

@@ -12,9 +12,10 @@ import 'package:grimorio_de_bolso/features/your_day/presentation/providers/daily
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:uuid/uuid.dart';
+import 'support/short_test_timeout.dart';
 
 void main() {
-  TestWidgetsFlutterBinding.ensureInitialized();
+  useShortTestTimeout();
   sqfliteFfiInit();
   databaseFactory = databaseFactoryFfi;
   const user = 'progress-user';

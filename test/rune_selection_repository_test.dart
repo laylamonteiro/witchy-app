@@ -13,9 +13,10 @@ import 'package:grimorio_de_bolso/features/runes/data/repositories/rune_selectio
 import 'package:grimorio_de_bolso/features/runes/domain/rune_selection_session.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'support/short_test_timeout.dart';
 
 void main() {
-  TestWidgetsFlutterBinding.ensureInitialized();
+  useShortTestTimeout();
   sqfliteFfiInit();
   databaseFactory = databaseFactoryFfi;
   const user = 'manual-rune-user';
