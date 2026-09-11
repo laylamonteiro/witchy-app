@@ -78,7 +78,6 @@ class RitualOfMomentCard extends StatelessWidget {
       return _HeroRitual(
         // Dourado como o dos sabbats: é o rito do dia, tem que chamar.
         accent: context.gc.starYellow,
-        emoji: phase.emoji,
         breathingPhase: phase,
         title: l10n.yourDayRitualTodayTitle(phase.displayName),
         exactMoment: exact == null ? null : _exactMoment(l10n, exact),
@@ -111,7 +110,8 @@ class RitualOfMomentCard extends StatelessWidget {
     if (nextFull != null) {
       candidates.add((
         name: MoonPhase.fullMoon.displayName,
-        emoji: MoonPhase.fullMoon.emoji,
+        // Sem emoji de propósito: ver o comentário do 'event' abaixo.
+        emoji: '',
         date: nextFull,
         ritualId: 'full_moon',
         isMoon: true,
@@ -121,7 +121,8 @@ class RitualOfMomentCard extends StatelessWidget {
     if (nextNew != null) {
       candidates.add((
         name: MoonPhase.newMoon.displayName,
-        emoji: MoonPhase.newMoon.emoji,
+        // Sem emoji de propósito: ver o comentário do 'event' abaixo.
+        emoji: '',
         date: nextNew,
         ritualId: 'new_moon',
         isMoon: true,
@@ -138,7 +139,12 @@ class RitualOfMomentCard extends StatelessWidget {
     final days =
         (targetDay.difference(today).inHours / 24).round().clamp(0, 9999);
     final hours = next.date.difference(now).inHours;
-    final event = '${next.emoji} ${next.name}';
+    // A lua entra só pelo nome: o emoji de fase é arte da fonte de cada
+    // plataforma, então a MESMA frase saía com um disco no aparelho e outro
+    // no navegador. O sabbat continua com o seu (🕯️, 🔥…), que não é fase e
+    // não tem desenho equivalente.
+    final event =
+        next.emoji.isEmpty ? next.name : '${next.emoji} ${next.name}';
 
     final accent = next.isMoon ? context.gc.lilac : context.gc.starYellow;
 
@@ -199,7 +205,10 @@ class RitualOfMomentCard extends StatelessWidget {
 
 class _HeroRitual extends StatelessWidget {
   final Color accent;
-  final String emoji;
+
+  /// Só o sabbat: a lua é desenhada a partir de [breathingPhase].
+  final String? emoji;
+
   final String title;
   final String cta;
   final String ritualId;
@@ -214,7 +223,7 @@ class _HeroRitual extends StatelessWidget {
 
   const _HeroRitual({
     required this.accent,
-    required this.emoji,
+    this.emoji,
     required this.title,
     required this.cta,
     required this.ritualId,
@@ -249,17 +258,27 @@ class _HeroRitual extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              SizedBox(
-                width: 64,
-                child: breathingPhase != null
-                    ? BreathingMoon(
-                        moonEmoji: emoji,
-                        size: 56,
-                        showStars: false,
-                        phase: breathingPhase,
-                      )
-                    : Text(emoji, style: const TextStyle(fontSize: 44)),
-              ),
+              // Slots de largura diferente de propósito: o halo da lua pede
+              // 86 (size + 30) e antes era raspado dos dois lados por um
+              // SizedBox de 64; o emoji do sabbat não tem halo e continua no
+              // slot estreito, para não roubar largura do título.
+              if (breathingPhase != null)
+                SizedBox(
+                  width: 88,
+                  child: BreathingMoon(
+                    phase: breathingPhase!,
+                    size: 56,
+                    showStars: false,
+                  ),
+                )
+              else
+                SizedBox(
+                  width: 64,
+                  child: Text(
+                    emoji ?? '',
+                    style: const TextStyle(fontSize: 44),
+                  ),
+                ),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(

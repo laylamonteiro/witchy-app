@@ -6,6 +6,7 @@ import '../providers/lunar_provider.dart';
 import '../../../../core/widgets/breathing_moon.dart';
 import '../../../../core/widgets/expansion_magical_card.dart';
 import '../../../../core/widgets/magical_card.dart';
+import '../../../../core/widgets/moon_disc.dart';
 import '../../../../core/widgets/staggered_entrance.dart';
 import '../../../../core/widgets/starfield_background.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -45,13 +46,14 @@ class LunarCalendarPage extends StatelessWidget {
               child: Column(
                 children: [
                   // Slot de altura fixa: o hero da Lua e o do Sol têm o MESMO
-                  // tamanho e formato, com o ícone centrado (emojis variam
-                  // de métrica). A lua que respira é a fase de HOJE.
+                  // tamanho e formato, com o astro centrado. A lua que
+                  // respira é a fase de HOJE, desenhada (o Sol ao lado ainda
+                  // é glifo, e por isso o slot continua fixo).
                   SizedBox(
                     height: 110,
                     child: Center(
                       child: BreathingMoon(
-                        moonEmoji: nowPhase.emoji,
+                        phase: nowPhase,
                         size: 72,
                         showStars: false,
                       ),
@@ -67,8 +69,11 @@ class LunarCalendarPage extends StatelessWidget {
                         ),
                   ),
                   const SizedBox(height: 4),
+                  // Só o nome: o emoji aqui era uma segunda lua, de arte
+                  // diferente da desenhada três linhas acima (e diferente
+                  // entre aparelho e navegador).
                   Text(
-                    '${nowPhase.emoji}  ${nowPhase.displayName}',
+                    nowPhase.displayName,
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.titleSmall?.copyWith(
                           fontWeight: FontWeight.w600,
@@ -212,7 +217,14 @@ class LunarCalendarPage extends StatelessWidget {
                   children: MoonPhase.values.map((moonPhase) {
                     final knowledge = MoonContent.phaseKnowledge[moonPhase]!;
                     return ExpansionMagicalCard(
-                      emoji: moonPhase.emoji,
+                      // Desenhada, como a do hero: eram oito emojis de fase
+                      // em coluna, ou seja, oito luas de arte alheia logo
+                      // abaixo da lua do app.
+                      leading: MoonDisc(
+                        phase: moonPhase,
+                        size: 26,
+                        halo: false,
+                      ),
                       title: moonPhase.displayName,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,

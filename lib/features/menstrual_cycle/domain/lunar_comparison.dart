@@ -67,6 +67,12 @@ class LunarComparisonSummary {
 /// * daqui não sai porcentagem de "sincronia", pontuação, ranking nem
 ///   previsão de que voltará a acontecer. Datas próximas autorizam uma
 ///   comparação e uma leitura poética, não uma conclusão.
+///
+/// O card "Você e a Lua" foi removido da página do Ciclo, e com ele o único
+/// consumidor de [LunarComparison.observe] e [LunarComparison.summarize] em
+/// lib/ — eles continuam aqui, com teste, porque a regra é o que custou a ser
+/// escrita. Já [LunarComparison.noonOf] segue em uso pela roda e pela leitura
+/// do ciclo: este arquivo não é código morto.
 abstract final class LunarComparison {
   /// A janela simétrica, em dias, em torno de Nova e Cheia.
   static const windowDays = 2;

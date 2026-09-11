@@ -8,12 +8,18 @@ class ExpansionMagicalCard extends StatefulWidget {
   final bool initiallyExpanded;
   final String? emoji;
 
+  /// Enfeite desenhado à esquerda do título, para quando emoji não serve —
+  /// a fase da lua, por exemplo, saía diferente em cada plataforma porque a
+  /// arte vinha da fonte. Tem precedência sobre [emoji].
+  final Widget? leading;
+
   const ExpansionMagicalCard({
     super.key,
     required this.title,
     required this.child,
     this.initiallyExpanded = false,
     this.emoji,
+    this.leading,
   });
 
   @override
@@ -66,7 +72,10 @@ class _ExpansionMagicalCardState extends State<ExpansionMagicalCard> {
           ),
           title: Row(
             children: [
-              if (widget.emoji != null) ...[
+              if (widget.leading != null) ...[
+                widget.leading!,
+                const SizedBox(width: 12),
+              ] else if (widget.emoji != null) ...[
                 Text(
                   widget.emoji!,
                   style: const TextStyle(fontSize: 24),

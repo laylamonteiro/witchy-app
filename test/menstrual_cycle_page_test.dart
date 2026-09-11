@@ -175,20 +175,17 @@ void main() {
     await until(tester, () => find.text('Spotting').evaluate().isNotEmpty,
         'the day on screen');
 
-    // Nothing derived anywhere on the free plan. O convite Premium fala de
-    // médias — por isso a ausência se mede pelas chaves do que é calculado,
-    // não por procurar a palavra na tela.
-    expect(find.byKey(const ValueKey('menstrual-derived')), findsNothing);
-    expect(find.byKey(const ValueKey('menstrual-cycle-day')), findsNothing);
-    expect(find.byKey(const ValueKey('menstrual-average')), findsNothing);
+    // O que o gratuito recebe no lugar do que se calculava: a explicação.
+    expect(find.byKey(const ValueKey('menstrual-about')), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('premium sees what the history shows; free sees none of it',
+  testWidgets('the history is no longer turned into numbers, on either plan',
       (tester) async {
     SharedPreferences.setMockInitialValues(
         {'menstrual_consent_record_local_user': true});
-    // Four beginnings, twenty-eight days apart: three complete intervals.
+    // Four beginnings, twenty-eight days apart: exactly the history that used
+    // to produce an average, a cycle day and a comparison with the Moon.
     final repo = MenstrualCycleRepository();
     await tester.runAsync(() async {
       for (final start in [
@@ -203,33 +200,52 @@ void main() {
     });
 
     await show(tester);
-    expect(find.byKey(const ValueKey('menstrual-derived')), findsNothing,
-        reason: 'Nothing derived is even built on the free plan');
-    expect(find.byKey(const ValueKey('menstrual-premium-invite')), findsOneWidget);
+    expect(find.byKey(const ValueKey('menstrual-about')), findsOneWidget);
+    expect(find.byKey(const ValueKey('menstrual-premium-invite')), findsOneWidget,
+        reason: 'The offer now closes the explanation card, not one of its own');
 
     await show(tester, premium: true);
     await until(
         tester,
-        () => find.byKey(const ValueKey('menstrual-derived')).evaluate().isNotEmpty,
-        'the derived card');
-    expect(find.byKey(const ValueKey('menstrual-average')), findsOneWidget);
-    expect(find.text('Observed average: 28 days'), findsOneWidget);
-    expect(find.byKey(const ValueKey('menstrual-next-reference')), findsNothing,
-        reason: 'The next date is opt in, and nobody opted in');
-    expect(find.byKey(const ValueKey('menstrual-lunar')), findsOneWidget,
-        reason: 'The comparison with the Moon comes with the derived side');
-    expect(find.byKey(const ValueKey('menstrual-lunar-closing')), findsOneWidget,
-        reason: 'The fourth beginning closes the third interval, and says so');
+        () =>
+            find.byKey(const ValueKey('menstrual-view-toggle')).evaluate().isNotEmpty,
+        'the premium page');
+    // O que o Premium continua tendo: a roda, as Estações e a mesma
+    // explicação. O que ninguém tem mais: qualquer número tirado do histórico.
+    expect(find.byKey(const ValueKey('menstrual-season')), findsOneWidget);
+    expect(find.byKey(const ValueKey('menstrual-about')), findsOneWidget);
+    expect(find.byKey(const ValueKey('menstrual-premium-invite')), findsNothing);
+    expect(find.textContaining('28 days'), findsNothing,
+        reason: 'No average survives anywhere');
+    expect(find.textContaining('23/03/2026'), findsNothing,
+        reason: 'No reference for a next date is estimated any more');
+    expect(tester.takeException(), isNull);
+  });
 
-    await tester.ensureVisible(
-        find.byKey(const ValueKey('menstrual-next-reference-switch')));
-    await tester.pump();
-    await tester.tap(find.byKey(const ValueKey('menstrual-next-reference-switch')));
-    await until(
-        tester,
-        () => find.byKey(const ValueKey('menstrual-next-reference')).evaluate().isNotEmpty,
-        'the reference');
-    expect(find.textContaining('23/03/2026'), findsOneWidget);
+  testWidgets('the explanation about menstruation is for everyone, and it '
+      'starts folded', (tester) async {
+    SharedPreferences.setMockInitialValues(
+        {'menstrual_consent_record_local_user': true});
+    for (final premium in [false, true]) {
+      await show(tester, premium: premium);
+      await until(
+          tester,
+          () => find.byKey(const ValueKey('menstrual-about')).evaluate().isNotEmpty,
+          'the explanation');
+      expect(find.byKey(const ValueKey('menstrual-about-text')), findsNothing,
+          reason: 'Folded by default: the free page cannot come back longer');
+
+      await tester.ensureVisible(find.byKey(const ValueKey('menstrual-about')));
+      await tester.pump();
+      await tester.tap(find.byKey(const ValueKey('menstrual-about')));
+      await tester.pump();
+      expect(find.byKey(const ValueKey('menstrual-about-text')), findsOneWidget,
+          reason: 'A tap opens it on both plans');
+      // O título mora no cabeçalho e está sempre à vista: procurá-lo não
+      // provaria abertura nenhuma. Quem prova é um subtítulo do corpo.
+      expect(find.text('What the blood marks'), findsOneWidget,
+          reason: 'The body is only there once it is open');
+    }
     expect(tester.takeException(), isNull);
   });
 
@@ -248,6 +264,16 @@ void main() {
         'the season card');
     expect(find.byKey(const ValueKey('menstrual-season-invitation')), findsNothing,
         reason: 'Nothing is chosen for her');
+
+    // "O que é isto?" chega antes da escolha, e chega recolhido.
+    expect(find.byKey(const ValueKey('menstrual-season-about')), findsOneWidget);
+    expect(find.byKey(const ValueKey('menstrual-season-about-text')), findsNothing);
+    await pressIn(tester, 'menstrual-season-about');
+    expect(find.byKey(const ValueKey('menstrual-season-about-text')),
+        findsOneWidget,
+        reason: 'The answer is one tap away, inside the recording area');
+    await pressIn(tester, 'menstrual-season-about');
+    expect(find.byKey(const ValueKey('menstrual-season-about-text')), findsNothing);
 
     await pressIn(tester, 'menstrual-season-spring');
     await until(

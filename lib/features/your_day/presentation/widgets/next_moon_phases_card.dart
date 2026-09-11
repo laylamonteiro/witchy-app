@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/expansion_magical_card.dart';
+import '../../../../core/widgets/moon_disc.dart';
 import '../../../grimoire/data/models/spell_model.dart';
 import '../../../lunar/presentation/providers/lunar_provider.dart';
 
@@ -111,10 +112,10 @@ class NextMoonPhasesCard extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            phase.emoji,
-            style: const TextStyle(fontSize: 32),
-          ),
+          // Disco desenhado, sem halo: são oito itens de lista, não heróis —
+          // e, acima do card, a lua de hoje já é desenhada. Um emoji aqui
+          // deixaria a página com duas artes de lua e duas cores.
+          MoonDisc(phase: phase, size: 32, halo: false),
           const SizedBox(width: 16),
           Expanded(
             child: Column(

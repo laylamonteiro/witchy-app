@@ -108,10 +108,6 @@ class LunarProvider with ChangeNotifier {
     return getCurrentMoonPhase().displayName;
   }
 
-  String getMoonPhaseEmoji() {
-    return getCurrentMoonPhase().emoji;
-  }
-
   String getMoonPhaseDescription() {
     return getCurrentMoonPhase().description;
   }

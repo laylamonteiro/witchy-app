@@ -24,8 +24,13 @@ class MenstrualEpisode {
 /// O que se calcula a partir do histórico — e só isso.
 ///
 /// Tudo aqui é resultado derivado: dia do ciclo, duração de episódios, média
-/// e faixa observadas e a referência de próxima data. Por isso nada disto é
-/// montado no plano gratuito: `MenstrualAccess.canSeeDerived` decide antes.
+/// e faixa observadas e a referência de próxima data.
+///
+/// NENHUMA TELA LÊ ISTO HOJE. O card "O que seu histórico mostra" saiu da
+/// página do Ciclo a pedido da dona, e com ele a única leitura destes
+/// números; o que sobrou aqui é domínio coberto por teste, guardado para o
+/// caso de a conta voltar. Antes de religá-lo, `MenstrualAccess.canSeeDerived`
+/// continua sendo quem decide.
 ///
 /// Os critérios são explícitos: um intervalo existe entre dois começos
 /// marcados pela pessoa; um escape nunca abre intervalo; e a referência de

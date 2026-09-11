@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/grimoire_colors.dart';
+import '../../../../core/theme/grimoire_motion.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../encyclopedia/presentation/widgets/related_link.dart';
@@ -16,8 +17,12 @@ import 'season_vignette.dart';
 /// data, fluxo, humor ou média, e "nenhuma" é uma resposta inteira. Tocar na
 /// estação já escolhida a desmarca.
 ///
-/// A escrita fica dentro do registro íntimo: não vai para o Diário, para o
-/// acervo nem para a IA.
+/// A escrita fica dentro do registro íntimo e não vai para o Diário. Ela só
+/// sai daqui quando a própria pessoa a inclui numa Leitura do Ciclo (a chave
+/// das palavras em menstrual_source_tile.dart leva `MenstrualField.seasonNote`
+/// junto): é por isso que [MenstrualSeasonCard] diz isso com todas as letras
+/// no bloco recolhível e no rodapé do campo, em vez de prometer sigilo
+/// absoluto.
 class MenstrualSeasonCard extends StatefulWidget {
   const MenstrualSeasonCard({
     super.key,
@@ -50,6 +55,10 @@ class _MenstrualSeasonCardState extends State<MenstrualSeasonCard> {
   bool _busy = false;
   bool _sealed = false;
 
+  /// A explicação da estação começa recolhida: a dúvida "o que é isso?" é de
+  /// quem chega, e quem já sabe não precisa rolar por cima dela toda vez.
+  bool _aboutOpen = false;
+
   @override
   void dispose() {
     _writing.dispose();
@@ -77,6 +86,71 @@ class _MenstrualSeasonCardState extends State<MenstrualSeasonCard> {
       _busy = false;
       _sealed = ok;
     });
+  }
+
+  /// "O que é uma estação interna?" — a resposta que faltava, no lugar onde a
+  /// pergunta nasce: logo abaixo dos quatro chips, antes de qualquer escolha.
+  ///
+  /// Recolhível e fechada por padrão porque este card já é o bloco mais longo
+  /// da tela; aberta, ela empurraria o campo de escrita para fora da dobra do
+  /// navegador. Retrátil escrito à mão, e não `ExpansionTile`, porque aquele
+  /// anima sem consultar [GrimoireMotion.reduced] — aqui, com movimento
+  /// reduzido, a abertura é instantânea.
+  Widget _about(
+      BuildContext context, AppLocalizations l10n, GrimoireColors colors) {
+    final paragraph =
+        TextStyle(color: colors.textPrimary, fontSize: 13, height: 1.5);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 10),
+        InkWell(
+          key: const ValueKey('menstrual-season-about'),
+          onTap: () => setState(() => _aboutOpen = !_aboutOpen),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 6),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    l10n.menstrualSeasonAboutTitle,
+                    style: TextStyle(
+                        color: colors.lilac,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600),
+                  ),
+                ),
+                Icon(_aboutOpen ? Icons.expand_less : Icons.expand_more,
+                    size: 20, color: colors.textSecondary),
+              ],
+            ),
+          ),
+        ),
+        AnimatedSize(
+          duration: GrimoireMotion.reduced(context)
+              ? Duration.zero
+              : GrimoireMotion.state,
+          curve: GrimoireMotion.enter,
+          alignment: Alignment.topCenter,
+          child: !_aboutOpen
+              ? const SizedBox(width: double.infinity)
+              : Column(
+                  key: const ValueKey('menstrual-season-about-text'),
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(l10n.menstrualSeasonAboutBody, style: paragraph),
+                    const SizedBox(height: 10),
+                    Text(l10n.menstrualSeasonAboutUse, style: paragraph),
+                    const SizedBox(height: 10),
+                    // O que sai daqui quando ela autoriza uma leitura: dizer
+                    // isso na explicação é a diferença entre explicar e
+                    // explicar pela metade.
+                    Text(l10n.menstrualSeasonAboutReading, style: paragraph),
+                  ],
+                ),
+        ),
+      ],
+    );
   }
 
   @override
@@ -132,6 +206,7 @@ class _MenstrualSeasonCardState extends State<MenstrualSeasonCard> {
                 ),
             ],
           ),
+          _about(context, l10n, colors),
           if (season == null && widget.invitesWinter) ...[
             const SizedBox(height: 12),
             Text(

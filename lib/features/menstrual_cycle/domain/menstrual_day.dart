@@ -65,7 +65,9 @@ class MenstrualDay {
   final InternalSeason? season;
 
   /// A escrita que veio com o convite da estação. Mora no registro íntimo e
-  /// não vai para o Diário, para o acervo nem para a IA.
+  /// não vai para o Diário. Sai daqui por um caminho só, e com autorização
+  /// explícita: `MenstrualField.seasonNote`, que a chave das palavras da
+  /// Leitura do Ciclo inclui no escopo (menstrual_source_tile.dart).
   final String seasonNote;
 
   final int revision;

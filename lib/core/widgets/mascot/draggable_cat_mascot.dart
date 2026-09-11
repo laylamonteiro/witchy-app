@@ -647,6 +647,51 @@ class _DraggableCatMascotState extends State<DraggableCatMascot>
     }
   }
 
+  /// Margem entre o Salem e a borda do viewport. A silhueta dele é maior que a
+  /// caixa de `size` — tem sombra lilás com spread e uma camada de partículas
+  /// por fora — e na web o quadro de 430 px recorta em hardEdge o que encostar.
+  static const double _margemDaBorda = 8;
+
+  /// Folga embaixo, para o gato não descer por cima da barra de navegação.
+  static const double _folgaInferior = 100;
+
+  /// Retrava `_x`/`_y` dentro do viewport informado e diz se mexeu.
+  ///
+  /// É a MESMA regra do arraste e da troca de viewport de propósito: até aqui
+  /// a trava só rodava durante o arraste, então qualquer mudança de viewport
+  /// — redimensionar a janela do navegador, cruzar o breakpoint de 600 px do
+  /// quadro web, abrir o teclado ou dividir a tela no Android — deixava o
+  /// Salem numa coordenada de uma tela que não existe mais, estourando a
+  /// borda. Os `math.max` evitam limite inferior maior que o superior, que
+  /// `clamp` lança: numa janela arrastada até ficar menor que o gato isso
+  /// acontece de verdade.
+  bool _ancorarNoViewport(Size viewport) {
+    final maxX =
+        math.max(_margemDaBorda, viewport.width - widget.size - _margemDaBorda);
+    final maxY =
+        math.max(_margemDaBorda, viewport.height - widget.size - _folgaInferior);
+    final x = _x.clamp(_margemDaBorda, maxX);
+    final y = _y.clamp(_margemDaBorda, maxY);
+    if (x == _x && y == _y) return false;
+    _x = x;
+    _y = y;
+    return true;
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Não precisa de setState: dependência mudada já marca este elemento para
+    // reconstruir, e didChangeDependencies roda antes do build dele.
+    if (!_ancorarNoViewport(MediaQuery.sizeOf(context))) return;
+    // O balão de fala é irmão ANTERIOR na pilha da Home e já construiu neste
+    // quadro — avisar o notifier agora seria markNeedsBuild durante o build.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      widget.positionNotifier?.value = Offset(_x, _y);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     // Só o tamanho: sem aspecto, o mascote se reconstruía a cada quadro do
@@ -702,9 +747,9 @@ class _DraggableCatMascotState extends State<DraggableCatMascot>
                 _x += details.delta.dx;
                 _y += details.delta.dy;
 
-                // Limitar aos bounds da tela
-                _x = _x.clamp(0.0, screenSize.width - widget.size);
-                _y = _y.clamp(0.0, screenSize.height - widget.size - 100);
+                // Limitar aos bounds da tela, pela mesma regra que retrava o
+                // gato quando o viewport muda.
+                _ancorarNoViewport(screenSize);
 
                 // Criar partículas de rastro
                 _createTrailParticle(_x, _y);

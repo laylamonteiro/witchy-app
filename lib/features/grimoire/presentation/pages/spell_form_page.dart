@@ -8,6 +8,7 @@ import '../providers/spell_provider.dart';
 import '../../../journeys/domain/action_outcome.dart';
 import '../../../journeys/domain/action_recorder.dart';
 import '../../../../core/widgets/magical_button.dart';
+import '../../../../core/widgets/moon_disc.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 
@@ -169,7 +170,11 @@ class _SpellFormPageState extends State<SpellFormPage> {
                     value: phase,
                     child: Row(
                       children: [
-                        Text(phase.emoji),
+                        // Desenhada, como na tela do feitiço: era o emoji de
+                        // fase, ou seja, a arte da fonte de cada plataforma.
+                        // A pessoa escolhia uma lua aqui e via outra no
+                        // detalhe do mesmo feitiço.
+                        MoonDisc(phase: phase, size: 20, halo: false),
                         const SizedBox(width: 8),
                         Text(phase.displayName),
                       ],

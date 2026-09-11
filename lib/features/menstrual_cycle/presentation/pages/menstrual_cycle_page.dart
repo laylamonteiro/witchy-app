@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/theme/grimoire_motion.dart';
 import '../../../../core/widgets/magical_card.dart';
+import '../../../../core/widgets/moon_disc.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../grimoire/data/models/spell_model.dart';
@@ -14,8 +15,6 @@ import '../../data/repositories/menstrual_cycle_repository.dart';
 import '../../domain/internal_season.dart';
 import '../../domain/menstrual_access.dart';
 import '../../domain/menstrual_day.dart';
-import '../../domain/menstrual_insights.dart';
-import '../widgets/menstrual_lunar_card.dart';
 import '../widgets/menstrual_record_form.dart';
 import '../widgets/menstrual_season_card.dart';
 import '../widgets/menstrual_wheel.dart';
@@ -23,12 +22,15 @@ import '../widgets/menstrual_wheel.dart';
 /// A roda pessoal: o registro do próprio ciclo.
 ///
 /// Antes de qualquer coisa, o consentimento — e ele explica o que é gratuito
-/// (registrar, consultar, corrigir, exportar e apagar) e o que é Premium (o
-/// que se calcula a partir disso). Recusar não apaga nada.
+/// (registrar, consultar, corrigir, exportar e apagar) e o que é Premium (a
+/// roda do mês, a Lua estimada de cada dia e as Estações Internas). Recusar
+/// não apaga nada.
 ///
 /// O calendário mostra só os dias que a pessoa registrou. Um dia vazio é
-/// ausência de registro, e nada aqui conta, soma ou estima: no plano
-/// gratuito esses números não são calculados nem para ficar escondidos.
+/// ausência de registro, e a tela não conta, não soma e não estima nada a
+/// partir do histórico: média, dia do ciclo, referência de próxima data e
+/// comparação com a Lua saíram daqui de vez — não foram escondidas atrás de
+/// um retrátil, e o histórico inteiro deixou de ser lido para isso.
 class MenstrualCyclePage extends StatefulWidget {
   const MenstrualCyclePage({
     super.key,
@@ -56,14 +58,14 @@ class _MenstrualCyclePageState extends State<MenstrualCyclePage> {
 
   Map<String, MenstrualDay> _days = const {};
 
-  /// O histórico inteiro alimenta o que se calcula; o mês alimenta o
-  /// calendário. Só quem tem acesso ao derivado chega a pedir o histórico.
-  List<MenstrualDay> _history = const [];
   bool _loading = true;
   bool _consented = false;
-  bool _wantsNextReference = false;
   bool _saving = false;
   String? _formError;
+
+  /// A explicação sobre a menstruação começa recolhida: no navegador a dobra
+  /// é curta, e o que ela veio fazer aqui primeiro é registrar.
+  bool _aboutOpen = false;
 
   /// A roda é uma alternativa oferecida, não a única porta: quem não quiser
   /// explorá-la fica no calendário do mês, que continua completo.
@@ -77,8 +79,6 @@ class _MenstrualCyclePageState extends State<MenstrualCyclePage> {
   late Map<int, MoonPhase> _moons = _moonsFor(_month);
 
   String get _userId => context.read<AuthProvider>().currentUser.id;
-
-  bool get _premium => context.read<AuthProvider>().isPremiumEffective;
 
   static DateTime _dayOf(DateTime value) =>
       DateTime(value.year, value.month, value.day);
@@ -94,18 +94,13 @@ class _MenstrualCyclePageState extends State<MenstrualCyclePage> {
     try {
       final consented = await widget.consent.recordingAllowed(userId);
       final days = consented ? await _monthOf(userId, _month) : const <MenstrualDay>[];
-      final wants = await widget.consent.nextReferenceWanted(userId);
-      // O histórico inteiro só é montado para quem pode ver o que se
-      // calcula dele: no gratuito ele não chega nem a ser lido.
-      final history = consented && _premium
-          ? await _repository.all(userId)
-          : const <MenstrualDay>[];
+      // Só o mês na tela é lido. O histórico inteiro era matéria-prima do
+      // que se calculava; sem cálculo, pedi-lo seria abrir o registro dela
+      // sem ter o que fazer com ele.
       if (!mounted) return;
       setState(() {
         _consented = consented;
-        _wantsNextReference = wants;
         _days = {for (final day in days) day.dayKey: day};
-        _history = history;
         _loading = false;
       });
     } catch (_) {
@@ -218,7 +213,8 @@ class _MenstrualCyclePageState extends State<MenstrualCyclePage> {
   }
 
   /// A escrita que veio com o convite da estação. Fica no registro íntimo do
-  /// dia: não vai para o Diário, para o acervo nem para a IA.
+  /// dia e não vai para o Diário; só sai daqui quando a própria pessoa a
+  /// inclui numa Leitura do Ciclo, ligando a chave das palavras.
   Future<bool> _writeSeason(String text) async =>
       _persist(_todayRecord().copyWith(seasonNote: text));
 
@@ -241,12 +237,9 @@ class _MenstrualCyclePageState extends State<MenstrualCyclePage> {
   Future<void> _refresh() async {
     final userId = _userId;
     final days = await _monthOf(userId, _month);
-    final history =
-        _premium ? await _repository.all(userId) : const <MenstrualDay>[];
     if (!mounted) return;
     setState(() {
       _days = {for (final day in days) day.dayKey: day};
-      _history = history;
     });
   }
 
@@ -403,114 +396,112 @@ class _MenstrualCyclePageState extends State<MenstrualCyclePage> {
               onChoose: _chooseSeason,
               onWrite: _writeSeason,
             ),
-          // Só aqui o histórico vira número — e só para quem tem acesso.
-          if (access.canSeeDerived) ...[
-            _derived(context, l10n),
-            MenstrualLunarCard(insights: MenstrualInsights.of(_history)),
-          ],
-          if (access.showsGenericPremiumInvite)
-            MagicalCard(
-              key: const ValueKey('menstrual-premium-invite'),
-              child: Text(
-                l10n.menstrualPremiumInvite,
-                style: TextStyle(color: context.gc.textSecondary, fontSize: 12),
-              ),
-            ),
+          // Onde antes o histórico virava número, agora há palavra: o que é
+          // menstruar, o que já foi lido nisso e o que a bruxaria faz com o
+          // assunto. Fecha a página para os dois planos.
+          _about(context, l10n, access),
           const SizedBox(height: 12),
         ],
       ),
     );
   }
 
-
-  /// O que se calcula a partir do histórico. Esta parte da tela só é montada
-  /// para quem tem acesso: no gratuito, nenhum destes números existe.
-  Widget _derived(BuildContext context, AppLocalizations l10n) {
-    final insights = MenstrualInsights.of(_history);
+  /// A menstruação em palavras: o que ela é, o que já foi lido nela e por que
+  /// a bruxaria olha para o sangue. Texto fixo — não lê registro nenhum, não
+  /// calcula nada e não muda com o plano.
+  ///
+  /// Sem gate de acesso, de propósito: isto não é resultado calculado nem
+  /// catálogo curado, é a explicação do corpo de quem está lendo, e cobrar
+  /// assinatura para dizer o que é menstruar seria vender de volta o que já é
+  /// dela. O convite Premium, quando existe, fecha ESTE card em vez de abrir
+  /// outro — dois cards saíram da tela, e a página do gratuito (que é a que
+  /// roda no navegador, de dobra curta) não pode voltar mais longa do que era.
+  ///
+  /// O texto mora no ARB, e não na camada de conteúdo (menstrual_phase_content
+  /// _pt/_en/_es.dart): aquela camada é catálogo — itens com identidade
+  /// estável, ordem e correspondências que a Enciclopédia resolve, e é isso
+  /// que o teste de paridade dela verifica. Isto aqui é texto fixo de uma
+  /// tela, sem item nem chave de curadoria, e o ARB ainda cobre o pt_BR, que
+  /// a camada de conteúdo não tem (ela cai no pt). A fronteira de vocabulário
+  /// que a camada ganha de graça, este texto ganha em
+  /// test/menstrual_about_text_test.dart.
+  Widget _about(
+      BuildContext context, AppLocalizations l10n, MenstrualAccess access) {
     final colors = context.gc;
-    final cycleDay = insights.cycleDayOn(_today);
-    final average = insights.averageIntervalDays;
-    final range = insights.intervalRange;
-    final reference = insights.nextReference(optedIn: _wantsNextReference);
+    final theme = Theme.of(context);
+    final body = TextStyle(color: colors.textPrimary, height: 1.5);
+    final head = TextStyle(
+        color: colors.lilac, fontSize: 12, fontWeight: FontWeight.bold);
     return MagicalCard(
-      key: const ValueKey('menstrual-derived'),
+      key: const ValueKey('menstrual-about'),
+      onTap: () => setState(() => _aboutOpen = !_aboutOpen),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(l10n.menstrualDerivedTitle,
-              style: Theme.of(context).textTheme.titleMedium
-                  ?.copyWith(color: colors.lilac, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 10),
-          if (cycleDay != null)
-            Text(l10n.menstrualCycleDayToday(cycleDay),
-                key: const ValueKey('menstrual-cycle-day'),
-                style: TextStyle(color: colors.textPrimary)),
-          if (insights.hasSummary) ...[
-            const SizedBox(height: 6),
-            if (average != null)
-              Text(l10n.menstrualObservedAverage(average),
-                  key: const ValueKey('menstrual-average'),
-                  style: TextStyle(color: colors.textPrimary)),
-            if (range != null)
-              Text(l10n.menstrualObservedRange(range.shortest, range.longest),
-                  style: TextStyle(color: colors.textSecondary, fontSize: 12)),
-            // O tamanho da amostra anda junto dos números: um resumo sem ele
-            // parece mais firme do que é.
-            Text(l10n.menstrualObservedSample(insights.sampleSize),
-                key: const ValueKey('menstrual-sample'),
-                style: TextStyle(color: colors.textSecondary, fontSize: 12)),
-          ] else ...[
-            const SizedBox(height: 6),
-            Text(l10n.menstrualSummaryPending(insights.intervals.length),
-                key: const ValueKey('menstrual-summary-pending'),
-                style: TextStyle(color: colors.textSecondary, fontSize: 12)),
-          ],
-          if (insights.hasSummary) ...[
-            SwitchListTile(
-              key: const ValueKey('menstrual-next-reference-switch'),
-              contentPadding: EdgeInsets.zero,
-              title: Text(l10n.menstrualNextReferenceWanted,
-                  style: TextStyle(color: colors.textPrimary, fontSize: 13)),
-              value: _wantsNextReference,
-              onChanged: (wanted) async {
-                await widget.consent.setNextReferenceWanted(_userId, wanted);
-                if (mounted) setState(() => _wantsNextReference = wanted);
-              },
-            ),
-            if (reference != null) ...[
-              Text(
-                l10n.menstrualNextReference(
-                    _readable(reference)),
-                key: const ValueKey('menstrual-next-reference'),
-                style: TextStyle(color: colors.textPrimary),
-              ),
-              // A data passou: dizer que a estimativa envelheceu, e nada
-              // além disso. Sem somar um ciclo fictício, sem falar em atraso.
-              if (insights.referenceIsStale(_today,
-                  optedIn: _wantsNextReference))
-                Padding(
-                  padding: const EdgeInsets.only(top: 4),
-                  child: Text(
-                    l10n.menstrualReferenceStale,
-                    key: const ValueKey('menstrual-reference-stale'),
-                    style: TextStyle(
-                        color: colors.textSecondary, fontSize: 12, height: 1.4),
-                  ),
+          Row(
+            children: [
+              Icon(Icons.auto_stories_outlined, size: 18, color: colors.lilac),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  l10n.menstrualAboutTitle,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                      color: colors.lilac, fontWeight: FontWeight.bold),
                 ),
+              ),
+              Icon(_aboutOpen ? Icons.expand_less : Icons.expand_more,
+                  size: 20, color: colors.textSecondary),
             ],
+          ),
+          AnimatedSize(
+            duration: GrimoireMotion.reduced(context)
+                ? Duration.zero
+                : GrimoireMotion.state,
+            curve: GrimoireMotion.enter,
+            alignment: Alignment.topCenter,
+            child: !_aboutOpen
+                ? const SizedBox(width: double.infinity)
+                : Column(
+                    key: const ValueKey('menstrual-about-text'),
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(height: 12),
+                      Text(l10n.menstrualAboutOpening, style: body),
+                      const SizedBox(height: 14),
+                      Text(l10n.menstrualAboutMeaningTitle, style: head),
+                      const SizedBox(height: 4),
+                      Text(l10n.menstrualAboutMeaning, style: body),
+                      const SizedBox(height: 14),
+                      Text(l10n.menstrualAboutMoonTitle, style: head),
+                      const SizedBox(height: 4),
+                      Text(l10n.menstrualAboutMoon, style: body),
+                      const SizedBox(height: 14),
+                      Text(l10n.menstrualAboutCraftTitle, style: head),
+                      const SizedBox(height: 4),
+                      Text(l10n.menstrualAboutCraft, style: body),
+                      const SizedBox(height: 14),
+                      Text(
+                        l10n.menstrualAboutNote,
+                        style: TextStyle(
+                            color: colors.textSecondary,
+                            fontSize: 11,
+                            height: 1.4),
+                      ),
+                    ],
+                  ),
+          ),
+          if (access.showsGenericPremiumInvite) ...[
+            const SizedBox(height: 10),
+            Text(
+              l10n.menstrualPremiumInvite,
+              key: const ValueKey('menstrual-premium-invite'),
+              style: TextStyle(color: colors.textSecondary, fontSize: 12),
+            ),
           ],
-          const SizedBox(height: 10),
-          Text(l10n.menstrualDerivedNote,
-              style: TextStyle(
-                  color: colors.textSecondary, fontSize: 11, height: 1.4)),
         ],
       ),
     );
   }
-
-  static String _readable(DateTime day) =>
-      '${day.day.toString().padLeft(2, '0')}/'
-      '${day.month.toString().padLeft(2, '0')}/${day.year}';
 
   String _markOf(AppLocalizations l10n, MenstrualMark mark) => switch (mark) {
         MenstrualMark.start => l10n.menstrualMarkStart,
@@ -631,7 +622,7 @@ class _MenstrualCyclePageState extends State<MenstrualCyclePage> {
                 reduced: reduced,
                 // Cruzar o que ela registrou com a Lua é comparação, e
                 // comparação é Premium: no gratuito a Lua nem é calculada.
-                moon: access.canSeeDerived ? _moons[day.day]?.emoji : null,
+                moon: access.canSeeDerived ? _moons[day.day] : null,
                 moonName:
                     access.canSeeDerived ? _moons[day.day]?.displayName : null,
                 onTap: () => _openDay(day),
@@ -681,7 +672,7 @@ class _DayCell extends StatelessWidget {
 
   /// A Lua estimada pelo app para este dia, quando a comparação é oferecida.
   /// É estimativa, e a legenda do calendário diz isso.
-  final String? moon;
+  final MoonPhase? moon;
 
   /// O nome da mesma fase, para quem ouve a tela: o desenho fica fora da
   /// árvore semântica e o texto entra no lugar dele.
@@ -717,10 +708,10 @@ class _DayCell extends StatelessWidget {
               // é quadrada e apertada, e a Lua não pode empurrar o número
               // para fora dela.
               if (moon != null)
-                ExcludeSemantics(
-                  child: Text(moon!,
-                      style: const TextStyle(fontSize: 10, height: 1)),
-                ),
+                // Desenhada, não o glifo da fonte: a mesma lua da roda e de
+                // Seu Dia. O glifo mudava de arte entre aparelho e navegador,
+                // e trocar de visão não pode trocar a lua de desenho.
+                MoonDisc(phase: moon!, size: 10, halo: false),
               Text('${day.day}',
                   style: TextStyle(
                       color: colors.textPrimary, fontSize: 12, height: 1.1)),

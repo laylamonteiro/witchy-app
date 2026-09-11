@@ -11,6 +11,11 @@ class MenstrualConsentStore {
 
   static const _recordPrefix = 'menstrual_consent_record_';
   static const _syncPrefix = 'menstrual_consent_sync_';
+
+  /// A referência de próxima data saiu da tela junto com o que se calculava
+  /// do histórico, e ninguém mais lê nem grava esta preferência. A chave
+  /// continua aqui só para o [forget] apagar o sim antigo de quem chegou a
+  /// ligá-la: deixar dado esquecido no aparelho seria guardar sem motivo.
   static const _nextReferencePrefix = 'menstrual_next_reference_';
   static const _revisionPrefix = 'menstrual_consent_revision_';
 
@@ -54,18 +59,6 @@ class MenstrualConsentStore {
   Future<void> setSyncAllowed(String userId, bool allowed) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('$_syncPrefix$userId', allowed);
-  }
-
-  /// A referência de próxima data é opcional dentro do Premium: alguém pode
-  /// querer registrar e ver médias sem uma data pairando na tela.
-  Future<bool> nextReferenceWanted(String userId) async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getBool('$_nextReferencePrefix$userId') ?? false;
-  }
-
-  Future<void> setNextReferenceWanted(String userId, bool wanted) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('$_nextReferencePrefix$userId', wanted);
   }
 
   /// Esquece as respostas desta conta — usado quando a pessoa apaga tudo.
