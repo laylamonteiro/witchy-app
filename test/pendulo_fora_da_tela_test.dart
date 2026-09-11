@@ -47,6 +47,15 @@ void main() {
   });
   setUp(() => SharedPreferences.setMockInitialValues({}));
 
+  /// Vários quadros, sem esperar silêncio: o pêndulo balança para sempre, e
+  /// a troca de rota só chega ao TickerMode um quadro depois de a transição
+  /// terminar — quando o Overlay marca a rota de baixo como fora de cena.
+  Future<void> avancar(WidgetTester tester) async {
+    for (var i = 0; i < 6; i++) {
+      await tester.pump(const Duration(milliseconds: 120));
+    }
+  }
+
   testWidgets('a rota coberta desliga o acelerômetro, e voltar religa',
       (tester) async {
     final sensor = StreamController<AccelerometerEvent>.broadcast();
@@ -73,17 +82,15 @@ void main() {
     navigator.currentState!.push(MaterialPageRoute<void>(
       builder: (_) => const Scaffold(body: Center(child: Text('outra tela'))),
     ));
-    // Nunca `pumpAndSettle` aqui: o pêndulo balança sem parar, e esperar o
-    // silêncio seria esperar para sempre. A transição de rota dura 300 ms.
     await tester.pump();
-    await tester.pump(const Duration(milliseconds: 400));
+    await avancar(tester);
     expect(find.text('outra tela'), findsOneWidget);
     expect(sensor.hasListener, isFalse,
         reason: 'Coberto, o acelerômetro só gastaria bateria');
 
     navigator.currentState!.pop();
     await tester.pump();
-    await tester.pump(const Duration(milliseconds: 400));
+    await avancar(tester);
     expect(sensor.hasListener, isTrue, reason: 'De volta, volta a ouvir');
     expect(tester.takeException(), isNull);
   });
