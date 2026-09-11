@@ -348,6 +348,41 @@ Entregue em 11/09.
   quem pontuou, gravação antes da revelação, resultado guardado abrindo
   direto).
 
+## Foto e relato: Quiromancia, Sonhos e Natureza (P12)
+
+Entregue em 11/09.
+
+- **Falha visível, com retomada:** quiromancia e interpretação de sonho
+  trocaram o aviso que some por um estado de falha na própria tela. A
+  quiromancia guarda a foto já comprimida em memória e “Tentar de novo”
+  reanalisa a MESMA foto — sem pedir outra, sem segunda compressão. O sonho
+  conserva o relato escrito e tenta de novo com um toque.
+- **Nada de sucesso falso:** a cota e o rito do dia só mudam quando a
+  leitura chega; uma falha não conta leitura, não cumpre rito e não anuncia
+  resultado. Desistir da foto não deixa rastro: nem análise em curso, nem
+  erro, nem chamada de visão.
+- **Superfície própria:** `PalmScanView` desenha a mão e as três linhas na
+  paleta ativa, com uma faixa de luz que percorre a palma **apenas** enquanto
+  a requisição real dura; com movimento reduzido a ilustração fica parada. O
+  ticker é suspenso fora da tela.
+- **Gates preservados:** acesso Premium, limite diário, limites de tamanho
+  da imagem, compressão com correção de EXIF e descarte da foto continuam
+  como estavam. A tela ganhou costuras de teste (`choosePhoto`,
+  `analyzePalm`) que só os testes usam.
+- **Verificação:** `palmistry_page_test.dart` (desistir da foto não muda
+  nada; falha mostra o erro, guarda a foto e só uma retomada explícita
+  reanalisa; a cota é gasta uma vez, quando a leitura chega; foto pequena é
+  recusada antes de qualquer chamada; a varredura só dura o que a
+  requisição durar).
+- **Sonho guardado entra na jornada:** salvar a interpretação grava o sonho,
+  confere a falha do provider e só então registra a ação pelo
+  `ActionRecorder` — o mesmo caminho do diário, sem XP duplicado.
+- **Guia da Natureza:** a revisão de candidatos pedida pelo pacote já existe
+  em `add_entry_page.dart` e foi conferida: mais de um candidato pergunta em
+  vez de escolher sozinho, um único já vem marcado, "nenhuma dessas" libera o
+  campo manual e nenhum estado anuncia identificação que não houve. Sem
+  mudança nesta entrega.
+
 ## Dados e compatibilidade
 
 O schema local sobe de 23 para 24 (sessões e ledger), 25 (descobertas do
@@ -410,6 +445,8 @@ usam sessões.
 - `card_selection_surface_test.dart`: toque, navegação horizontal sem sorteio,
   retirada/cancelamento, extremos por teclado, escolha travada, semântica,
   fonte ampliada e movimento reduzido.
+- `palmistry_page_test.dart`: cancelamento sem rastro, falha com retomada,
+  cota gasta só no sucesso e varredura limitada à requisição real.
 - `oracle_album_test.dart` e `archetype_quiz_test.dart`: álbum, retrospectiva
   silenciosa, constelação determinística e revelação depois da gravação.
 - `sigil_trace_test.dart` e `sigil_drawing_page_test.dart`: percurso do
@@ -437,7 +474,7 @@ pendentes. Os testes automatizados não substituem essa avaliação.
 
 ## Continuação do lote
 
-1. P12–P14: fluxos com foto, numerologia/pêndulo e navegação entre ferramentas.
+1. P13 e P14: numerologia/pêndulo e navegação entre ferramentas.
 2. P16/P17: registro menstrual manual Free; dados derivados e análises Premium.
 3. P18: registros menstruais autorizados entram na análise completa do ciclo.
 4. P15: integração e validação final do lote.

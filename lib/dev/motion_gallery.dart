@@ -11,6 +11,7 @@ import '../features/divination/presentation/widgets/card_selection_surface.dart'
 import '../features/divination/presentation/widgets/oracle_card_face.dart';
 import '../features/runes/data/data_sources/runes_data.dart';
 import '../features/runes/presentation/widgets/rune_selection_surface.dart';
+import '../features/palmistry/presentation/widgets/palm_scan_view.dart';
 import '../features/runes/presentation/widgets/rune_stone_view.dart';
 import '../features/sigils/data/models/sigil_model.dart';
 import '../features/sigils/presentation/widgets/sigil_drawing_painter.dart';
@@ -114,6 +115,12 @@ class _GalleryState extends State<_Gallery> {
             intention: 'PROTECAO',
             letters: Sigil.fromIntention('PROTECAO').processedLetters,
           ),
+          const SizedBox(height: 24),
+          // A mão sob leitura: a faixa só anda enquanto a requisição dura.
+          Wrap(spacing: 16, runSpacing: 16, alignment: WrapAlignment.center, children: [
+            PalmScanView(size: 120, active: !_reduced),
+            const PalmScanView(size: 120),
+          ]),
           const SizedBox(height: 16),
           SizedBox(
             width: 260,

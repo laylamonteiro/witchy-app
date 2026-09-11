@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:image_picker/image_picker.dart';
@@ -17,13 +18,21 @@ import '../../../diary/data/models/free_writing_model.dart';
 import '../../../grimoire/presentation/pages/record_detail_page.dart';
 import '../../../diary/presentation/providers/free_writing_provider.dart';
 import '../../../your_day/presentation/providers/daily_checkin_provider.dart';
+import '../widgets/palm_scan_view.dart';
 
 /// Leitura de Mãos (Quiromancia) — exclusiva Premium.
 ///
 /// A foto é redimensionada/comprimida em memória, enviada para análise e
 /// descartada: nada é armazenado local ou remotamente.
 class PalmistryPage extends StatefulWidget {
-  const PalmistryPage({super.key});
+  const PalmistryPage({super.key, this.choosePhoto, this.analyzePalm});
+
+  /// Só para teste: entrega os bytes já comprimidos no lugar do plugin de
+  /// câmera/galeria. Devolver null é o mesmo que desistir da foto.
+  final Future<Uint8List?> Function(ImageSource source)? choosePhoto;
+
+  /// Só para teste: a análise, no lugar da chamada de visão real.
+  final Future<String> Function(Uint8List bytes)? analyzePalm;
 
   @override
   State<PalmistryPage> createState() => _PalmistryPageState();
@@ -35,6 +44,14 @@ class _PalmistryPageState extends State<PalmistryPage> {
   bool _isAnalyzing = false;
   String? _reading;
   bool _saved = false;
+
+  /// A foto já comprimida, guardada só em memória para uma segunda
+  /// tentativa: tentar de novo não pede outra foto nem cobra a cota de novo.
+  Uint8List? _bytes;
+
+  /// A falha visível. Um aviso que some não basta: a pessoa fica sem
+  /// leitura e sem saber o que fazer.
+  String? _error;
 
   /// Pediu a leitura sem ter Premium: a tela mostra o sumário do que ela
   /// diria, em vez de bater a porta na entrada.
@@ -66,62 +83,90 @@ class _PalmistryPageState extends State<PalmistryPage> {
       return;
     }
 
+    // Lidos antes de qualquer await (use_build_context_synchronously).
+    final l10n = AppLocalizations.of(context);
     try {
-      final picked = await _picker.pickImage(
-        source: source,
-        maxWidth: 1600,
-        maxHeight: 1600,
-      );
-      if (picked == null || !mounted) return;
+      final bytes = await _choosePhoto(source);
+      // Desistir da foto não deixa rastro: nem análise em curso, nem erro.
+      if (bytes == null || !mounted) return;
 
       setState(() {
-        _isAnalyzing = true;
         _reading = null;
+        _error = null;
         _saved = false;
       });
 
-      // Redimensiona/comprime em memória: corrige rotação EXIF, remove
-      // metadados e limita o tamanho do envio.
-      final compressed = await compressPickedImage(picked);
-      final bytes = compressed ?? await picked.readAsBytes();
-
       if (bytes.length > _maxUploadBytes) {
-        throw Exception(
-          AppLocalizations.of(context).palmImageTooLarge,
-        );
+        throw Exception(l10n.palmImageTooLarge);
       }
       if (bytes.length < 20 * 1024) {
-        throw Exception(
-          AppLocalizations.of(context).palmImageTooSmall,
-        );
+        throw Exception(l10n.palmImageTooSmall);
       }
 
-      final reading = await AIService.instance.analyzePalm(jpegBytes: bytes);
+      _bytes = bytes;
+      await _analyze(bytes, l10n);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isAnalyzing = false;
+        _error = _messageFor(e, l10n);
+      });
+    }
+  }
+
+  /// A foto, já comprimida: redimensiona em memória, corrige a rotação EXIF,
+  /// remove metadados e limita o tamanho do envio. null = desistiu.
+  Future<Uint8List?> _choosePhoto(ImageSource source) async {
+    final injected = widget.choosePhoto;
+    if (injected != null) return injected(source);
+    final picked = await _picker.pickImage(
+      source: source,
+      maxWidth: 1600,
+      maxHeight: 1600,
+    );
+    if (picked == null) return null;
+    final compressed = await compressPickedImage(picked);
+    return compressed ?? await picked.readAsBytes();
+  }
+
+  /// A chamada real. A cota e o rito do dia só mudam quando a leitura chega;
+  /// uma falha vira estado visível, com retomada explícita da mesma foto.
+  Future<void> _analyze(Uint8List bytes, AppLocalizations l10n) async {
+    final auth = context.read<AuthProvider>();
+    final checkin = context.read<DailyCheckinProvider>();
+    setState(() {
+      _isAnalyzing = true;
+      _error = null;
+    });
+    try {
+      final read = widget.analyzePalm ??
+          ((Uint8List image) => AIService.instance.analyzePalm(jpegBytes: image));
+      final reading = await read(bytes);
       if (!mounted) return;
       setState(() => _reading = reading);
       // Só conta quando a leitura foi gerada com sucesso.
-      await context.read<AuthProvider>().incrementPalmistryReadings();
+      await auth.incrementPalmistryReadings();
       // A leitura saiu: se a quiromancia é o rito de hoje, está cumprida.
-      if (mounted) {
-        unawaited(context
-            .read<DailyCheckinProvider>()
-            .completeRite(DailyRites.palmistry));
-      }
+      unawaited(checkin.completeRite(DailyRites.palmistry));
     } catch (e) {
       if (!mounted) return;
-      final message = e is AiRateLimitException
-          ? AppLocalizations.of(context).palmRateLimit
-          : '$e'.replaceAll('Exception: ', '');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(message),
-          backgroundColor: context.gc.alert,
-        ),
-      );
+      setState(() => _error = _messageFor(e, l10n));
     } finally {
       if (mounted) setState(() => _isAnalyzing = false);
     }
   }
+
+  /// Tentar de novo usa a MESMA foto já escolhida: nada é pedido outra vez.
+  Future<void> _retry() async {
+    final bytes = _bytes;
+    if (bytes == null || _isAnalyzing) return;
+    await _analyze(bytes, AppLocalizations.of(context));
+  }
+
+  String _messageFor(Object error, AppLocalizations l10n) =>
+      error is AiRateLimitException
+          ? l10n.palmRateLimit
+          : '$error'.replaceAll('Exception: ', '');
 
   Future<void> _saveReading() async {
     final reading = _reading;
@@ -269,8 +314,53 @@ class _PalmistryPageState extends State<PalmistryPage> {
             ),
           if (_isAnalyzing)
             MagicalCard(
-              child: LoadingWidget(
-                message: AppLocalizations.of(context).palmReadingLines,
+              child: Column(
+                children: [
+                  // A faixa de luz percorre a palma enquanto a análise real
+                  // dura — nem um segundo a mais.
+                  const PalmScanView(
+                    key: ValueKey('palm-scan'),
+                    active: true,
+                  ),
+                  LoadingWidget(
+                    message: AppLocalizations.of(context).palmReadingLines,
+                  ),
+                ],
+              ),
+            ),
+          // Falhou: a foto continua aqui e a retomada é uma escolha da
+          // pessoa. Nenhum sucesso é anunciado.
+          if (_error != null && !_isAnalyzing)
+            MagicalCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(Icons.error_outline, color: context.gc.alert, size: 20),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          _error!,
+                          style: TextStyle(color: context.gc.textPrimary),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  if (_bytes != null)
+                    OutlinedButton.icon(
+                      key: const ValueKey('palm-retry'),
+                      onPressed: _retry,
+                      icon: const Icon(Icons.refresh, size: 18),
+                      label: Text(AppLocalizations.of(context).commonTryAgain),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: context.gc.lilac,
+                        side: BorderSide(color: context.gc.lilac),
+                      ),
+                    ),
+                ],
               ),
             ),
           if (_mostrarPrevia && _reading == null)
