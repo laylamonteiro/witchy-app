@@ -104,6 +104,8 @@ void main() {
   });
 
   testWidgets('the circle draws any step count and exposes its progress', (tester) async {
+    // A árvore de semântica só existe enquanto alguém a pede.
+    final semantics = tester.ensureSemantics();
     await tester.pumpWidget(const MaterialApp(home: Scaffold(body: Row(children: [
       RitualCircle(steps: 1, lit: 0),
       RitualCircle(steps: 5, lit: 3, emblem: '🔥'),
@@ -111,7 +113,10 @@ void main() {
     ]))));
     await tester.pumpAndSettle();
     expect(find.bySemanticsLabel('3/5'), findsOneWidget);
+    expect(find.bySemanticsLabel('0/1'), findsOneWidget,
+        reason: 'Each circle keeps its own count');
     expect(find.text('🔥'), findsOneWidget);
     expect(tester.takeException(), isNull);
+    semantics.dispose();
   });
 }
