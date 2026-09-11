@@ -383,6 +383,30 @@ Entregue em 11/09.
   campo manual e nenhum estado anuncia identificação que não houve. Sem
   mudança nesta entrega.
 
+## Numerologia e pêndulo (P13)
+
+Entregue em 11/09.
+
+- **Números que chegam contando:** `NumberReveal` percorre o caminho até o
+  valor **calculado** e para nele, nas duas telas de numerologia. A animação
+  não decide nada: com movimento reduzido o número já aparece pronto, e um
+  mestre (11, 22, 33) chega inteiro porque quem o preserva é
+  `NumerologyCalculator.reduce`. A semântica anuncia sempre o valor final,
+  mesmo enquanto a contagem anda.
+- **Pêndulo fora da tela:** a assinatura do acelerômetro passou a depender
+  também do `TickerMode`. Com outra rota por cima, o sensor para — antes só
+  o segundo plano o desligava — e voltar para a tela religa sozinho. Movimento
+  reduzido continua dispensando o sensor por completo, e o sorteio da
+  resposta segue separado da inclinação: o efeito muda, a resposta não.
+- **Verificação:** `number_reveal_test.dart` (a contagem termina no valor
+  calculado, movimento reduzido mostra o resultado no primeiro quadro,
+  mestres não são reduzidos pela animação, semântica anuncia o final) e
+  `pendulo_fora_da_tela_test.dart` (rota coberta desliga o sensor, voltar
+  religa, movimento reduzido nem assina).
+- **Fora desta entrega:** unificar o painel de explicação de IA entre as
+  ferramentas continua pendente — é refatoração de conteúdo, não de
+  movimento, e não muda nenhum resultado.
+
 ## Dados e compatibilidade
 
 O schema local sobe de 23 para 24 (sessões e ledger), 25 (descobertas do
@@ -445,6 +469,8 @@ usam sessões.
 - `card_selection_surface_test.dart`: toque, navegação horizontal sem sorteio,
   retirada/cancelamento, extremos por teclado, escolha travada, semântica,
   fonte ampliada e movimento reduzido.
+- `number_reveal_test.dart` e `pendulo_fora_da_tela_test.dart`: número final
+  igual com e sem animação; sensor e controladores parados fora da tela.
 - `palmistry_page_test.dart`: cancelamento sem rastro, falha com retomada,
   cota gasta só no sucesso e varredura limitada à requisição real.
 - `oracle_album_test.dart` e `archetype_quiz_test.dart`: álbum, retrospectiva
@@ -474,7 +500,7 @@ pendentes. Os testes automatizados não substituem essa avaliação.
 
 ## Continuação do lote
 
-1. P13 e P14: numerologia/pêndulo e navegação entre ferramentas.
+1. P14: navegação e identidade das Ferramentas.
 2. P16/P17: registro menstrual manual Free; dados derivados e análises Premium.
 3. P18: registros menstruais autorizados entram na análise completa do ciclo.
 4. P15: integração e validação final do lote.

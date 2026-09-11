@@ -266,8 +266,13 @@ class _PendulumPageState extends State<PendulumPage>
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // "Reduzir movimento" desliga a inclinação, como todo o resto.
-    final quer = !GrimoireMotion.reduced(context) && _plataformaComSensor;
+    // "Reduzir movimento" desliga a inclinação, como todo o resto. Fora da
+    // tela — outra rota por cima — o TickerMode é falso e o acelerômetro
+    // também para: a dependência aqui é o que traz esta função de volta
+    // quando a rota reaparece.
+    final quer = !GrimoireMotion.reduced(context) &&
+        _plataformaComSensor &&
+        TickerMode.of(context);
     if (quer == _sensorLigado) return;
     _sensorLigado = quer;
     if (quer) {
