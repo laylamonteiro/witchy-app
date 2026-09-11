@@ -136,6 +136,8 @@ void main() {
     addTearDown(tester.view.resetDevicePixelRatio);
     const spread = RuneSpreadType.nineWorlds;
     await show(tester, textScale: 1.3);
+    // The album of the twenty-four stones is one tap from the reading.
+    expect(find.byKey(const ValueKey('runes-album-open')), findsOneWidget);
     await open(tester, spread);
     await until(tester, () => find.byType(RuneSelectionPage).evaluate().isNotEmpty,
         'selection route');

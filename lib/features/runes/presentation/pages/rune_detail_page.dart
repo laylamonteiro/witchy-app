@@ -4,6 +4,7 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../data/models/rune_model.dart';
+import '../widgets/rune_stone_view.dart';
 
 /// Tela de detalhe de uma runa
 class RuneDetailPage extends StatelessWidget {
@@ -31,20 +32,13 @@ class RuneDetailPage extends StatelessWidget {
             MagicalCard(
               child: Column(
                 children: [
-                  // Símbolo grande
-                  Container(
-                    padding: const EdgeInsets.all(24),
-                    decoration: BoxDecoration(
-                      color: context.gc.background,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      rune.symbol,
-                      style: TextStyle(
-                        fontSize: 120,
-                        color: context.gc.starYellow,
-                      ),
-                    ),
+                  // A pedra, do mesmo jeito que ela aparece na tiragem.
+                  RuneStoneView(
+                    size: 180,
+                    deckPosition: Rune.getAllRunes()
+                        .indexWhere((other) => other.name == rune.name)
+                        .clamp(0, 23),
+                    symbol: rune.symbol,
                   ),
                   const SizedBox(height: 16),
 

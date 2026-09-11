@@ -2028,7 +2028,7 @@
     }
   },
   "runeSelectionTitle": "Escolha suas pedras",
-  "runeSelectionInstruction": "As pedras estão viradas para baixo sobre o tecido. Toque em uma pedra ou segure-a e puxe para cima para escolher.",
+  "runeSelectionInstruction": "As pedras estão viradas para baixo. Toque em uma pedra ou segure-a e puxe para cima para escolher.",
   "runeSelectionPosition": "Pedra {position} de {total}",
   "runeSelectionPrevious": "Pedra anterior",
   "runeSelectionNext": "Próxima pedra",

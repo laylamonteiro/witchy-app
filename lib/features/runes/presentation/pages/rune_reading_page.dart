@@ -32,6 +32,7 @@ import '../widgets/rune_stone_view.dart';
 import 'rune_detail_page.dart';
 import 'rune_selection_page.dart';
 import '../../../../core/tools/tool_identity.dart';
+import 'runes_list_page.dart';
 
 /// Trocar de conta recria a tela: o rascunho, a mesa e a interpretação
 /// pertencem a quem estava logada quando começaram.
@@ -359,6 +360,17 @@ class _RuneReadingBodyState extends State<_RuneReadingBody> {
         title: ToolHeading(tool: ToolId.runes,
             title: AppLocalizations.of(context).runesReadingTitle),
         backgroundColor: context.gc.darkBackground,
+        actions: [
+          // O álbum das runas: as 24 pedras e seus significados.
+          IconButton(
+            key: const ValueKey('runes-album-open'),
+            tooltip: AppLocalizations.of(context).runesListTitle,
+            icon: const Icon(Icons.auto_stories),
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const RunesListPage()),
+            ),
+          ),
+        ],
       ),
       backgroundColor: context.gc.darkBackground,
       body: ToolSceneFrame(child: SingleChildScrollView(

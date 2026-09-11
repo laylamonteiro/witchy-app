@@ -55,8 +55,9 @@ class ArchetypeConstellation extends StatelessWidget {
           final slot = order.indexOf(key);
           final angle = 2 * math.pi * ((slot < 0 ? i : slot) / slots) - math.pi / 2;
           final score = scores[key] ?? 0;
-          // Quanto mais pontos, mais perto do centro brilhante.
-          final radius = highest <= 0 ? .8 : .82 - .42 * (score / highest);
+          // Quanto mais pontos, mais perto do centro — mas nenhuma estrela
+          // entra no meio: é ali que o arquétipo aparece.
+          final radius = highest <= 0 ? .85 : .85 - .30 * (score / highest);
           return ConstellationStar(
             key: key,
             position: Offset(.5 + radius * math.cos(angle) * .9,

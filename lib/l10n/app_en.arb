@@ -2028,7 +2028,7 @@
     }
   },
   "runeSelectionTitle": "Choose your stones",
-  "runeSelectionInstruction": "The stones lie face down on the cloth. Tap a stone, or press and lift it, to choose it.",
+  "runeSelectionInstruction": "The stones are face down. Tap a stone, or hold it and lift it, to choose.",
   "runeSelectionPosition": "Stone {position} of {total}",
   "runeSelectionPrevious": "Previous stone",
   "runeSelectionNext": "Next stone",

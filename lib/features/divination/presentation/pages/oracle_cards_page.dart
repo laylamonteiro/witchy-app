@@ -570,8 +570,17 @@ class _OracleBodyState extends State<_OracleBody> {
       revealed: _revealed,
       delay: Duration(milliseconds: _passoRevelacaoMs(_drawnCards!.length) * index),
       back: TarotCardBack(width: width, deckPosition: slot),
-      front: OracleCardFace(card: position.card, width: width,
-          highlighted: _focused == index),
+      // Numa tiragem de uma carta só, é aqui que a cena acontece: a mesa
+      // faz o papel do palco, sem repetir a figura mais abaixo.
+      front: _drawnCards!.length == 1
+          ? OracleSceneCard(
+              card: position.card,
+              width: width,
+              playToken: '${_activeSession?.id}-$_sceneToken',
+              highlighted: _focused == index,
+            )
+          : OracleCardFace(card: position.card, width: width,
+              highlighted: _focused == index),
     );
   }
 
@@ -642,12 +651,15 @@ class _OracleBodyState extends State<_OracleBody> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    // Só a carta em foco executa sua cena, uma vez.
-                    Center(child: OracleSceneCard(
-                      key: const ValueKey('oracle-stage'),
-                      card: focused.card, width: 150,
-                      playToken: '${_activeSession?.id}-$_focused-$_sceneToken',
-                    )),
+                    // O palco existe para destacar UMA carta entre várias.
+                    // Numa tiragem de uma carta só, a mesa já é o palco:
+                    // repeti-la aqui mostrava a mesma carta três vezes.
+                    if (positions.length > 1)
+                      Center(child: OracleSceneCard(
+                        key: const ValueKey('oracle-stage'),
+                        card: focused.card, width: 150,
+                        playToken: '${_activeSession?.id}-$_focused-$_sceneToken',
+                      )),
                     if (_newDiscoveries.isNotEmpty) ...[
                       const SizedBox(height: 10),
                       Center(child: Container(
@@ -698,28 +710,33 @@ class _OracleBodyState extends State<_OracleBody> {
             children: [
               Row(
                 children: [
-                  Container(
-                    width: 80,
-                    height: 80,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          context.gc.lilac,
-                          context.gc.lilac.withValues(alpha: 0.5),
-                        ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
+                  // A miniatura ajuda a distinguir uma posição entre várias.
+                  // Com uma carta só, ela seria a terceira vez que a mesma
+                  // figura aparece na tela.
+                  if (_drawnCards!.length > 1) ...[
+                    Container(
+                      width: 80,
+                      height: 80,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            context.gc.lilac,
+                            context.gc.lilac.withValues(alpha: 0.5),
+                          ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Center(
-                      child: Text(
-                        position.card.emoji,
-                        style: const TextStyle(fontSize: 40),
+                      child: Center(
+                        child: Text(
+                          position.card.emoji,
+                          style: const TextStyle(fontSize: 40),
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 16),
+                    const SizedBox(width: 16),
+                  ],
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,

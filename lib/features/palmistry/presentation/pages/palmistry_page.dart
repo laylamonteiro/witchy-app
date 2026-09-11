@@ -7,7 +7,6 @@ import 'package:provider/provider.dart';
 import '../../../../core/ai/ai_service.dart';
 import '../../../../core/utils/image_compression.dart';
 import '../../../../core/theme/grimoire_colors.dart';
-import '../../../../core/widgets/loading_widget.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/widgets/premium_locked_preview.dart';
 import '../../../diary/presentation/widgets/dream_interpretation_text.dart';
@@ -318,14 +317,18 @@ class _PalmistryPageState extends State<PalmistryPage> {
             MagicalCard(
               child: Column(
                 children: [
-                  // A faixa de luz percorre a palma enquanto a análise real
-                  // dura — nem um segundo a mais.
+                  // Uma espera só: a faixa de luz percorre a palma enquanto
+                  // a análise real dura, e é ela que marca o tempo.
                   const PalmScanView(
                     key: ValueKey('palm-scan'),
+                    size: 180,
                     active: true,
                   ),
-                  LoadingWidget(
-                    message: AppLocalizations.of(context).palmReadingLines,
+                  const SizedBox(height: 12),
+                  Text(
+                    AppLocalizations.of(context).palmReadingLines,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: context.gc.textSecondary),
                   ),
                 ],
               ),

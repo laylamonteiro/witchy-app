@@ -2028,7 +2028,7 @@
     }
   },
   "runeSelectionTitle": "Elige tus piedras",
-  "runeSelectionInstruction": "Las piedras están boca abajo sobre el paño. Toca una piedra, o mantenla pulsada y levántala, para elegirla.",
+  "runeSelectionInstruction": "Las piedras están boca abajo. Toca una piedra, o sostenla y levántala, para elegir.",
   "runeSelectionPosition": "Piedra {position} de {total}",
   "runeSelectionPrevious": "Piedra anterior",
   "runeSelectionNext": "Siguiente piedra",

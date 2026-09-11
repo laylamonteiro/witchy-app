@@ -214,20 +214,40 @@ class _ArchetypeQuizPageState extends State<ArchetypeQuizPage> {
                 // A constelação da sessão: uma estrela por arquétipo tocado
                 // pelas respostas, ligadas na ordem do céu. Sem sorteio: as
                 // mesmas respostas dão sempre a mesma figura.
+                // A constelação envolve o arquétipo: as estrelas da sessão
+                // ficam em volta dele, não empilhadas por cima.
                 if (_scores.isNotEmpty)
                   Semantics(
                     label: AppLocalizations.of(context).quizConstellationLabel,
-                    child: ArchetypeConstellation(
-                      scores: Map<String, int>.from(_scores),
-                      order: [for (final entry in archetypesData) entry.emoji],
-                      winner: result.emoji,
-                      animate: _justFinished,
+                    child: SizedBox(
+                      height: 200,
+                      width: double.infinity,
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          Positioned.fill(
+                            child: ArchetypeConstellation(
+                              scores: Map<String, int>.from(_scores),
+                              order: [for (final entry in archetypesData) entry.emoji],
+                              winner: result.emoji,
+                              animate: _justFinished,
+                              height: 200,
+                            ),
+                          ),
+                          _Reveal(
+                            play: _justFinished,
+                            child: Text(result.emoji,
+                                style: const TextStyle(fontSize: 56)),
+                          ),
+                        ],
+                      ),
                     ),
+                  )
+                else
+                  _Reveal(
+                    play: _justFinished,
+                    child: Text(result.emoji, style: const TextStyle(fontSize: 56)),
                   ),
-                _Reveal(
-                  play: _justFinished,
-                  child: Text(result.emoji, style: const TextStyle(fontSize: 56)),
-                ),
                 const SizedBox(height: 12),
                 if (_savedDate != null) ...[
                   Text(

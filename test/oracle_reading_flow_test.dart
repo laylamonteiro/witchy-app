@@ -267,9 +267,11 @@ void main() {
     await until(tester, () => faces().evaluate().length == 1, 'revealed card');
     await tester.pumpAndSettle();
     expect(tester.widget<AnimatedOpacity>(find.byKey(const ValueKey('oracle-text'))).opacity, 1);
-    final stage = tester.widget<OracleCardFace>(find.descendant(
-        of: find.byKey(const ValueKey('oracle-stage')), matching: find.byType(OracleCardFace)));
-    expect(stage.sceneProgress, 1);
+    expect(find.byKey(const ValueKey('oracle-stage')), findsNothing,
+        reason: 'With one card the table is already the stage');
+    final face = tester.widget<OracleCardFace>(faces().first);
+    expect(face.sceneProgress, 1,
+        reason: 'Reduced motion shows the scene already settled, on the table');
     final l10n = AppLocalizations.of(tester.element(find.byType(OracleCardsPage)));
     expect(find.text(l10n.oracleNewDiscovery(1)), findsOneWidget);
     expect(await rows(tester, 'oracle_readings'), hasLength(1));

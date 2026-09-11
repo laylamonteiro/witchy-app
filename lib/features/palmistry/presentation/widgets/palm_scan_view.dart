@@ -88,83 +88,98 @@ class _PalmPainter extends CustomPainter {
     final unit = math.min(size.width, size.height);
     final centre = Offset(size.width / 2, size.height / 2);
 
-    // Palma: um quadrado de cantos muito arredondados.
-    final palm = RRect.fromRectAndRadius(
+    // A palma primeiro: tudo o mais é medido a partir dela, para a mão não
+    // sair com dedos soltos nem linhas fora do lugar.
+    final palmWidth = unit * .44;
+    final palmHeight = unit * .40;
+    final palm = RRect.fromRectAndCorners(
       Rect.fromCenter(
-          center: centre.translate(0, unit * .12),
-          width: unit * .52,
-          height: unit * .5),
-      Radius.circular(unit * .16),
-    );
-    canvas.drawRRect(
-        palm,
-        Paint()
-          ..color = colors.lilac.withValues(alpha: .10)
-          ..style = PaintingStyle.fill);
-    canvas.drawRRect(
-        palm,
-        Paint()
-          ..color = colors.lilac.withValues(alpha: .55)
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 1.4);
-
-    // Quatro dedos e o polegar, como cápsulas.
-    final fingerPaint = Paint()
-      ..color = colors.lilac.withValues(alpha: .45)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.4;
-    for (var i = 0; i < 4; i++) {
-      final x = centre.dx - unit * .195 + i * unit * .13;
-      final height = unit * (i == 1 ? .30 : (i == 2 ? .28 : .24));
-      final top = centre.dy - unit * .13 - height;
-      canvas.drawRRect(
-        RRect.fromRectAndRadius(
-          Rect.fromLTWH(x - unit * .045, top, unit * .09, height + unit * .06),
-          Radius.circular(unit * .045),
-        ),
-        fingerPaint,
-      );
-    }
-    canvas.save();
-    canvas.translate(centre.dx - unit * .26, centre.dy + unit * .04);
-    canvas.rotate(-0.5);
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        Rect.fromLTWH(-unit * .045, -unit * .11, unit * .09, unit * .22),
-        Radius.circular(unit * .045),
+        center: centre.translate(0, unit * .14),
+        width: palmWidth,
+        height: palmHeight,
       ),
-      fingerPaint,
+      topLeft: Radius.circular(unit * .10),
+      topRight: Radius.circular(unit * .10),
+      bottomLeft: Radius.circular(unit * .17),
+      bottomRight: Radius.circular(unit * .17),
     );
-    canvas.restore();
-
-    // As três linhas maiores da palma.
-    final linePaint = Paint()
-      ..color = colors.starYellow.withValues(alpha: .75)
+    final outline = Paint()
+      ..color = colors.lilac.withValues(alpha: .55)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.6
+      ..strokeJoin = StrokeJoin.round;
+    final fill = Paint()
+      ..color = colors.lilac.withValues(alpha: .10)
+      ..style = PaintingStyle.fill;
+
+    // Os dedos saem de dentro da palma e sobem: desenhados antes dela, as
+    // bases ficam escondidas e a mão fica inteira, não montada em peças.
+    final fingerWidth = palmWidth * .19;
+    final heights = [.30, .36, .34, .27];
+    for (var i = 0; i < 4; i++) {
+      final x = palm.left + palmWidth * (.155 + i * .23);
+      final height = unit * heights[i];
+      final finger = RRect.fromRectAndRadius(
+        Rect.fromLTWH(
+          x - fingerWidth / 2,
+          palm.top - height + unit * .06,
+          fingerWidth,
+          height,
+        ),
+        Radius.circular(fingerWidth / 2),
+      );
+      canvas.drawRRect(finger, fill);
+      canvas.drawRRect(finger, outline);
+    }
+
+    // O polegar, inclinado, saindo da borda esquerda da palma.
+    canvas.save();
+    canvas.translate(palm.left + unit * .02, centre.dy + unit * .10);
+    canvas.rotate(-0.65);
+    final thumb = RRect.fromRectAndRadius(
+      Rect.fromCenter(
+          center: Offset.zero, width: fingerWidth * 1.1, height: unit * .22),
+      Radius.circular(fingerWidth * .55),
+    );
+    canvas.drawRRect(thumb, fill);
+    canvas.drawRRect(thumb, outline);
+    canvas.restore();
+
+    // A palma por cima das bases dos dedos.
+    canvas.drawRRect(palm, fill);
+    canvas.drawRRect(palm, outline);
+
+    // As três linhas maiores, todas dentro da palma.
+    final linePaint = Paint()
+      ..color = colors.starYellow.withValues(alpha: .8)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.8
       ..strokeCap = StrokeCap.round;
-    final left = centre.dx - unit * .25;
-    final right = centre.dx + unit * .25;
-    final top = centre.dy - unit * .12;
+    final left = palm.left;
+    final right = palm.right;
+    final top = palm.top;
+    // Coração: da borda esquerda, subindo de leve até a direita.
     canvas.drawPath(
       Path()
-        ..moveTo(left + unit * .03, top + unit * .06)
-        ..quadraticBezierTo(
-            centre.dx, top + unit * .02, right - unit * .04, top + unit * .10),
+        ..moveTo(left + palmWidth * .10, top + palmHeight * .30)
+        ..quadraticBezierTo(centre.dx, top + palmHeight * .16,
+            right - palmWidth * .12, top + palmHeight * .26),
       linePaint,
     );
+    // Cabeça: atravessa a palma, mais reta.
     canvas.drawPath(
       Path()
-        ..moveTo(left + unit * .02, top + unit * .16)
-        ..quadraticBezierTo(
-            centre.dx, top + unit * .20, right - unit * .06, top + unit * .17),
+        ..moveTo(left + palmWidth * .08, top + palmHeight * .48)
+        ..quadraticBezierTo(centre.dx, top + palmHeight * .54,
+            right - palmWidth * .16, top + palmHeight * .46),
       linePaint,
     );
+    // Vida: contorna a base do polegar.
     canvas.drawPath(
       Path()
-        ..moveTo(left + unit * .08, top + unit * .02)
-        ..quadraticBezierTo(left + unit * .06, centre.dy + unit * .20,
-            centre.dx + unit * .06, centre.dy + unit * .34),
+        ..moveTo(left + palmWidth * .16, top + palmHeight * .20)
+        ..quadraticBezierTo(left + palmWidth * .10, top + palmHeight * .72,
+            centre.dx, palm.bottom - palmHeight * .06),
       linePaint,
     );
 
@@ -184,7 +199,7 @@ class _PalmPainter extends CustomPainter {
           end: Alignment.bottomCenter,
           colors: [
             colors.gold.withValues(alpha: 0),
-            colors.gold.withValues(alpha: .35),
+            colors.gold.withValues(alpha: .38),
             colors.gold.withValues(alpha: 0),
           ],
         ).createShader(glow),
