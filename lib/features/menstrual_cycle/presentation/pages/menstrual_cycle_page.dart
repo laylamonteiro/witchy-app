@@ -1,0 +1,431 @@
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+import '../../../../core/theme/grimoire_colors.dart';
+import '../../../../core/theme/grimoire_motion.dart';
+import '../../../../core/widgets/magical_card.dart';
+import '../../../../l10n/generated/app_localizations.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../data/menstrual_consent_store.dart';
+import '../../data/repositories/menstrual_cycle_repository.dart';
+import '../../domain/menstrual_access.dart';
+import '../../domain/menstrual_day.dart';
+import '../widgets/menstrual_record_form.dart';
+
+/// A roda pessoal: o registro do próprio ciclo.
+///
+/// Antes de qualquer coisa, o consentimento — e ele explica o que é gratuito
+/// (registrar, consultar, corrigir, exportar e apagar) e o que é Premium (o
+/// que se calcula a partir disso). Recusar não apaga nada.
+///
+/// O calendário mostra só os dias que a pessoa registrou. Um dia vazio é
+/// ausência de registro, e nada aqui conta, soma ou estima: no plano
+/// gratuito esses números não são calculados nem para ficar escondidos.
+class MenstrualCyclePage extends StatefulWidget {
+  const MenstrualCyclePage({
+    super.key,
+    this.repository,
+    this.consent = const MenstrualConsentStore(),
+    this.today,
+  });
+
+  final MenstrualCycleRepository? repository;
+  final MenstrualConsentStore consent;
+
+  /// Só para teste: o dia que a tela considera hoje.
+  final DateTime? today;
+
+  @override
+  State<MenstrualCyclePage> createState() => _MenstrualCyclePageState();
+}
+
+class _MenstrualCyclePageState extends State<MenstrualCyclePage> {
+  late final MenstrualCycleRepository _repository =
+      widget.repository ?? MenstrualCycleRepository();
+
+  late final DateTime _today = _dayOf(widget.today ?? DateTime.now());
+  late DateTime _month = DateTime(_today.year, _today.month);
+
+  Map<String, MenstrualDay> _days = const {};
+  bool _loading = true;
+  bool _consented = false;
+  bool _saving = false;
+  String? _formError;
+
+  String get _userId => context.read<AuthProvider>().currentUser.id;
+
+  static DateTime _dayOf(DateTime value) =>
+      DateTime(value.year, value.month, value.day);
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    final userId = _userId;
+    try {
+      final consented = await widget.consent.recordingAllowed(userId);
+      final days = consented ? await _monthOf(userId, _month) : const [];
+      if (!mounted) return;
+      setState(() {
+        _consented = consented;
+        _days = {for (final day in days) day.dayKey: day};
+        _loading = false;
+      });
+    } catch (_) {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  Future<List<MenstrualDay>> _monthOf(String userId, DateTime month) =>
+      _repository.between(
+        userId: userId,
+        from: DateTime(month.year, month.month),
+        to: DateTime(month.year, month.month + 1, 0),
+      );
+
+  Future<void> _accept() async {
+    final userId = _userId;
+    await widget.consent.setRecordingAllowed(userId, true);
+    if (!mounted) return;
+    setState(() => _loading = true);
+    await _load();
+  }
+
+  Future<void> _changeMonth(int months) async {
+    final userId = _userId;
+    final month = DateTime(_month.year, _month.month + months);
+    final days = await _monthOf(userId, month);
+    if (!mounted) return;
+    setState(() {
+      _month = month;
+      _days = {for (final day in days) day.dayKey: day};
+    });
+  }
+
+  Future<void> _openDay(DateTime day) async {
+    final existing = _days[MenstrualDay.keyOf(day)];
+    _formError = null;
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: context.gc.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (sheetContext) => StatefulBuilder(
+        builder: (sheetContext, setSheetState) => MenstrualRecordForm(
+          key: ValueKey('menstrual-form-${MenstrualDay.keyOf(day)}'),
+          userId: _userId,
+          day: day,
+          existing: existing,
+          saving: _saving,
+          error: _formError,
+          onSubmit: (record) async {
+            setSheetState(() => _saving = true);
+            final ok = await _save(record);
+            if (!sheetContext.mounted) return;
+            setSheetState(() => _saving = false);
+            // Guardar primeiro, fechar depois: "registro salvo" quer dizer
+            // que a gravação local terminou.
+            if (ok) Navigator.of(sheetContext).pop();
+          },
+          onDelete: existing == null
+              ? null
+              : () async {
+                  await _repository.remove(userId: _userId, day: day);
+                  if (!sheetContext.mounted) return;
+                  Navigator.of(sheetContext).pop();
+                  await _refresh();
+                  if (mounted) _say(AppLocalizations.of(context).menstrualDeleted);
+                },
+        ),
+      ),
+    );
+    if (mounted) setState(() {});
+  }
+
+  Future<bool> _save(MenstrualDay record) async {
+    final l10n = AppLocalizations.of(context);
+    try {
+      await _repository.save(record);
+      await _refresh();
+      if (mounted) _say(l10n.menstrualSaved);
+      return true;
+    } catch (_) {
+      // O formulário continua na tela, com o que foi escrito.
+      if (mounted) setState(() => _formError = l10n.menstrualSaveError);
+      return false;
+    }
+  }
+
+  Future<void> _refresh() async {
+    final days = await _monthOf(_userId, _month);
+    if (!mounted) return;
+    setState(() => _days = {for (final day in days) day.dayKey: day});
+  }
+
+  void _say(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(message),
+      duration: const Duration(seconds: 2),
+    ));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final auth = context.watch<AuthProvider>();
+    final access = MenstrualAccess(
+      gender: auth.currentUser.gender,
+      consented: _consented,
+      premium: auth.isPremiumEffective,
+    );
+    return Scaffold(
+      backgroundColor: context.gc.background,
+      appBar: AppBar(
+        title: Text(l10n.menstrualCardTitle),
+        backgroundColor: context.gc.surface,
+      ),
+      body: _loading
+          ? const Center(child: CircularProgressIndicator())
+          : access.canRecord
+              ? _record(context, l10n, access)
+              : _consent(context, l10n),
+    );
+  }
+
+  Widget _consent(BuildContext context, AppLocalizations l10n) =>
+      SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            MagicalCard(
+              key: const ValueKey('menstrual-consent'),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(l10n.menstrualConsentTitle,
+                      style: Theme.of(context).textTheme.titleLarge
+                          ?.copyWith(color: context.gc.lilac)),
+                  const SizedBox(height: 12),
+                  Text(l10n.menstrualConsentBody,
+                      style: TextStyle(color: context.gc.textPrimary, height: 1.5)),
+                  const SizedBox(height: 12),
+                  Text(l10n.menstrualConsentControl,
+                      style: TextStyle(
+                          color: context.gc.textSecondary, fontSize: 12, height: 1.4)),
+                  const SizedBox(height: 20),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      key: const ValueKey('menstrual-consent-accept'),
+                      onPressed: _accept,
+                      child: Text(l10n.menstrualConsentAccept),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+
+  Widget _record(
+      BuildContext context, AppLocalizations l10n, MenstrualAccess access) {
+    final todayRecord = _days[MenstrualDay.keyOf(_today)];
+    return SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          MagicalCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(l10n.menstrualTodayTitle,
+                    style: TextStyle(color: context.gc.textSecondary, fontSize: 12)),
+                const SizedBox(height: 4),
+                Text(
+                  todayRecord == null
+                      ? l10n.menstrualNoRecordToday
+                      : _markOf(l10n, todayRecord.mark),
+                  key: const ValueKey('menstrual-today'),
+                  style: Theme.of(context).textTheme.titleMedium
+                      ?.copyWith(color: context.gc.textPrimary),
+                ),
+                if (todayRecord?.note.isNotEmpty ?? false) ...[
+                  const SizedBox(height: 8),
+                  Text(todayRecord!.note,
+                      style: TextStyle(color: context.gc.textSecondary)),
+                ],
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    key: const ValueKey('menstrual-record-today'),
+                    onPressed: () => _openDay(_today),
+                    icon: const Icon(Icons.edit_calendar_outlined, size: 18),
+                    label: Text(l10n.menstrualRecordAction),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          _calendar(context, l10n),
+          if (access.showsGenericPremiumInvite)
+            MagicalCard(
+              key: const ValueKey('menstrual-premium-invite'),
+              child: Text(
+                l10n.menstrualPremiumInvite,
+                style: TextStyle(color: context.gc.textSecondary, fontSize: 12),
+              ),
+            ),
+          const SizedBox(height: 12),
+        ],
+      ),
+    );
+  }
+
+  String _markOf(AppLocalizations l10n, MenstrualMark mark) => switch (mark) {
+        MenstrualMark.start => l10n.menstrualMarkStart,
+        MenstrualMark.flow => l10n.menstrualMarkFlow,
+        MenstrualMark.spotting => l10n.menstrualMarkSpotting,
+        MenstrualMark.end => l10n.menstrualMarkEnd,
+        MenstrualMark.note => l10n.menstrualMarkNote,
+      };
+
+  Widget _calendar(BuildContext context, AppLocalizations l10n) {
+    final first = DateTime(_month.year, _month.month);
+    final total = DateTime(_month.year, _month.month + 1, 0).day;
+    // Segunda a domingo, como o restante do app.
+    final leading = (first.weekday - 1) % 7;
+    final cells = leading + total;
+    final reduced = GrimoireMotion.reduced(context);
+    return MagicalCard(
+      key: const ValueKey('menstrual-calendar'),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              IconButton(
+                key: const ValueKey('menstrual-previous-month'),
+                onPressed: () => _changeMonth(-1),
+                icon: const Icon(Icons.chevron_left),
+                tooltip: l10n.menstrualPreviousMonth,
+              ),
+              Expanded(
+                child: Text(
+                  '${first.month.toString().padLeft(2, '0')}/${first.year}',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                      color: context.gc.textPrimary, fontWeight: FontWeight.bold),
+                ),
+              ),
+              IconButton(
+                key: const ValueKey('menstrual-next-month'),
+                onPressed: () => _changeMonth(1),
+                icon: const Icon(Icons.chevron_right),
+                tooltip: l10n.menstrualNextMonth,
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 7,
+              mainAxisSpacing: 4,
+              crossAxisSpacing: 4,
+            ),
+            itemCount: cells,
+            itemBuilder: (context, index) {
+              if (index < leading) return const SizedBox.shrink();
+              final day = DateTime(_month.year, _month.month, index - leading + 1);
+              final record = _days[MenstrualDay.keyOf(day)];
+              return _DayCell(
+                day: day,
+                record: record,
+                isToday: day == _today,
+                reduced: reduced,
+                onTap: () => _openDay(day),
+              );
+            },
+          ),
+          if (_days.isEmpty) ...[
+            const SizedBox(height: 8),
+            Text(
+              l10n.menstrualEmptyMonth,
+              key: const ValueKey('menstrual-empty-month'),
+              style: TextStyle(color: context.gc.textSecondary, fontSize: 12),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+/// Um dia do calendário: o número e, quando existe, a marca do registro.
+/// Sem registro é sem registro — a célula não diz nada sobre o corpo.
+class _DayCell extends StatelessWidget {
+  const _DayCell({
+    required this.day,
+    required this.record,
+    required this.isToday,
+    required this.reduced,
+    required this.onTap,
+  });
+
+  final DateTime day;
+  final MenstrualDay? record;
+  final bool isToday;
+  final bool reduced;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.gc;
+    final marked = record != null;
+    return Semantics(
+      button: true,
+      child: InkWell(
+        key: ValueKey('menstrual-day-${MenstrualDay.keyOf(day)}'),
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(8),
+        child: AnimatedContainer(
+          duration: reduced ? Duration.zero : GrimoireMotion.state,
+          decoration: BoxDecoration(
+            color: marked ? colors.lilac.withValues(alpha: .22) : null,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: isToday ? colors.gold : colors.surfaceBorder,
+              width: isToday ? 1.6 : 1,
+            ),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text('${day.day}',
+                  style: TextStyle(color: colors.textPrimary, fontSize: 12)),
+              if (marked)
+                Container(
+                  width: 6,
+                  height: 6,
+                  margin: const EdgeInsets.only(top: 2),
+                  decoration: BoxDecoration(
+                    color: colors.pink,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}

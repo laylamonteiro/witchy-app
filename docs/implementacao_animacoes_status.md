@@ -483,7 +483,28 @@ Entregue em 11/09.
   enviá-lo para a conta é outro, desligado até haver um sim explícito.
   Retirar o primeiro fecha o segundo, e a resposta de uma conta não responde
   por outra.
-- **Verificação:** `menstrual_access_test.dart` (a matriz de acesso e os dois
+- **Cartão em Ciclos:** depois da Leitura do Ciclo e antes das Eras, e só
+  para quem a funcionalidade é oferecida. Antes de ativar ele apresenta a
+  área com as próprias palavras, sem “dados de exemplo” que pareçam registros
+  de alguém; depois continua discreto, sem dia nem estação — isso dependeria
+  de uma escolha explícita que ainda não existe.
+- **Primeira abertura:** a tela pede o consentimento e explica o que é
+  gratuito e o que é Premium antes de qualquer campo. Aceitar abre o registro
+  na hora, sem etapa de compra; o envio para a conta continua desligado.
+- **Hoje e calendário:** o cabeçalho mostra o que foi realmente registrado
+  hoje (ou “sem registro hoje”), e o calendário do mês marca só os dias com
+  registro. Tocar um dia abre o painel; os botões de mês fazem a mesma coisa
+  que deslizar. Nenhuma média, dia do ciclo ou comparação aparece no
+  gratuito — esses números não são calculados.
+- **Registrar:** a escolha é explícita (começou, dia de fluxo, escape,
+  terminou ou só uma anotação) e a intensidade só é oferecida onde houve
+  sangramento. A data em edição fica ao lado de salvar, inclusive num dia
+  retroativo. Gravar primeiro, fechar depois: “registro salvo” significa
+  gravação local concluída, e uma falha mantém o painel aberto com o texto.
+- **Verificação:** `menstrual_cycle_page_test.dart` (nada antes do sim,
+  escrever/reler/apagar um dia, escape que continua escape, ausência de
+  resultados no gratuito, cartão invisível no masculino, falha que preserva o
+  formulário), `menstrual_access_test.dart` (a matriz de acesso e os dois
   consentimentos) e `menstrual_cycle_repository_test.dart` (o que foi escrito
   e nada além, escape que continua escape, correção com revisão, ausência de
   registro, lápide que resiste ao aparelho antigo, revisão maior que vence,
