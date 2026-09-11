@@ -673,7 +673,32 @@ ao compositor vêm em seguida.
 - **O consentimento ganhou revisão:** dizer sim de novo depois de ter dito
   não é OUTRO consentimento, e a revisão entra no contrato — o que tinha sido
   autorizado antes deixa de valer sozinho.
-- **Verificação:** `menstrual_source_tile_test.dart` (sem Premium a chave não
+- **Do escopo até o material:** o compositor recebe o escopo, lê SÓ os dias
+  autorizados daquela janela (escopo vazio não consulta nada) e guarda o
+  contexto **fora** do JSON geral. Isso é deliberado: o material inteiro vai
+  para qualquer seção que não esteja cadastrada no recorte por seção, e a
+  fonte íntima não pode chegar a uma seção por esquecimento. Ela é injetada
+  seção a seção, pela lista fechada do módulo.
+- **Duas contagens, separadas:** `readingIncludedRecordCount` soma os dias do
+  corpo autorizados; `recordCount` — o sinal que mede a leitura e alimenta
+  oferta — continua sem saúde. A cobertura da fonte fica em bloco próprio,
+  fora do payload da IA.
+- **A impressão do rascunho inclui o contrato:** mudar o que foi autorizado,
+  ou retirar o sim, descarta o rascunho em vez de continuar um relatório com
+  material que ela já não autoriza.
+- **O benefício é revalidado ao gerar:** perder o Premium entre a escolha e o
+  botão tira a fonte da leitura, e nada dela é lido.
+- **Os prompts PT/EN/ES ganharam o limite:** quando o bloco existe, ele é o
+  que ELA registrou e autorizou, citado com atribuição; `not_recorded` nunca
+  vira "sem sintomas"; `chosen_by_her` é escolha simbólica, não fase do corpo;
+  `moon_estimated` é estimativa do app; e nada de hormônio, ovulação,
+  fertilidade, gravidez, diagnóstico ou causa.
+- **Verificação:** `cycle_reading_menstrual_source_test.dart` (a fonte nunca
+  mora no material geral; cada seção recebe a projeção que lhe cabe; seção
+  desconhecida não recebe nada; a contagem da leitura cresce e a comercial
+  não; sem autorização o material é exatamente o de antes) e
+  `ai_prompts_parity_test.dart` (os limites da fonte íntima nos três idiomas,
+  em qualquer tratamento), além de `menstrual_source_tile_test.dart` (sem Premium a chave não
   abre nada; abrir mostra os dias e nenhum vai junto sem ela marcar; as
   palavras dela entram só quando ela pede; desligar devolve escopo vazio; sem
   consentimento de registro não há prévia) e

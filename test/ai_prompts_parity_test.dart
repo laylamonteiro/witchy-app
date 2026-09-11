@@ -305,6 +305,22 @@ void main() {
       });
     });
 
+    test('o prompt de sistema guarda os limites da fonte íntima', () {
+      // O bloco menstrual só chega às seções autorizadas, mas quando chega o
+      // prompt precisa dizer o que ele é e o que NÃO se conclui dele — nos
+      // três idiomas, e em qualquer tratamento.
+      promptsByLang.forEach((lang, prompts) {
+        for (final gender in Gender.values) {
+          final prompt = prompts.cycleReadingSystemPrompt(gender);
+          final onde = '[$lang/${gender.name}]';
+          expect(prompt, contains('menstrual'), reason: 'bloco $onde');
+          expect(prompt, contains('not_recorded'), reason: 'ausente $onde');
+          expect(prompt, contains('chosen_by_her'), reason: 'escolha $onde');
+          expect(prompt, contains('moon_estimated'), reason: 'estimativa $onde');
+        }
+      });
+    });
+
     test('os rituais pedem a anotação que o app lê', () {
       // O cartão do ritual tira a lua e os ingredientes de `[moon: ...]` e
       // `[items: ...]`. Se o prompt parar de pedir a anotação, o feitiço

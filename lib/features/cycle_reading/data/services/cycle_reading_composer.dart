@@ -12,6 +12,9 @@ import '../../../diary/data/models/free_writing_model.dart';
 import '../../../grimoire/data/models/spell_model.dart'
     show MoonPhase, MoonPhaseExtension;
 import '../../../lunar/presentation/providers/lunar_provider.dart';
+import '../../../menstrual_cycle/data/repositories/menstrual_cycle_repository.dart';
+import '../../../menstrual_cycle/domain/menstrual_reading_context.dart';
+import '../../../menstrual_cycle/domain/menstrual_reading_scope.dart';
 import '../../../wheel_of_year/data/models/sabbat_model.dart'
     show SabbatType, SabbatTypeExtension;
 import '../../../your_day/data/daily_checkin_repository.dart';
@@ -63,11 +66,33 @@ class CycleReadingMaterial {
   /// sempre os entrega.
   final NumerosDoCiclo? numbers;
 
+  /// O que ela autorizou da fonte íntima, já recortado pelo escopo.
+  ///
+  /// Ele NÃO entra em [json] de propósito: as seções não cadastradas em
+  /// [_sectionFields] recebem o material inteiro, e a fonte íntima não pode
+  /// chegar a uma seção por esquecimento. Ela é injetada seção a seção, em
+  /// [compactJsonFor], e só onde a lista fechada do módulo permite.
+  final MenstrualReadingContext? menstrual;
+
   const CycleReadingMaterial({
     required this.json,
     required this.recordCount,
     this.numbers,
+    this.menstrual,
   });
+
+  /// Os registros que a leitura levou junto — os do período mais os dias do
+  /// corpo que ela autorizou.
+  ///
+  /// É contagem de LEITURA. [recordCount] continua sendo o sinal comercial
+  /// (a oferta e o aviso de leitura rasa), e saúde nunca entra nele.
+  int get readingIncludedRecordCount =>
+      recordCount + (menstrual?.days.length ?? 0);
+
+  /// A cobertura da fonte íntima, para o bloco determinístico e para a tela.
+  /// Fora do payload da IA: é contagem, não narrativa.
+  Map<String, dynamic>? get menstrualCoverage =>
+      menstrual == null || menstrual!.isEmpty ? null : menstrual!.coverage;
 
   String get compactJson => jsonEncode(json);
 
@@ -84,11 +109,17 @@ class CycleReadingMaterial {
   /// pessoa. Onde não há certeza, o material vai inteiro.
   String compactJsonFor(String sectionKey) {
     final campos = _sectionFields[sectionKey];
-    if (campos == null) return compactJson;
-    return jsonEncode({
-      for (final entry in json.entries)
-        if (campos.contains(entry.key)) entry.key: entry.value,
-    });
+    final base = campos == null
+        ? Map<String, dynamic>.from(json)
+        : <String, dynamic>{
+            for (final entry in json.entries)
+              if (campos.contains(entry.key)) entry.key: entry.value,
+          };
+    // A fonte íntima entra aqui, e só onde a lista fechada do módulo
+    // permite: uma seção desconhecida recebe null e segue sem ela.
+    final intimate = menstrual?.projectionFor(sectionKey);
+    if (intimate != null) base['menstrual'] = intimate;
+    return jsonEncode(base);
   }
 
   /// Só as seções listadas aqui recebem material reduzido. As demais (e
@@ -599,6 +630,8 @@ class CycleReadingComposer {
     String periodType = CycleReadingPeriodType.lunation,
     CycleReadingSourceOptions options = const CycleReadingSourceOptions(),
     String? userName,
+    MenstrualReadingScope? menstrual,
+    MenstrualCycleRepository? menstrualRepository,
   }) async {
     final db = await _db;
     final json = <String, dynamic>{
@@ -1125,11 +1158,42 @@ class CycleReadingComposer {
     json['numbers'] = numeros.toJson();
 
     json['recordCount'] = recordCount;
+
+    // A fonte íntima entra por último e por fora do JSON geral: só os dias
+    // que ela autorizou, na revisão autorizada, dentro desta janela. Um
+    // escopo vazio não lê nada do banco.
+    final context = await _menstrualContext(menstrual, menstrualRepository);
+
     return CycleReadingMaterial(
       json: json,
       recordCount: recordCount,
       numbers: numeros,
+      menstrual: context,
     );
+  }
+
+  /// Lê só o que a autorização cobre. Sem escopo, sem leitura — nem uma
+  /// consulta ao registro dela acontece.
+  Future<MenstrualReadingContext?> _menstrualContext(
+    MenstrualReadingScope? scope,
+    MenstrualCycleRepository? repository,
+  ) async {
+    if (scope == null || scope.isEmpty) return null;
+    final from = scope.start;
+    final to = scope.end;
+    if (from == null || to == null) return null;
+    try {
+      final days = await (repository ?? MenstrualCycleRepository()).between(
+        userId: scope.userId,
+        from: from,
+        // A janela da leitura é [start, end): o último dia é a véspera.
+        to: to.subtract(const Duration(days: 1)),
+      );
+      return MenstrualReadingContext.of(scope, days);
+    } catch (_) {
+      // Sem conseguir ler, a leitura segue sem a fonte — nunca com metade.
+      return null;
+    }
   }
 
   /// O retrato mágico dela, tirado da Análise Personalizada que ela já leu.

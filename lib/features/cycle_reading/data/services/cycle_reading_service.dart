@@ -5,6 +5,7 @@ import '../../../../core/ai/ai_service.dart';
 import '../../../../core/content/content_locale.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../diary/data/models/free_writing_model.dart';
+import '../../../menstrual_cycle/domain/menstrual_reading_scope.dart';
 import '../../../diary/data/repositories/free_writing_repository.dart';
 import '../../../grimoire/data/models/spell_model.dart'
     show MoonPhaseExtension;
@@ -323,6 +324,7 @@ class CycleReadingService {
     CycleReadingSourceOptions options = const CycleReadingSourceOptions(),
     bool regenerate = false,
     String? userName,
+    MenstrualReadingScope? menstrual,
   }) async {
     // Não há mais teto de regerações (decisão da dona, 24/08): quem já pagou
     // pela janela gera quantas vezes quiser, e cada geração da MESMA janela
@@ -337,6 +339,7 @@ class CycleReadingService {
       periodType: credit.periodType,
       options: options,
       userName: userName,
+      menstrual: menstrual,
     );
     final generate = _generateSection ?? _defaultGenerate;
 
@@ -348,7 +351,14 @@ class CycleReadingService {
     // com material diferente entrarem no mesmo relatório, e é barato
     // demais exigir que o tamanho também bata.
     final materialJson = material.compactJson;
-    final fingerprint = '${materialJson.length}:${materialJson.hashCode}';
+    // A impressão inclui o contrato da fonte íntima: mudar o que foi
+    // autorizado — ou retirar o sim — descarta o rascunho em vez de
+    // continuar um relatório com material que ela já não autoriza.
+    final scope = menstrual == null || menstrual.isEmpty
+        ? 'no-menstrual'
+        : menstrual.fingerprint;
+    final fingerprint =
+        '${materialJson.length}:${materialJson.hashCode}:$scope';
     if (regenerate) {
       // Regenerar é pedir um texto NOVO: reaproveitar o rascunho devolveria
       // exatamente o que ela quis trocar.

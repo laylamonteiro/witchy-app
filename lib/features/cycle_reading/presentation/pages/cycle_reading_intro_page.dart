@@ -546,7 +546,11 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
       {bool regenerate = false}) async {
     final l10n = AppLocalizations.of(context);
     final messenger = ScaffoldMessenger.of(context);
-    final user = context.read<AuthProvider>().currentUser;
+    final auth = context.read<AuthProvider>();
+    final user = auth.currentUser;
+    // O benefício é revalidado na hora de gerar: perder o Premium entre a
+    // escolha e o botão tira a fonte íntima da leitura, e nada dela é lido.
+    final menstrual = auth.isPremiumEffective ? _menstrual : null;
     setState(() => _isWorking = true);
     try {
       final result = await _service.generateForCredit(
@@ -557,6 +561,7 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
         // Com o nome no material, a narrativa fala DELA em terceira pessoa
         // (decisão da dona, 23/08); sem nome no perfil, segue com "você".
         userName: user.displayName?.split(' ').first,
+        menstrual: menstrual,
       );
       if (!mounted) return;
       setState(() => _existing = result.reading);
