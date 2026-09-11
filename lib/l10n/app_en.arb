@@ -2126,5 +2126,14 @@
   "guidedRitualLogFailed": "The ritual completion could not be recorded. Your steps are kept.",
   "sigilDrawingSemantics": "Drawing of your sigil",
   "sigilTraceHint": "Tap to complete the tracing",
-  "sigilTraceReplay": "Redraw the tracing"
+  "sigilTraceReplay": "Redraw the tracing",
+  "oracleAlbumTitle": "Oracle album",
+  "oracleAlbumProgress": "{found} of {total} cards discovered",
+  "oracleAlbumLocked": "Not discovered yet",
+  "oracleAlbumFoundOn": "Found on {date}",
+  "oracleAlbumEmpty": "No cards yet. Confirm a reading and they start appearing here.",
+  "oracleAlbumOpen": "Card album",
+  "@oracleAlbumProgress": {"placeholders": {"found": {"type": "int"}, "total": {"type": "int"}}},
+  "@oracleAlbumFoundOn": {"placeholders": {"date": {"type": "String"}}},
+  "quizConstellationLabel": "Constellation of your answers"
 }

@@ -3,11 +3,13 @@ import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
+import '../../../../core/theme/grimoire_motion.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../data/data_sources/arcane_categories.dart';
 import '../../data/data_sources/archetype_quiz_data.dart';
 import '../../data/data_sources/archetypes_data.dart';
 import '../../data/models/arcane_entry_model.dart';
+import '../widgets/archetype_constellation.dart';
 import 'arcane_detail_page.dart';
 
 /// Teste de Arquétipo: 8 perguntas, resultado abre o verbete da Enciclopédia.
@@ -33,6 +35,10 @@ class _ArchetypeQuizPageState extends State<ArchetypeQuizPage> {
   List<MapEntry<String, int>> _topThree = [];
   ArcaneEntry? _result;
   String? _savedDate;
+
+  /// A constelação e a revelação só acontecem na sessão que acabou de
+  /// terminar; um resultado guardado abre direto no estado final.
+  bool _justFinished = false;
 
   @override
   void initState() {
@@ -65,20 +71,27 @@ class _ArchetypeQuizPageState extends State<ArchetypeQuizPage> {
     });
   }
 
-  Future<void> _persist(String winnerEmoji) async {
-    final prefs = await SharedPreferences.getInstance();
-    final now = DateTime.now();
-    _savedDate = '${now.day.toString().padLeft(2, '0')}/'
-        '${now.month.toString().padLeft(2, '0')}/${now.year}';
-    await prefs.setString(_resultKey, winnerEmoji);
-    await prefs.setStringList(
-      _topThreeKey,
-      [for (final e in _topThree) '${e.key}|${e.value}'],
-    );
-    await prefs.setString(_dateKey, _savedDate!);
+  /// Grava o resultado e devolve a data gravada, ou null se a gravação
+  /// falhou — a tela só mostra a data que existe de verdade no aparelho.
+  Future<String?> _persist(String winnerEmoji) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final now = DateTime.now();
+      final date = '${now.day.toString().padLeft(2, '0')}/'
+          '${now.month.toString().padLeft(2, '0')}/${now.year}';
+      await prefs.setString(_resultKey, winnerEmoji);
+      await prefs.setStringList(
+        _topThreeKey,
+        [for (final e in _topThree) '${e.key}|${e.value}'],
+      );
+      await prefs.setString(_dateKey, date);
+      return date;
+    } catch (_) {
+      return null;
+    }
   }
 
-  void _answer(ArchetypeQuizOption option) {
+  Future<void> _answer(ArchetypeQuizOption option) async {
     _scores[option.archetypeEmoji] =
         (_scores[option.archetypeEmoji] ?? 0) + 1;
 
@@ -88,7 +101,8 @@ class _ArchetypeQuizPageState extends State<ArchetypeQuizPage> {
     }
 
     // Cada resposta soma 1 ponto ao arquétipo correspondente; vence o de
-    // maior pontuação (empate: o que atingiu a pontuação primeiro).
+    // maior pontuação (empate: o que atingiu a pontuação primeiro). A
+    // contagem é a de sempre: a constelação apenas desenha o que ela deu.
     final winner = _scores.entries
         .reduce((a, b) => b.value > a.value ? b : a)
         .key;
@@ -96,8 +110,13 @@ class _ArchetypeQuizPageState extends State<ArchetypeQuizPage> {
           ..sort((a, b) => b.value.compareTo(a.value)))
         .take(3)
         .toList();
-    _persist(winner);
+    // Guardar primeiro, revelar depois: o resultado que aparece é o que
+    // ficou no aparelho. O teste tem progresso próprio e não entra no XP.
+    final date = await _persist(winner);
+    if (!mounted) return;
     setState(() {
+      _savedDate = date;
+      _justFinished = true;
       _result = _entryForKey(winner);
     });
   }
@@ -109,6 +128,7 @@ class _ArchetypeQuizPageState extends State<ArchetypeQuizPage> {
       _topThree = [];
       _result = null;
       _savedDate = null;
+      _justFinished = false;
     });
   }
 
@@ -190,7 +210,23 @@ class _ArchetypeQuizPageState extends State<ArchetypeQuizPage> {
           MagicalCard(
             child: Column(
               children: [
-                Text(result.emoji, style: const TextStyle(fontSize: 56)),
+                // A constelação da sessão: uma estrela por arquétipo tocado
+                // pelas respostas, ligadas na ordem do céu. Sem sorteio: as
+                // mesmas respostas dão sempre a mesma figura.
+                if (_scores.isNotEmpty)
+                  Semantics(
+                    label: AppLocalizations.of(context).quizConstellationLabel,
+                    child: ArchetypeConstellation(
+                      scores: Map<String, int>.from(_scores),
+                      order: [for (final entry in archetypesData) entry.emoji],
+                      winner: result.emoji,
+                      animate: _justFinished,
+                    ),
+                  ),
+                _Reveal(
+                  play: _justFinished,
+                  child: Text(result.emoji, style: const TextStyle(fontSize: 56)),
+                ),
                 const SizedBox(height: 12),
                 if (_savedDate != null) ...[
                   Text(
@@ -208,12 +244,17 @@ class _ArchetypeQuizPageState extends State<ArchetypeQuizPage> {
                   style: TextStyle(color: context.gc.textSecondary),
                 ),
                 const SizedBox(height: 4),
-                Text(
-                  result.name,
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                        color: context.gc.lilac,
-                      ),
+                _Reveal(
+                  play: _justFinished,
+                  delay: GrimoireMotion.state,
+                  child: Text(
+                    result.name,
+                    key: const ValueKey('quiz-result-name'),
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                          color: context.gc.lilac,
+                        ),
+                  ),
                 ),
                 const SizedBox(height: 12),
                 Text(
@@ -310,6 +351,37 @@ class _ArchetypeQuizPageState extends State<ArchetypeQuizPage> {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// A revelação do arquétipo: sobe e assenta uma vez, quando o teste acaba
+/// de terminar. Um resultado guardado — e o movimento reduzido — abre
+/// direto no estado final, que é o mesmo.
+class _Reveal extends StatelessWidget {
+  const _Reveal({required this.play, required this.child, this.delay = Duration.zero});
+
+  final bool play;
+  final Widget child;
+  final Duration delay;
+
+  @override
+  Widget build(BuildContext context) {
+    if (!play || GrimoireMotion.reduced(context)) return child;
+    final total = GrimoireMotion.celebration + delay;
+    final start = delay.inMilliseconds / total.inMilliseconds;
+    return TweenAnimationBuilder<double>(
+      tween: Tween<double>(begin: 0, end: 1),
+      duration: total,
+      curve: Curves.linear,
+      builder: (context, raw, inner) {
+        final t = Interval(start, 1, curve: GrimoireMotion.enter).transform(raw);
+        return Opacity(
+          opacity: t,
+          child: Transform.translate(offset: Offset(0, 12 * (1 - t)), child: inner),
+        );
+      },
+      child: child,
     );
   }
 }

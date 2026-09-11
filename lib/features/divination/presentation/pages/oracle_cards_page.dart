@@ -29,6 +29,7 @@ import '../../data/repositories/oracle_selection_repository.dart';
 import '../../domain/oracle_selection_session.dart';
 import '../widgets/oracle_card_face.dart';
 import '../widgets/oracle_spread_board.dart';
+import 'oracle_album_page.dart';
 import 'oracle_selection_page.dart';
 
 /// Trocar de conta recria a tela: rascunho, mesa e conselho pertencem a
@@ -363,6 +364,17 @@ class _OracleBodyState extends State<_OracleBody> {
       appBar: AppBar(
         title: ResponsiveAppBarTitle(AppLocalizations.of(context).oracleTitle),
         backgroundColor: context.gc.darkBackground,
+        actions: [
+          // O álbum só lê o que as tiragens já registraram.
+          IconButton(
+            key: const ValueKey('oracle-album-open'),
+            tooltip: AppLocalizations.of(context).oracleAlbumOpen,
+            icon: const Icon(Icons.auto_stories),
+            onPressed: () => Navigator.of(context).push(MaterialPageRoute(
+              builder: (_) => const OracleAlbumPage(),
+            )),
+          ),
+        ],
       ),
       backgroundColor: context.gc.darkBackground,
       body: ToolSceneFrame(child: SingleChildScrollView(

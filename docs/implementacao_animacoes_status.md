@@ -317,6 +317,37 @@ Entregue em 10/09.
   (traçado até o fim, movimento reduzido, antecipação por toque, viagem das
   letras, gravação antes de sair, letras da etapa 2).
 
+## Álbum do Oráculo, quiz e arquétipos (P11)
+
+Entregue em 11/09.
+
+- **Álbum das 44 cartas:** uma vaga por carta do catálogo. As que já
+  apareceram numa tiragem confirmada abrem a face e guardam a data do
+  primeiro encontro; as demais ficam de verso, sem entregar nome, mensagem
+  nem emoji. Tocar numa carta aberta mostra mensagem, orientação e palavras.
+- **Retrospectiva:** abrir o álbum roda o `backfill` silencioso das leituras
+  que já existem no aparelho — nada é celebrado e nada rende XP. Uma carta
+  repetida não muda a contagem, e o primeiro encontro conserva a data mais
+  antiga mesmo quando a leitura mais nova é lida primeiro.
+- **Constelação da sessão:** o resultado do teste desenha uma estrela por
+  arquétipo que recebeu respostas, mais perto do centro quanto mais pontos,
+  ligadas na ordem do catálogo, com halo no vencedor. A figura é
+  determinística: vem da chave invariante (o emoji) e da contagem, sem
+  sorteio, então as mesmas respostas dão sempre o mesmo céu.
+- **Revelação do arquétipo:** o emoji e o nome entram uma vez, só na sessão
+  que acabou de terminar. Um resultado guardado abre direto no estado final
+  — e sem constelação, porque ela pertence à sessão respondida.
+- **Guardar antes de revelar:** a última resposta grava o resultado e só
+  então a tela muda; a data exibida é a que ficou no aparelho, e uma falha de
+  gravação mostra o arquétipo sem inventar data. A pontuação é a mesma de
+  sempre (um ponto por resposta, empate para quem chegou primeiro) e o
+  progresso do teste continua fora do XP unificado.
+- **Verificação:** `oracle_album_test.dart` (retrospectiva idempotente, data
+  do primeiro encontro, álbum sem vazar carta fechada, álbum vazio) e
+  `archetype_quiz_test.dart` (constelação determinística, estrela só para
+  quem pontuou, gravação antes da revelação, resultado guardado abrindo
+  direto).
+
 ## Dados e compatibilidade
 
 O schema local sobe de 23 para 24 (sessões e ledger), 25 (descobertas do
@@ -379,13 +410,18 @@ usam sessões.
 - `card_selection_surface_test.dart`: toque, navegação horizontal sem sorteio,
   retirada/cancelamento, extremos por teclado, escolha travada, semântica,
   fonte ampliada e movimento reduzido.
+- `oracle_album_test.dart` e `archetype_quiz_test.dart`: álbum, retrospectiva
+  silenciosa, constelação determinística e revelação depois da gravação.
 - `sigil_trace_test.dart` e `sigil_drawing_page_test.dart`: percurso do
   sigilo, estado final para exportação, interpolação do embaralhamento e
   gravação antes de fechar a tela.
-- Os testes de tela que dirigem SQLite dentro do tempo falso têm limite por
-  teste (`@Timeout`): uma falha no meio de uma gravação deixa o cadeado do
-  SQLite preso para os testes seguintes do mesmo arquivo, e sem o limite isso
-  vira dezenas de minutos de CI em vez de uma falha legível.
+- Os testes de tela que dirigem SQLite dentro do tempo falso encurtam o
+  limite por teste (`useShortTestTimeout`, em `test/support/`): uma falha no
+  meio de uma gravação deixa o cadeado do SQLite preso para os testes
+  seguintes do mesmo arquivo, e com o padrão de dez minutos isso vira dezenas
+  de minutos de CI em vez de uma falha legível. A anotação `@Timeout` do
+  arquivo não serve sozinha: `testWidgets` passa o próprio limite e vence a
+  anotação, então o valor é ajustado no binding.
 - Gates locais disponíveis: paridade ARB, órfãs ARB, scanner de português e
   `git diff --check`. Analyze e testes Flutter rodam no CI com o SDK pinado
   pelo repositório; o ambiente de edição não tem Flutter instalado.
@@ -401,7 +437,7 @@ pendentes. Os testes automatizados não substituem essa avaliação.
 
 ## Continuação do lote
 
-1. P11–P14: álbum do Oráculo/quiz/arquétipos, fluxos com foto, numerologia/pêndulo e navegação.
+1. P12–P14: fluxos com foto, numerologia/pêndulo e navegação entre ferramentas.
 2. P16/P17: registro menstrual manual Free; dados derivados e análises Premium.
 3. P18: registros menstruais autorizados entram na análise completa do ciclo.
 4. P15: integração e validação final do lote.

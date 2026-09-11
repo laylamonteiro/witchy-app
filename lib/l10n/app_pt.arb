@@ -2996,5 +2996,14 @@
   "guidedRitualLogFailed": "Não foi possível registrar a conclusão do ritual. Seus passos estão preservados.",
   "sigilDrawingSemantics": "Desenho do seu sigilo",
   "sigilTraceHint": "Toque para completar o traçado",
-  "sigilTraceReplay": "Refazer o traçado"
+  "sigilTraceReplay": "Refazer o traçado",
+  "oracleAlbumTitle": "Álbum do Oráculo",
+  "oracleAlbumProgress": "{found} de {total} cartas descobertas",
+  "oracleAlbumLocked": "Ainda não descoberta",
+  "oracleAlbumFoundOn": "Encontrada em {date}",
+  "oracleAlbumEmpty": "Nenhuma carta ainda. Confirme uma tiragem e elas começam a aparecer aqui.",
+  "oracleAlbumOpen": "Álbum das cartas",
+  "@oracleAlbumProgress": {"placeholders": {"found": {"type": "int"}, "total": {"type": "int"}}},
+  "@oracleAlbumFoundOn": {"placeholders": {"date": {"type": "String"}}},
+  "quizConstellationLabel": "Constelação das suas respostas"
 }

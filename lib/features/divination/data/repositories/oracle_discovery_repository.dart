@@ -21,6 +21,26 @@ class OracleDiscoveryRepository {
     return {for (final r in rows) (r['card_id'] as num).toInt()};
   }
 
+  /// When each card was first met, for the album. Cards never met are absent.
+  Future<Map<int, DateTime>> firstSeen(String userId) async {
+    final db = await _dbHelper.database;
+    final rows = await db.query('oracle_discoveries',
+        columns: ['card_id', 'first_seen_at'],
+        where: 'user_id = ?', whereArgs: [userId]);
+    return {
+      for (final r in rows)
+        (r['card_id'] as num).toInt():
+            DateTime.fromMillisecondsSinceEpoch((r['first_seen_at'] as num).toInt()),
+    };
+  }
+
+  /// The retrospective on its own transaction, for screens that open without
+  /// drawing anything (the album). Silent and idempotent.
+  Future<void> backfill(String userId) async {
+    final db = await _dbHelper.database;
+    await db.transaction((txn) => backfillIn(txn, userId));
+  }
+
   /// Records [cardIds] for [readingId]; returns the ones seen for the first
   /// time, in catalog order of appearance.
   static Future<List<int>> recordIn(
