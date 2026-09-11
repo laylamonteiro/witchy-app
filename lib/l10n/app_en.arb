@@ -2225,5 +2225,22 @@
   "menstrualViewWheel": "Wheel",
   "menstrualWheelLegend": "Outer ring: the estimated Moon for each day. Inner ring: only what you recorded — a filled dot is a beginning or a flow day, an outline is spotting, a bar is an end and a square is a note. Move across dates by dragging horizontally or with the arrow keys; tapping opens the day.",
   "menstrualNoRecordDay": "no record",
-  "menstrualHasRecordDay": "has a record"
+  "menstrualHasRecordDay": "has a record",
+  "cycleReadingIncludeMenstrual": "Menstrual Cycle",
+  "cycleReadingIncludeMenstrualHint": "What you recorded of your cycle in this period — and only the days you tick here.",
+  "cycleReadingMenstrualPremium": "Part of Premium. Without it, none of your record is read or sent.",
+  "cycleReadingMenstrualEmpty": "No cycle records of yours in this period.",
+  "cycleReadingMenstrualSelected": "{count, plural, =0{No records included} =1{1 record included} other{{count} records included}}",
+  "cycleReadingMenstrualAll": "Include all from this period",
+  "cycleReadingMenstrualNone": "Include none",
+  "cycleReadingMenstrualWords": "Also include what I wrote on those days",
+  "cycleReadingMenstrualWordsHint": "Your own words: the day’s note and the season writing.",
+  "cycleReadingMenstrualArchive": "The analysis is kept in your collection and may contain whatever you include here.",
+  "cycleReadingMenstrualScopeNote": "This authorization is for this reading. New records do not join on their own, and a day corrected afterwards drops out.",
+  "cycleReadingMenstrualSymptoms": "{count, plural, =1{1 symptom} other{{count} symptoms}}",
+  "cycleReadingMenstrualHasWords": "with your own words",
+  "@cycleReadingMenstrualSelected": {"placeholders": {"count": {"type": "int"}}},
+  "@cycleReadingMenstrualSymptoms": {"placeholders": {"count": {"type": "int"}}},
+  "cycleReadingMenstrualSummary": "{count, plural, =1{Menstrual Cycle · 1 record included} other{Menstrual Cycle · {count} records included}}",
+  "@cycleReadingMenstrualSummary": {"placeholders": {"count": {"type": "int"}}}
 }

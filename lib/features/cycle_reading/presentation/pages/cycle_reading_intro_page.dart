@@ -24,9 +24,12 @@ import '../../../grimoire/presentation/pages/records_archive_list_page.dart';
 import '../../../../core/services/debug_log_service.dart';
 import '../../data/compra_pendente_store.dart';
 import '../../data/models/cycle_reading_model.dart';
+import '../../../menstrual_cycle/domain/menstrual_access.dart';
+import '../../../menstrual_cycle/domain/menstrual_reading_scope.dart';
 import '../../data/services/cycle_reading_composer.dart';
 import '../../data/services/cycle_reading_service.dart';
 import '../widgets/cycle_period_picker_sheet.dart';
+import '../widgets/menstrual_source_tile.dart';
 import '../widgets/paywall_da_leitura.dart';
 import 'cycle_reading_report_page.dart';
 
@@ -160,6 +163,13 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
   bool _includeJournals = true;
   bool _includePractice = true;
   bool _includeDivination = true;
+
+  /// A fonte íntima é a única que começa DESLIGADA, e a única que não é um
+  /// interruptor: ela é uma lista de dias autorizados um a um. Vazia até a
+  /// pessoa marcar o que vai junto.
+  late MenstrualReadingScope _menstrual = MenstrualReadingScope.none(
+    userId: context.read<AuthProvider>().currentUser.id,
+  );
 
   @override
   void initState() {
@@ -960,6 +970,19 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
               value: _includePractice,
               onChanged: (v) => setState(() => _includePractice = v),
             ),
+            // Só para quem a área é oferecida: no masculino não há fonte,
+            // nem menção a ela.
+            if (MenstrualAccess(
+              gender: context.watch<AuthProvider>().currentUser.gender,
+              consented: true,
+              premium: context.watch<AuthProvider>().isPremiumEffective,
+            ).isOffered)
+              MenstrualSourceTile(
+                userId: context.read<AuthProvider>().currentUser.id,
+                period: _period,
+                premium: context.watch<AuthProvider>().isPremiumEffective,
+                onChanged: (scope) => setState(() => _menstrual = scope),
+              ),
           ],
         ),
       ),
@@ -1126,6 +1149,19 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
                     fontWeight: FontWeight.bold,
                   ),
             ),
+            // O que ela autorizou da fonte íntima se acomoda ao lado das
+            // outras fontes, com a contagem separada: registro do corpo não
+            // entra na contagem que mede a leitura nem na que mira oferta.
+            if (_menstrual.isNotEmpty) ...[
+              const SizedBox(height: 6),
+              Text(
+                l10n.cycleReadingMenstrualSummary(_menstrual.recordCount),
+                key: const ValueKey('cycle-reading-menstrual-summary'),
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: context.gc.textSecondary,
+                    ),
+              ),
+            ],
             if (_recordCount <
                 CycleReadingComposer.minRecordsFor(_periodType)) ...[
               const SizedBox(height: 8),

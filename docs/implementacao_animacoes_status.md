@@ -657,7 +657,27 @@ ao compositor vêm em seguida.
 - **Cobertura em bloco próprio:** dias autorizados, janela, campos e a
   impressão do escopo. Não há streak, constância nem prática aqui: a fonte
   íntima não vira atividade.
-- **Verificação:** `menstrual_reading_scope_test.dart` (a impressão muda com
+- **A escolha, na tela de fontes:** "Ciclo Menstrual" entra no painel de
+  fontes da Leitura do Ciclo, e é a única fonte que nasce **desligada**. Sem
+  Premium efetivo a chave nem abre — nada é lido, nada é mostrado. No
+  masculino a fonte não existe na tela.
+- **Ligar não autoriza:** ligar a chave abre a prévia dos registros que
+  existem naquela janela, e autorizar é marcar, um a um ou por "incluir todos
+  deste período" — ação explícita sobre os registros que estão à vista. A
+  contagem do que foi incluído aparece ao lado das outras fontes.
+- **As palavras dela são escolha à parte:** a anotação do dia e a escrita da
+  estação só vão junto com um segundo sim, desmarcado por padrão.
+- **A tela diz o alcance:** a análise fica guardada no acervo e pode conter o
+  que ela incluir; a autorização vale para esta leitura; registros novos não
+  entram sozinhos e um dia corrigido depois sai da conta.
+- **O consentimento ganhou revisão:** dizer sim de novo depois de ter dito
+  não é OUTRO consentimento, e a revisão entra no contrato — o que tinha sido
+  autorizado antes deixa de valer sozinho.
+- **Verificação:** `menstrual_source_tile_test.dart` (sem Premium a chave não
+  abre nada; abrir mostra os dias e nenhum vai junto sem ela marcar; as
+  palavras dela entram só quando ela pede; desligar devolve escopo vazio; sem
+  consentimento de registro não há prévia) e
+  `menstrual_reading_scope_test.dart` (a impressão muda com
   qualquer parte do contrato; o dia corrigido sai do escopo; nada de fora da
   janela nem fora da lista; cada seção recebe só o que lhe cabe e chave nova
   não recebe nada; a nota livre fica de fora enquanto ela não pedir; campo

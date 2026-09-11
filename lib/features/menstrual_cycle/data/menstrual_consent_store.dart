@@ -12,6 +12,7 @@ class MenstrualConsentStore {
   static const _recordPrefix = 'menstrual_consent_record_';
   static const _syncPrefix = 'menstrual_consent_sync_';
   static const _nextReferencePrefix = 'menstrual_next_reference_';
+  static const _revisionPrefix = 'menstrual_consent_revision_';
 
   Future<bool> recordingAllowed(String userId) async {
     final prefs = await SharedPreferences.getInstance();
@@ -20,10 +21,26 @@ class MenstrualConsentStore {
 
   Future<void> setRecordingAllowed(String userId, bool allowed) async {
     final prefs = await SharedPreferences.getInstance();
+    final before = prefs.getBool('$_recordPrefix$userId') ?? false;
     await prefs.setBool('$_recordPrefix$userId', allowed);
     // Deixar de consentir com o registro também fecha o envio: o contrário
     // seria continuar mandando para a nuvem o que ela pediu para parar.
     if (!allowed) await prefs.setBool('$_syncPrefix$userId', false);
+    // Dizer sim de novo, depois de ter dito não, é OUTRO consentimento: a
+    // revisão sobe, e toda autorização presa à revisão anterior deixa de
+    // valer sozinha.
+    if (allowed && !before) {
+      await prefs.setInt(
+          '$_revisionPrefix$userId', await consentRevision(userId) + 1);
+    }
+  }
+
+  /// Quantas vezes ela disse sim ao registro nesta conta. Entra no contrato
+  /// de uma análise autorizada: retirar e dar o sim de novo invalida o que
+  /// tinha sido autorizado antes.
+  Future<int> consentRevision(String userId) async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getInt('$_revisionPrefix$userId') ?? 0;
   }
 
   /// O envio para a conta na nuvem. Desligado até haver um sim explícito, e
@@ -57,5 +74,6 @@ class MenstrualConsentStore {
     await prefs.remove('$_recordPrefix$userId');
     await prefs.remove('$_syncPrefix$userId');
     await prefs.remove('$_nextReferencePrefix$userId');
+    await prefs.remove('$_revisionPrefix$userId');
   }
 }

@@ -2225,5 +2225,22 @@
   "menstrualViewWheel": "Roda",
   "menstrualWheelLegend": "Anel de fora: a Lua estimada de cada dia. Anel de dentro: só o que você registrou — bolinha cheia é começo ou fluxo, contorno é escape, barra é fim e quadrado é anotação. Percorra as datas arrastando na horizontal ou com as setas do teclado; tocar abre o dia.",
   "menstrualNoRecordDay": "sem registro",
-  "menstrualHasRecordDay": "com registro"
+  "menstrualHasRecordDay": "com registro",
+  "cycleReadingIncludeMenstrual": "Ciclo Menstrual",
+  "cycleReadingIncludeMenstrualHint": "O que você registrou do seu ciclo neste período — e só os dias que você marcar aqui.",
+  "cycleReadingMenstrualPremium": "Faz parte do Premium. Sem ele, nada do seu registro é lido nem enviado.",
+  "cycleReadingMenstrualEmpty": "Nenhum registro seu do ciclo neste período.",
+  "cycleReadingMenstrualSelected": "{count, plural, =0{Nenhum registro incluído} =1{1 registro incluído} other{{count} registros incluídos}}",
+  "cycleReadingMenstrualAll": "Incluir todos deste período",
+  "cycleReadingMenstrualNone": "Não incluir nenhum",
+  "cycleReadingMenstrualWords": "Incluir também o que escrevi nesses dias",
+  "cycleReadingMenstrualWordsHint": "As suas palavras: a anotação do dia e a escrita da estação.",
+  "cycleReadingMenstrualArchive": "A análise fica guardada no seu acervo e pode conter o que você incluir aqui.",
+  "cycleReadingMenstrualScopeNote": "A autorização vale para esta leitura. Registros novos não entram sozinhos, e um dia corrigido depois sai da conta.",
+  "cycleReadingMenstrualSymptoms": "{count, plural, =1{1 sintoma} other{{count} sintomas}}",
+  "cycleReadingMenstrualHasWords": "com escrita sua",
+  "@cycleReadingMenstrualSelected": {"placeholders": {"count": {"type": "int"}}},
+  "@cycleReadingMenstrualSymptoms": {"placeholders": {"count": {"type": "int"}}},
+  "cycleReadingMenstrualSummary": "{count, plural, =1{Ciclo Menstrual · 1 registro incluído} other{Ciclo Menstrual · {count} registros incluídos}}",
+  "@cycleReadingMenstrualSummary": {"placeholders": {"count": {"type": "int"}}}
 }

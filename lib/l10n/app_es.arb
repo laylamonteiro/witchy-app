@@ -2225,5 +2225,22 @@
   "menstrualViewWheel": "Rueda",
   "menstrualWheelLegend": "Anillo de fuera: la Luna estimada de cada día. Anillo de dentro: solo lo que registraste — el punto lleno es comienzo o flujo, el contorno es manchado, la barra es fin y el cuadrado es una nota. Recorre las fechas arrastrando en horizontal o con las flechas del teclado; tocar abre el día.",
   "menstrualNoRecordDay": "sin registro",
-  "menstrualHasRecordDay": "con registro"
+  "menstrualHasRecordDay": "con registro",
+  "cycleReadingIncludeMenstrual": "Ciclo Menstrual",
+  "cycleReadingIncludeMenstrualHint": "Lo que registraste de tu ciclo en este período — y solo los días que marques aquí.",
+  "cycleReadingMenstrualPremium": "Forma parte de Premium. Sin él, nada de tu registro se lee ni se envía.",
+  "cycleReadingMenstrualEmpty": "Ningún registro tuyo del ciclo en este período.",
+  "cycleReadingMenstrualSelected": "{count, plural, =0{Ningún registro incluido} =1{1 registro incluido} other{{count} registros incluidos}}",
+  "cycleReadingMenstrualAll": "Incluir todos de este período",
+  "cycleReadingMenstrualNone": "No incluir ninguno",
+  "cycleReadingMenstrualWords": "Incluir también lo que escribí esos días",
+  "cycleReadingMenstrualWordsHint": "Tus palabras: la nota del día y la escritura de la estación.",
+  "cycleReadingMenstrualArchive": "El análisis se guarda en tu acervo y puede contener lo que incluyas aquí.",
+  "cycleReadingMenstrualScopeNote": "La autorización vale para esta lectura. Los registros nuevos no entran solos, y un día corregido después queda fuera.",
+  "cycleReadingMenstrualSymptoms": "{count, plural, =1{1 síntoma} other{{count} síntomas}}",
+  "cycleReadingMenstrualHasWords": "con escritura tuya",
+  "@cycleReadingMenstrualSelected": {"placeholders": {"count": {"type": "int"}}},
+  "@cycleReadingMenstrualSymptoms": {"placeholders": {"count": {"type": "int"}}},
+  "cycleReadingMenstrualSummary": "{count, plural, =1{Ciclo Menstrual · 1 registro incluido} other{Ciclo Menstrual · {count} registros incluidos}}",
+  "@cycleReadingMenstrualSummary": {"placeholders": {"count": {"type": "int"}}}
 }
