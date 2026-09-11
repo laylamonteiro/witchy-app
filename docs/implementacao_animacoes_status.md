@@ -693,7 +693,19 @@ ao compositor vêm em seguida.
   vira "sem sintomas"; `chosen_by_her` é escolha simbólica, não fase do corpo;
   `moon_estimated` é estimativa do app; e nada de hormônio, ovulação,
   fertilidade, gravidez, diagnóstico ou causa.
-- **Verificação:** `cycle_reading_menstrual_source_test.dart` (a fonte nunca
+- **A leitura que levou a fonte fica marcada:** só datas e identificadores —
+  qual leitura, qual entrada do acervo, qual escopo e quais dias foram junto.
+  Nenhuma observação dela mora nessa marca, e gerar de novo a mesma janela
+  troca a marca em vez de somar outra.
+- **Apagar o registro leva a cópia derivada:** a confirmação em Privacidade
+  diz quantas leituras usaram aqueles registros, e apagar leva junto os
+  relatórios delas — apagar o original não bastaria se as observações
+  continuassem dentro de um texto no acervo. Os créditos de leitura ficam: ela
+  pode gerar de novo, sem a fonte íntima.
+- **Verificação:** `menstrual_report_marks_test.dart` (a marca guarda leitura,
+  relatório e dias; gerar de novo troca em vez de somar; ela vê quais leituras
+  usaram um registro; apagar esquece; armazenamento estragado não derruba
+  nada) e `cycle_reading_menstrual_source_test.dart` (a fonte nunca
   mora no material geral; cada seção recebe a projeção que lhe cabe; seção
   desconhecida não recebe nada; a contagem da leitura cresce e a comercial
   não; sem autorização o material é exatamente o de antes) e

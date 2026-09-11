@@ -5,6 +5,7 @@ import '../../../../core/ai/ai_service.dart';
 import '../../../../core/content/content_locale.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../diary/data/models/free_writing_model.dart';
+import '../../../menstrual_cycle/data/menstrual_report_marks.dart';
 import '../../../menstrual_cycle/domain/menstrual_reading_scope.dart';
 import '../../../diary/data/repositories/free_writing_repository.dart';
 import '../../../grimoire/data/models/spell_model.dart'
@@ -122,17 +123,20 @@ class CycleReadingService {
     FreeWritingRepository? writings,
     CycleSectionGenerator? generateSection,
     CycleReadingDraftStore drafts = const CycleReadingDraftStore(),
+    MenstrualReportMarks reportMarks = const MenstrualReportMarks(),
   })  : _composer = composer ?? CycleReadingComposer(),
         _repository = repository ?? CycleReadingRepository(),
         _writings = writings ?? FreeWritingRepository(),
         _generateSection = generateSection,
-        _drafts = drafts;
+        _drafts = drafts,
+        _reportMarks = reportMarks;
 
   final CycleReadingComposer _composer;
   final CycleReadingRepository _repository;
   final FreeWritingRepository _writings;
   final CycleSectionGenerator? _generateSection;
   final CycleReadingDraftStore _drafts;
+  final MenstrualReportMarks _reportMarks;
 
   CycleReadingComposer get composer => _composer;
   CycleReadingRepository get repository => _repository;
@@ -434,6 +438,24 @@ class CycleReadingService {
           regenerate ? credit.regenerationsUsed + 1 : credit.regenerationsUsed,
     );
     await _repository.update(updated);
+
+    // Esta leitura levou a fonte íntima junto: fica marcado. É por esta
+    // marca que o acervo sabe o que o relatório contém, que ela vê quais
+    // leituras usaram um registro antes de apagá-lo, e que apagar pode levar
+    // as cópias derivadas junto. Só datas e identificadores moram lá —
+    // nenhuma observação dela.
+    if (menstrual != null && menstrual.isNotEmpty) {
+      await _reportMarks.record(
+        userId,
+        MenstrualReportMark(
+          readingId: credit.id,
+          writingId: writing.id,
+          scope: menstrual.fingerprint,
+          dayKeys: [for (final entry in menstrual.entries) entry.dayKey],
+          at: DateTime.now(),
+        ),
+      );
+    }
 
     // Relatório salvo e crédito consumido: o rascunho cumpriu o papel.
     await _drafts.clear(credit.id);

@@ -2242,5 +2242,7 @@
   "@cycleReadingMenstrualSelected": {"placeholders": {"count": {"type": "int"}}},
   "@cycleReadingMenstrualSymptoms": {"placeholders": {"count": {"type": "int"}}},
   "cycleReadingMenstrualSummary": "{count, plural, =1{Ciclo Menstrual · 1 registro incluido} other{Ciclo Menstrual · {count} registros incluidos}}",
-  "@cycleReadingMenstrualSummary": {"placeholders": {"count": {"type": "int"}}}
+  "@cycleReadingMenstrualSummary": {"placeholders": {"count": {"type": "int"}}},
+  "menstrualPrivacyEraseReadings": "{count, plural, =1{1 lectura llevó estos registros consigo, y su informe también será borrado. Tu crédito de lectura sigue siendo tuyo.} other{{count} lecturas llevaron estos registros consigo, y sus informes también serán borrados. Tus créditos de lectura siguen siendo tuyos.}}",
+  "@menstrualPrivacyEraseReadings": {"placeholders": {"count": {"type": "int"}}}
 }

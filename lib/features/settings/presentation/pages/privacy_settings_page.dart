@@ -11,7 +11,9 @@ import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/loading_widget.dart';
 import '../../../../core/database/database_helper.dart';
 import '../../../../core/database/menstrual_cycle_schema.dart';
+import '../../../diary/data/repositories/free_writing_repository.dart';
 import '../../../menstrual_cycle/data/menstrual_consent_store.dart';
+import '../../../menstrual_cycle/data/menstrual_report_marks.dart';
 import '../../../menstrual_cycle/data/repositories/menstrual_cycle_repository.dart';
 import '../../../../core/database/reading_session_schema.dart';
 import '../../../../core/config/supabase_config.dart';
@@ -54,18 +56,29 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
   }
 
   /// Apaga só o registro do ciclo, e esquece as respostas de consentimento.
+  ///
+  /// Se alguma leitura levou esses registros junto, a confirmação diz quantas
+  /// são e o relatório derivado vai junto — apagar o original não basta se as
+  /// observações dela continuam dentro de um texto no acervo. Os créditos de
+  /// leitura ficam: ela pode gerar de novo, sem a fonte íntima.
   Future<void> _eraseMenstrualRecord() async {
     final l10n = AppLocalizations.of(context);
     final userId = context.read<AuthProvider>().currentUser.id;
     final messenger = ScaffoldMessenger.of(context);
     final success = context.gc.success;
+    final marks = await const MenstrualReportMarks().all(userId);
+    if (!mounted) return;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
         backgroundColor: dialogContext.gc.surface,
         title: Text(l10n.menstrualPrivacyErase,
             style: TextStyle(color: dialogContext.gc.textPrimary)),
-        content: Text(l10n.menstrualPrivacyEraseConfirm(_menstrualDays),
+        content: Text(
+            marks.isEmpty
+                ? l10n.menstrualPrivacyEraseConfirm(_menstrualDays)
+                : '${l10n.menstrualPrivacyEraseConfirm(_menstrualDays)}\n\n'
+                    '${l10n.menstrualPrivacyEraseReadings(marks.length)}',
             style: TextStyle(color: dialogContext.gc.textSecondary)),
         actions: [
           TextButton(
@@ -83,6 +96,13 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
     if (confirmed != true) return;
     await MenstrualCycleRepository().purge(userId);
     await const MenstrualConsentStore().forget(userId);
+    // As cópias derivadas vão junto: o relatório é onde as observações dela
+    // continuariam existindo depois de o registro sumir. O crédito da
+    // leitura permanece, e a entrada pode ser gerada de novo sem a fonte.
+    for (final mark in marks) {
+      await FreeWritingRepository().delete(mark.writingId);
+    }
+    await const MenstrualReportMarks().forget(userId);
     if (!mounted) return;
     setState(() => _menstrualDays = 0);
     messenger.showSnackBar(SnackBar(
