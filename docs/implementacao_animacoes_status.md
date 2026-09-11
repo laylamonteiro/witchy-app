@@ -407,6 +407,23 @@ Entregue em 11/09.
   ferramentas continua pendente — é refatoração de conteúdo, não de
   movimento, e não muda nenhum resultado.
 
+## Ferramentas: feedback uniforme (P14, primeira parte)
+
+Entregue em 11/09.
+
+- **Uma falha, um cartão:** `RetryNotice` passou a ser o estado de erro do
+  Conselheiro, da Quiromancia e da interpretação de sonho — o mesmo ícone, o
+  mesmo espaçamento, a mesma região viva para leitores de tela e o mesmo
+  convite de retomada. Cada ferramenta conserva a chave do seu botão, então
+  nenhum fluxo mudou. Sem nada a repetir, a mensagem fica sem convite em vez
+  de oferecer um botão que não faria nada.
+- **Rótulos que dizem só o que importa:** o emblema do círculo de ritual é
+  decoração e saiu da semântica; o círculo anuncia o progresso e nada mais.
+- **Falta para fechar P14:** integrar as artes dos cards às cenas de
+  destino, revisar tamanhos e hierarquia e percorrer as 12 entradas com
+  retorno e re-toque de aba. É trabalho de tela, que pede aparelho: os
+  testes automatizados não substituem essa avaliação.
+
 ## Dados e compatibilidade
 
 O schema local sobe de 23 para 24 (sessões e ledger), 25 (descobertas do
@@ -500,7 +517,7 @@ pendentes. Os testes automatizados não substituem essa avaliação.
 
 ## Continuação do lote
 
-1. P14: navegação e identidade das Ferramentas.
+1. P14: artes de entrada, tamanhos e o percurso pelas 12 ferramentas.
 2. P16/P17: registro menstrual manual Free; dados derivados e análises Premium.
 3. P18: registros menstruais autorizados entram na análise completa do ciclo.
 4. P15: integração e validação final do lote.
