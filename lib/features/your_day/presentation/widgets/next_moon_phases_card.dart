@@ -23,7 +23,11 @@ class NextMoonPhasesCard extends StatelessWidget {
     final lunarProvider = context.watch<LunarProvider>();
 
     return ExpansionMagicalCard(
-      emoji: '🌙',
+      // O cabeçalho usa o MESMO disco das oito linhas do corpo: com o emoji
+      // aqui, a lua do título vinha da fonte do aparelho e a do corpo era
+      // desenhada — duas artes no mesmo card.
+      leading: MoonDisc(
+          phase: lunarProvider.getCurrentMoonPhase(), size: 26, halo: false),
       title: l10n.lunarNextPhases,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

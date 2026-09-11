@@ -64,7 +64,10 @@ const String moonEsbatsIntroPt =
 
 const List<EsbatItem> moonEsbatItemsPt = [
   (
-    emoji: '🌕',
+    // Relógio, e não a lua cheia: a fase é desenhada em todo o app, e um
+    // glifo de fase aqui traria de volta a arte da fonte do aparelho, ao
+    // lado dos oito discos que esta mesma página desenha.
+    emoji: '🕐',
     title: 'Quando',
     text:
         'Na noite da lua cheia — há 12 ou 13 por ano, e muitas tradições dão nome a cada uma (Lua do Lobo, Lua das Flores, Lua da Colheita...)',

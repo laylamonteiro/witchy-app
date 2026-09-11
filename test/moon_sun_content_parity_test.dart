@@ -59,9 +59,15 @@ void main() {
       }
       expect(moonEsbatItemsEn.length, moonEsbatItemsPt.length);
       expect(moonEsbatItemsEs.length, moonEsbatItemsPt.length);
+      // A fase da lua é DESENHADA em todo o app (MoonDisc), porque o glifo
+      // vinha da fonte do aparelho e saía diferente no navegador. Um glifo
+      // de fase aqui reapareceria ao lado dos oito discos da mesma página.
+      const glifosDeFase = ['🌑', '🌒', '🌓', '🌔', '🌕', '🌖', '🌗', '🌘'];
       for (final list in [moonEsbatItemsPt, moonEsbatItemsEn, moonEsbatItemsEs]) {
         for (final item in list) {
           expect(item.emoji.trim(), isNotEmpty);
+          expect(glifosDeFase, isNot(contains(item.emoji)),
+              reason: 'A fase da lua é desenhada, não escrita: ${item.title}');
           expect(item.title.trim(), isNotEmpty);
           expect(item.text.trim(), isNotEmpty, reason: item.title);
         }

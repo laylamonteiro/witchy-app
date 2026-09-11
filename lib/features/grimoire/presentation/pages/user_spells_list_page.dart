@@ -3,6 +3,7 @@ import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
 import '../providers/spell_provider.dart';
 import '../../../../core/widgets/magical_card.dart';
+import '../../../../core/widgets/moon_disc.dart';
 import '../../../../core/widgets/loading_widget.dart';
 import '../../../../core/widgets/empty_state_widget.dart';
 import '../../../../core/widgets/magical_fab.dart';
@@ -267,10 +268,14 @@ class _UserSpellsListPageState extends State<UserSpellsListPage> {
                                 ),
                                 const SizedBox(width: 8),
                                 if (showMoon) ...[
-                                  Text(
-                                    spell.moonPhase!.emoji,
-                                    style: const TextStyle(fontSize: 20),
-                                  ),
+                                  // O mesmo disco do formulário e da tela do
+                                  // feitiço: com o glifo aqui, a lista e o
+                                  // detalhe mostravam luas diferentes do
+                                  // mesmo feitiço.
+                                  MoonDisc(
+                                      phase: spell.moonPhase!,
+                                      size: 20,
+                                      halo: false),
                                   const SizedBox(width: 8),
                                 ],
                                 Expanded(
