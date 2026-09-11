@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:grimorio_de_bolso/core/database/database_helper.dart';
 import 'package:grimorio_de_bolso/core/database/menstrual_cycle_schema.dart';
 import 'package:grimorio_de_bolso/core/i18n/gender.dart';
+import 'package:grimorio_de_bolso/features/auth/data/models/user_model.dart';
 import 'package:grimorio_de_bolso/features/auth/presentation/providers/auth_provider.dart';
 import 'package:grimorio_de_bolso/features/menstrual_cycle/data/menstrual_consent_store.dart';
 import 'package:grimorio_de_bolso/features/menstrual_cycle/data/repositories/menstrual_cycle_repository.dart';
@@ -24,6 +25,13 @@ class _Fixture extends AuthProvider {
 
   final Gender gender;
   final bool premium;
+
+  /// O tratamento vem do usuário, e é por ele que a tela decide se a área
+  /// sequer é oferecida — sem isto o teste do masculino olharia para o
+  /// padrão do app, não para o que o teste pediu.
+  @override
+  UserModel get currentUser =>
+      UserModel.defaultUser().copyWith(gender: gender);
 
   @override
   bool get isPremiumEffective => premium;
@@ -57,6 +65,34 @@ void main() {
     fail('The record did not reach: $stage');
   }
 
+  /// A folha de registro entra deslizando: no quadro em que o formulário
+  /// aparece ela ainda está fora da tela, e um toque ali não acerta nada.
+  /// Esperar o formulário parar de se mover vale para os dois casos — com
+  /// animação e sem ela.
+  Future<void> openForm(WidgetTester tester) async {
+    await until(tester, () => find.byType(MenstrualRecordForm).evaluate().isNotEmpty,
+        'the form');
+    final form = find.byType(MenstrualRecordForm);
+    Offset? previous;
+    for (var i = 0; i < 40; i++) {
+      await tester.pump(const Duration(milliseconds: 50));
+      final now = tester.getTopLeft(form);
+      if (now == previous) return;
+      previous = now;
+    }
+    fail('The record did not reach: the form in place');
+  }
+
+  /// Tocar no que está dentro da folha: o painel rola, e o alvo pode estar
+  /// abaixo da dobra em telas curtas.
+  Future<void> pressIn(WidgetTester tester, String key) async {
+    final target = find.byKey(ValueKey(key));
+    await tester.ensureVisible(target);
+    await tester.pump();
+    await tester.tap(target);
+    await tester.pump();
+  }
+
   Future<void> show(
     WidgetTester tester, {
     Gender gender = Gender.feminine,
@@ -67,6 +103,9 @@ void main() {
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
     await tester.pumpWidget(ChangeNotifierProvider<AuthProvider>(
+      // Uma chave por combinação: pedir a tela de novo com outro plano
+      // constrói tudo do zero, em vez de herdar o provedor anterior.
+      key: ValueKey('$gender-$premium'),
       create: (_) => _Fixture(gender: gender, premium: premium),
       child: MaterialApp(
         locale: const Locale('en'),
@@ -113,15 +152,15 @@ void main() {
     expect(find.byKey(const ValueKey('menstrual-premium-invite')), findsOneWidget);
 
     await tester.tap(find.byKey(const ValueKey('menstrual-record-today')));
-    await until(tester, () => find.byType(MenstrualRecordForm).evaluate().isNotEmpty,
-        'the form');
+    await openForm(tester);
     expect(find.byKey(const ValueKey('menstrual-editing-day')), findsOneWidget);
 
-    await tester.tap(find.byKey(const ValueKey('menstrual-mark-spotting')));
+    await pressIn(tester, 'menstrual-mark-spotting');
+    await tester.ensureVisible(find.byKey(const ValueKey('menstrual-note')));
     await tester.pump();
     await tester.enterText(find.byKey(const ValueKey('menstrual-note')), 'a quiet day');
     await tester.pump();
-    await tester.tap(find.byKey(const ValueKey('menstrual-save')));
+    await pressIn(tester, 'menstrual-save');
     await until(tester, () => find.byType(MenstrualRecordForm).evaluate().isEmpty,
         'the form to close after the write');
 
@@ -134,9 +173,12 @@ void main() {
     await until(tester, () => find.text('Spotting').evaluate().isNotEmpty,
         'the day on screen');
 
-    // Nothing derived anywhere on the free plan.
-    expect(find.textContaining('Day 1'), findsNothing);
-    expect(find.textContaining('average'), findsNothing);
+    // Nothing derived anywhere on the free plan. O convite Premium fala de
+    // médias — por isso a ausência se mede pelas chaves do que é calculado,
+    // não por procurar a palavra na tela.
+    expect(find.byKey(const ValueKey('menstrual-derived')), findsNothing);
+    expect(find.byKey(const ValueKey('menstrual-cycle-day')), findsNothing);
+    expect(find.byKey(const ValueKey('menstrual-average')), findsNothing);
     expect(tester.takeException(), isNull);
   });
 
@@ -175,6 +217,7 @@ void main() {
 
     await tester.ensureVisible(
         find.byKey(const ValueKey('menstrual-next-reference-switch')));
+    await tester.pump();
     await tester.tap(find.byKey(const ValueKey('menstrual-next-reference-switch')));
     await until(
         tester,
@@ -187,6 +230,9 @@ void main() {
   testWidgets('the card is not offered in the masculine', (tester) async {
     Future<void> pumpCard(Gender gender) async {
       await tester.pumpWidget(ChangeNotifierProvider<AuthProvider>(
+        // Sem chave, o provedor do primeiro tratamento sobreviveria aos
+        // outros dois e o teste olharia sempre para o mesmo usuário.
+        key: ValueKey(gender),
         create: (_) => _Fixture(gender: gender),
         child: MaterialApp(
           locale: const Locale('en'),
@@ -233,11 +279,12 @@ void main() {
         () => find.byKey(const ValueKey('menstrual-calendar')).evaluate().isNotEmpty,
         'the calendar');
     await tester.tap(find.byKey(const ValueKey('menstrual-record-today')));
-    await until(tester, () => find.byType(MenstrualRecordForm).evaluate().isNotEmpty,
-        'the form');
+    await openForm(tester);
+    await tester.ensureVisible(find.byKey(const ValueKey('menstrual-note')));
+    await tester.pump();
     await tester.enterText(find.byKey(const ValueKey('menstrual-note')), 'keep me');
     await tester.pump();
-    await tester.tap(find.byKey(const ValueKey('menstrual-save')));
+    await pressIn(tester, 'menstrual-save');
     await until(tester, () => find.byKey(const ValueKey('menstrual-error')).evaluate().isNotEmpty,
         'the failure');
     expect(find.byType(MenstrualRecordForm), findsOneWidget,
