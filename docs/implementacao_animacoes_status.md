@@ -600,7 +600,26 @@ Entregue em 11/09.
   muito diferente não arrasta a referência inteira — e, quando a data passa,
   a tela diz apenas que a estimativa está desatualizada: sem somar ciclo
   fictício, sem falar em atraso, gravidez ou anormalidade.
-- **Verificação:** `menstrual_lunar_comparison_test.dart` (perto da Nova,
+- **A roda do mês (Premium):** dois anéis na mesma escala de datas — o
+  externo com a Lua estimada de cada dia, do escuro ao claro; o interno só
+  com o que ela registrou, com forma por tipo de marca (bolinha cheia é
+  começo ou fluxo, contorno é escape, barra é fim, quadrado é anotação). Não
+  existe anel de 28 dias esticado até coincidir com uma lunação: o intervalo
+  é o mês que está na tela. O centro mostra o dia em foco, a Lua estimada e a
+  estação escolhida, quando existe.
+- **Calendário continua sendo a alternativa explícita:** a troca entre roda e
+  calendário é um botão, e quem não quiser explorar a roda não perde nada. No
+  gratuito só existe o calendário — a roda mostra comparação.
+- **Percorrer sem atropelar:** o dedo percorre as datas na horizontal, para
+  não disputar com a rolagem vertical nem com o gesto de voltar; o cursor
+  acompanha o gesto no mesmo quadro, sem easing; soltar nunca altera
+  registro. O teclado percorre com as setas e abre com Enter, e tocar na roda
+  entrega o teclado a ela. A árvore semântica anuncia o dia em foco, se há
+  registro nele e a fase estimada — uma etiqueta por seleção, não por quadro.
+- **Verificação:** `menstrual_wheel_test.dart` (tocar escolhe e abre o dia
+  tocado; as setas percorrem sem abrir; o cursor não passa do primeiro nem do
+  último dia do mês; a semântica fala do dia, do registro e da Lua),
+  `menstrual_lunar_comparison_test.dart` (perto da Nova,
   perto da Cheia e nem uma coisa nem outra; a janela simétrica dos dois
   lados; sem quatro começos não há resumo; o quarto fecha e não conta; com
   mais histórico o resumo olha os três mais recentes) e as novas histórias de

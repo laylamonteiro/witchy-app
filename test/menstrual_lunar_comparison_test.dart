@@ -32,11 +32,17 @@ void main() {
   });
 
   test('a janela é simétrica e a convenção é o meio-dia', () {
-    // Dois dias antes e dois dias depois da mesma Cheia entram os dois.
-    expect(LunarComparison.observe(DateTime(2024, 11, 14)).nearness,
+    // A Cheia estimada dessa lunação cai em 16/11/2024. Um dia de cada lado
+    // entra; três dias de cada lado ficam de fora — a janela não é mais
+    // generosa antes do que depois.
+    expect(LunarComparison.observe(DateTime(2024, 11, 15)).nearness,
         LunarNearness.fullMoon);
-    expect(LunarComparison.observe(DateTime(2024, 11, 18)).nearness,
+    expect(LunarComparison.observe(DateTime(2024, 11, 17)).nearness,
         LunarNearness.fullMoon);
+    expect(LunarComparison.observe(DateTime(2024, 11, 13)).nearness,
+        LunarNearness.neither);
+    expect(LunarComparison.observe(DateTime(2024, 11, 19)).nearness,
+        LunarNearness.neither);
     expect(LunarComparison.noonOf(DateTime(2026, 3, 12)),
         DateTime(2026, 3, 12, 12));
   });

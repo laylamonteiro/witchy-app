@@ -8,6 +8,7 @@ import '../../../../l10n/generated/app_localizations.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../grimoire/data/models/spell_model.dart';
 import '../../../lunar/presentation/providers/lunar_provider.dart';
+import '../../data/data_sources/menstrual_phase_content.dart';
 import '../../data/menstrual_consent_store.dart';
 import '../../data/repositories/menstrual_cycle_repository.dart';
 import '../../domain/internal_season.dart';
@@ -17,6 +18,7 @@ import '../../domain/menstrual_insights.dart';
 import '../widgets/menstrual_lunar_card.dart';
 import '../widgets/menstrual_record_form.dart';
 import '../widgets/menstrual_season_card.dart';
+import '../widgets/menstrual_wheel.dart';
 
 /// A roda pessoal: o registro do próprio ciclo.
 ///
@@ -62,6 +64,14 @@ class _MenstrualCyclePageState extends State<MenstrualCyclePage> {
   bool _wantsNextReference = false;
   bool _saving = false;
   String? _formError;
+
+  /// A roda é uma alternativa oferecida, não a única porta: quem não quiser
+  /// explorá-la fica no calendário do mês, que continua completo.
+  bool _wheelView = false;
+
+  /// O dia em foco na roda. O calendário não tem foco — ele abre o dia que
+  /// for tocado.
+  late DateTime _focused = _today;
 
   String get _userId => context.read<AuthProvider>().currentUser.id;
 
@@ -123,6 +133,11 @@ class _MenstrualCyclePageState extends State<MenstrualCyclePage> {
     setState(() {
       _month = month;
       _days = {for (final day in days) day.dayKey: day};
+      // O foco da roda acompanha o mês: apontar para uma data que saiu da
+      // tela deixaria o centro contando outra história.
+      _focused = _month.year == _today.year && _month.month == _today.month
+          ? _today
+          : DateTime(month.year, month.month);
     });
   }
 
@@ -334,7 +349,41 @@ class _MenstrualCyclePageState extends State<MenstrualCyclePage> {
               ],
             ),
           ),
-          _calendar(context, l10n, access),
+          // A roda só existe onde a comparação existe; o calendário é a
+          // alternativa explícita, e continua inteiro nas duas situações.
+          if (access.canSeeDerived)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: SegmentedButton<bool>(
+                      key: const ValueKey('menstrual-view-toggle'),
+                      segments: [
+                        ButtonSegment(
+                          value: false,
+                          icon: const Icon(Icons.calendar_month_outlined, size: 16),
+                          label: Text(l10n.menstrualViewCalendar),
+                        ),
+                        ButtonSegment(
+                          value: true,
+                          icon: const Icon(Icons.brightness_2_outlined, size: 16),
+                          label: Text(l10n.menstrualViewWheel),
+                        ),
+                      ],
+                      selected: {_wheelView},
+                      showSelectedIcon: false,
+                      onSelectionChanged: (choice) =>
+                          setState(() => _wheelView = choice.first),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          if (access.canSeeDerived && _wheelView)
+            _wheel(context, l10n)
+          else
+            _calendar(context, l10n, access),
           // A estação é escolha simbólica, não resultado — mas é conteúdo
           // editorial, e por isso mora no Premium.
           if (access.canChooseSeason)
@@ -468,6 +517,70 @@ class _MenstrualCyclePageState extends State<MenstrualCyclePage> {
   static MoonPhase _moonOf(DateTime day) =>
       LunarProvider.phaseOn(DateTime(day.year, day.month, day.day, 12));
 
+  /// O mês na tela e os dois botões de virar — os mesmos na roda e no
+  /// calendário, para que trocar de visão não mude a navegação.
+  Widget _monthHeader(BuildContext context, AppLocalizations l10n) {
+    final first = DateTime(_month.year, _month.month);
+    return Row(
+      children: [
+        IconButton(
+          key: const ValueKey('menstrual-previous-month'),
+          onPressed: () => _changeMonth(-1),
+          icon: const Icon(Icons.chevron_left),
+          tooltip: l10n.menstrualPreviousMonth,
+        ),
+        Expanded(
+          child: Text(
+            '${first.month.toString().padLeft(2, '0')}/${first.year}',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+                color: context.gc.textPrimary, fontWeight: FontWeight.bold),
+          ),
+        ),
+        IconButton(
+          key: const ValueKey('menstrual-next-month'),
+          onPressed: () => _changeMonth(1),
+          icon: const Icon(Icons.chevron_right),
+          tooltip: l10n.menstrualNextMonth,
+        ),
+      ],
+    );
+  }
+
+  /// A roda do mês: o anel externo com a Lua estimada de cada dia e o interno
+  /// só com o que ela registrou. A legenda distingue registro, estimativa e
+  /// escolha por texto, não só por cor.
+  Widget _wheel(BuildContext context, AppLocalizations l10n) {
+    final focused = _days[MenstrualDay.keyOf(_focused)];
+    return MagicalCard(
+      key: const ValueKey('menstrual-wheel-card'),
+      child: Column(
+        children: [
+          _monthHeader(context, l10n),
+          const SizedBox(height: 8),
+          Center(
+            child: MenstrualWheel(
+              month: _month,
+              days: _days,
+              selected: _focused,
+              season: focused?.season == null
+                  ? null
+                  : MenstrualSeasonContentSource.of(focused!.season!).title,
+              onSelect: (day) => setState(() => _focused = day),
+              onOpen: _openDay,
+            ),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            l10n.menstrualWheelLegend,
+            style: TextStyle(
+                color: context.gc.textSecondary, fontSize: 11, height: 1.4),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _calendar(
       BuildContext context, AppLocalizations l10n, MenstrualAccess access) {
     final first = DateTime(_month.year, _month.month);
@@ -480,30 +593,7 @@ class _MenstrualCyclePageState extends State<MenstrualCyclePage> {
       key: const ValueKey('menstrual-calendar'),
       child: Column(
         children: [
-          Row(
-            children: [
-              IconButton(
-                key: const ValueKey('menstrual-previous-month'),
-                onPressed: () => _changeMonth(-1),
-                icon: const Icon(Icons.chevron_left),
-                tooltip: l10n.menstrualPreviousMonth,
-              ),
-              Expanded(
-                child: Text(
-                  '${first.month.toString().padLeft(2, '0')}/${first.year}',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                      color: context.gc.textPrimary, fontWeight: FontWeight.bold),
-                ),
-              ),
-              IconButton(
-                key: const ValueKey('menstrual-next-month'),
-                onPressed: () => _changeMonth(1),
-                icon: const Icon(Icons.chevron_right),
-                tooltip: l10n.menstrualNextMonth,
-              ),
-            ],
-          ),
+          _monthHeader(context, l10n),
           const SizedBox(height: 8),
           GridView.builder(
             shrinkWrap: true,
@@ -607,12 +697,17 @@ class _DayCell extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              // Altura de linha fixa nos dois textos: a célula do calendário
+              // é quadrada e apertada, e a Lua não pode empurrar o número
+              // para fora dela.
               if (moon != null)
                 ExcludeSemantics(
-                  child: Text(moon!, style: const TextStyle(fontSize: 11)),
+                  child: Text(moon!,
+                      style: const TextStyle(fontSize: 10, height: 1)),
                 ),
               Text('${day.day}',
-                  style: TextStyle(color: colors.textPrimary, fontSize: 12)),
+                  style: TextStyle(
+                      color: colors.textPrimary, fontSize: 12, height: 1.1)),
               if (marked)
                 Container(
                   width: 6,

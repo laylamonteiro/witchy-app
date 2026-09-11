@@ -3090,5 +3090,10 @@
   "@menstrualLunarNearFull": {"placeholders": {"near": {"type": "int"}, "total": {"type": "int"}, "window": {"type": "int"}}},
   "@menstrualLunarNearNew": {"placeholders": {"near": {"type": "int"}, "total": {"type": "int"}, "window": {"type": "int"}}},
   "@menstrualLunarNeither": {"placeholders": {"total": {"type": "int"}, "window": {"type": "int"}}},
-  "@menstrualLunarNote": {"placeholders": {"window": {"type": "int"}}}
+  "@menstrualLunarNote": {"placeholders": {"window": {"type": "int"}}},
+  "menstrualViewCalendar": "Calendário",
+  "menstrualViewWheel": "Roda",
+  "menstrualWheelLegend": "Anel de fora: a Lua estimada de cada dia. Anel de dentro: só o que você registrou — bolinha cheia é começo ou fluxo, contorno é escape, barra é fim e quadrado é anotação. Percorra as datas arrastando na horizontal ou com as setas do teclado; tocar abre o dia.",
+  "menstrualNoRecordDay": "sem registro",
+  "menstrualHasRecordDay": "com registro"
 }
