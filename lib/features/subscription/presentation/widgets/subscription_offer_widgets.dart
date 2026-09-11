@@ -164,6 +164,13 @@ class CatHeroArt extends StatelessWidget {
                 // O Image só embrulha o semanticLabel no caminho que dá
                 // certo; no erro ele devolve o que o builder retornar, cru.
                 // Sem este Semantics o leitor de tela perderia o gato.
+                //
+                // `container: true` é o que o próprio Image faz quando tem
+                // semanticLabel. Sem ele o rótulo não vira nó próprio: é
+                // absorvido pelo nó do ancestral e sai grudado nos textos
+                // da oferta, num anúncio só. Com ele o gato continua sendo
+                // uma imagem à parte, como no caminho feliz.
+                container: true,
                 image: true,
                 label: AppLocalizations.of(context).premiumCatSemantic,
                 child: Center(

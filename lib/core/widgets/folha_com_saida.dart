@@ -5,17 +5,18 @@ import '../theme/grimoire_colors.dart';
 
 /// Abre uma folha (bottom sheet) que a pessoa consegue FECHAR.
 ///
-/// No navegador do celular — onde a dona testa — arrastar a folha para baixo
-/// não se anuncia e tocar fora não tem afordância nenhuma. Uma folha cuja
-/// única saída é o gesto é, na prática, uma folha sem saída.
+/// `enableDrag` e `isDismissible` já eram `true` por padrão nestas folhas, ou
+/// seja: arrastar e tocar fora sempre fecharam. O que faltava era o ANÚNCIO.
+/// No navegador do celular — onde a dona testa — nenhum dos dois gestos se
+/// oferece, e uma folha cuja única saída é gesto invisível é, para quem olha,
+/// uma folha sem saída.
 ///
-/// Por isso toda folha aberta por aqui nasce com a alça de arrasto DE VERDADE
-/// (a do Material, que arrasta mesmo) e as telas põem lá dentro um
-/// [BotaoFecharFolha] visível. O que estas telas tinham antes era uma alça
-/// PINTADA à mão: um retângulo de 40x4 prometendo um gesto que não existia.
-///
-/// `enableDrag` e `isDismissible` ficam no padrão do Material (ambos `true`) —
-/// o gesto e o toque fora continuam funcionando; o que faltava era o anúncio.
+/// O que estas telas tinham era uma alça PINTADA à mão: um retângulo de 40x4
+/// desenhado DENTRO do conteúdo, sem alvo de toque, sem realce e sem semântica
+/// — decoração que parecia afordância. A alça do Material que entra aqui fica
+/// FORA da área rolável, tem alvo de 48x48 e rótulo de acessibilidade; e as
+/// telas ainda põem lá dentro um [BotaoFecharFolha] visível, porque botão se
+/// vê e gesto não.
 Future<T?> mostrarFolhaComSaida<T>({
   required BuildContext context,
   required WidgetBuilder builder,

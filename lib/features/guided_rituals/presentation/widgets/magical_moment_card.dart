@@ -103,9 +103,10 @@ class MagicalMomentCard extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final locale = Localizations.localeOf(context).toString();
 
-    // Guia longo: a pessoa rola até o fim e, lá embaixo, precisa voltar. A
-    // alça pintada que ficava aqui não arrastava nada; agora a alça é a do
-    // Material e o X anda junto do título, visível o tempo todo.
+    // Guia longo: a pessoa rola até o fim e, lá embaixo, precisa voltar. O
+    // retângulo pintado que ficava aqui era decoração dentro do conteúdo;
+    // agora a alça é a do Material e fica FIXA no topo, fora da rolagem. O X
+    // anda junto do título (rola com ele), e é a saída que se lê como botão.
     mostrarFolhaComSaida<void>(
       context: context,
       isScrollControlled: true,

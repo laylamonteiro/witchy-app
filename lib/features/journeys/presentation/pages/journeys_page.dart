@@ -344,9 +344,10 @@ class _JourneysPageState extends State<JourneysPage> {
 
   void _showLevelsSheet() {
     // O fundo e o canto arredondado passaram para a folha em si (antes eram
-    // de um Container interno, com o fundo do modal transparente) para que a
-    // alça de arrasto do Material — a que arrasta de verdade — caia DENTRO
-    // da superfície, e não flutuando sobre o escurecido.
+    // de um Container interno, com o fundo do modal transparente) porque a
+    // alça do Material é desenhada pela própria folha: com o modal
+    // transparente ela ficaria flutuando sobre o escurecido, fora da
+    // superfície. O X rola junto com a lista; quem fica fixo no topo é a alça.
     mostrarFolhaComSaida<void>(
       context: context,
       isScrollControlled: true,
@@ -672,9 +673,10 @@ class _JourneysPageState extends State<JourneysPage> {
 
   void _showJourneyDetails(JourneyModel journey) {
     // O fundo e o canto arredondado passaram para a folha em si (antes eram
-    // de um Container interno, com o modal transparente) para que a alça de
-    // arrasto do Material — a que arrasta de verdade — caia DENTRO da
-    // superfície, e não flutuando sobre o escurecido.
+    // de um Container interno, com o modal transparente) porque a alça do
+    // Material é desenhada pela própria folha: com o modal transparente ela
+    // ficaria flutuando sobre o escurecido, fora da superfície. O X rola junto
+    // com a lista; quem fica fixo no topo é a alça.
     mostrarFolhaComSaida<void>(
       context: context,
       isScrollControlled: true,

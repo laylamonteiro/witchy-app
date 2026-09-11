@@ -472,9 +472,10 @@ class BirthChartViewPage extends StatelessWidget {
 
   void _showExplanationDialog(
       BuildContext context, String title, Widget content) {
-    // O detalhe do mapa é leitura longa: a saída precisa estar à vista sem
-    // rolar de volta. A alça agora é a do Material (arrasta de verdade) e o X
-    // fica ao lado do título — no navegador, tocar fora não se oferece.
+    // O detalhe do mapa é leitura longa e precisa de saída anunciada: a alça
+    // do Material fica FIXA no topo (fora da rolagem), e o X ao lado do título
+    // é a saída que se lê como botão — no navegador, nem o arrasto nem o toque
+    // fora se oferecem.
     mostrarFolhaComSaida<void>(
       context: context,
       isScrollControlled: true,

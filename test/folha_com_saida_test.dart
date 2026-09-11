@@ -8,10 +8,12 @@ import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 /// Folhas sem saída.
 ///
 /// A dona testa no navegador do celular, onde arrastar a folha para baixo não
-/// se anuncia e tocar fora não se oferece. Cinco folhas grandes desenhavam uma
-/// alça de 40x4 PINTADA à mão — decoração pura, que não arrastava nada — e não
-/// tinham nenhum botão de sair. A pior delas era o portão do captcha: quem não
-/// conseguisse resolver o desafio ficava presa no login, sem porta.
+/// se anuncia e tocar fora não se oferece. Os dois gestos FUNCIONAVAM (o
+/// padrão do Material já traz `enableDrag` e `isDismissible`); o que faltava
+/// era dizer isso a quem olha. Cinco folhas grandes desenhavam uma alça de
+/// 40x4 PINTADA à mão — retângulo dentro do conteúdo, sem alvo de toque nem
+/// semântica — e nenhuma tinha botão de sair. A pior delas era o portão do
+/// captcha: quem não conseguisse resolver o desafio não via nenhuma porta.
 ///
 /// A primeira metade destes testes olha o comportamento do
 /// [mostrarFolhaComSaida]; a segunda é uma catraca de código-fonte, para que a
@@ -47,7 +49,8 @@ void main() {
 
       final folha = tester.widget<BottomSheet>(find.byType(BottomSheet));
       expect(folha.showDragHandle, isTrue,
-          reason: 'sem isto a alça volta a ser desenho, e o gesto some');
+          reason: 'sem isto a folha ainda arrasta, mas não diz a ninguém '
+              'que arrasta — que era o defeito');
       expect(folha.enableDrag, isTrue,
           reason: 'a alça só significa alguma coisa se a folha arrastar');
     });
@@ -104,6 +107,21 @@ void main() {
           'o guia completo do Momento Mágico',
       'lib/features/astrology/presentation/pages/birth_chart_view_page.dart':
           'o detalhe do mapa natal',
+      'lib/features/encyclopedia/presentation/widgets/nature_guide_launcher.dart':
+          'a escolha de categoria do Guia da Natureza',
+    };
+
+    // As folhas que pintam o PRÓPRIO cartão (fundo transparente no modal).
+    // Nelas a alça do Material não serve — flutuaria sobre o escurecido, fora
+    // do cartão —, então a saída é só o botão. Por isso o
+    // `showModalBottomSheet` cru continua legítimo aqui.
+    const cartoesProprios = <String, String>{
+      'lib/features/auth/presentation/widgets/usage_limit_widget.dart':
+          'a oferta de Premium ao bater o limite',
+      'lib/features/auth/presentation/widgets/profile_avatar_picker.dart':
+          'a escolha de foto do perfil',
+      'lib/core/sharing/share_card_sheet.dart':
+          'o cartão de compartilhar',
     };
 
     // A alça pintada: um retângulo de 40x4 prometendo um gesto que não
@@ -118,14 +136,28 @@ void main() {
         final fonte = arquivo.readAsStringSync();
 
         expect(alcaPintada.hasMatch(fonte), isFalse,
-            reason: '$caminho voltou a desenhar a alça à mão — ela não '
-                'arrasta nada, só finge');
+            reason: '$caminho voltou a desenhar a alça à mão — retângulo sem '
+                'alvo de toque nem semântica, que só PARECE afordância');
         expect(fonte.contains('showModalBottomSheet('), isFalse,
             reason: '$caminho abriu folha sem passar pelo '
                 'mostrarFolhaComSaida, e aí a alça de arrasto some');
         expect(fonte.contains('BotaoFecharFolha'), isTrue,
             reason: '$caminho ficou sem botão de sair — no navegador, tocar '
                 'fora não se anuncia');
+      });
+    });
+
+    cartoesProprios.forEach((caminho, tela) {
+      test('$tela tem saída de verdade', () {
+        final arquivo = File(caminho);
+        expect(arquivo.existsSync(), isTrue, reason: '$caminho não existe');
+
+        final fonte = arquivo.readAsStringSync();
+
+        expect(alcaPintada.hasMatch(fonte), isFalse,
+            reason: '$caminho voltou a desenhar a alça à mão');
+        expect(fonte.contains('BotaoFecharFolha'), isTrue,
+            reason: '$caminho ficou sem botão de sair');
       });
     });
   });

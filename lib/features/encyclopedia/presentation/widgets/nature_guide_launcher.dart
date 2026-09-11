@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
+import 'package:grimorio_de_bolso/core/widgets/folha_com_saida.dart';
 
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../data/models/user_entry_model.dart';
@@ -15,30 +16,31 @@ import '../pages/add_entry_page.dart';
 /// oficial (roda + páginas completas), sem identificação por foto.
 Future<void> openNatureGuide(BuildContext context) async {
   final l10n = AppLocalizations.of(context);
-  final category = await showModalBottomSheet<UserEntryCategory>(
+  final category = await mostrarFolhaComSaida<UserEntryCategory>(
     context: context,
-    backgroundColor: context.gc.surface,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-    ),
     builder: (sheetContext) => SafeArea(
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 20),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: sheetContext.gc.surfaceBorder,
-                borderRadius: BorderRadius.circular(2),
+            // A alça pintada saiu: quem anuncia o gesto agora é a do
+            // Material, e quem dá a saída visível é o X.
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              child: Row(
+                children: [
+                  const SizedBox(width: 40),
+                  Expanded(
+                    child: Text(
+                      l10n.toolNatureGuideSheetTitle,
+                      textAlign: TextAlign.center,
+                      style: Theme.of(sheetContext).textTheme.titleLarge,
+                    ),
+                  ),
+                  const BotaoFecharFolha(),
+                ],
               ),
-            ),
-            const SizedBox(height: 20),
-            Text(
-              l10n.toolNatureGuideSheetTitle,
-              style: Theme.of(sheetContext).textTheme.titleLarge,
             ),
             const SizedBox(height: 12),
             _categoryTile(

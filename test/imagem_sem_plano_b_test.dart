@@ -39,7 +39,13 @@ void main() {
     // até o que o fecha — é o que permite perguntar se ESTA imagem tem
     // reserva, em vez de contar `errorBuilder` soltos no arquivo (um
     // comentário citando o nome já inflaria a conta).
-    String argumentosDe(String fonte, int abertura) {
+    //
+    // Nulo quando a contagem não fecha: o casamento não distingue código de
+    // string nem de comentário, então um parêntese solto dentro deles
+    // desalinha tudo. Devolver o resto do arquivo nesse caso seria PIOR do
+    // que falhar — o `errorBuilder` de qualquer imagem seguinte faria esta
+    // aqui passar, e a varredura viraria um carimbo que não vigia nada.
+    String? argumentosDe(String fonte, int abertura) {
       var profundidade = 0;
       for (var i = abertura; i < fonte.length; i++) {
         if (fonte[i] == '(') profundidade++;
@@ -48,7 +54,7 @@ void main() {
           if (profundidade == 0) return fonte.substring(abertura, i + 1);
         }
       }
-      return fonte.substring(abertura);
+      return null;
     }
 
     test('toda imagem das telas de assinatura e do cartão tem reserva', () {
@@ -91,6 +97,14 @@ void main() {
             final linha = '\n'.allMatches(fonte.substring(0, achou)).length + 1;
             expect(
               argumentos,
+              isNotNull,
+              reason: '${arquivo.path}:$linha — os parênteses desta chamada '
+                  'não fecham para a varredura (parêntese solto numa string '
+                  'ou num comentário dentro dela?). Sem casar, este teste '
+                  'não consegue afirmar nada sobre a imagem.',
+            );
+            expect(
+              argumentos!,
               contains('errorBuilder'),
               reason: '${arquivo.path}:$linha — $construtor sem errorBuilder: '
                   'na web este asset pode simplesmente não chegar.',

@@ -265,9 +265,10 @@ class WheelOfYearPage extends StatelessWidget {
     Sabbat sabbat,
     DateFormat dateFormat,
   ) {
-    // A folha abre pelo [mostrarFolhaComSaida]: a alça de arrasto é a de
-    // verdade (a pintada à mão não arrastava nada) e o X é a saída visível —
-    // no navegador do celular, tocar fora não se anuncia.
+    // A folha abre pelo [mostrarFolhaComSaida]: no lugar do retângulo pintado
+    // à mão (decoração dentro do conteúdo, sem alvo nem rótulo) entra a alça
+    // do Material, fixa no topo, e o X vira a saída visível — no navegador do
+    // celular, nem o arrasto nem o toque fora se anunciam.
     mostrarFolhaComSaida<void>(
       context: context,
       builder: (sheetContext) => Padding(
