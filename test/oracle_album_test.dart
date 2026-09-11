@@ -41,6 +41,9 @@ void main() {
     user = _AuthFixture().currentUser.id;
   });
 
+  /// Semeia uma leitura. Dentro de um teste de widget o banco só anda no
+  /// tempo real, então a chamada precisa de `runAsync` — senão a gravação
+  /// nunca completa e o teste espera o limite inteiro.
   Future<void> seedReading(String id, List<int> cardIds, DateTime when) async {
     final db = await DatabaseHelper.instance.database;
     await db.insert('oracle_readings', {
@@ -119,7 +122,7 @@ void main() {
 
   testWidgets('the album opens the cards already met and keeps the others closed',
       (tester) async {
-    await seedReading('r1', [1, 2], DateTime(2026, 3, 1));
+    await tester.runAsync(() => seedReading('r1', [1, 2], DateTime(2026, 3, 1)));
     await show(tester);
     final total = oracleCardsData.length;
     expect(find.text('2 of $total cards discovered'), findsOneWidget);

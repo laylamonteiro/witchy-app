@@ -217,10 +217,14 @@ void main() {
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
-    final db = await DatabaseHelper.instance.database;
-    await db.insert('advisor_consultations', {
-      'id': 'stale', 'user_id': 'local_user', 'question': 'Old question?', 'answer': null,
-      'status': 'pending', 'writing_id': null, 'created_at': 1, 'updated_at': 1,
+    // O banco é trabalho real: dentro do tempo falso do teste a gravação
+    // nunca completaria, e o teste esperaria o limite inteiro.
+    await tester.runAsync(() async {
+      final db = await DatabaseHelper.instance.database;
+      await db.insert('advisor_consultations', {
+        'id': 'stale', 'user_id': 'local_user', 'question': 'Old question?', 'answer': null,
+        'status': 'pending', 'writing_id': null, 'created_at': 1, 'updated_at': 1,
+      });
     });
     await show(tester);
     final owner = (await rows(tester, 'advisor_consultations')).single['user_id'];
