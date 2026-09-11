@@ -151,6 +151,9 @@ class _MenstrualCyclePageState extends State<MenstrualCyclePage> {
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
+      // A alça de arrasto é o segundo afordance de saída: no navegador,
+      // arrastar a folha para baixo é invisível sem ela.
+      showDragHandle: true,
       backgroundColor: context.gc.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
@@ -172,6 +175,8 @@ class _MenstrualCyclePageState extends State<MenstrualCyclePage> {
             // que a gravação local terminou.
             if (ok) Navigator.of(sheetContext).pop();
           },
+          // Sair sem gravar: nada foi escrito até aqui, então fechar basta.
+          onCancel: () => Navigator.of(sheetContext).pop(),
           onDelete: existing == null
               ? null
               : () async {

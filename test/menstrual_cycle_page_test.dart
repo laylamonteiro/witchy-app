@@ -310,6 +310,71 @@ void main() {
     expect(find.byKey(const ValueKey('menstrual-premium-invite')), findsOneWidget);
   });
 
+  testWidgets('cancelling closes the sheet and writes nothing', (tester) async {
+    SharedPreferences.setMockInitialValues(
+        {'menstrual_consent_record_local_user': true});
+    await show(tester);
+    await tester.tap(find.byKey(const ValueKey('menstrual-record-today')));
+    await openForm(tester);
+
+    await tester.ensureVisible(find.byKey(const ValueKey('menstrual-note')));
+    await tester.pump();
+    await tester.enterText(
+        find.byKey(const ValueKey('menstrual-note')), 'never meant to keep');
+    await tester.pump();
+    await pressIn(tester, 'menstrual-cancel');
+    await until(tester, () => find.byType(MenstrualRecordForm).evaluate().isEmpty,
+        'the form to close without writing');
+
+    final saved = await tester.runAsync(() =>
+        MenstrualCycleRepository().dayOf(userId: 'local_user', day: today));
+    expect(saved, isNull, reason: 'Leaving without saving leaves no record');
+    expect(find.text('No record today'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('cancelling never touches what was already saved', (tester) async {
+    SharedPreferences.setMockInitialValues(
+        {'menstrual_consent_record_local_user': true});
+    await show(tester);
+    await tester.runAsync(() => MenstrualCycleRepository().save(MenstrualDay(
+          userId: 'local_user',
+          day: today,
+          mark: MenstrualMark.start,
+          note: 'kept',
+        )));
+
+    await tester.tap(find.byKey(const ValueKey('menstrual-record-today')));
+    await openForm(tester);
+    await pressIn(tester, 'menstrual-mark-spotting');
+    await tester.ensureVisible(find.byKey(const ValueKey('menstrual-note')));
+    await tester.pump();
+    await tester.enterText(
+        find.byKey(const ValueKey('menstrual-note')), 'a second thought');
+    await tester.pump();
+    await pressIn(tester, 'menstrual-cancel');
+    await until(tester, () => find.byType(MenstrualRecordForm).evaluate().isEmpty,
+        'the form to close');
+
+    final saved = await tester.runAsync(() =>
+        MenstrualCycleRepository().dayOf(userId: 'local_user', day: today));
+    expect(saved!.mark, MenstrualMark.start);
+    expect(saved.note, 'kept', reason: 'A discarded edit is a discarded edit');
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('the X in the header is a way out too', (tester) async {
+    SharedPreferences.setMockInitialValues(
+        {'menstrual_consent_record_local_user': true});
+    await show(tester);
+    await tester.tap(find.byKey(const ValueKey('menstrual-record-today')));
+    await openForm(tester);
+    await pressIn(tester, 'menstrual-close');
+    await until(tester, () => find.byType(MenstrualRecordForm).evaluate().isEmpty,
+        'the form to close by the X');
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('the card is not offered in the masculine', (tester) async {
     Future<void> pumpCard(Gender gender) async {
       await tester.pumpWidget(ChangeNotifierProvider<AuthProvider>(
@@ -329,6 +394,9 @@ void main() {
 
     await pumpCard(Gender.feminine);
     expect(find.byKey(const ValueKey('menstrual-card')), findsOneWidget);
+    expect(find.text('🩸'), findsOneWidget,
+        reason: 'The cycle card wears the drop, not the moon');
+    expect(find.text('🌘'), findsNothing);
     await pumpCard(Gender.neutral);
     expect(find.byKey(const ValueKey('menstrual-card')), findsOneWidget);
     await pumpCard(Gender.masculine);

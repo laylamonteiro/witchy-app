@@ -41,7 +41,11 @@ class MenstrualCycleCard extends StatelessWidget {
       ),
       child: Row(
         children: [
-          const Text('🌘', style: TextStyle(fontSize: 32)),
+          // A gota, não a lua: o card é do ciclo dela, e a lua já tem casa
+          // em outros três cartões da mesma aba. Fora da semântica porque o
+          // título logo ao lado já diz "Ciclo Menstrual" — anunciar "gota de
+          // sangue" antes dele só atrapalha quem ouve a tela.
+          const ExcludeSemantics(child: Text('🩸', style: TextStyle(fontSize: 32))),
           const SizedBox(width: 16),
           Expanded(
             child: Column(

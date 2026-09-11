@@ -9,8 +9,12 @@ import '../../domain/menstrual_day.dart';
 /// A escolha é explícita: começou, dia de fluxo, escape, terminou ou só uma
 /// anotação. Nada é presumido a partir de outra coisa — marcar escape não
 /// escreve um começo. Intensidade, sintomas, humor e nota são opcionais, e a
-/// data em edição fica visível ao lado de salvar, inclusive quando é um dia
-/// retroativo.
+/// data em edição fica visível logo acima das ações, inclusive quando é um
+/// dia retroativo.
+///
+/// A saída sem gravar tem botão, e não só o gesto: no navegador não há alça
+/// de arrasto nem toque fora que se anuncie, então uma folha sem "Cancelar"
+/// é uma folha sem saída visível.
 class MenstrualRecordForm extends StatefulWidget {
   const MenstrualRecordForm({
     super.key,
@@ -19,6 +23,7 @@ class MenstrualRecordForm extends StatefulWidget {
     required this.onSubmit,
     this.existing,
     this.onDelete,
+    this.onCancel,
     this.saving = false,
     this.error,
   });
@@ -28,6 +33,11 @@ class MenstrualRecordForm extends StatefulWidget {
   final MenstrualDay? existing;
   final void Function(MenstrualDay day) onSubmit;
   final VoidCallback? onDelete;
+
+  /// A saída sem gravar. Quando nula, o formulário fecha a própria rota —
+  /// o botão existe sempre, porque é a única saída anunciada da folha.
+  final VoidCallback? onCancel;
+
   final bool saving;
 
   /// A falha da última tentativa. O formulário continua aqui, com o que foi
@@ -104,6 +114,19 @@ class _MenstrualRecordFormState extends State<MenstrualRecordForm> {
     ));
   }
 
+  /// Sair sem gravar. Descartar já era o que acontecia ao tocar fora da
+  /// folha; aqui só ganha nome e alvo. Nada foi escrito no repositório até o
+  /// "Salvar", então não há o que desfazer.
+  void _cancel() {
+    if (widget.saving) return;
+    final onCancel = widget.onCancel;
+    if (onCancel != null) {
+      onCancel();
+      return;
+    }
+    Navigator.maybePop(context);
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -115,12 +138,23 @@ class _MenstrualRecordFormState extends State<MenstrualRecordForm> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(l10n.menstrualSheetTitle,
-              style: Theme.of(context)
-                  .textTheme
-                  .titleMedium
-                  ?.copyWith(color: colors.lilac, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: Text(l10n.menstrualSheetTitle,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: colors.lilac, fontWeight: FontWeight.bold)),
+              ),
+              IconButton(
+                key: const ValueKey('menstrual-close'),
+                onPressed: widget.saving ? null : _cancel,
+                icon: const Icon(Icons.close, size: 20),
+                tooltip: l10n.commonClose,
+                color: colors.textSecondary,
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
           Wrap(
             spacing: 8,
             runSpacing: 8,
@@ -199,18 +233,26 @@ class _MenstrualRecordFormState extends State<MenstrualRecordForm> {
             ),
           ],
           const SizedBox(height: 20),
-          // A data em edição fica ao lado de salvar: um dia retroativo nunca
-          // é salvo por engano achando que é hoje.
+          // A data em edição fica colada nas ações: um dia retroativo nunca
+          // é salvo por engano achando que é hoje. Em linha própria porque,
+          // numa tela estreita, data + Cancelar + Salvar se espremeriam.
+          Text(
+            l10n.menstrualEditingDay(_readable(widget.day)),
+            key: const ValueKey('menstrual-editing-day'),
+            style: TextStyle(color: colors.textSecondary, fontSize: 12),
+          ),
+          const SizedBox(height: 10),
           Row(
+            mainAxisAlignment: MainAxisAlignment.end,
             children: [
-              Expanded(
-                child: Text(
-                  l10n.menstrualEditingDay(_readable(widget.day)),
-                  key: const ValueKey('menstrual-editing-day'),
-                  style: TextStyle(color: colors.textSecondary, fontSize: 12),
-                ),
+              TextButton(
+                key: const ValueKey('menstrual-cancel'),
+                onPressed: widget.saving ? null : _cancel,
+                style: TextButton.styleFrom(
+                    foregroundColor: colors.textSecondary),
+                child: Text(l10n.commonCancel),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 8),
               ElevatedButton(
                 key: const ValueKey('menstrual-save'),
                 onPressed: widget.saving ? null : _submit,
