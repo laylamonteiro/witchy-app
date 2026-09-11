@@ -278,6 +278,45 @@ Entregue em 10/09.
   falha → retry sem anúncio, sucesso → conclusão anunciada uma vez;
   desmarcar/marcar não regrava).
 
+## Sigilos (P10)
+
+Entregue em 10/09.
+
+- **Traçado com progresso:** `SigilTrace` mede o percurso uma vez por
+  intenção/tamanho e o reaproveita; `SigilDrawingPainter` ganhou `progress` e
+  revela só um prefixo do caminho, com a ponta acesa enquanto anda e os pontos
+  aparecendo à medida que são percorridos. `progress` igual a 1 é sempre o
+  símbolo inteiro.
+- **Mesmo resultado em qualquer velocidade:** a animação normal, o movimento
+  reduzido (símbolo pronto no primeiro quadro) e a antecipação por toque
+  terminam no mesmo desenho, porque todos usam os pontos que a regra da roda
+  já calculava.
+- **Reorganização das letras:** embaralhar e restaurar interpolam do arranjo
+  anterior para o novo — cada letra desliza pelo caminho mais curto do seu
+  próprio anel (`WitchWheelPainter.angleFor`) e o traço acompanha a geometria
+  interpolada. Terminada a viagem, o arranjo antigo é solto e o percurso
+  medido volta a ser reaproveitado.
+- **Intenção → letras:** a etapa 2 mostra as letras normalizadas, dissipa as
+  repetidas e deixa as restantes se aproximarem pelo próprio layout. Quem
+  decide o que fica continua sendo `SigilWheel.textToSigilSequence`;
+  `normalizedLetters` e `keptIndexes` só descrevem a regra para a tela.
+- **Exportação sempre completa:** salvar na galeria e guardar no Diário de
+  Desejos passam por `_settleForCapture()`, que leva o traço ao fim e espera
+  um quadro antes de ler os pixels — nunca uma captura pela metade.
+- **Quadro responsivo:** o desenho era fixo em 360 e estourava o cartão num
+  telefone de 390dp; agora ele acompanha a largura disponível, e a roda e os
+  pontos escalam juntos porque saem do tamanho real do canvas.
+- **Salvamento:** “Finalizar” espera a gravação do sigilo e só então fecha a
+  tela, registrando a ação pelo `ActionRecorder` (`ActionOrigin.sigil`); a
+  confirmação aparece no receptor acima do roteador, mesmo com a tela já
+  fechada. Guardar no Diário de Desejos confere se o desejo foi gravado,
+  avisa quando não foi e registra a criação.
+- **Verificação:** `sigil_trace_test.dart` (percurso medido e reaproveitado,
+  prefixo, símbolo final estável, interpolação entre arranjos, intenção de
+  uma letra, regra de repetição intacta) e `sigil_drawing_page_test.dart`
+  (traçado até o fim, movimento reduzido, antecipação por toque, viagem das
+  letras, gravação antes de sair, letras da etapa 2).
+
 ## Dados e compatibilidade
 
 O schema local sobe de 23 para 24 (sessões e ledger), 25 (descobertas do
@@ -340,6 +379,13 @@ usam sessões.
 - `card_selection_surface_test.dart`: toque, navegação horizontal sem sorteio,
   retirada/cancelamento, extremos por teclado, escolha travada, semântica,
   fonte ampliada e movimento reduzido.
+- `sigil_trace_test.dart` e `sigil_drawing_page_test.dart`: percurso do
+  sigilo, estado final para exportação, interpolação do embaralhamento e
+  gravação antes de fechar a tela.
+- Os testes de tela que dirigem SQLite dentro do tempo falso têm limite por
+  teste (`@Timeout`): uma falha no meio de uma gravação deixa o cadeado do
+  SQLite preso para os testes seguintes do mesmo arquivo, e sem o limite isso
+  vira dezenas de minutos de CI em vez de uma falha legível.
 - Gates locais disponíveis: paridade ARB, órfãs ARB, scanner de português e
   `git diff --check`. Analyze e testes Flutter rodam no CI com o SDK pinado
   pelo repositório; o ambiente de edição não tem Flutter instalado.
@@ -355,7 +401,7 @@ pendentes. Os testes automatizados não substituem essa avaliação.
 
 ## Continuação do lote
 
-1. P10–P14: sigilos, álbum do Oráculo/quiz/arquétipos, fluxos com foto, numerologia/pêndulo e navegação.
+1. P11–P14: álbum do Oráculo/quiz/arquétipos, fluxos com foto, numerologia/pêndulo e navegação.
 2. P16/P17: registro menstrual manual Free; dados derivados e análises Premium.
 3. P18: registros menstruais autorizados entram na análise completa do ciclo.
 4. P15: integração e validação final do lote.

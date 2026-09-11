@@ -2123,5 +2123,8 @@
   },
   "feedbackOriginDesireManifested": "Deseo cumplido ✦ sellado",
   "feedbackOriginDesireReleased": "Deseo liberado al viento",
-  "guidedRitualLogFailed": "No se pudo registrar la conclusión del ritual. Tus pasos se conservan."
+  "guidedRitualLogFailed": "No se pudo registrar la conclusión del ritual. Tus pasos se conservan.",
+  "sigilDrawingSemantics": "Dibujo de tu sigilo",
+  "sigilTraceHint": "Toca para completar el trazo",
+  "sigilTraceReplay": "Rehacer el trazo"
 }

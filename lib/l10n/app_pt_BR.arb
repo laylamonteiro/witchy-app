@@ -2123,5 +2123,8 @@
   },
   "feedbackOriginDesireManifested": "Desejo realizado ✦ selo posto",
   "feedbackOriginDesireReleased": "Desejo liberado ao vento",
-  "guidedRitualLogFailed": "Não foi possível registrar a conclusão do ritual. Seus passos estão preservados."
+  "guidedRitualLogFailed": "Não foi possível registrar a conclusão do ritual. Seus passos estão preservados.",
+  "sigilDrawingSemantics": "Desenho do seu sigilo",
+  "sigilTraceHint": "Toque para completar o traçado",
+  "sigilTraceReplay": "Refazer o traçado"
 }

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import '../core/theme/app_theme.dart';
 import '../core/theme/grimoire_colors.dart';
+import '../core/theme/grimoire_motion.dart';
 import '../core/widgets/motion/tool_scene_frame.dart';
 import '../features/divination/data/data_sources/oracle_cards_data.dart';
 import '../features/divination/presentation/oracle_art_registry.dart';
@@ -11,6 +12,10 @@ import '../features/divination/presentation/widgets/oracle_card_face.dart';
 import '../features/runes/data/data_sources/runes_data.dart';
 import '../features/runes/presentation/widgets/rune_selection_surface.dart';
 import '../features/runes/presentation/widgets/rune_stone_view.dart';
+import '../features/sigils/data/models/sigil_model.dart';
+import '../features/sigils/presentation/widgets/sigil_drawing_painter.dart';
+import '../features/sigils/presentation/widgets/sigil_letters_transition.dart';
+import '../features/sigils/presentation/widgets/witch_wheel_painter.dart';
 import '../features/tarot/data/data_sources/tarot_cards_data.dart';
 import '../features/tarot/presentation/widgets/tarot_card_view.dart';
 import '../l10n/generated/app_localizations.dart';
@@ -101,6 +106,41 @@ class _GalleryState extends State<_Gallery> {
           Wrap(spacing: 8, runSpacing: 8, alignment: WrapAlignment.center, children: [
             for (final card in oracleCardsData.take(8)) OracleCardFace(card: card, width: 64),
           ]),
+          const SizedBox(height: 32),
+          // O sigilo: as letras repetidas se dissipam e o traço percorre os
+          // pontos até o símbolo assentar. O botão de reiniciar repete.
+          SigilLettersTransition(
+            key: ValueKey('sigil-letters-$_generation'),
+            intention: 'PROTECAO',
+            letters: Sigil.fromIntention('PROTECAO').processedLetters,
+          ),
+          const SizedBox(height: 16),
+          SizedBox(
+            width: 260,
+            height: 260,
+            child: TweenAnimationBuilder<double>(
+              key: ValueKey('sigil-trace-$_generation'),
+              tween: Tween<double>(begin: _reduced ? 1 : 0, end: 1),
+              duration: _reduced ? Duration.zero : GrimoireMotion.celebration,
+              curve: Curves.easeInOut,
+              builder: (context, progress, _) => CustomPaint(
+                size: const Size(260, 260),
+                painter: WitchWheelPainter(
+                  borderColor: context.gc.surfaceBorder,
+                  starColor: context.gc.starYellow,
+                  accentColor: context.gc.lilac,
+                  highlightedLetters:
+                      Sigil.fromIntention('PROTECAO').processedLetters.split('').toSet(),
+                ),
+                foregroundPainter: SigilDrawingPainter(
+                  intention: 'PROTECAO',
+                  lineColor: context.gc.starYellow,
+                  pointColor: context.gc.lilac,
+                  progress: progress,
+                ),
+              ),
+            ),
+          ),
         ]),
       )),
     ),

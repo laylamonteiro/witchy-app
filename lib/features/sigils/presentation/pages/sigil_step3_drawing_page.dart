@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:ui' as ui;
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -13,6 +14,7 @@ import '../../../../core/database/database_helper.dart';
 import '../../../../core/services/data_sync_service.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
+import '../../../../core/theme/grimoire_motion.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/widgets/magical_button.dart';
 import '../../data/models/sigil_model.dart';
@@ -23,6 +25,8 @@ import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../auth/presentation/widgets/premium_blur_widget.dart';
 import '../../../diary/data/models/desire_model.dart';
 import '../../../diary/presentation/providers/desire_provider.dart';
+import '../../../journeys/domain/action_outcome.dart';
+import '../../../journeys/domain/action_recorder.dart';
 
 /// Etapa 3: Mostrar desenho do sigilo com a Roda das Bruxas
 class SigilStep3DrawingPage extends StatefulWidget {
@@ -37,7 +41,8 @@ class SigilStep3DrawingPage extends StatefulWidget {
   State<SigilStep3DrawingPage> createState() => _SigilStep3DrawingPageState();
 }
 
-class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage> {
+class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage>
+    with TickerProviderStateMixin {
   bool _showWheel = true;
   bool _showStartEnd = true;
   bool _isShuffled = false;
@@ -47,19 +52,98 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage> {
   /// (com/sem roda, com/sem pontos).
   final GlobalKey _drawingKey = GlobalKey();
   Map<String, WheelPosition>? _shuffledPositions;
+
+  /// Arranjo de onde as letras estão saindo enquanto se reorganizam.
+  Map<String, WheelPosition>? _previousPositions;
   bool _isSaving = false;
 
   /// Estado do salvamento no Diário de Desejos (independente do "Finalizar").
   bool _isSavingToDesires = false;
   bool _savedToDesires = false;
 
+  /// O traço percorrendo os pontos da roda, uma vez.
+  late final AnimationController _trace = AnimationController(
+      vsync: this, duration: GrimoireMotion.celebration);
+
+  /// A reorganização das letras: interpola do arranjo anterior para o novo.
+  late final AnimationController _blend = AnimationController(
+      vsync: this, duration: GrimoireMotion.reveal, value: 1);
+  bool _traceStarted = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _blend.addStatusListener((status) {
+      // Terminada a viagem, só o arranjo novo importa (e volta a ser
+      // reaproveitado o percurso já medido).
+      if (status == AnimationStatus.completed && _previousPositions != null) {
+        setState(() => _previousPositions = null);
+      }
+    });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (GrimoireMotion.reduced(context)) {
+      _trace.value = 1;
+      _blend.value = 1;
+      _traceStarted = true;
+    } else if (!_traceStarted) {
+      _traceStarted = true;
+      _trace.forward();
+    }
+  }
+
+  @override
+  void dispose() {
+    _trace.dispose();
+    _blend.dispose();
+    super.dispose();
+  }
+
+  /// Antecipa: o símbolo assenta agora, no mesmo estado final de sempre.
+  void _finishTrace() {
+    if (_trace.value >= 1 && _blend.value >= 1) return;
+    // Os pintores escutam os dois controladores: mexer no valor já repinta,
+    // e o estado só muda para soltar o arranjo antigo.
+    _trace
+      ..stop()
+      ..value = 1;
+    _blend
+      ..stop()
+      ..value = 1;
+    if (_previousPositions != null) setState(() => _previousPositions = null);
+  }
+
+  /// Refaz o traçado do início. O resultado final não muda.
+  void _replayTrace() {
+    if (GrimoireMotion.reduced(context)) {
+      setState(() => _trace.value = 1);
+      return;
+    }
+    _trace.forward(from: 0);
+  }
+
+  /// Toda captura de imagem usa o símbolo inteiro: o traço vai ao fim e um
+  /// quadro é pintado antes de ler os pixels, nunca um traçado pela metade.
+  Future<void> _settleForCapture() async {
+    final settled = _trace.value >= 1 && _blend.value >= 1;
+    _finishTrace();
+    if (!settled) await WidgetsBinding.instance.endOfFrame;
+  }
+
   Future<void> _saveAndFinish() async {
     if (_isSaving) return;
     setState(() => _isSaving = true);
+    // Lido antes de qualquer await: a confirmação continua acima do roteador
+    // mesmo depois que esta tela fechar.
+    final recorder = ActionRecorder.of(context);
+    final id = const Uuid().v4();
     try {
       final now = DateTime.now().millisecondsSinceEpoch;
       final data = <String, dynamic>{
-        'id': const Uuid().v4(),
+        'id': id,
         'user_id': context.read<AuthProvider>().currentUser.id,
         'intention': widget.sigil.intention,
         'image_path': jsonEncode({
@@ -75,6 +159,8 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage> {
       final db = await DatabaseHelper.instance.database;
       await db.insert('sigils', data);
       await DataSyncService().syncItem(SyncEntity.sigils, data);
+      // Só depois da gravação: o sigilo guardado é que rende XP e marco.
+      unawaited(recorder.record(origin: ActionOrigin.sigil, entityId: id));
       if (mounted) Navigator.pop(context, true);
     } catch (e) {
       if (!mounted) return;
@@ -104,6 +190,7 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage> {
     final l10n = AppLocalizations.of(context);
     setState(() => _isExporting = true);
     try {
+      await _settleForCapture();
       final boundary = _drawingKey.currentContext?.findRenderObject()
           as RenderRepaintBoundary?;
       if (boundary == null) {
@@ -184,8 +271,14 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage> {
     // Capturado antes dos awaits: o desejo deve ser salvo MESMO que a
     // página morra no meio (use_build_context_synchronously).
     final desireProvider = context.read<DesireProvider>();
+    final recorder = ActionRecorder.of(context);
+    // Capturados antes do await: avisar de uma falha não pode depender de a
+    // tela ainda estar montada.
+    final messenger = ScaffoldMessenger.of(context);
+    final alertColor = context.gc.alert;
     setState(() => _isSavingToDesires = true);
     try {
+      await _settleForCapture();
       final boundary = _drawingKey.currentContext?.findRenderObject()
           as RenderRepaintBoundary?;
       if (boundary == null) {
@@ -211,8 +304,17 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage> {
       );
       // Persiste na hora (insere no banco e sincroniza) — não depende de
       // tocar em "Finalizar".
-      await desireProvider.addDesire(desire);
+      final saved = await desireProvider.addDesire(desire);
       if (!mounted) return;
+      if (!saved) {
+        setState(() => _isSavingToDesires = false);
+        messenger.showSnackBar(SnackBar(
+          content: Text(desireProvider.error ?? l10n.errorsGeneric),
+          backgroundColor: alertColor,
+        ));
+        return;
+      }
+      unawaited(recorder.record(origin: ActionOrigin.desire, entityId: desire.id));
       setState(() {
         _isSavingToDesires = false;
         _savedToDesires = true;
@@ -235,20 +337,33 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage> {
     }
   }
 
-  /// Embaralha as posições das letras na roda (como no "Sigilo Nada" do livro)
+  /// Embaralha as posições das letras na roda (como no "Sigilo Nada" do livro).
+  /// As letras deslizam do arranjo anterior para o novo e o traço acompanha.
   void _shuffleLetters() {
-    setState(() {
-      _isShuffled = true;
-      _shuffledPositions = SigilWheel.generateShuffledPositions();
-    });
+    _rearrange(SigilWheel.generateShuffledPositions(), shuffled: true);
   }
 
   /// Restaura as posições originais das letras
   void _resetLetters() {
+    _rearrange(null, shuffled: false);
+  }
+
+  void _rearrange(Map<String, WheelPosition>? positions, {required bool shuffled}) {
     setState(() {
-      _isShuffled = false;
-      _shuffledPositions = null;
+      _previousPositions = _shuffledPositions ?? SigilWheel.letterPositions;
+      _isShuffled = shuffled;
+      _shuffledPositions = positions;
+      // O traço já percorrido continua onde está; só a geometria viaja.
+      if (_trace.value < 1) _trace.value = 1;
     });
+    if (GrimoireMotion.reduced(context)) {
+      setState(() {
+        _blend.value = 1;
+        _previousPositions = null;
+      });
+    } else {
+      _blend.forward(from: 0);
+    }
   }
 
   @override
@@ -284,41 +399,38 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage> {
             MagicalCard(
               child: Column(
                 children: [
-                  // Desenho do sigilo
-                  RepaintBoundary(
-                    key: _drawingKey,
-                    child: Container(
-                    width: 360,
-                    height: 360,
-                    decoration: BoxDecoration(
-                      color: context.gc.background,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: CustomPaint(
-                      size: const Size(360, 360),
-                      painter: _showWheel
-                          ? WitchWheelPainter(
-                              borderColor: context.gc.surfaceBorder,
-                              starColor: context.gc.starYellow,
-                              accentColor: context.gc.lilac,
-                              showLetters: true,
-                              highlightedLetters: widget.sigil.processedLetters
-                                  .split('')
-                                  .toSet(),
-                              customPositions: _shuffledPositions,
-                            )
-                          : null,
-                      foregroundPainter: SigilDrawingPainter(
-                        lineColor: context.gc.starYellow,
-                        pointColor: context.gc.lilac,
-                        intention: widget.sigil.intention,
-                        showStartEnd: _showStartEnd,
-                        customPositions: _shuffledPositions,
-                      ),
-                    ),
+                  // Desenho do sigilo. Tocar antecipa: o símbolo assenta no
+                  // mesmo estado final, sem esperar o traço terminar.
+                  // O quadro acompanha a largura disponível: num telefone
+                  // estreito ele encolhe inteiro. A roda e os pontos são
+                  // calculados a partir do tamanho real do canvas, então o
+                  // desenho é o mesmo em qualquer tela — e a exportação
+                  // também.
+                  LayoutBuilder(
+                    builder: (context, constraints) => _drawing(
+                      context,
+                      constraints.maxWidth.isFinite
+                          ? constraints.maxWidth.clamp(0.0, 360.0).toDouble()
+                          : 360.0,
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 8),
+                  AnimatedBuilder(
+                    animation: _trace,
+                    builder: (context, _) => AnimatedOpacity(
+                      opacity: _trace.value < 1 ? 1 : 0,
+                      duration: GrimoireMotion.state,
+                      child: Text(
+                        AppLocalizations.of(context).sigilTraceHint,
+                        key: const ValueKey('sigil-trace-hint'),
+                        style: TextStyle(
+                          color: context.gc.textSecondary,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
 
                   // Legenda
                   if (_showStartEnd) ...[
@@ -429,6 +541,17 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage> {
                                 MaterialTapTargetSize.shrinkWrap,
                           ),
                           const SizedBox(width: 8),
+                          IconButton(
+                            key: const ValueKey('sigil-trace-replay'),
+                            onPressed: _replayTrace,
+                            icon: const Icon(Icons.replay, size: 20),
+                            tooltip: AppLocalizations.of(context).sigilTraceReplay,
+                            style: IconButton.styleFrom(
+                              backgroundColor: context.gc.surface,
+                              foregroundColor: context.gc.textSecondary,
+                            ),
+                          ),
+                          const SizedBox(width: 4),
                           IconButton(
                             onPressed: _shuffleLetters,
                             icon: const Icon(Icons.shuffle, size: 20),
@@ -604,6 +727,61 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage> {
           ],
         ),
       ),
+    );
+  }
+
+  /// O quadro do desenho, do tamanho que couber (até 360). A roda e os
+  /// pontos vêm do tamanho real do canvas, então o símbolo é o mesmo em
+  /// qualquer tela — e a exportação também. Tocar antecipa o traçado.
+  Widget _drawing(BuildContext context, double side) {
+    return GestureDetector(
+    onTap: _finishTrace,
+    child: Semantics(
+      label: AppLocalizations.of(context).sigilDrawingSemantics,
+      child: RepaintBoundary(
+        key: _drawingKey,
+        child: Container(
+          width: side,
+          height: side,
+          decoration: BoxDecoration(
+            color: context.gc.background,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: AnimatedBuilder(
+            animation: Listenable.merge([_trace, _blend]),
+            builder: (context, _) => CustomPaint(
+              key: const ValueKey('sigil-drawing'),
+              size: Size(side, side),
+              painter: _showWheel
+                  ? WitchWheelPainter(
+                      borderColor: context.gc.surfaceBorder,
+                      starColor: context.gc.starYellow,
+                      accentColor: context.gc.lilac,
+                      showLetters: true,
+                      highlightedLetters: widget
+                          .sigil.processedLetters
+                          .split('')
+                          .toSet(),
+                      customPositions: _shuffledPositions,
+                      previousPositions: _previousPositions,
+                      blend: _blend.value,
+                    )
+                  : null,
+              foregroundPainter: SigilDrawingPainter(
+                lineColor: context.gc.starYellow,
+                pointColor: context.gc.lilac,
+                intention: widget.sigil.intention,
+                showStartEnd: _showStartEnd,
+                customPositions: _shuffledPositions,
+                previousPositions: _previousPositions,
+                blend: _blend.value,
+                progress: _trace.value,
+              ),
+            ),
+          ),
+        ),
+      ),
+    ),
     );
   }
 
