@@ -140,6 +140,50 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('premium sees what the history shows; free sees none of it',
+      (tester) async {
+    SharedPreferences.setMockInitialValues(
+        {'menstrual_consent_record_local_user': true});
+    // Four beginnings, twenty-eight days apart: three complete intervals.
+    final repo = MenstrualCycleRepository();
+    await tester.runAsync(() async {
+      for (final start in [
+        DateTime(2025, 12, 1),
+        DateTime(2025, 12, 29),
+        DateTime(2026, 1, 26),
+        DateTime(2026, 2, 23),
+      ]) {
+        await repo.save(MenstrualDay(
+            userId: 'local_user', day: start, mark: MenstrualMark.start));
+      }
+    });
+
+    await show(tester);
+    expect(find.byKey(const ValueKey('menstrual-derived')), findsNothing,
+        reason: 'Nothing derived is even built on the free plan');
+    expect(find.byKey(const ValueKey('menstrual-premium-invite')), findsOneWidget);
+
+    await show(tester, premium: true);
+    await until(
+        tester,
+        () => find.byKey(const ValueKey('menstrual-derived')).evaluate().isNotEmpty,
+        'the derived card');
+    expect(find.byKey(const ValueKey('menstrual-average')), findsOneWidget);
+    expect(find.text('Observed average: 28 days'), findsOneWidget);
+    expect(find.byKey(const ValueKey('menstrual-next-reference')), findsNothing,
+        reason: 'The next date is opt in, and nobody opted in');
+
+    await tester.ensureVisible(
+        find.byKey(const ValueKey('menstrual-next-reference-switch')));
+    await tester.tap(find.byKey(const ValueKey('menstrual-next-reference-switch')));
+    await until(
+        tester,
+        () => find.byKey(const ValueKey('menstrual-next-reference')).evaluate().isNotEmpty,
+        'the reference');
+    expect(find.textContaining('23/03/2026'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('the card is not offered in the masculine', (tester) async {
     Future<void> pumpCard(Gender gender) async {
       await tester.pumpWidget(ChangeNotifierProvider<AuthProvider>(

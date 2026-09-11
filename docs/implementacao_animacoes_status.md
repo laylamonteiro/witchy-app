@@ -501,7 +501,21 @@ Entregue em 11/09.
   sangramento. A data em edição fica ao lado de salvar, inclusive num dia
   retroativo. Gravar primeiro, fechar depois: “registro salvo” significa
   gravação local concluída, e uma falha mantém o painel aberto com o texto.
-- **Verificação:** `menstrual_cycle_page_test.dart` (nada antes do sim,
+- **O que o histórico mostra (Premium):** dia do ciclo, média e faixa
+  observadas entre começos, e duração dos episódios. Um intervalo existe
+  entre dois começos marcados pela pessoa; escape não abre intervalo, e um
+  dia sem registro interrompe o episódio. O resumo aparece com três
+  intervalos completos, e antes disso a tela diz quantos existem.
+- **Referência de próxima data:** opcional dentro do Premium e desligada por
+  padrão. É o último começo mais a média observada, apresentada como
+  referência do histórico — não é previsão e não diz nada sobre fertilidade
+  ou ovulação, que estão fora deste trabalho.
+- **No gratuito o histórico nem é lido:** a tela só monta a lista completa
+  para quem pode ver o que se calcula dela.
+- **Verificação:** `menstrual_insights_test.dart` (intervalo entre começos,
+  escape que não abre intervalo, episódio que conta as duas pontas e para no
+  buraco, resumo com três intervalos, referência só com opt-in, dia do ciclo
+  e contagem que atravessa horário de verão), `menstrual_cycle_page_test.dart` (nada antes do sim,
   escrever/reler/apagar um dia, escape que continua escape, ausência de
   resultados no gratuito, cartão invisível no masculino, falha que preserva o
   formulário), `menstrual_access_test.dart` (a matriz de acesso e os dois

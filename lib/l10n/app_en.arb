@@ -2174,5 +2174,18 @@
   "menstrualPremiumInvite": "Cycle day, averages and the comparison with the Moon are part of Premium.",
   "menstrualPreviousMonth": "Previous month",
   "menstrualNextMonth": "Next month",
-  "@menstrualEditingDay": {"placeholders": {"date": {"type": "String"}}}
+  "@menstrualEditingDay": {"placeholders": {"date": {"type": "String"}}},
+  "menstrualCycleDayToday": "Day {day} of the cycle",
+  "menstrualObservedAverage": "Observed average: {days} days",
+  "menstrualObservedRange": "Between {shortest} and {longest} days",
+  "menstrualSummaryPending": "The summary appears with three complete intervals. You have {count} so far.",
+  "menstrualNextReference": "Reference for the next beginning: {date}",
+  "menstrualNextReferenceWanted": "Show a reference for the next date",
+  "menstrualDerivedNote": "These numbers come from what you recorded: they observe your history, they do not predict it, and they say nothing about fertility.",
+  "menstrualDerivedTitle": "What your history shows",
+  "@menstrualCycleDayToday": {"placeholders": {"day": {"type": "int"}}},
+  "@menstrualObservedAverage": {"placeholders": {"days": {"type": "int"}}},
+  "@menstrualObservedRange": {"placeholders": {"shortest": {"type": "int"}, "longest": {"type": "int"}}},
+  "@menstrualSummaryPending": {"placeholders": {"count": {"type": "int"}}},
+  "@menstrualNextReference": {"placeholders": {"date": {"type": "String"}}}
 }

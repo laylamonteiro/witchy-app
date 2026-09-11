@@ -11,6 +11,7 @@ class MenstrualConsentStore {
 
   static const _recordPrefix = 'menstrual_consent_record_';
   static const _syncPrefix = 'menstrual_consent_sync_';
+  static const _nextReferencePrefix = 'menstrual_next_reference_';
 
   Future<bool> recordingAllowed(String userId) async {
     final prefs = await SharedPreferences.getInstance();
@@ -38,10 +39,23 @@ class MenstrualConsentStore {
     await prefs.setBool('$_syncPrefix$userId', allowed);
   }
 
+  /// A referência de próxima data é opcional dentro do Premium: alguém pode
+  /// querer registrar e ver médias sem uma data pairando na tela.
+  Future<bool> nextReferenceWanted(String userId) async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool('$_nextReferencePrefix$userId') ?? false;
+  }
+
+  Future<void> setNextReferenceWanted(String userId, bool wanted) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('$_nextReferencePrefix$userId', wanted);
+  }
+
   /// Esquece as respostas desta conta — usado quando a pessoa apaga tudo.
   Future<void> forget(String userId) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('$_recordPrefix$userId');
     await prefs.remove('$_syncPrefix$userId');
+    await prefs.remove('$_nextReferencePrefix$userId');
   }
 }

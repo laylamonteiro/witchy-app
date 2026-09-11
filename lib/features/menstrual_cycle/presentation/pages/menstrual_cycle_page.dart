@@ -10,6 +10,7 @@ import '../../data/menstrual_consent_store.dart';
 import '../../data/repositories/menstrual_cycle_repository.dart';
 import '../../domain/menstrual_access.dart';
 import '../../domain/menstrual_day.dart';
+import '../../domain/menstrual_insights.dart';
 import '../widgets/menstrual_record_form.dart';
 
 /// A roda pessoal: o registro do próprio ciclo.
@@ -47,12 +48,19 @@ class _MenstrualCyclePageState extends State<MenstrualCyclePage> {
   late DateTime _month = DateTime(_today.year, _today.month);
 
   Map<String, MenstrualDay> _days = const {};
+
+  /// O histórico inteiro alimenta o que se calcula; o mês alimenta o
+  /// calendário. Só quem tem acesso ao derivado chega a pedir o histórico.
+  List<MenstrualDay> _history = const [];
   bool _loading = true;
   bool _consented = false;
+  bool _wantsNextReference = false;
   bool _saving = false;
   String? _formError;
 
   String get _userId => context.read<AuthProvider>().currentUser.id;
+
+  bool get _premium => context.read<AuthProvider>().isPremiumEffective;
 
   static DateTime _dayOf(DateTime value) =>
       DateTime(value.year, value.month, value.day);
@@ -67,11 +75,19 @@ class _MenstrualCyclePageState extends State<MenstrualCyclePage> {
     final userId = _userId;
     try {
       final consented = await widget.consent.recordingAllowed(userId);
-      final days = consented ? await _monthOf(userId, _month) : const [];
+      final days = consented ? await _monthOf(userId, _month) : const <MenstrualDay>[];
+      final wants = await widget.consent.nextReferenceWanted(userId);
+      // O histórico inteiro só é montado para quem pode ver o que se
+      // calcula dele: no gratuito ele não chega nem a ser lido.
+      final history = consented && _premium
+          ? await _repository.all(userId)
+          : const <MenstrualDay>[];
       if (!mounted) return;
       setState(() {
         _consented = consented;
+        _wantsNextReference = wants;
         _days = {for (final day in days) day.dayKey: day};
+        _history = history;
         _loading = false;
       });
     } catch (_) {
@@ -162,9 +178,15 @@ class _MenstrualCyclePageState extends State<MenstrualCyclePage> {
   }
 
   Future<void> _refresh() async {
-    final days = await _monthOf(_userId, _month);
+    final userId = _userId;
+    final days = await _monthOf(userId, _month);
+    final history =
+        _premium ? await _repository.all(userId) : const <MenstrualDay>[];
     if (!mounted) return;
-    setState(() => _days = {for (final day in days) day.dayKey: day});
+    setState(() {
+      _days = {for (final day in days) day.dayKey: day};
+      _history = history;
+    });
   }
 
   void _say(String message) {
@@ -276,6 +298,8 @@ class _MenstrualCyclePageState extends State<MenstrualCyclePage> {
             ),
           ),
           _calendar(context, l10n),
+          // Só aqui o histórico vira número — e só para quem tem acesso.
+          if (access.canSeeDerived) _derived(context, l10n),
           if (access.showsGenericPremiumInvite)
             MagicalCard(
               key: const ValueKey('menstrual-premium-invite'),
@@ -289,6 +313,77 @@ class _MenstrualCyclePageState extends State<MenstrualCyclePage> {
       ),
     );
   }
+
+
+  /// O que se calcula a partir do histórico. Esta parte da tela só é montada
+  /// para quem tem acesso: no gratuito, nenhum destes números existe.
+  Widget _derived(BuildContext context, AppLocalizations l10n) {
+    final insights = MenstrualInsights.of(_history);
+    final colors = context.gc;
+    final cycleDay = insights.cycleDayOn(_today);
+    final average = insights.averageIntervalDays;
+    final range = insights.intervalRange;
+    final reference = insights.nextReference(optedIn: _wantsNextReference);
+    return MagicalCard(
+      key: const ValueKey('menstrual-derived'),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(l10n.menstrualDerivedTitle,
+              style: Theme.of(context).textTheme.titleMedium
+                  ?.copyWith(color: colors.lilac, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 10),
+          if (cycleDay != null)
+            Text(l10n.menstrualCycleDayToday(cycleDay),
+                key: const ValueKey('menstrual-cycle-day'),
+                style: TextStyle(color: colors.textPrimary)),
+          if (insights.hasSummary) ...[
+            const SizedBox(height: 6),
+            if (average != null)
+              Text(l10n.menstrualObservedAverage(average),
+                  key: const ValueKey('menstrual-average'),
+                  style: TextStyle(color: colors.textPrimary)),
+            if (range != null)
+              Text(l10n.menstrualObservedRange(range.shortest, range.longest),
+                  style: TextStyle(color: colors.textSecondary, fontSize: 12)),
+          ] else ...[
+            const SizedBox(height: 6),
+            Text(l10n.menstrualSummaryPending(insights.intervals.length),
+                key: const ValueKey('menstrual-summary-pending'),
+                style: TextStyle(color: colors.textSecondary, fontSize: 12)),
+          ],
+          if (insights.hasSummary) ...[
+            SwitchListTile(
+              key: const ValueKey('menstrual-next-reference-switch'),
+              contentPadding: EdgeInsets.zero,
+              title: Text(l10n.menstrualNextReferenceWanted,
+                  style: TextStyle(color: colors.textPrimary, fontSize: 13)),
+              value: _wantsNextReference,
+              onChanged: (wanted) async {
+                await widget.consent.setNextReferenceWanted(_userId, wanted);
+                if (mounted) setState(() => _wantsNextReference = wanted);
+              },
+            ),
+            if (reference != null)
+              Text(
+                l10n.menstrualNextReference(
+                    _readable(reference)),
+                key: const ValueKey('menstrual-next-reference'),
+                style: TextStyle(color: colors.textPrimary),
+              ),
+          ],
+          const SizedBox(height: 10),
+          Text(l10n.menstrualDerivedNote,
+              style: TextStyle(
+                  color: colors.textSecondary, fontSize: 11, height: 1.4)),
+        ],
+      ),
+    );
+  }
+
+  static String _readable(DateTime day) =>
+      '${day.day.toString().padLeft(2, '0')}/'
+      '${day.month.toString().padLeft(2, '0')}/${day.year}';
 
   String _markOf(AppLocalizations l10n, MenstrualMark mark) => switch (mark) {
         MenstrualMark.start => l10n.menstrualMarkStart,
