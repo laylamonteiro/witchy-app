@@ -566,6 +566,48 @@ Entregue em 11/09.
   prometer) e `menstrual_season_migration_test.dart` (um telefone na v28 ganha
   as colunas da estação sem perder o que já estava escrito).
 
+## Ciclo menstrual: a Lua nas datas que ela marcou (P17, primeira parte)
+
+Entregue em 11/09.
+
+- **Uma conta só, compartilhada:** a posição contínua dentro da lunação sai
+  do mesmo cálculo do calendário lunar (`LunarProvider.lunationPositionOn`),
+  exposta sem os degraus das fases. A comparação de proximidade usa essa
+  função e a constante do ciclo médio que já existiam — nada foi duplicado.
+- **Convenção de cálculo:** um registro não tem hora, então a comparação usa
+  o meio-dia local do dia observado. É convenção, não o horário de nada que
+  aconteceu com ela, e trocar o fuso do aparelho não reclassifica o
+  histórico.
+- **Janela simétrica de ±2 dias** em torno da Nova e da Cheia estimadas, com
+  versão de algoritmo registrada. A tela informa a janela e que as fases são
+  estimativas do app.
+- **Lua estimada por dia no calendário (Premium):** cada dia do mês mostra a
+  fase estimada, com o nome em texto para quem ouve a tela, e uma legenda diz
+  o que é aquilo. No gratuito a Lua nem é calculada — cruzar registro com
+  fase é comparação, e comparação é Premium.
+- **Você e a Lua:** as datas dos começos com a fase estimada de cada uma
+  aparecem desde o primeiro começo. O resumo exige quatro começos — três
+  intervalos completos — e conta quantos ficaram dentro da janela: "Em 2 de 3
+  ciclos completos observados...". O quarto começo fecha o terceiro intervalo,
+  continua visível e diz na tela que não entra na contagem.
+- **O que não existe aqui:** porcentagem de sincronia, pontuação, ranking,
+  previsão de repetição, título de Lua Branca ou Vermelha (só com revisão
+  editorial confirmada) e qualquer frase de causa. Datas próximas autorizam
+  uma comparação e uma leitura poética.
+- **Média, faixa e referência, revisadas:** os números falam de até seis
+  intervalos recentes e a tela diz o tamanho da amostra. A referência de
+  próxima data passa a usar a **mediana** dessa janela — um único intervalo
+  muito diferente não arrasta a referência inteira — e, quando a data passa,
+  a tela diz apenas que a estimativa está desatualizada: sem somar ciclo
+  fictício, sem falar em atraso, gravidez ou anormalidade.
+- **Verificação:** `menstrual_lunar_comparison_test.dart` (perto da Nova,
+  perto da Cheia e nem uma coisa nem outra; a janela simétrica dos dois
+  lados; sem quatro começos não há resumo; o quarto fecha e não conta; com
+  mais histórico o resumo olha os três mais recentes) e as novas histórias de
+  `menstrual_insights_test.dart` (a janela de seis intervalos com o tamanho
+  da amostra, a mediana em vez da média na referência, e a referência que
+  passou).
+
 ## Dados e compatibilidade
 
 O schema local sobe de 23 para 24 (sessões e ledger), 25 (descobertas do

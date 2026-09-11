@@ -216,6 +216,10 @@ void main() {
     expect(find.text('Observed average: 28 days'), findsOneWidget);
     expect(find.byKey(const ValueKey('menstrual-next-reference')), findsNothing,
         reason: 'The next date is opt in, and nobody opted in');
+    expect(find.byKey(const ValueKey('menstrual-lunar')), findsOneWidget,
+        reason: 'The comparison with the Moon comes with the derived side');
+    expect(find.byKey(const ValueKey('menstrual-lunar-closing')), findsOneWidget,
+        reason: 'The fourth beginning closes the third interval, and says so');
 
     await tester.ensureVisible(
         find.byKey(const ValueKey('menstrual-next-reference-switch')));

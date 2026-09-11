@@ -6,12 +6,15 @@ import '../../../../core/theme/grimoire_motion.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../grimoire/data/models/spell_model.dart';
+import '../../../lunar/presentation/providers/lunar_provider.dart';
 import '../../data/menstrual_consent_store.dart';
 import '../../data/repositories/menstrual_cycle_repository.dart';
 import '../../domain/internal_season.dart';
 import '../../domain/menstrual_access.dart';
 import '../../domain/menstrual_day.dart';
 import '../../domain/menstrual_insights.dart';
+import '../widgets/menstrual_lunar_card.dart';
 import '../widgets/menstrual_record_form.dart';
 import '../widgets/menstrual_season_card.dart';
 
@@ -331,7 +334,7 @@ class _MenstrualCyclePageState extends State<MenstrualCyclePage> {
               ],
             ),
           ),
-          _calendar(context, l10n),
+          _calendar(context, l10n, access),
           // A estação é escolha simbólica, não resultado — mas é conteúdo
           // editorial, e por isso mora no Premium.
           if (access.canChooseSeason)
@@ -343,7 +346,10 @@ class _MenstrualCyclePageState extends State<MenstrualCyclePage> {
               onWrite: _writeSeason,
             ),
           // Só aqui o histórico vira número — e só para quem tem acesso.
-          if (access.canSeeDerived) _derived(context, l10n),
+          if (access.canSeeDerived) ...[
+            _derived(context, l10n),
+            MenstrualLunarCard(insights: MenstrualInsights.of(_history)),
+          ],
           if (access.showsGenericPremiumInvite)
             MagicalCard(
               key: const ValueKey('menstrual-premium-invite'),
@@ -390,6 +396,11 @@ class _MenstrualCyclePageState extends State<MenstrualCyclePage> {
             if (range != null)
               Text(l10n.menstrualObservedRange(range.shortest, range.longest),
                   style: TextStyle(color: colors.textSecondary, fontSize: 12)),
+            // O tamanho da amostra anda junto dos números: um resumo sem ele
+            // parece mais firme do que é.
+            Text(l10n.menstrualObservedSample(insights.sampleSize),
+                key: const ValueKey('menstrual-sample'),
+                style: TextStyle(color: colors.textSecondary, fontSize: 12)),
           ] else ...[
             const SizedBox(height: 6),
             Text(l10n.menstrualSummaryPending(insights.intervals.length),
@@ -408,13 +419,27 @@ class _MenstrualCyclePageState extends State<MenstrualCyclePage> {
                 if (mounted) setState(() => _wantsNextReference = wanted);
               },
             ),
-            if (reference != null)
+            if (reference != null) ...[
               Text(
                 l10n.menstrualNextReference(
                     _readable(reference)),
                 key: const ValueKey('menstrual-next-reference'),
                 style: TextStyle(color: colors.textPrimary),
               ),
+              // A data passou: dizer que a estimativa envelheceu, e nada
+              // além disso. Sem somar um ciclo fictício, sem falar em atraso.
+              if (insights.referenceIsStale(_today,
+                  optedIn: _wantsNextReference))
+                Padding(
+                  padding: const EdgeInsets.only(top: 4),
+                  child: Text(
+                    l10n.menstrualReferenceStale,
+                    key: const ValueKey('menstrual-reference-stale'),
+                    style: TextStyle(
+                        color: colors.textSecondary, fontSize: 12, height: 1.4),
+                  ),
+                ),
+            ],
           ],
           const SizedBox(height: 10),
           Text(l10n.menstrualDerivedNote,
@@ -437,7 +462,14 @@ class _MenstrualCyclePageState extends State<MenstrualCyclePage> {
         MenstrualMark.note => l10n.menstrualMarkNote,
       };
 
-  Widget _calendar(BuildContext context, AppLocalizations l10n) {
+  /// A Lua estimada para um dia, pela convenção de cálculo do app: meio-dia
+  /// local do dia observado. O registro não tem hora — o meio-dia é escolha
+  /// de cálculo, não o horário de nada que aconteceu com ela.
+  static MoonPhase _moonOf(DateTime day) =>
+      LunarProvider.phaseOn(DateTime(day.year, day.month, day.day, 12));
+
+  Widget _calendar(
+      BuildContext context, AppLocalizations l10n, MenstrualAccess access) {
     final first = DateTime(_month.year, _month.month);
     final total = DateTime(_month.year, _month.month + 1, 0).day;
     // Segunda a domingo, como o restante do app.
@@ -491,6 +523,11 @@ class _MenstrualCyclePageState extends State<MenstrualCyclePage> {
                 record: record,
                 isToday: day == _today,
                 reduced: reduced,
+                // Cruzar o que ela registrou com a Lua é comparação, e
+                // comparação é Premium: no gratuito a Lua nem é calculada.
+                moon: access.canSeeDerived ? _moonOf(day).emoji : null,
+                moonName:
+                    access.canSeeDerived ? _moonOf(day).displayName : null,
                 onTap: () => _openDay(day),
               );
             },
@@ -501,6 +538,15 @@ class _MenstrualCyclePageState extends State<MenstrualCyclePage> {
               l10n.menstrualEmptyMonth,
               key: const ValueKey('menstrual-empty-month'),
               style: TextStyle(color: context.gc.textSecondary, fontSize: 12),
+            ),
+          ],
+          if (access.canSeeDerived) ...[
+            const SizedBox(height: 10),
+            Text(
+              l10n.menstrualMoonLegend,
+              key: const ValueKey('menstrual-moon-legend'),
+              style: TextStyle(
+                  color: context.gc.textSecondary, fontSize: 11, height: 1.4),
             ),
           ],
         ],
@@ -517,6 +563,8 @@ class _DayCell extends StatelessWidget {
     required this.record,
     required this.isToday,
     required this.reduced,
+    required this.moon,
+    required this.moonName,
     required this.onTap,
   });
 
@@ -524,6 +572,15 @@ class _DayCell extends StatelessWidget {
   final MenstrualDay? record;
   final bool isToday;
   final bool reduced;
+
+  /// A Lua estimada pelo app para este dia, quando a comparação é oferecida.
+  /// É estimativa, e a legenda do calendário diz isso.
+  final String? moon;
+
+  /// O nome da mesma fase, para quem ouve a tela: o desenho fica fora da
+  /// árvore semântica e o texto entra no lugar dele.
+  final String? moonName;
+
   final VoidCallback onTap;
 
   @override
@@ -532,6 +589,7 @@ class _DayCell extends StatelessWidget {
     final marked = record != null;
     return Semantics(
       button: true,
+      label: moonName,
       child: InkWell(
         key: ValueKey('menstrual-day-${MenstrualDay.keyOf(day)}'),
         onTap: onTap,
@@ -549,6 +607,10 @@ class _DayCell extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              if (moon != null)
+                ExcludeSemantics(
+                  child: Text(moon!, style: const TextStyle(fontSize: 11)),
+                ),
               Text('${day.day}',
                   style: TextStyle(color: colors.textPrimary, fontSize: 12)),
               if (marked)

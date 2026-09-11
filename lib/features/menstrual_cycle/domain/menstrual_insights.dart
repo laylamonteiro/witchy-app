@@ -45,6 +45,11 @@ class MenstrualInsights {
   /// Quantos intervalos completos o resumo do histórico exige.
   static const minimumIntervalsForSummary = 3;
 
+  /// Quantos intervalos recentes entram na conta. Média e faixa falam do que
+  /// vem acontecendo, não da vida inteira dela — e o tamanho da amostra
+  /// aparece na tela junto dos números.
+  static const recentIntervalWindow = 6;
+
   static MenstrualInsights of(Iterable<MenstrualDay> days) {
     final ordered = [...days]..sort((a, b) => a.day.compareTo(b.day));
     final starts = <DateTime>[];
@@ -92,19 +97,45 @@ class MenstrualInsights {
       DateTime.utc(date.year, date.month, date.day).millisecondsSinceEpoch ~/
           Duration.millisecondsPerDay;
 
-  /// A média observada, arredondada. Nula enquanto não houver um intervalo.
+  /// Os intervalos que entram na conta: até [recentIntervalWindow] mais
+  /// recentes. Um intervalo longo não é descartado por parecer diferente —
+  /// só sai da janela quando fica velho.
+  List<MenstrualInterval> get recentIntervals => intervals.length <=
+          recentIntervalWindow
+      ? intervals
+      : intervals.sublist(intervals.length - recentIntervalWindow);
+
+  /// Sobre quantos intervalos os números falam. A tela mostra este número
+  /// junto deles: um resumo sem tamanho de amostra parece mais firme do que é.
+  int get sampleSize => recentIntervals.length;
+
+  /// A média observada na janela recente, arredondada. Nula enquanto não
+  /// houver um intervalo.
   int? get averageIntervalDays {
-    if (intervals.isEmpty) return null;
-    final total = intervals.fold<int>(0, (sum, item) => sum + item.days);
-    return (total / intervals.length).round();
+    final recent = recentIntervals;
+    if (recent.isEmpty) return null;
+    final total = recent.fold<int>(0, (sum, item) => sum + item.days);
+    return (total / recent.length).round();
   }
 
-  /// O menor e o maior intervalo observados.
+  /// A mediana da janela recente: é ela que serve de referência central para
+  /// a próxima data, porque um único intervalo muito diferente não deve
+  /// arrastar a referência inteira.
+  int? get medianIntervalDays {
+    final days = [for (final interval in recentIntervals) interval.days]..sort();
+    if (days.isEmpty) return null;
+    final middle = days.length ~/ 2;
+    if (days.length.isOdd) return days[middle];
+    return ((days[middle - 1] + days[middle]) / 2).round();
+  }
+
+  /// O menor e o maior intervalo observados na janela recente.
   ({int shortest, int longest})? get intervalRange {
-    if (intervals.isEmpty) return null;
-    var shortest = intervals.first.days;
-    var longest = intervals.first.days;
-    for (final interval in intervals) {
+    final recent = recentIntervals;
+    if (recent.isEmpty) return null;
+    var shortest = recent.first.days;
+    var longest = recent.first.days;
+    for (final interval in recent) {
       if (interval.days < shortest) shortest = interval.days;
       if (interval.days > longest) longest = interval.days;
     }
@@ -124,14 +155,22 @@ class MenstrualInsights {
     return last == null ? null : daysBetween(last, date) + 1;
   }
 
-  /// Uma referência para a próxima data: o último começo mais a média
+  /// Uma referência para a próxima data: o último começo mais a mediana
   /// observada. Só com o resumo disponível, e só se a pessoa pediu para ver.
   /// É referência, não promessa — e não diz nada sobre fertilidade.
   DateTime? nextReference({required bool optedIn}) {
     if (!optedIn || !hasSummary || starts.isEmpty) return null;
-    final average = averageIntervalDays;
-    if (average == null) return null;
+    final median = medianIntervalDays;
+    if (median == null) return null;
     final last = starts.last;
-    return DateTime(last.year, last.month, last.day + average);
+    return DateTime(last.year, last.month, last.day + median);
+  }
+
+  /// A referência já passou. Quando isso acontece, a tela diz que a
+  /// estimativa está desatualizada e para por aí: nada de somar um ciclo
+  /// fictício para inventar uma data nova, e nada de falar em atraso.
+  bool referenceIsStale(DateTime today, {required bool optedIn}) {
+    final reference = nextReference(optedIn: optedIn);
+    return reference != null && daysBetween(reference, today) > 0;
   }
 }

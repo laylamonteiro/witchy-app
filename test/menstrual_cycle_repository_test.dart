@@ -62,7 +62,9 @@ void main() {
     expect(saved.note, 'Quieter morning');
     expect(saved.day, DateTime(2026, 3, 8));
 
-    // Nothing derived is stored: no cycle day, no length, no estimate.
+    // Nothing derived is stored: no cycle day, no length, no estimate. The
+    // season and the writing that came with it are hers too — an explicit
+    // choice and her own words, never something the app worked out.
     final db = await DatabaseHelper.instance.database;
     final columns = (await db.rawQuery(
             'PRAGMA table_info(${MenstrualCycleSchema.table})'))
@@ -72,6 +74,7 @@ void main() {
         columns,
         {
           'user_id', 'day_key', 'mark', 'flow', 'symptoms', 'mood', 'note',
+          'season', 'season_note',
           'revision', 'deleted', 'created_at', 'updated_at', 'synced',
         },
         reason: 'A derived column here would be a Premium result stored on Free');
