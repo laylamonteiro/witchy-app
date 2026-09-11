@@ -434,13 +434,15 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage>
 
                   // Legenda
                   if (_showStartEnd) ...[
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                    // Três legendas traduzidas: em telas estreitas elas
+                    // passam para a linha de baixo em vez de estourar.
+                    Wrap(
+                      alignment: WrapAlignment.center,
+                      spacing: 16,
+                      runSpacing: 6,
                       children: [
                         _buildLegendItem(Colors.green.shade300, AppLocalizations.of(context).sigilLegendStart),
-                        const SizedBox(width: 16),
                         _buildLegendItem(context.gc.lilac, AppLocalizations.of(context).sigilLegendLetters),
-                        const SizedBox(width: 16),
                         _buildLegendItem(Colors.red.shade300, AppLocalizations.of(context).sigilLegendEnd),
                       ],
                     ),
@@ -616,9 +618,13 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage>
                     children: [
                       const Text('🎨', style: TextStyle(fontSize: 24)),
                       const SizedBox(width: 12),
-                      Text(
-                        AppLocalizations.of(context).sigilHowToUse,
-                        style: Theme.of(context).textTheme.titleMedium,
+                      // O título é traduzido: numa tela estreita ele quebra
+                      // a linha em vez de estourar o cartão.
+                      Expanded(
+                        child: Text(
+                          AppLocalizations.of(context).sigilHowToUse,
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
                       ),
                     ],
                   ),
@@ -787,6 +793,7 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage>
 
   Widget _buildLegendItem(Color color, String label) {
     return Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
         Container(
           width: 12,

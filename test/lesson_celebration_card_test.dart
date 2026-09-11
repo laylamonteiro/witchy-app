@@ -67,14 +67,16 @@ void main() {
   });
 
   testWidgets('covers are keyed by trail id and the seal replays by token', (tester) async {
-    await tester.pumpWidget(MaterialApp(home: Scaffold(body: Row(children: [
+    await tester.pumpWidget(MaterialApp(home: Scaffold(body: Row(
+        key: const ValueKey('covers'), children: [
       for (final t in learningTrails.take(3))
         BoundBookCover(trailId: t.id, emblem: t.emoji, width: 48),
       const WaxSealStamp(size: 48, playToken: 1),
     ]))));
     await tester.pump();
     final accents = {for (final t in learningTrails.take(3))
-      TrailCoverRegistry.accentFor(tester.element(find.byType(Row)), t.id)};
+      TrailCoverRegistry.accentFor(
+          tester.element(find.byKey(const ValueKey('covers'))), t.id)};
     expect(accents, hasLength(3));
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);

@@ -229,7 +229,9 @@ void main() {
     await show(tester);
     final owner = (await rows(tester, 'advisor_consultations')).single['user_id'];
     if (owner == 'local_user') {
-      expect(find.byKey(const ValueKey('advisor-retry')), findsOneWidget);
+      // Restaurar lê o banco: a falha aparece quando a leitura volta.
+      await until(tester, () => find.byKey(const ValueKey('advisor-retry'))
+          .evaluate().isNotEmpty, 'the stale consultation shown as failed');
       expect(find.text('Old question?'), findsWidgets);
     }
     expect(calls, isEmpty);

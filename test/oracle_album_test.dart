@@ -51,11 +51,11 @@ void main() {
       'user_id': user,
       'spread_type': 'single',
       'reading_data': jsonEncode({
-        'cards': [
-          for (final cardId in cardIds)
+        'positions': [
+          for (var i = 0; i < cardIds.length; i++)
             {
-              'position': 0,
-              'card': oracleCardsData.firstWhere((c) => c.id == cardId).toJson(),
+              'position': i,
+              'card': oracleCardsData.firstWhere((c) => c.id == cardIds[i]).toJson(),
               'positionMeaning': '',
             },
         ],

@@ -29,6 +29,8 @@ class RitualCircle extends StatelessWidget {
   Widget build(BuildContext context) {
     final reduced = GrimoireMotion.reduced(context);
     return Semantics(
+      // Nó próprio: lado a lado, dois círculos não podem virar um rótulo só.
+      container: true,
       label: '$lit/$steps',
       child: TweenAnimationBuilder<double>(
         tween: Tween<double>(end: lit.toDouble()),
