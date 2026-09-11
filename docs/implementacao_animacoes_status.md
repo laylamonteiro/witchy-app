@@ -469,7 +469,22 @@ Entregue em 11/09.
   nem telemetria, e não é enviado à IA — isso é assunto do P18, com
   consentimento próprio. Entrar numa conta no mesmo aparelho leva o registro
   junto, como as demais tabelas anônimas.
-- **Verificação:** `menstrual_cycle_repository_test.dart` (o que foi escrito
+- **Quem vê e o que vê:** `MenstrualAccess` responde três perguntas, nesta
+  ordem — a funcionalidade é oferecida a esta pessoa (só feminino e neutro;
+  no masculino não há cartão, teaser nem oferta), houve consentimento para
+  registrar, e o que está na tela é dado inserido ou derivado. Registrar,
+  consultar, corrigir, exportar e apagar são do plano gratuito; dia do ciclo,
+  duração, média, intervalo, estimativa e cruzamento lunar são resultados, e
+  ficam no Premium. Nada derivado é calculado para depois ser borrado.
+- **Levar embora e apagar não dependem de assinatura** — nem de o
+  consentimento continuar de pé: quem mudou de ideia precisa poder apagar
+  depois.
+- **Dois consentimentos separados:** manter o registro no aparelho é um;
+  enviá-lo para a conta é outro, desligado até haver um sim explícito.
+  Retirar o primeiro fecha o segundo, e a resposta de uma conta não responde
+  por outra.
+- **Verificação:** `menstrual_access_test.dart` (a matriz de acesso e os dois
+  consentimentos) e `menstrual_cycle_repository_test.dart` (o que foi escrito
   e nada além, escape que continua escape, correção com revisão, ausência de
   registro, lápide que resiste ao aparelho antigo, revisão maior que vence,
   isolamento entre contas, apagar tudo, e a Leitura do Ciclo sem ver nada) e
