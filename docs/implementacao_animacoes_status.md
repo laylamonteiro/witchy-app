@@ -702,7 +702,17 @@ ao compositor vêm em seguida.
   relatórios delas — apagar o original não bastaria se as observações
   continuassem dentro de um texto no acervo. Os créditos de leitura ficam: ela
   pode gerar de novo, sem a fonte íntima.
-- **Verificação:** `menstrual_report_marks_test.dart` (a marca guarda leitura,
+- **Conferido antes de cada chamada:** a autorização não é perguntada de novo
+  a cada capítulo — é conferida em silêncio. São três perguntas, e todas
+  precisam de sim: é a mesma conta, o consentimento continua de pé na mesma
+  revisão, e os dias autorizados continuam como ela os deixou. Caindo
+  qualquer uma, a geração para ali: as próximas chamadas não saem, o rascunho
+  é descartado, o crédito continua dela e a tela explica o que mudou,
+  devolvendo a seleção ao zero para ser revista.
+- **Verificação:** `cycle_reading_scope_revalidation_test.dart` (retirar o
+  consentimento no meio interrompe; corrigir um registro autorizado no meio
+  interrompe; sem fonte íntima nada disso acontece) e
+  `menstrual_report_marks_test.dart` (a marca guarda leitura,
   relatório e dias; gerar de novo troca em vez de somar; ela vê quais leituras
   usaram um registro; apagar esquece; armazenamento estragado não derruba
   nada) e `cycle_reading_menstrual_source_test.dart` (a fonte nunca

@@ -595,6 +595,19 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
           ),
         ),
       );
+    } on MenstrualScopeChanged {
+      // A autorização caiu no meio: ela retirou o sim, mexeu num registro
+      // autorizado ou trocou de conta. A geração parou ali, o crédito
+      // continua dela, e a seleção volta ao zero para ser revista.
+      if (!mounted) return;
+      setState(() => _menstrual = MenstrualReadingScope.none(
+            userId: context.read<AuthProvider>().currentUser.id,
+          ));
+      messenger.showSnackBar(SnackBar(
+        content: Text(l10n.cycleReadingMenstrualScopeChanged),
+        backgroundColor: context.gc.warning,
+        duration: const Duration(seconds: 6),
+      ));
     } catch (_) {
       // Inclui AiRateLimitException: o crédito segue pendente e a tela
       // continua oferecendo gerar de novo — sem nova cobrança.

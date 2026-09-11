@@ -5,7 +5,10 @@ import '../../../../core/ai/ai_service.dart';
 import '../../../../core/content/content_locale.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../diary/data/models/free_writing_model.dart';
+import '../../../menstrual_cycle/data/menstrual_consent_store.dart';
 import '../../../menstrual_cycle/data/menstrual_report_marks.dart';
+import '../../../menstrual_cycle/data/repositories/menstrual_cycle_repository.dart';
+import '../../../menstrual_cycle/domain/menstrual_reading_context.dart';
 import '../../../menstrual_cycle/domain/menstrual_reading_scope.dart';
 import '../../../diary/data/repositories/free_writing_repository.dart';
 import '../../../grimoire/data/models/spell_model.dart'
@@ -113,6 +116,19 @@ class CycleReadingResult {
   });
 }
 
+/// A autorização da fonte íntima mudou no meio da geração.
+///
+/// Acontece quando ela retira o consentimento, corrige ou apaga um registro
+/// autorizado, ou troca de conta enquanto a leitura é escrita. A geração para
+/// ali: as próximas chamadas não saem, o rascunho é descartado e o crédito
+/// continua dela, para gerar de novo com uma prévia nova.
+class MenstrualScopeChanged implements Exception {
+  const MenstrualScopeChanged();
+
+  @override
+  String toString() => 'MenstrualScopeChanged';
+}
+
 /// Orquestra a Leitura do Ciclo: agrega o período, gera seção a seção
 /// (chamadas curtas — ver [AIService.generateCycleReadingSection]), salva o
 /// relatório no acervo e SÓ ENTÃO consome o crédito da compra.
@@ -140,6 +156,37 @@ class CycleReadingService {
 
   CycleReadingComposer get composer => _composer;
   CycleReadingRepository get repository => _repository;
+
+  /// A autorização ainda vale? Três perguntas, e todas precisam de sim: é a
+  /// mesma conta, o consentimento continua de pé na mesma revisão, e os dias
+  /// autorizados continuam como ela os deixou.
+  Future<bool> _menstrualStillAuthorized(
+    String userId,
+    MenstrualReadingScope? scope,
+  ) async {
+    if (scope == null || scope.isEmpty) return false;
+    if (scope.userId != userId) return false;
+    try {
+      const consent = MenstrualConsentStore();
+      if (!await consent.recordingAllowed(userId)) return false;
+      if (await consent.consentRevision(userId) != scope.consentRevision) {
+        return false;
+      }
+      final from = scope.start;
+      final to = scope.end;
+      if (from == null || to == null) return false;
+      final days = await MenstrualCycleRepository().between(
+        userId: userId,
+        from: from,
+        to: to.subtract(const Duration(days: 1)),
+      );
+      return MenstrualReadingContext.of(scope, days).days.length ==
+          scope.recordCount;
+    } catch (_) {
+      // Na dúvida, a fonte não segue: é o lado seguro do engano.
+      return false;
+    }
+  }
 
   /// A lunação corrente: da última lua nova à próxima.
   static ({DateTime start, DateTime end}) currentLunation({DateTime? now}) {
@@ -374,6 +421,15 @@ class CycleReadingService {
 
     for (final key in CycleReadingSections.forPeriod(credit.periodType)) {
       if (sections[key]?.isNotEmpty ?? false) continue;
+      // Antes de CADA chamada, em silêncio: a autorização continua de pé?
+      // Ela não é perguntada de novo — só conferida. Se caiu, nada mais sai
+      // daqui, o rascunho vai embora e o crédito continua dela.
+      if (material.menstrual?.isEmpty == false) {
+        if (!await _menstrualStillAuthorized(userId, menstrual)) {
+          await _drafts.clear(credit.id);
+          throw const MenstrualScopeChanged();
+        }
+      }
       // Cada seção recebe só o material que ela usa (ver compactJsonFor).
       sections[key] = (await generate(
         key,

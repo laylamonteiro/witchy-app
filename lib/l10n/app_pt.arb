@@ -3114,5 +3114,6 @@
   "cycleReadingMenstrualSummary": "{count, plural, =1{Ciclo Menstrual · 1 registro incluído} other{Ciclo Menstrual · {count} registros incluídos}}",
   "@cycleReadingMenstrualSummary": {"placeholders": {"count": {"type": "int"}}},
   "menstrualPrivacyEraseReadings": "{count, plural, =1{1 leitura levou esses registros junto, e o relatório dela será apagado também. Seu crédito de leitura continua seu.} other{{count} leituras levaram esses registros junto, e os relatórios delas serão apagados também. Seus créditos de leitura continuam seus.}}",
-  "@menstrualPrivacyEraseReadings": {"placeholders": {"count": {"type": "int"}}}
+  "@menstrualPrivacyEraseReadings": {"placeholders": {"count": {"type": "int"}}},
+  "cycleReadingMenstrualScopeChanged": "A autorização do Ciclo Menstrual mudou enquanto a leitura era escrita, então ela parou aqui. Seu crédito continua seu: revise o que quer incluir e gere de novo."
 }
