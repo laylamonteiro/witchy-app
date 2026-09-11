@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/theme/grimoire_motion.dart';
 import '../../../../core/widgets/magical_card.dart';
-import '../../../../core/widgets/moon_disc.dart';
+import '../../../../core/widgets/moon_glyph.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../grimoire/data/models/spell_model.dart';
@@ -704,10 +704,10 @@ class _DayCell extends StatelessWidget {
               // é quadrada e apertada, e a Lua não pode empurrar o número
               // para fora dela.
               if (moon != null)
-                // Desenhada, não o glifo da fonte: a mesma lua da roda e de
-                // Seu Dia. O glifo mudava de arte entre aparelho e navegador,
-                // e trocar de visão não pode trocar a lua de desenho.
-                MoonDisc(phase: moon!, size: 10, halo: false),
+                // A mesma lua de Seu Dia e da página da Lua: o glifo da
+                // fase, sem halo — a célula tem 43dp e um brilho aqui
+                // borraria o número do dia ao lado.
+                MoonGlyph(phase: moon!, size: 10, halo: false),
               Text('${day.day}',
                   style: TextStyle(
                       color: colors.textPrimary, fontSize: 12, height: 1.1)),

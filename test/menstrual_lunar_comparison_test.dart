@@ -1,95 +1,48 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:grimorio_de_bolso/features/grimoire/data/models/spell_model.dart';
+import 'package:grimorio_de_bolso/features/lunar/presentation/providers/lunar_provider.dart';
 import 'package:grimorio_de_bolso/features/menstrual_cycle/domain/lunar_comparison.dart';
-import 'package:grimorio_de_bolso/features/menstrual_cycle/domain/menstrual_day.dart';
-import 'package:grimorio_de_bolso/features/menstrual_cycle/domain/menstrual_insights.dart';
 
-/// A comparação com a Lua: proximidade medida pela mesma conta do calendário
-/// lunar, numa janela simétrica de dois dias, sobre os começos que ela marcou.
-///
-/// As datas do teste foram escolhidas com folga — nenhuma delas fica a menos
-/// de meio dia da borda da janela, então o fuso do aparelho que roda o teste
-/// não muda o resultado.
+/// A convenção do meio-dia, que é o que sobrou de vivo da comparação lunar:
+/// a roda do ciclo e a leitura perguntam a fase da Lua por este ponto do dia,
+/// nunca pela meia-noite. Sem isso, um dia que cai perto da virada de fase
+/// passaria a ser classificado de um jeito ou de outro conforme o fuso do
+/// aparelho — por isso a convenção continua com teste próprio mesmo depois de
+/// o card "Você e a Lua" sair.
 void main() {
-  MenstrualDay start(DateTime day) =>
-      MenstrualDay(userId: 'she', day: day, mark: MenstrualMark.start);
+  // Exatamente o que a roda do ciclo e a leitura executam: o dia vira
+  // meio-dia local, e é esse ponto que vai perguntar a fase.
+  MoonPhase phaseAtNoon(DateTime day) =>
+      LunarProvider.phaseOn(LunarComparison.noonOf(day));
 
-  test('perto da Nova, perto da Cheia, e nem uma coisa nem outra', () {
-    final newMoon = LunarComparison.observe(DateTime(2024, 11, 1));
-    expect(newMoon.nearness, LunarNearness.newMoon);
-    expect(newMoon.phase, MoonPhase.newMoon);
-    expect(newMoon.daysFromNewMoon, lessThan(1));
-
-    final fullMoon = LunarComparison.observe(DateTime(2024, 11, 16));
-    expect(fullMoon.nearness, LunarNearness.fullMoon);
-    expect(fullMoon.daysFromFullMoon, lessThan(1));
-
-    final between = LunarComparison.observe(DateTime(2024, 11, 8));
-    expect(between.nearness, LunarNearness.neither,
-        reason: 'Um quarto não é nem Nova nem Cheia, e a tela não força uma');
-    expect(between.daysFromNewMoon, greaterThan(LunarComparison.windowDays));
-    expect(between.daysFromFullMoon, greaterThan(LunarComparison.windowDays));
-  });
-
-  test('a janela é simétrica e a convenção é o meio-dia', () {
-    // A Cheia estimada dessa lunação cai em 16/11/2024. Um dia de cada lado
-    // entra; três dias de cada lado ficam de fora — a janela não é mais
-    // generosa antes do que depois.
-    expect(LunarComparison.observe(DateTime(2024, 11, 15)).nearness,
-        LunarNearness.fullMoon);
-    expect(LunarComparison.observe(DateTime(2024, 11, 17)).nearness,
-        LunarNearness.fullMoon);
-    expect(LunarComparison.observe(DateTime(2024, 11, 13)).nearness,
-        LunarNearness.neither);
-    expect(LunarComparison.observe(DateTime(2024, 11, 19)).nearness,
-        LunarNearness.neither);
+  test('a convenção é o meio-dia local do dia observado', () {
     expect(LunarComparison.noonOf(DateTime(2026, 3, 12)),
         DateTime(2026, 3, 12, 12));
   });
 
-  test('sem quatro começos não há resumo', () {
-    final insights = MenstrualInsights.of([
-      start(DateTime(2024, 11, 16)),
-      start(DateTime(2024, 12, 15)),
-      start(DateTime(2025, 1, 14)),
-    ]);
-    expect(insights.intervals, hasLength(2));
-    expect(LunarComparison.summarize(insights), isNull,
-        reason: 'Três intervalos completos exigem quatro começos');
+  test('a hora do registro não vaza para a conta', () {
+    // Dois momentos do mesmo dia perguntam à Lua exatamente o mesmo ponto:
+    // é o dia que importa, não a hora em que ela abriu o app para marcar.
+    expect(LunarComparison.noonOf(DateTime(2026, 3, 12, 23, 40)),
+        LunarComparison.noonOf(DateTime(2026, 3, 12, 0, 5)));
   });
 
-  test('o quarto começo fecha o terceiro intervalo e não entra na conta', () {
-    final insights = MenstrualInsights.of([
-      start(DateTime(2024, 11, 16)),
-      start(DateTime(2024, 12, 15)),
-      start(DateTime(2025, 1, 14)),
-      start(DateTime(2025, 2, 12)),
-    ]);
-    final summary = LunarComparison.summarize(insights)!;
-    expect(summary.total, 3);
-    expect(summary.observations.map((o) => o.day), [
-      DateTime(2024, 11, 16),
-      DateTime(2024, 12, 15),
-      DateTime(2025, 1, 14),
-    ]);
-    expect(summary.closing.day, DateTime(2025, 2, 12),
-        reason: 'Ele fecha o terceiro intervalo e continua visível');
-    expect(summary.nearFullMoon, 3);
-    expect(summary.nearNewMoon, 0);
-  });
+  // Era a comparação apagada que, de carona, ancorava a conta da lunação em
+  // datas de calendário. Sem estas duas âncoras NENHUM teste do repositório
+  // olharia para o resultado de LunarProvider.phaseOn — um erro de sinal ou
+  // de referência na lunação passaria verde, e quem pagaria seria a fase
+  // mostrada na roda do ciclo e na leitura.
+  //
+  // As datas ficam no meio das faixas de fase, a mais de um dia da borda
+  // mais próxima, e o fuso da máquina desloca no máximo meio dia: de UTC-12
+  // a UTC+14 o veredito é o mesmo.
+  group('a conta da lunação continua ancorada em datas conhecidas', () {
+    test('16/11/2024 ao meio-dia é Cheia', () {
+      expect(phaseAtNoon(DateTime(2024, 11, 16)), MoonPhase.fullMoon);
+    });
 
-  test('com mais histórico, o resumo olha para os três mais recentes', () {
-    final insights = MenstrualInsights.of([
-      start(DateTime(2024, 11, 1)),
-      start(DateTime(2024, 11, 16)),
-      start(DateTime(2024, 12, 15)),
-      start(DateTime(2025, 1, 14)),
-      start(DateTime(2025, 2, 12)),
-    ]);
-    final summary = LunarComparison.summarize(insights)!;
-    expect(summary.observations.first.day, DateTime(2024, 11, 16),
-        reason: 'O começo mais antigo saiu da janela de três intervalos');
-    expect(summary.nearNewMoon, 0);
-    expect(summary.nearFullMoon, 3);
+    test('08/11/2024 ao meio-dia é Quarto Crescente', () {
+      expect(phaseAtNoon(DateTime(2024, 11, 8)), MoonPhase.firstQuarter);
+    });
   });
 }

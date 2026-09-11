@@ -151,6 +151,33 @@ class CatHeroArt extends StatelessWidget {
               alignment: Alignment.bottomCenter,
               filterQuality: FilterQuality.high,
               semanticLabel: AppLocalizations.of(context).premiumCatSemantic,
+              // Na web cada PNG é um download que pode falhar sozinho —
+              // rede ruim, cache frio, deploy no meio da sessão. Sem
+              // reserva o Flutter desenha um X cinza bem no herói da tela
+              // que COBRA, ou estoura a exceção no meio da oferta.
+              //
+              // A reserva mora dentro do mesmo Positioned.fill: o halo
+              // lilás já está pintado atrás, então o que falta é só a
+              // silhueta do gato por cima dele. A altura do herói é do
+              // SizedBox lá em cima, então a oferta não se mexe.
+              errorBuilder: (context, _, __) => Semantics(
+                // O Image só embrulha o semanticLabel no caminho que dá
+                // certo; no erro ele devolve o que o builder retornar, cru.
+                // Sem este Semantics o leitor de tela perderia o gato.
+                image: true,
+                label: AppLocalizations.of(context).premiumCatSemantic,
+                child: Center(
+                  child: Icon(
+                    Icons.pets,
+                    // `onPrimary` é o token feito para pousar SOBRE o
+                    // acento: escuro nas cinco paletas escuras, branco na
+                    // clara. Escolher lilás ou branco à mão sumiria numa
+                    // delas, porque o halo atrás é lilás nas seis.
+                    color: context.gc.onPrimary,
+                    size: height * 0.42,
+                  ),
+                ),
+              ),
             ),
           ),
         ],
@@ -301,24 +328,33 @@ class PremiumBenefitsSection extends StatelessWidget {
       // O vislumbre de cada peça é o MESMO texto da página de descoberta,
       // de propósito: as duas telas precisam parecer a mesma ideia vista de
       // dois ângulos, e não dois times escrevendo sobre o mesmo produto.
+      // O `reserva` de cada peça é o desenho que aparece se a arte não
+      // baixar. Três deles são os MESMOS ícones que a tela de assinante já
+      // usa para estes benefícios (psychology, menu_book, style); o quarto
+      // segue a própria arte, que é uma lua. Reserva que contradiz o que a
+      // linha vende confunde mais do que um quadrado vazio.
       OfferBenefit.asset(
         'assets/premium/icon_orb.png',
         l10n.premiumBenefitAdvisor,
+        reserva: Icons.psychology,
         vislumbre: l10n.conviteVislumbreConselheiroLinha,
       ),
       OfferBenefit.asset(
         'assets/premium/icon_book.png',
         l10n.premiumBenefitEncyclopedia,
+        reserva: Icons.menu_book,
         vislumbre: l10n.conviteVislumbreEnciclopediaLinha,
       ),
       OfferBenefit.asset(
         'assets/premium/icon_moon.png',
         l10n.premiumBenefitDailyClimate,
+        reserva: Icons.nightlight_round,
         vislumbre: l10n.conviteVislumbreClimaLinha,
       ),
       OfferBenefit.asset(
         'assets/premium/icon_runes.png',
         l10n.premiumBenefitUnlimitedReadings,
+        reserva: Icons.style,
         vislumbre: l10n.conviteVislumbreLeiturasLinha,
       ),
       // A sincronização SAIU da lista, sem substituto: ela deixou de ser
@@ -358,8 +394,20 @@ class OfferBenefit {
     this.highlighted = false,
   });
 
-  factory OfferBenefit.asset(String assetPath, String label, {String? vislumbre}) =>
-      OfferBenefit._(assetPath: assetPath, label: label, vislumbre: vislumbre);
+  /// [reserva] é obrigatório de propósito: peça de oferta sem desenho de
+  /// reserva é peça que some se o PNG não baixar, e na web isso acontece.
+  factory OfferBenefit.asset(
+    String assetPath,
+    String label, {
+    required IconData reserva,
+    String? vislumbre,
+  }) =>
+      OfferBenefit._(
+        assetPath: assetPath,
+        label: label,
+        iconData: reserva,
+        vislumbre: vislumbre,
+      );
 
   factory OfferBenefit.icon(
     IconData iconData,
@@ -381,6 +429,9 @@ class OfferBenefit {
   final String? vislumbre;
 
   final String? assetPath;
+
+  /// O desenho que SEMPRE funciona: é o ícone da peça quando ela não tem
+  /// arte própria, e a reserva da arte quando ela tem (ver [OfferBenefitRow]).
   final IconData? iconData;
   final bool highlighted;
 }
@@ -393,6 +444,14 @@ class OfferBenefitRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final destaque = benefit.highlighted;
+    // Um Icon só, montado uma vez e usado em UM dos dois caminhos: é o
+    // desenho da peça quando ela não tem arte, e a reserva da arte quando
+    // o PNG não carrega. Nunca entra duas vezes na árvore.
+    final glifo = Icon(
+      benefit.iconData,
+      size: 22,
+      color: context.gc.lilac,
+    );
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
@@ -424,12 +483,12 @@ class OfferBenefitRow extends StatelessWidget {
                     benefit.assetPath!,
                     fit: BoxFit.contain,
                     filterQuality: FilterQuality.high,
+                    // O círculo de 44 é do Container acima e não depende do
+                    // que vem aqui dentro: trocar a arte pelo glifo não
+                    // move nem esta linha nem as de baixo.
+                    errorBuilder: (_, __, ___) => glifo,
                   )
-                : Icon(
-                    benefit.iconData,
-                    size: 22,
-                    color: context.gc.lilac,
-                  ),
+                : glifo,
           ),
           const SizedBox(width: 10),
           Expanded(
@@ -1006,9 +1065,20 @@ class GuaranteeBadges extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    // Terceiro campo: o desenho de reserva de cada selo. Selo de confiança
+    // que perde o ícone e fica só com a legenda deixa de ser selo — e é
+    // justamente na hora de pagar que ele precisa estar lá.
     final guarantees = [
-      ('assets/premium/icon_shield.png', l10n.premiumSecurePayment),
-      ('assets/premium/icon_lock.png', l10n.premiumDataProtected),
+      (
+        'assets/premium/icon_shield.png',
+        l10n.premiumSecurePayment,
+        Icons.verified_user,
+      ),
+      (
+        'assets/premium/icon_lock.png',
+        l10n.premiumDataProtected,
+        Icons.lock_outline,
+      ),
     ];
     return Wrap(
       alignment: WrapAlignment.center,
@@ -1016,7 +1086,11 @@ class GuaranteeBadges extends StatelessWidget {
       runSpacing: 8,
       children: [
         for (final guarantee in guarantees)
-          _GuaranteeItem(assetPath: guarantee.$1, label: guarantee.$2),
+          _GuaranteeItem(
+            assetPath: guarantee.$1,
+            label: guarantee.$2,
+            reserva: guarantee.$3,
+          ),
       ],
     );
   }
@@ -1026,7 +1100,14 @@ class _GuaranteeItem extends StatelessWidget {
   final String assetPath;
   final String label;
 
-  const _GuaranteeItem({required this.assetPath, required this.label});
+  /// Desenho exibido quando o PNG do selo não carrega (ver `errorBuilder`).
+  final IconData reserva;
+
+  const _GuaranteeItem({
+    required this.assetPath,
+    required this.label,
+    required this.reserva,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -1039,6 +1120,13 @@ class _GuaranteeItem extends StatelessWidget {
           height: 14,
           fit: BoxFit.contain,
           filterQuality: FilterQuality.high,
+          // Mesmos 14 do PNG: a Row não encolhe nem empurra a legenda, e o
+          // Wrap continua quebrando nas mesmas linhas.
+          errorBuilder: (context, _, __) => Icon(
+            reserva,
+            size: 14,
+            color: context.gc.textSecondary,
+          ),
         ),
         const SizedBox(width: 4),
         Flexible(

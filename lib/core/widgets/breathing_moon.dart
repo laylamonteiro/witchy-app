@@ -2,13 +2,14 @@ import 'package:flutter/material.dart';
 import '../theme/grimoire_colors.dart';
 import '../theme/grimoire_motion.dart';
 import '../../features/grimoire/data/models/spell_model.dart';
-import 'moon_disc.dart';
+import 'moon_glyph.dart';
 
-/// A lua em destaque: disco desenhado ([MoonDisc]) com halo pulsante e, se
+/// A lua em destaque: o glifo da fase ([MoonGlyph]) com halo pulsante e, se
 /// pedido, estrelas piscando ao redor.
 ///
-/// A fase chega como [MoonPhase], não como emoji: o glifo dependia da fonte
-/// de cada plataforma e desenhava uma lua no aparelho e outra no navegador.
+/// A fase chega como [MoonPhase] e não como emoji pronto: quem escolhe o
+/// glifo é o widget, para que o halo — que é desenhado em código, e é o que
+/// faltava no navegador — venha sempre junto dele.
 class BreathingMoon extends StatefulWidget {
   final MoonPhase phase;
   final double size;
@@ -125,7 +126,7 @@ class _BreathingMoonState extends State<BreathingMoon>
             // acima já é o halo desta cena, e dois somados viram neon.
             ScaleTransition(
               scale: _scaleAnimation,
-              child: MoonDisc(
+              child: MoonGlyph(
                 phase: widget.phase,
                 size: widget.size,
                 halo: false,

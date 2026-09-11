@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:grimorio_de_bolso/core/theme/grimoire_colors.dart';
 import 'package:grimorio_de_bolso/core/widgets/breathing_moon.dart';
-import 'package:grimorio_de_bolso/core/widgets/moon_disc.dart';
+import 'package:grimorio_de_bolso/core/widgets/moon_glyph.dart';
 import 'package:grimorio_de_bolso/core/widgets/moon_phase_widget.dart';
 import 'package:grimorio_de_bolso/features/grimoire/data/models/spell_model.dart';
 
@@ -40,7 +40,7 @@ void main() {
     // Antes daqui não se voltava.
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
-    expect(find.byType(MoonDisc), findsOneWidget);
+    expect(find.byType(MoonGlyph), findsOneWidget);
   });
 
   testWidgets('as estrelas também param (o atraso escalonado não é agendado)',
@@ -63,7 +63,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 500));
     await tester.pump(const Duration(milliseconds: 500));
     expect(tester.takeException(), isNull);
-    expect(find.byType(MoonDisc), findsOneWidget);
+    expect(find.byType(MoonGlyph), findsOneWidget);
   });
 
   testWidgets('a fase no carrossel assenta mesmo com movimento reduzido',
@@ -79,8 +79,9 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
-    // Entrada de escala vai direto a 1: o disco já está no tamanho final.
-    expect(tester.getSize(find.byType(MoonDisc)), const Size(60, 60));
+    // Entrada de escala vai direto a 1: a lua já está no tamanho final. O
+    // widget mede o HALO (1,45x o corpo), que é quem manda no layout.
+    expect(tester.getSize(find.byType(MoonGlyph)), const Size(87, 87));
   });
 
   testWidgets('o halo da lua pede size + 30 de largura', (tester) async {

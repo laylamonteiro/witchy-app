@@ -14,6 +14,12 @@ import '../../domain/menstrual_day.dart';
 /// Apagar deixa lápide: o dia sai do histórico, mas a linha continua com uma
 /// revisão maior, para que a cópia antiga de outro aparelho não o traga de
 /// volta. Só [purge] remove de verdade, quando a pessoa pede para apagar tudo.
+///
+/// Não há aqui um método que devolva o histórico inteiro, e isso é de
+/// propósito: levar os dados embora é trabalho do DataExportService, que lê a
+/// tabela direto — e de propósito leva também as lápides, que um `deleted = 0`
+/// esconderia do backup dela. Um `all()` existiu, ficou sem nenhum chamador em
+/// lib/ e foi apagado; quem for reabrir a exportação mexe no serviço, não aqui.
 class MenstrualCycleRepository {
   MenstrualCycleRepository({DatabaseHelper? dbHelper})
       : _dbHelper = dbHelper ?? DatabaseHelper.instance;
@@ -95,16 +101,6 @@ class MenstrualCycleRepository {
       whereArgs: [userId, MenstrualDay.keyOf(from), MenstrualDay.keyOf(to)],
       orderBy: 'day_key ASC',
     );
-    return [for (final row in rows) MenstrualDay.fromRow(row)];
-  }
-
-  /// Tudo o que a pessoa registrou, para ela ver ou levar embora.
-  Future<List<MenstrualDay>> all(String userId) async {
-    final db = await _dbHelper.database;
-    final rows = await db.query(_table,
-        where: 'user_id = ? AND deleted = 0',
-        whereArgs: [userId],
-        orderBy: 'day_key ASC');
     return [for (final row in rows) MenstrualDay.fromRow(row)];
   }
 

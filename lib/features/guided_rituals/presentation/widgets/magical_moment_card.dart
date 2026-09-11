@@ -3,6 +3,7 @@ import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/theme/grimoire_colors.dart';
+import '../../../../core/widgets/folha_com_saida.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../data/models/magical_moment_data.dart';
 
@@ -102,37 +103,33 @@ class MagicalMomentCard extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final locale = Localizations.localeOf(context).toString();
 
-    showModalBottomSheet(
+    // Guia longo: a pessoa rola até o fim e, lá embaixo, precisa voltar. A
+    // alça pintada que ficava aqui não arrastava nada; agora a alça é a do
+    // Material e o X anda junto do título, visível o tempo todo.
+    mostrarFolhaComSaida<void>(
       context: context,
-      backgroundColor: context.gc.surface,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
       builder: (sheetContext) => DraggableScrollableSheet(
         expand: false,
         initialChildSize: 0.75,
         maxChildSize: 0.95,
         builder: (context, scrollController) => SingleChildScrollView(
           controller: scrollController,
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.fromLTRB(24, 4, 24, 24),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: context.gc.surfaceBorder,
-                    borderRadius: BorderRadius.circular(2),
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      l10n.magicalMomentGuideTitle,
+                      style: Theme.of(context).textTheme.headlineMedium,
+                    ),
                   ),
-                ),
-              ),
-              const SizedBox(height: 20),
-              Text(
-                l10n.magicalMomentGuideTitle,
-                style: Theme.of(context).textTheme.headlineMedium,
+                  const BotaoFecharFolha(
+                      key: ValueKey('magical-moment-close')),
+                ],
               ),
               const SizedBox(height: 16),
               Text(

@@ -5,7 +5,7 @@ import 'package:provider/provider.dart';
 
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/expansion_magical_card.dart';
-import '../../../../core/widgets/moon_disc.dart';
+import '../../../../core/widgets/moon_glyph.dart';
 import '../../../grimoire/data/models/spell_model.dart';
 import '../../../lunar/presentation/providers/lunar_provider.dart';
 
@@ -23,10 +23,9 @@ class NextMoonPhasesCard extends StatelessWidget {
     final lunarProvider = context.watch<LunarProvider>();
 
     return ExpansionMagicalCard(
-      // O cabeçalho usa o MESMO disco das oito linhas do corpo: com o emoji
-      // aqui, a lua do título vinha da fonte do aparelho e a do corpo era
-      // desenhada — duas artes no mesmo card.
-      leading: MoonDisc(
+      // A lua de HOJE no cabeçalho, com o brilho do app atrás: é a mesma
+      // lua que o corpo lista, e o card fala dela.
+      leading: MoonGlyph(
           phase: lunarProvider.getCurrentMoonPhase(), size: 26, halo: false),
       title: l10n.lunarNextPhases,
       child: Column(
@@ -116,10 +115,9 @@ class NextMoonPhasesCard extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Disco desenhado, sem halo: são oito itens de lista, não heróis —
-          // e, acima do card, a lua de hoje já é desenhada. Um emoji aqui
-          // deixaria a página com duas artes de lua e duas cores.
-          MoonDisc(phase: phase, size: 32, halo: false),
+          // Sem halo: são oito itens de lista, não heróis — oito brilhos
+          // empilhados viram uma faixa acesa. O brilho fica no cabeçalho.
+          MoonGlyph(phase: phase, size: 32, halo: false),
           const SizedBox(width: 16),
           Expanded(
             child: Column(

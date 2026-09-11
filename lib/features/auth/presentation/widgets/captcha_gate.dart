@@ -5,12 +5,19 @@ import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 
 import '../../../../core/config/captcha_config.dart';
 import '../../../../core/theme/grimoire_colors.dart';
+import '../../../../core/widgets/folha_com_saida.dart';
 
 /// Verificação anti-robô do Cloudflare Turnstile.
 ///
 /// Sobe como folha por cima do formulário, resolve o desafio (na maioria
 /// das vezes sem pedir nada à pessoa) e devolve o token que o Supabase
 /// exige. Devolve null quando a pessoa desiste ou o desafio falha.
+///
+/// A saída tem BOTÃO, e não só o gesto: este é o portão de Entrar, Cadastrar,
+/// Esqueci minha senha e do re-login, e não há tela por baixo para onde
+/// escapar. Quem não conseguisse resolver o desafio — WebView que não carrega,
+/// desafio que se repete — ficava preso numa folha sem porta, porque no
+/// navegador do celular arrastar não se anuncia e tocar fora não se oferece.
 ///
 /// Sem a site key compilada ([CaptchaConfig.isConfigured] falso) o gate
 /// nem aparece e devolve null — que é exatamente o que os repositórios
@@ -21,13 +28,8 @@ class CaptchaGate {
   static Future<String?> resolve(BuildContext context) async {
     if (!CaptchaConfig.isConfigured) return null;
 
-    return showModalBottomSheet<String>(
+    return mostrarFolhaComSaida<String>(
       context: context,
-      isDismissible: true,
-      backgroundColor: context.gc.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
       builder: (_) => const _CaptchaSheet(),
     );
   }
@@ -68,19 +70,17 @@ class _CaptchaSheetState extends State<_CaptchaSheet> {
     final l10n = AppLocalizations.of(context);
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
+      padding: const EdgeInsets.fromLTRB(24, 4, 24, 24),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Container(
-            width: 40,
-            height: 4,
-            decoration: BoxDecoration(
-              color: context.gc.surfaceBorder,
-              borderRadius: BorderRadius.circular(2),
-            ),
+          // O X fica no alto à direita para não empurrar o título do centro,
+          // e o "Cancelar" repete a saída embaixo, onde o olho já está depois
+          // de o desafio falhar.
+          const Align(
+            alignment: Alignment.centerRight,
+            child: BotaoFecharFolha(key: ValueKey('captcha-close')),
           ),
-          const SizedBox(height: 20),
           Text(
             l10n.authCaptchaTitle(context.vocativo),
             textAlign: TextAlign.center,
@@ -115,6 +115,17 @@ class _CaptchaSheetState extends State<_CaptchaSheet> {
               },
               onError: (_) => _onError(),
             ),
+          ),
+          const SizedBox(height: 4),
+          // Desistir devolve null, que é o mesmo que o gate já devolvia quando
+          // a pessoa tocava fora — aqui só ganha nome e alvo.
+          TextButton(
+            key: const ValueKey('captcha-cancel'),
+            onPressed: () => Navigator.of(context).maybePop(),
+            style: TextButton.styleFrom(
+              foregroundColor: context.gc.textSecondary,
+            ),
+            child: Text(l10n.commonCancel),
           ),
         ],
       ),

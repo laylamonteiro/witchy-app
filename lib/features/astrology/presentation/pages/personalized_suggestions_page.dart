@@ -19,18 +19,6 @@ import '../../data/services/transit_interpreter.dart';
 import '../../data/services/transit_calculator.dart';
 import 'birth_chart_input_page.dart';
 
-/// Ícones (invariantes entre idiomas) dos planetas retrógrados.
-const Map<Planet, String> _retrogradeIcons = {
-  Planet.mercury: '☿️',
-  Planet.venus: '♀️',
-  Planet.mars: '♂️',
-  Planet.jupiter: '♃',
-  Planet.saturn: '♄',
-  Planet.uranus: '♅',
-  Planet.neptune: '♆',
-  Planet.pluto: '♇',
-};
-
 class PersonalizedSuggestionsPage extends StatefulWidget {
   const PersonalizedSuggestionsPage({super.key});
 
@@ -405,15 +393,30 @@ class _PersonalizedSuggestionsPageState
     final mercuryRetrograde =
         _retrogradePlanets!.any((p) => p.planet == Planet.mercury);
 
+    // Uma cor só para o par ícone+título, tirada do tema. O laranja cru que
+    // estava aqui não tem contraste garantido na paleta clara, e o estado
+    // "Mercúrio retrógrado" é justamente o que precisa saltar aos olhos.
+    final stateColor = mercuryRetrograde ? context.gc.alert : context.gc.lilac;
+
     return MagicalCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Text(
-                mercuryRetrograde ? '☿️' : '🔄',
-                style: const TextStyle(fontSize: 28),
+              // Este desenho é INFORMAÇÃO: é ele que separa os dois estados
+              // do card. Antes eram dois emojis, e o de Mercúrio vinha com
+              // seletor de emoji sobre um símbolo que quase nenhuma fonte
+              // desenha colorido — no aparelho antigo virava quadradinho, e
+              // aí os dois estados ficavam iguais. O ícone do Material vem
+              // dentro do app e é o mesmo em qualquer aparelho.
+              // Sem semanticLabel de propósito: o título ao lado JÁ diz em
+              // qual estado o card está, e rotular faria o leitor de tela
+              // repetir a mesma frase.
+              Icon(
+                mercuryRetrograde ? Icons.sync_problem : Icons.sync,
+                size: 28,
+                color: stateColor,
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -425,8 +428,7 @@ class _PersonalizedSuggestionsPageState
                           ? content.ui['mercuryRetrogradeActive']!
                           : content.ui['retrogradePlanets']!,
                       style: TextStyle(
-                        color:
-                            mercuryRetrograde ? Colors.orange : context.gc.lilac,
+                        color: stateColor,
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
                       ),
@@ -462,8 +464,15 @@ class _PersonalizedSuggestionsPageState
                   // Título sempre visível
                   Row(
                     children: [
-                      Text(_retrogradeIcons[planet.planet] ?? '🔄',
-                          style: const TextStyle(fontSize: 20)),
+                      // Os símbolos astrológicos de planeta não existem em
+                      // toda fonte de sistema (e três deles ainda vinham com
+                      // seletor de emoji), então no aparelho antigo a lista
+                      // abria com quadradinhos. Toda linha daqui É um
+                      // planeta retrógrado e o nome dele está escrito ao
+                      // lado: o desenho marca o MOVIMENTO (para trás), não a
+                      // identidade — por isso um ícone só serve, e decorativo.
+                      Icon(Icons.rotate_left,
+                          size: 20, color: context.gc.lilac),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
@@ -551,10 +560,16 @@ class _PersonalizedSuggestionsPageState
 
   Widget _buildSuggestionCard(PersonalizedSuggestion suggestion,
       {bool isFree = false}) {
+    // Os quatro desenhos separam as categorias do card, então precisam
+    // existir no aparelho mais antigo que o app aceita (minSdk 24, Android
+    // 7 = Emoji 4.0). A pessoa em lótus é de 2017 (Emoji 5.0): ali saía
+    // quadradinho, e um card de meditação ficava sem categoria visível. O
+    // yin-yang é de 2010 e existe em qualquer fonte de sistema; os outros
+    // três já eram antigos o bastante e ficam como estavam.
     final categoryIcons = {
       'ritual': '🕯️',
       'spell': '✨',
-      'meditation': '🧘',
+      'meditation': '☯️',
       'divination': '🔮',
     };
 

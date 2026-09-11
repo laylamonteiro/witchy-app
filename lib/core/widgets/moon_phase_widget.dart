@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import '../../features/grimoire/data/models/spell_model.dart';
 import '../theme/grimoire_colors.dart';
 import '../theme/grimoire_motion.dart';
-import 'moon_disc.dart';
+import 'moon_glyph.dart';
 
 /// A fase da lua com nome (e, se pedido, o significado) embaixo.
 ///
-/// O disco é pintado pelo [MoonDisc]: era um emoji, e emoji é arte da fonte
-/// de quem abre o app — mesma tela e mesmo dia saíam diferentes no aparelho
-/// e no navegador.
+/// A lua vem do [MoonGlyph]: o glifo da fase com o brilho do app desenhado
+/// atrás. O brilho é o que faltava no navegador e fazia a mesma lua parecer
+/// apagada lá.
 class MoonPhaseWidget extends StatelessWidget {
   final MoonPhase phase;
   final bool showName;
@@ -39,7 +39,7 @@ class MoonPhaseWidget extends StatelessWidget {
           builder: (context, value, child) {
             return Transform.scale(scale: value, child: child);
           },
-          child: MoonDisc(phase: phase, size: size),
+          child: MoonGlyph(phase: phase, size: size),
         ),
         if (showName) ...[
           const SizedBox(height: 8),

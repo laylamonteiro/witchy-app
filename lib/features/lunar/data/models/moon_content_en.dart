@@ -64,10 +64,7 @@ const String moonEsbatsIntroEn =
 
 const List<EsbatItem> moonEsbatItemsEn = [
   (
-    // Relógio, e não a lua cheia: a fase é desenhada em todo o app, e um
-    // glifo de fase aqui traria de volta a arte da fonte do aparelho, ao
-    // lado dos oito discos que esta mesma página desenha.
-    emoji: '🕐',
+    emoji: '🌕',
     title: 'When',
     text:
         'On the night of the full moon — there are 12 or 13 a year, and many traditions name each one (Wolf Moon, Flower Moon, Harvest Moon...)',
@@ -84,7 +81,11 @@ const List<EsbatItem> moonEsbatItemsEn = [
         'Leave crystals and tools under the moonlight to renew their power',
   ),
   (
-    emoji: '🫙',
+    // Gota, e não o potinho: U+1FAD9 é emoji de 2021 e o minSdk do app
+    // é 24 — em Android antigo a fonte do sistema não o tem e a linha
+    // abria com um quadradinho. A gota é de 2010 e existe em todo
+    // aparelho.
+    emoji: '💧',
     title: 'Moon water',
     text: 'Make moon water at the height of lunar power',
   ),

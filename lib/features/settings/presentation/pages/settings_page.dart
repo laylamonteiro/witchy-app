@@ -622,7 +622,13 @@ class SettingsPage extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  const Text('🐈‍⬛', style: TextStyle(fontSize: 26)),
+                  // Mesmo defeito do tour: o gato preto é sequência ZWJ de 2020
+                  // e, com minSdk 24, se parte em dois desenhos no aparelho
+                  // antigo. Os outros cabeçalhos de sheet deste arquivo já
+                  // abrem com Icon — este passa a seguir o mesmo padrão.
+                  // Decorativo: o título "Salem" ao lado é o que o leitor de
+                  // tela anuncia, então um rótulo aqui seria eco.
+                  Icon(Icons.pets, color: context.gc.lilac, size: 26),
                   const SizedBox(width: 12),
                   Text(
                     AppLocalizations.of(context).settingsSalem,
@@ -773,7 +779,11 @@ class SettingsPage extends StatelessWidget {
                       ),
                       Divider(color: context.gc.textPrimary10),
                       _NotificationTile(
-                        icon: '🐈‍⬛',
+                        // A fileira de avisos usa emoji, mas o gato preto é
+                        // sequência ZWJ de 2020: com minSdk 24 ele se parte
+                        // em dois desenhos e desalinha a linha inteira. Só
+                        // esta linha troca para ícone do Material.
+                        iconData: Icons.pets,
                         title: AppLocalizations.of(context)
                             .settingsDailyReminder,
                         subtitle: AppLocalizations.of(context)
@@ -1296,28 +1306,41 @@ class SettingsPage extends StatelessWidget {
 }
 
 class _NotificationTile extends StatelessWidget {
-  final String icon;
+  /// Emoji da linha. Nulo quando a linha usa [iconData] — ver o porquê lá.
+  final String? icon;
+
+  /// Desenho do Material, para a linha cujo emoji não existe em todo
+  /// aparelho. O ícone vem dentro do app, então não depende da fonte do
+  /// sistema; o emoji, sim.
+  final IconData? iconData;
+
   final String title;
   final String subtitle;
   final bool value;
   final ValueChanged<bool> onChanged;
 
   const _NotificationTile({
-    required this.icon,
+    this.icon,
+    this.iconData,
     required this.title,
     required this.subtitle,
     required this.value,
     required this.onChanged,
-  });
+  }) : assert(icon != null || iconData != null,
+            'a linha precisa de um emoji ou de um ícone');
 
   @override
   Widget build(BuildContext context) {
+    // Cópia local porque campo público não é promovido pelo null-check.
+    final data = iconData;
     return ListTile(
       contentPadding: EdgeInsets.zero,
-      leading: Text(
-        icon,
-        style: const TextStyle(fontSize: 32),
-      ),
+      leading: data != null
+          ? Icon(data, size: 32, color: context.gc.lilac)
+          : Text(
+              icon!,
+              style: const TextStyle(fontSize: 32),
+            ),
       title: Text(
         title,
         style: TextStyle(

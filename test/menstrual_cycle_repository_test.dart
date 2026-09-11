@@ -197,7 +197,6 @@ void main() {
 
     final erased = await repo.purge(user);
     expect(erased, 1);
-    expect(await repo.all(user), isEmpty);
     expect(await repo.count(other), 1, reason: 'Only the asking account is erased');
 
     // Erasing everything leaves no headstone either: there is nothing left.

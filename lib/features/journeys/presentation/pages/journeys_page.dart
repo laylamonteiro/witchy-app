@@ -3,6 +3,7 @@ import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
+import '../../../../core/widgets/folha_com_saida.dart';
 import '../../../../core/widgets/loading_widget.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../learning/presentation/providers/learning_provider.dart';
@@ -342,41 +343,28 @@ class _JourneysPageState extends State<JourneysPage> {
   }
 
   void _showLevelsSheet() {
-    showModalBottomSheet(
+    // O fundo e o canto arredondado passaram para a folha em si (antes eram
+    // de um Container interno, com o fundo do modal transparente) para que a
+    // alça de arrasto do Material — a que arrasta de verdade — caia DENTRO
+    // da superfície, e não flutuando sobre o escurecido.
+    mostrarFolhaComSaida<void>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
       builder: (context) => DraggableScrollableSheet(
         initialChildSize: 0.7,
         minChildSize: 0.5,
         maxChildSize: 0.95,
         expand: false,
-        builder: (context, scrollController) => Container(
-          decoration: BoxDecoration(
-            color: context.gc.surface,
-            borderRadius:
-                const BorderRadius.vertical(top: Radius.circular(20)),
-          ),
-          child: Column(
-            children: [
-              Container(
-                margin: const EdgeInsets.only(top: 12),
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: context.gc.textSecondary,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              Expanded(
-                child: ListView(
-                  controller: scrollController,
-                  padding: const EdgeInsets.all(20),
-                  children: [_buildLevelsSection()],
-                ),
-              ),
-            ],
-          ),
+        builder: (context, scrollController) => ListView(
+          controller: scrollController,
+          padding: const EdgeInsets.fromLTRB(20, 4, 20, 20),
+          children: [
+            const Align(
+              alignment: Alignment.centerRight,
+              child: BotaoFecharFolha(key: ValueKey('journeys-levels-close')),
+            ),
+            _buildLevelsSection(),
+          ],
         ),
       ),
     );
@@ -683,215 +671,198 @@ class _JourneysPageState extends State<JourneysPage> {
   }
 
   void _showJourneyDetails(JourneyModel journey) {
-    showModalBottomSheet(
+    // O fundo e o canto arredondado passaram para a folha em si (antes eram
+    // de um Container interno, com o modal transparente) para que a alça de
+    // arrasto do Material — a que arrasta de verdade — caia DENTRO da
+    // superfície, e não flutuando sobre o escurecido.
+    mostrarFolhaComSaida<void>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
       builder: (context) => DraggableScrollableSheet(
         initialChildSize: 0.7,
         minChildSize: 0.5,
         maxChildSize: 0.95,
         expand: false,
-        builder: (context, scrollController) => Container(
-          decoration: BoxDecoration(
-            color: context.gc.surface,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-          ),
-          child: Column(
-            children: [
-              Container(
-                margin: const EdgeInsets.only(top: 12),
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: context.gc.textSecondary,
-                  borderRadius: BorderRadius.circular(2),
+        builder: (context, scrollController) => ListView(
+          controller: scrollController,
+          padding: const EdgeInsets.fromLTRB(20, 4, 20, 20),
+          children: [
+            // Header
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: journey.color.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Icon(journey.icon,
+                      color: journey.color, size: 40),
                 ),
-              ),
-              Expanded(
-                child: ListView(
-                  controller: scrollController,
-                  padding: const EdgeInsets.all(20),
-                  children: [
-                    // Header
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: journey.color.withValues(alpha: 0.2),
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: Icon(journey.icon,
-                              color: journey.color, size: 40),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        journey.localizedTitle,
+                        style: TextStyle(
+                          color: context.gc.textPrimary,
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
                         ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                journey.localizedTitle,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        journey.localizedDescription,
+                        style: TextStyle(
+                          color: context.gc.textSecondary,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const BotaoFecharFolha(key: ValueKey('journey-close')),
+              ],
+            ),
+            const SizedBox(height: 24),
+
+            // Etapas
+            Text(
+              'Etapas da Jornada',
+              style: TextStyle(
+                color: context.gc.textPrimary,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            ...journey.steps.asMap().entries.map((entry) {
+              final index = entry.key;
+              final step = entry.value;
+              final progress = _getStepProgress(step);
+              final isCompleted = progress >= step.requiredCount;
+              final progressPercent = step.requiredCount > 0
+                  ? (progress / step.requiredCount).clamp(0.0, 1.0)
+                  : 0.0;
+
+              return Container(
+                margin: const EdgeInsets.only(bottom: 12),
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: isCompleted
+                      ? Colors.green.withValues(alpha: 0.1)
+                      : context.gc.textPrimary.withValues(alpha: 0.05),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: isCompleted ? Colors.green : context.gc.textPrimary10,
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 32,
+                      height: 32,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: isCompleted
+                            ? Colors.green
+                            : journey.color.withValues(alpha: 0.3),
+                      ),
+                      child: Center(
+                        child: isCompleted
+                            ? Icon(Icons.check,
+                                color: context.gc.textPrimary, size: 18)
+                            : Text(
+                                '${index + 1}',
                                 style: TextStyle(
-                                  color: context.gc.textPrimary,
-                                  fontSize: 22,
+                                  color: journey.color,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
-                              const SizedBox(height: 4),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            step.localizedTitle,
+                            style: TextStyle(
+                              color: isCompleted
+                                  ? Colors.green
+                                  : context.gc.textPrimary,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            step.localizedDescription,
+                            style: TextStyle(
+                              color: context.gc.textSecondary,
+                              fontSize: 12,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: ClipRRect(
+                                  borderRadius:
+                                      BorderRadius.circular(2),
+                                  child: LinearProgressIndicator(
+                                    value: progressPercent,
+                                    backgroundColor: context.gc.textPrimary10,
+                                    valueColor: AlwaysStoppedAnimation(
+                                      isCompleted
+                                          ? Colors.green
+                                          : journey.color,
+                                    ),
+                                    minHeight: 4,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
                               Text(
-                                journey.localizedDescription,
+                                '$progress/${step.requiredCount}',
                                 style: TextStyle(
-                                  color: context.gc.textSecondary,
-                                  fontSize: 14,
+                                  color: isCompleted
+                                      ? Colors.green
+                                      : context.gc.textSecondary,
+                                  fontSize: 12,
                                 ),
                               ),
                             ],
                           ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 24),
-
-                    // Etapas
-                    Text(
-                      'Etapas da Jornada',
-                      style: TextStyle(
-                        color: context.gc.textPrimary,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
+                        ],
                       ),
                     ),
-                    const SizedBox(height: 16),
-
-                    ...journey.steps.asMap().entries.map((entry) {
-                      final index = entry.key;
-                      final step = entry.value;
-                      final progress = _getStepProgress(step);
-                      final isCompleted = progress >= step.requiredCount;
-                      final progressPercent = step.requiredCount > 0
-                          ? (progress / step.requiredCount).clamp(0.0, 1.0)
-                          : 0.0;
-
-                      return Container(
-                        margin: const EdgeInsets.only(bottom: 12),
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: isCompleted
-                              ? Colors.green.withValues(alpha: 0.1)
-                              : context.gc.textPrimary.withValues(alpha: 0.05),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: isCompleted ? Colors.green : context.gc.textPrimary10,
-                          ),
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color:
+                            context.gc.starYellow.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        '+${step.xpReward} XP',
+                        style: TextStyle(
+                          color: context.gc.starYellow,
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
                         ),
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 32,
-                              height: 32,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: isCompleted
-                                    ? Colors.green
-                                    : journey.color.withValues(alpha: 0.3),
-                              ),
-                              child: Center(
-                                child: isCompleted
-                                    ? Icon(Icons.check,
-                                        color: context.gc.textPrimary, size: 18)
-                                    : Text(
-                                        '${index + 1}',
-                                        style: TextStyle(
-                                          color: journey.color,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    step.localizedTitle,
-                                    style: TextStyle(
-                                      color: isCompleted
-                                          ? Colors.green
-                                          : context.gc.textPrimary,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    step.localizedDescription,
-                                    style: TextStyle(
-                                      color: context.gc.textSecondary,
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Row(
-                                    children: [
-                                      Expanded(
-                                        child: ClipRRect(
-                                          borderRadius:
-                                              BorderRadius.circular(2),
-                                          child: LinearProgressIndicator(
-                                            value: progressPercent,
-                                            backgroundColor: context.gc.textPrimary10,
-                                            valueColor: AlwaysStoppedAnimation(
-                                              isCompleted
-                                                  ? Colors.green
-                                                  : journey.color,
-                                            ),
-                                            minHeight: 4,
-                                          ),
-                                        ),
-                                      ),
-                                      const SizedBox(width: 8),
-                                      Text(
-                                        '$progress/${step.requiredCount}',
-                                        style: TextStyle(
-                                          color: isCompleted
-                                              ? Colors.green
-                                              : context.gc.textSecondary,
-                                          fontSize: 12,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 8, vertical: 4),
-                              decoration: BoxDecoration(
-                                color:
-                                    context.gc.starYellow.withValues(alpha: 0.2),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Text(
-                                '+${step.xpReward} XP',
-                                style: TextStyle(
-                                  color: context.gc.starYellow,
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    }),
+                      ),
+                    ),
                   ],
                 ),
-              ),
-            ],
-          ),
+              );
+            }),
+          ],
         ),
       ),
     );

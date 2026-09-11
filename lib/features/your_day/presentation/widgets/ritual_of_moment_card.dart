@@ -110,8 +110,7 @@ class RitualOfMomentCard extends StatelessWidget {
     if (nextFull != null) {
       candidates.add((
         name: MoonPhase.fullMoon.displayName,
-        // Sem emoji de propósito: ver o comentário do 'event' abaixo.
-        emoji: '',
+        emoji: MoonPhase.fullMoon.emoji,
         date: nextFull,
         ritualId: 'full_moon',
         isMoon: true,
@@ -121,8 +120,7 @@ class RitualOfMomentCard extends StatelessWidget {
     if (nextNew != null) {
       candidates.add((
         name: MoonPhase.newMoon.displayName,
-        // Sem emoji de propósito: ver o comentário do 'event' abaixo.
-        emoji: '',
+        emoji: MoonPhase.newMoon.emoji,
         date: nextNew,
         ritualId: 'new_moon',
         isMoon: true,
@@ -139,10 +137,8 @@ class RitualOfMomentCard extends StatelessWidget {
     final days =
         (targetDay.difference(today).inHours / 24).round().clamp(0, 9999);
     final hours = next.date.difference(now).inHours;
-    // A lua entra só pelo nome: o emoji de fase é arte da fonte de cada
-    // plataforma, então a MESMA frase saía com um disco no aparelho e outro
-    // no navegador. O sabbat continua com o seu (🕯️, 🔥…), que não é fase e
-    // não tem desenho equivalente.
+    // O emoji continua podendo faltar (um sabbat sem glifo), e aí a frase
+    // fica só com o nome em vez de começar por um espaço.
     final event =
         next.emoji.isEmpty ? next.name : '${next.emoji} ${next.name}';
 
