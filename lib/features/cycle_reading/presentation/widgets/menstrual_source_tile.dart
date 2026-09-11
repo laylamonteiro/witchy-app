@@ -59,7 +59,17 @@ class _MenstrualSourceTileState extends State<MenstrualSourceTile> {
   final Set<String> _chosen = {};
   bool _words = false;
 
+  /// Quantas vezes a prévia já foi pedida nesta caixinha.
+  ///
+  /// Uma leitura em voo não pode repovoar a lista depois que a fonte foi
+  /// fechada ou que a janela mudou: o `setState` atrasado do [_open] devolvia
+  /// os dias marcados com a chave DESLIGADA na tela, e o pai ficava com uma
+  /// autorização que ela não vê em lugar nenhum — o contrário do que esta
+  /// caixinha promete.
+  int _aberturaPedida = 0;
+
   Future<void> _open() async {
+    final pedido = ++_aberturaPedida;
     setState(() {
       _on = true;
       _loading = true;
@@ -76,7 +86,9 @@ class _MenstrualSourceTileState extends State<MenstrualSourceTile> {
               to: widget.period.end.subtract(const Duration(days: 1)),
             )
           : const <MenstrualDay>[];
-      if (!mounted) return;
+      // Fechou ou trocou de janela enquanto o banco respondia: o que voltou
+      // é de uma pergunta que não está mais de pé.
+      if (!mounted || pedido != _aberturaPedida) return;
       setState(() {
         _consented = consented;
         _consentRevision = revision;
@@ -91,19 +103,55 @@ class _MenstrualSourceTileState extends State<MenstrualSourceTile> {
         _loading = false;
       });
     } catch (_) {
-      if (mounted) setState(() => _loading = false);
+      if (mounted && pedido == _aberturaPedida) {
+        setState(() => _loading = false);
+      }
     }
+    if (pedido != _aberturaPedida) return;
     _emit();
   }
 
   void _close() {
-    setState(() {
-      _on = false;
-      _chosen.clear();
-      _words = false;
-      _days = const [];
-    });
+    setState(_limpar);
     _emit();
+  }
+
+  void _limpar() {
+    // Invalida a prévia em voo junto: fechar a fonte tem de desfazer também
+    // o que ainda está a caminho, senão o `_open` atrasado religa a lista
+    // com a chave desligada e o pai recebe dias autorizados sem aviso.
+    _aberturaPedida++;
+    _on = false;
+    _loading = false;
+    _chosen.clear();
+    _words = false;
+    _days = const [];
+  }
+
+  @override
+  void didUpdateWidget(covariant MenstrualSourceTile oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final outraJanela =
+        !oldWidget.period.start.isAtSameMomentAs(widget.period.start) ||
+            !oldWidget.period.end.isAtSameMomentAs(widget.period.end);
+    if (!outraJanela || (!_on && _chosen.isEmpty)) return;
+
+    // Trocar o período no calendário invalida o que estava marcado: os dias
+    // eram os da janela ANTERIOR, e o escopo emitido carrega o próprio
+    // `start`/`end` — mantê-lo faria a leitura ler do banco os dias do
+    // período errado, sem que nada avisasse.
+    //
+    // Fecha em vez de reabrir sozinha na janela nova: `_open` marca o
+    // período inteiro por padrão, então reabrir seria o app autorizando no
+    // lugar dela. Autorizar é dela; o app só desfaz.
+    setState(_limpar);
+
+    // O aviso ao pai sai DEPOIS do frame: `didUpdateWidget` roda durante o
+    // build de quem nos contém, e o pai guarda o escopo com setState —
+    // chamá-lo agora derrubaria a árvore.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _emit();
+    });
   }
 
   void _emit() {

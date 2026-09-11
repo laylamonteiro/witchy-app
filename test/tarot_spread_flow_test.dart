@@ -121,6 +121,11 @@ void main() {
       await show(tester, textScale: count == 5 ? 1.5 : 1);
       final l10n = AppLocalizations.of(tester.element(find.byType(TarotPage)));
       final title = count == 3 ? l10n.tarotThreeCards : l10n.tarotCross;
+      // O palco do painel de foco mostra a carta em foco GRANDE, e ela também
+      // é um TarotCardView. Contar a tiragem exige olhar só para a mesa.
+      final naMesa = find.descendant(
+          of: find.byKey(const ValueKey('tarot-table')),
+          matching: find.byType(TarotCardView));
       Future<void> open() async {
         await tester.enterText(find.byType(TextField), 'A manual spread question');
         await tester.ensureVisible(find.text(title));
@@ -181,20 +186,22 @@ void main() {
         expect(find.byType(TextField), findsNothing,
             reason: 'No frame between the fan and the result may show the spread menu');
         if (selection.evaluate().isNotEmpty) {
-          expect(find.byType(TarotCardView), findsNothing,
+          expect(naMesa, findsNothing,
               reason: 'The flip starts after the fan has left');
         }
-        return find.byType(TarotCardView).evaluate().length == count;
+        return naMesa.evaluate().length == count;
       }, 'all revealed faces', step: const Duration(milliseconds: 16));
       await tester.pumpAndSettle();
-      final cards = tester.widgetList<TarotCardView>(find.byType(TarotCardView)).toList();
+      final cards = tester.widgetList<TarotCardView>(naMesa).toList();
       expect(cards.map((c) => c.card.id).toSet(), chosen.toSet());
       final flips = tester.widgetList<TarotFlipCard>(find.byType(TarotFlipCard));
       expect(flips.map((f) => (f.back as TarotCardBack).deckPosition).toSet(),
           originalPositions.toSet());
       if (count == 5) {
-        Offset point(int i) => tester.getCenter(find.byWidgetPredicate(
-            (w) => w is TarotCardView && w.card.id == chosen[i]));
+        Offset point(int i) => tester.getCenter(find.descendant(
+            of: find.byKey(const ValueKey('tarot-table')),
+            matching: find.byWidgetPredicate(
+                (w) => w is TarotCardView && w.card.id == chosen[i])));
         expect(point(4).dy, lessThan(point(0).dy));
         expect(point(2).dy, greaterThan(point(0).dy));
         expect(point(3).dx, lessThan(point(0).dx));
@@ -210,7 +217,7 @@ void main() {
       await tester.pumpAndSettle();
       await tester.ensureVisible(find.text(title));
       await tester.tap(find.text(title));
-      await until(tester, () => find.byType(TarotCardView).evaluate().length == count, 'revisited result');
+      await until(tester, () => naMesa.evaluate().length == count, 'revisited result');
       expect(find.byType(TarotSpreadSelectionPage), findsNothing);
       expect(await rows(tester, 'tarot_readings'), hasLength(1));
       expect(await rows(tester, 'free_writings'), hasLength(1));

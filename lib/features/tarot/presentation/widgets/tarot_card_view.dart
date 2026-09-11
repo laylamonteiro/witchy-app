@@ -17,12 +17,18 @@ class TarotCardView extends StatelessWidget {
   final bool reversed;
   final double width;
 
+  /// Carta em foco no painel de leitura. O destaque mora aqui (e não numa
+  /// moldura por fora) porque a carta invertida gira meia volta: uma borda
+  /// desenhada fora do [RotatedBox] ficaria com a sombra do lado errado.
+  final bool highlighted;
+
   const TarotCardView({
     super.key,
     required this.card,
     this.deck = TarotDeck.riderWaite,
     this.reversed = false,
     this.width = 110,
+    this.highlighted = false,
   });
 
   static const double aspectRatio = 0.585; // proporção clássica de tarot
@@ -45,13 +51,24 @@ class TarotCardView extends StatelessWidget {
     return RotatedBox(
       quarterTurns: reversed ? 2 : 0,
       child: Container(
+        // A caixa de FORA tem tamanho fixo (como em `OracleCardFace`): a
+        // borda come para DENTRO. Sem isto a carta cresceria com a espessura
+        // da borda — 2 px ao entrar em foco — e a mesa inteira daria um
+        // solavanco a cada troca de posição. É também o que faz a frente
+        // medir exatamente o mesmo que o verso, que é pintado em `Size(width,
+        // height)` cravado: antes a carta engordava na metade do giro.
+        width: width,
+        height: height,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: context.gc.surfaceBorder),
+          border: Border.all(
+            color: highlighted ? context.gc.lilac : context.gc.surfaceBorder,
+            width: highlighted ? 2 : 1,
+          ),
           boxShadow: [
             BoxShadow(
-              color: context.gc.lilac.withValues(alpha: 0.18),
-              blurRadius: 10,
+              color: context.gc.lilac.withValues(alpha: highlighted ? .35 : 0.18),
+              blurRadius: highlighted ? 14 : 10,
             ),
           ],
         ),

@@ -28,6 +28,7 @@ import '../../data/models/oracle_card_model.dart';
 import '../../data/repositories/oracle_reading_repository.dart';
 import '../../data/repositories/oracle_selection_repository.dart';
 import '../../domain/oracle_selection_session.dart';
+import '../widgets/grimoire_card_back.dart';
 import '../widgets/oracle_card_face.dart';
 import '../widgets/oracle_spread_board.dart';
 import 'oracle_album_page.dart';
@@ -605,7 +606,7 @@ class _OracleBodyState extends State<_OracleBody> {
       key: ValueKey('oracle-flip-${_activeSession?.id}-$index'),
       revealed: _revealed,
       delay: Duration(milliseconds: _passoRevelacaoMs(_drawnCards!.length) * index),
-      back: TarotCardBack(width: width, deckPosition: slot),
+      back: OracleCardBack(width: width, deckPosition: slot),
       // Numa tiragem de uma carta só, é aqui que a cena acontece: a mesa
       // faz o papel do palco, sem repetir a figura mais abaixo.
       front: _drawnCards!.length == 1

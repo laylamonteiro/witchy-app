@@ -126,13 +126,9 @@ class _MenstrualSeasonCardState extends State<MenstrualSeasonCard> {
             ),
           ),
         ),
-        AnimatedSize(
-          duration: GrimoireMotion.reduced(context)
-              ? Duration.zero
-              : GrimoireMotion.state,
-          curve: GrimoireMotion.enter,
-          alignment: Alignment.topCenter,
-          child: !_aboutOpen
+        _abrindo(
+          context,
+          !_aboutOpen
               ? const SizedBox(width: double.infinity)
               : Column(
                   key: const ValueKey('menstrual-season-about-text'),
@@ -317,4 +313,20 @@ class _MenstrualSeasonCardState extends State<MenstrualSeasonCard> {
       ),
     );
   }
+}
+
+/// O corpo que abre e fecha.
+///
+/// Com movimento reduzido NÃO há [AnimatedSize] nenhum: um AnimatedSize de
+/// duração zero completa o próprio controlador durante o layout e se
+/// re-suja a si mesmo ("A RenderAnimatedSize was mutated in its own
+/// performLayout"). Zerar a duração não é o mesmo que não animar.
+Widget _abrindo(BuildContext context, Widget corpo) {
+  if (GrimoireMotion.reduced(context)) return corpo;
+  return AnimatedSize(
+    duration: GrimoireMotion.state,
+    curve: GrimoireMotion.enter,
+    alignment: Alignment.topCenter,
+    child: corpo,
+  );
 }

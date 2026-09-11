@@ -218,6 +218,7 @@ class _AlbumSlot extends StatelessWidget {
                   width: width,
                   height: width / OracleCardFace.aspectRatio,
                   deckPosition: order,
+                  face: GrimoireBackFace.oracle,
                 ),
               );
       },

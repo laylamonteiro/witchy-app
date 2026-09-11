@@ -11,6 +11,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:grimorio_de_bolso/core/database/database_helper.dart';
 import 'package:grimorio_de_bolso/features/auth/presentation/providers/auth_provider.dart';
+import 'package:grimorio_de_bolso/features/diary/data/models/desire_model.dart';
+import 'package:grimorio_de_bolso/features/diary/presentation/providers/desire_provider.dart';
 import 'package:grimorio_de_bolso/features/sigils/data/models/sigil_model.dart';
 import 'package:grimorio_de_bolso/features/sigils/data/models/sigil_wheel_model.dart';
 import 'package:grimorio_de_bolso/features/sigils/domain/sigil_trace.dart';
@@ -48,6 +50,8 @@ void main() {
     SharedPreferences.setMockInitialValues({});
     final db = await DatabaseHelper.instance.database;
     await db.delete('sigils');
+    // Finishing now writes to both shelves, so both start empty.
+    await db.delete('desires');
   });
 
   Future<void> until(WidgetTester tester, bool Function() ready, String stage) async {
@@ -89,6 +93,41 @@ void main() {
     }());
     await until(tester, () => result != null, 'SQLite snapshot of $table');
     return result!;
+  }
+
+  /// Opens step 3 pushed over another route — the way the flow reaches it —
+  /// with the DesireProvider in the tree, as the app has it. The auth fixture
+  /// is deliberately NOT premium: finishing a sigil must work for everyone.
+  Future<void> openPushed(WidgetTester tester) async {
+    tester.view.physicalSize = const Size(390, 1400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await tester.pumpWidget(MultiProvider(
+      providers: [
+        ChangeNotifierProvider<AuthProvider>(create: (_) => _AuthFixture()),
+        ChangeNotifierProvider<DesireProvider>(create: (_) => DesireProvider()),
+      ],
+      child: MaterialApp(
+        locale: const Locale('en'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        builder: (context, child) => MediaQuery(
+          data: MediaQuery.of(context).copyWith(disableAnimations: true),
+          child: child!,
+        ),
+        home: Builder(builder: (context) => Scaffold(
+          body: Center(child: ElevatedButton(
+            onPressed: () => Navigator.push(context, MaterialPageRoute(
+                builder: (_) => SigilStep3DrawingPage(sigil: sigil))),
+            child: const Text('open'),
+          )),
+        )),
+      ),
+    ));
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+    expect(find.byType(SigilStep3DrawingPage), findsOneWidget);
   }
 
   SigilDrawingPainter painterOf(WidgetTester tester) =>
@@ -182,33 +221,9 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('finishing waits for the write before leaving', (tester) async {
-    tester.view.physicalSize = const Size(390, 1400);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.resetPhysicalSize);
-    addTearDown(tester.view.resetDevicePixelRatio);
-    await tester.pumpWidget(ChangeNotifierProvider<AuthProvider>(
-      create: (_) => _AuthFixture(),
-      child: MaterialApp(
-        locale: const Locale('en'),
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
-        builder: (context, child) => MediaQuery(
-          data: MediaQuery.of(context).copyWith(disableAnimations: true),
-          child: child!,
-        ),
-        home: Builder(builder: (context) => Scaffold(
-          body: Center(child: ElevatedButton(
-            onPressed: () => Navigator.push(context, MaterialPageRoute(
-                builder: (_) => SigilStep3DrawingPage(sigil: sigil))),
-            child: const Text('open'),
-          )),
-        )),
-      ),
-    ));
-    await tester.tap(find.text('open'));
-    await tester.pumpAndSettle();
-    expect(find.byType(SigilStep3DrawingPage), findsOneWidget);
+  testWidgets('finishing files the sigil and its page before leaving',
+      (tester) async {
+    await openPushed(tester);
 
     final l10n = AppLocalizations.of(tester.element(find.byType(SigilStep3DrawingPage)));
     await tester.ensureVisible(find.text(l10n.commonFinish));
@@ -218,6 +233,50 @@ void main() {
     final saved = await rows(tester, 'sigils');
     expect(saved, hasLength(1), reason: 'It only leaves after the write');
     expect(saved.single['intention'], 'PROTECAO');
+
+    // The sigils table is listed by no screen at all, so finishing also files
+    // the drawing in the wishes journal — the only shelf where she can find
+    // it again. Without this row the confirmation announced a keeping she
+    // could never reach.
+    final filed = await rows(tester, 'desires');
+    expect(filed, hasLength(1),
+        reason: 'Finishing files the sigil where she can find it');
+    expect(filed.single['title'], l10n.diaryDesireSigilTitle);
+    expect(filed.single['description'] as String,
+        startsWith(DesireModel.sigilImagePrefix),
+        reason: 'The drawing travels as an image; the intention stays secret');
+    expect(filed.single['description'] as String, isNot(contains('PROTECAO')));
+    // Both rows are born under the SAME account. The journal lists with
+    // `WHERE user_id = ?`, so a page filed under another id would sit in the
+    // database and vanish from the screen — the very disappearance this work
+    // undid. In the app the ChangeNotifierProxyProvider in main.dart is what
+    // pushes the session's account into the DesireProvider.
+    expect(filed.single['user_id'], saved.single['user_id']);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('finishing twice files one sigil and one page, never two',
+      (tester) async {
+    await openPushed(tester);
+    final l10n = AppLocalizations.of(tester.element(find.byType(SigilStep3DrawingPage)));
+    await tester.ensureVisible(find.text(l10n.commonFinish));
+    // Two taps in the same instant: the second lands while the first write is
+    // still running. The ids live in the State, so even a retry after a
+    // failure rewrites the same two rows instead of opening new ones.
+    await tester.tap(find.text(l10n.commonFinish));
+    await tester.pump();
+    // The button already reads "Saving…", so the second tap lands INSIDE the
+    // first write — the case the re-entrancy guard exists for. Asserted, not
+    // guarded by an `if`: a skipped second tap would leave the test green
+    // while proving nothing.
+    final again = find.text(l10n.commonSaving);
+    expect(again, findsOneWidget);
+    await tester.tap(again, warnIfMissed: false);
+    await tester.pump();
+    await until(tester, () => find.byType(SigilStep3DrawingPage).evaluate().isEmpty,
+        'the drawing to close after the write');
+    expect(await rows(tester, 'sigils'), hasLength(1));
+    expect(await rows(tester, 'desires'), hasLength(1));
     expect(tester.takeException(), isNull);
   });
 

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:grimorio_de_bolso/features/cycle_reading/presentation/widgets/menstrual_source_tile.dart';
@@ -22,6 +24,27 @@ class _Records extends MenstrualCycleRepository {
     required DateTime to,
   }) async =>
       days;
+}
+
+/// Um banco que só responde quando o teste mandar.
+///
+/// É o único jeito de observar a prévia ATRASADA — a que chega depois de ela
+/// ter desligado a fonte — e provar que ela não religa nada.
+class _Portao extends MenstrualCycleRepository {
+  _Portao(this.days);
+
+  final List<MenstrualDay> days;
+  final _resposta = Completer<List<MenstrualDay>>();
+
+  void responder() => _resposta.complete(days);
+
+  @override
+  Future<List<MenstrualDay>> between({
+    required String userId,
+    required DateTime from,
+    required DateTime to,
+  }) =>
+      _resposta.future;
 }
 
 void main() {
@@ -153,6 +176,103 @@ void main() {
     await tester.pump();
     expect(emitted.last.isEmpty, isTrue);
     expect(emitted.last.includesWrittenWords, isFalse);
+  });
+
+  testWidgets('trocar a janela desfaz a autorização da janela anterior',
+      (tester) async {
+    SharedPreferences.setMockInitialValues(
+        {'menstrual_consent_record_she': true});
+    final emitted = <MenstrualReadingScope>[];
+    Future<void> mostrar(({DateTime start, DateTime end}) janela) =>
+        tester.pumpWidget(MaterialApp(
+          locale: const Locale('en'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: SingleChildScrollView(
+              child: MenstrualSourceTile(
+                userId: 'she',
+                period: janela,
+                premium: true,
+                repository: _Records(days),
+                onChanged: emitted.add,
+              ),
+            ),
+          ),
+        ));
+
+    await mostrar(period);
+    await tester.pump();
+    await tester.tap(find.byKey(const ValueKey('cycle-reading-menstrual')));
+    await settle(
+        tester,
+        () => find
+            .byKey(const ValueKey('cycle-reading-menstrual-2026-03-04'))
+            .evaluate()
+            .isNotEmpty);
+    expect(emitted.last.recordCount, 2);
+
+    // Ela mexe no calendário da tela de compra: outro período, outra
+    // pergunta. Os dias marcados eram os de março, e o escopo carrega as
+    // próprias datas — mantê-lo mandaria para a leitura os dias da janela
+    // errada, sem que nada avisasse.
+    await mostrar((start: DateTime(2026, 4, 1), end: DateTime(2026, 5, 1)));
+    await tester.pump();
+
+    final chave = tester.widget<SwitchListTile>(
+        find.byKey(const ValueKey('cycle-reading-menstrual')));
+    expect(chave.value, isFalse,
+        reason: 'A fonte íntima volta a ficar fechada na janela nova');
+    expect(find.byKey(const ValueKey('cycle-reading-menstrual-2026-03-04')),
+        findsNothing);
+    expect(emitted.last.isEmpty, isTrue,
+        reason: 'Nada segue autorizado até ela marcar de novo');
+  });
+
+  testWidgets('fechar a fonte cancela a prévia que ainda vinha a caminho',
+      (tester) async {
+    SharedPreferences.setMockInitialValues(
+        {'menstrual_consent_record_she': true});
+    final emitted = <MenstrualReadingScope>[];
+    final portao = _Portao(days);
+    await tester.pumpWidget(MaterialApp(
+      locale: const Locale('en'),
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      home: Scaffold(
+        body: SingleChildScrollView(
+          child: MenstrualSourceTile(
+            userId: 'she',
+            period: period,
+            premium: true,
+            repository: portao,
+            onChanged: emitted.add,
+          ),
+        ),
+      ),
+    ));
+    await tester.pump();
+
+    // Ela liga, se arrepende e desliga antes de o banco responder.
+    await tester.tap(find.byKey(const ValueKey('cycle-reading-menstrual')));
+    await tester.pump();
+    await tester.tap(find.byKey(const ValueKey('cycle-reading-menstrual')));
+    await tester.pump();
+    expect(emitted.last.isEmpty, isTrue);
+
+    // O banco responde agora, para uma pergunta que já foi retirada.
+    portao.responder();
+    await tester.pump();
+    await tester.pump();
+
+    final chave = tester.widget<SwitchListTile>(
+        find.byKey(const ValueKey('cycle-reading-menstrual')));
+    expect(chave.value, isFalse,
+        reason: 'A chave ficou desligada, e a tela não pode mentir sobre ela');
+    expect(find.byKey(const ValueKey('cycle-reading-menstrual-2026-03-04')),
+        findsNothing);
+    expect(emitted.last.isEmpty, isTrue,
+        reason: 'A prévia atrasada não autoriza o que ela já desligou');
   });
 
   testWidgets('sem consentimento de registro não há prévia', (tester) async {

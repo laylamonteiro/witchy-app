@@ -20,9 +20,11 @@ import '../../../astrology/presentation/providers/astrology_provider.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../diary/data/models/free_writing_model.dart';
 import '../../../diary/data/repositories/free_writing_repository.dart';
+import '../../../diary/presentation/providers/free_writing_provider.dart';
 import '../../../grimoire/presentation/pages/records_archive_list_page.dart';
 import '../../../../core/services/debug_log_service.dart';
 import '../../data/compra_pendente_store.dart';
+import '../../data/cycle_reading_sources_store.dart';
 import '../../data/models/cycle_reading_model.dart';
 import '../../../menstrual_cycle/domain/menstrual_access.dart';
 import '../../../menstrual_cycle/domain/menstrual_reading_scope.dart';
@@ -140,6 +142,35 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
   /// caminho de volta se a gravação do crédito falhar depois da cobrança.
   final _compras = CompraPendenteStore();
 
+  /// O que ela desligou da análise, guardado entre uma visita e outra.
+  final _fontes = const CycleReadingSourcesStore();
+
+  /// O acervo de escrita, assinado enquanto a tela viver.
+  ///
+  /// Guardado como campo porque `dispose` não pode chamar `context.read`:
+  /// a árvore já pode estar desmontada, e um ouvinte esquecido num
+  /// ChangeNotifier global sobrevive à tela.
+  FreeWritingProvider? _acervo;
+
+  /// Esta tela está em cena, ou tem outra por cima dela?
+  ///
+  /// Ela é SEMPRE empurrada como rota (`MaterialPageRoute`, de Seu Dia, dos
+  /// Ciclos, do acervo, da análise), e o Overlay desliga o `TickerMode` da
+  /// rota que fica coberta por uma opaca. A virada de volta é o único aviso
+  /// que esta tela recebe de que a pessoa esteve em outro lugar do app e
+  /// pode ter apagado um sonho, uma tiragem ou um feitiço — coisas que o
+  /// acervo de escrita não anuncia e que a tela nunca releria sozinha,
+  /// porque ela não desmonta: continua viva embaixo, com o número velho.
+  bool _telaEmCena = true;
+
+  /// Quantas páginas o acervo tinha da última vez que ele avisou.
+  ///
+  /// O provider notifica a cada digitação salva (autosave da reflexão) e
+  /// duas vezes por exclusão. O que muda a contagem do período é linha
+  /// entrando ou saindo, não texto mudando — então só o tamanho da lista
+  /// dispara uma recontagem, e o banco não leva treze COUNT por tecla.
+  int? _acervoQuantidade;
+
   /// A seleção do calendário está fechada (dois dias marcados)?
   ///
   /// Nasce `true` porque a tela abre com uma janela sugerida já marcada. Fica
@@ -171,6 +202,12 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
     userId: context.read<AuthProvider>().currentUser.id,
   );
 
+  /// Quantas vezes a fonte íntima teve de voltar do zero nesta tela.
+  ///
+  /// Entra na chave do widget: a caixinha guarda os dias marcados no próprio
+  /// State, e não há como zerá-la de fora sem trocar a chave.
+  int _revisaoDaFonteIntima = 0;
+
   @override
   void initState() {
     super.initState();
@@ -193,8 +230,73 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
     _periodType =
         CycleReadingService.periodTypeForSpan(janela.start, janela.end);
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) _load();
+      if (mounted) _abrirTela();
     });
+  }
+
+  /// A abertura, na ordem certa: primeiro o que ela escolheu da última vez,
+  /// depois a contagem.
+  ///
+  /// Inverter isto faria o número aparecer cheio e encolher meio segundo
+  /// depois, na cara dela — e um número que se corrige sozinho é um número
+  /// em que ninguém confia.
+  Future<void> _abrirTela() async {
+    await _restaurarFontes();
+    if (!mounted) return;
+    await _load();
+  }
+
+  /// Traz de volta as chaves que ela desligou numa visita anterior.
+  Future<void> _restaurarFontes() async {
+    final userId = context.read<AuthProvider>().currentUser.id;
+    final salvas = await _fontes.load(userId);
+    if (!mounted) return;
+    setState(() {
+      _includeDreams = salvas.includeDreams;
+      _includeJournals = salvas.includeJournals;
+      _includeDivination = salvas.includeDivination;
+      _includePractice = salvas.includePractice;
+    });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+
+    // O acervo já grita "mudei" a cada exclusão (FreeWritingProvider.delete
+    // recarrega a lista e notifica). Esta tela só precisava estar ouvindo:
+    // apagar uma página do Grimório e voltar encontrava o mesmo número de
+    // antes, porque o número era lido uma vez, na abertura, e nunca mais.
+    final acervo = context.read<FreeWritingProvider>();
+    if (!identical(acervo, _acervo)) {
+      _acervo?.removeListener(_aoMudarOAcervo);
+      _acervo = acervo..addListener(_aoMudarOAcervo);
+      _acervoQuantidade = acervo.freeWritings.length;
+    }
+
+    // A tela voltou para a cena: o que estava por cima saiu. Só na volta,
+    // nunca na ida — recontar ao ser coberta gastaria banco para atualizar
+    // um número que ninguém está vendo.
+    final emCena = TickerMode.of(context);
+    if (emCena && !_telaEmCena) unawaited(_recontar());
+    _telaEmCena = emCena;
+  }
+
+  @override
+  void dispose() {
+    _acervo?.removeListener(_aoMudarOAcervo);
+    super.dispose();
+  }
+
+  /// O acervo mudou de tamanho: uma página entrou ou saiu, então a promessa
+  /// de "N registros" pode ter deixado de ser verdade.
+  void _aoMudarOAcervo() {
+    final acervo = _acervo;
+    if (!mounted || acervo == null) return;
+    final quantidade = acervo.freeWritings.length;
+    if (quantidade == _acervoQuantidade) return;
+    _acervoQuantidade = quantidade;
+    unawaited(_recontar());
   }
 
   /// O mapa de calor do último ano — quantos registros em cada dia.
@@ -246,6 +348,10 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
 
   /// Recarrega o que depende da janela escolhida.
   Future<void> _load() async {
+    // Entra na MESMA fila de `_recontar`: as duas escrevem no `_recordCount`
+    // e podem se cruzar (trocar uma fonte no meio de uma troca de período
+    // fazia a contagem velha chegar por último e ganhar).
+    final pedido = ++_contagemPedida;
     final userId = context.read<AuthProvider>().currentUser.id;
     // Lido ANTES dos await: depois deles, tocar no context seria uso após
     // gap assíncrono (a tela pode ter saído).
@@ -263,7 +369,9 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
     );
     if (!mounted) return;
     setState(() {
-      _recordCount = recordCount;
+      // O `_isLoading` sai do ar de qualquer jeito — segurá-lo por causa de
+      // uma contagem atropelada deixaria a tela girando para sempre.
+      if (pedido == _contagemPedida) _recordCount = recordCount;
       _existing = existing;
       _isLoading = false;
     });
@@ -308,12 +416,30 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
       return;
     }
 
+    // Os atalhos "semana"/"lunação" (e um segundo toque nas mesmas datas)
+    // reemitem a janela que já está de pé. Medido ANTES do setState, porque
+    // logo abaixo `_period` vira a janela nova.
+    final mesmaJanela = _period.start.isAtSameMomentAs(janela.start) &&
+        _period.end.isAtSameMomentAs(janela.end);
+
     setState(() {
       _period = janela;
       _periodType = veredito.periodType;
       _conflito = veredito.conflict;
       _customRejection = null;
       _isLoading = true;
+      // Uma autorização é de UMA janela. Os dias marcados eram os do período
+      // anterior, e o escopo guarda o próprio `start`/`end`: mantê-lo aqui
+      // mandaria para a leitura os dias da janela errada (o serviço relê o
+      // banco pelas datas do escopo e não confere se são as da leitura).
+      // Trocar o período é começar de novo — a caixinha da fonte íntima
+      // fecha junto, pelo `didUpdateWidget` dela.
+      //
+      // Só quando a janela muda de VERDADE: a caixinha se desfaz pelo mesmo
+      // critério (`didUpdateWidget` compara as datas), e zerar o escopo aqui
+      // sem ela zerar junto deixaria a tela dizendo duas coisas sobre a mesma
+      // fonte — "nada autorizado" no resumo e "N dias incluídos" logo acima.
+      if (!mesmaJanela) _menstrual = MenstrualReadingScope.none(userId: userId);
     });
     await _load();
     if (rolar) _mostrarAOferta();
@@ -367,8 +493,33 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
   /// também o número de registros que a tela promete. Recontar é barato e
   /// evita a promessa que a leitura não cumpriria.
   void _trocarFonte(VoidCallback mudanca) {
+    // A chave responde ao dedo na hora; o resto vem atrás.
     setState(mudanca);
-    unawaited(_recontar());
+    unawaited(_gravarERecontar());
+  }
+
+  /// As gravações, uma atrás da outra.
+  ///
+  /// Cada `save` escreve as QUATRO chaves a partir do retrato que tinha na
+  /// mão. Dedo rápido em duas fontes dispara duas gravações, e soltas em
+  /// paralelo a mais VELHA pode chegar por último ao disco e desfazer o "não"
+  /// mais novo — o defeito exato que este store existe para não ter.
+  Future<void> _gravacoes = Future<void>.value();
+
+  /// Guardar primeiro, apresentar depois: a escolha dela é o fato, e o
+  /// número é a consequência. Se a tela morrer entre uma coisa e outra, o
+  /// que tem de sobreviver é o "não".
+  Future<void> _gravarERecontar() {
+    final userId = context.read<AuthProvider>().currentUser.id;
+    // O retrato sai AGORA, no mesmo instante do toque; a gravação espera a
+    // vez dela na fila, sem perder o que foi decidido enquanto esperava.
+    final escolha = _options;
+    final gravacao = _gravacoes.then((_) => _fontes.save(userId, escolha));
+    _gravacoes = gravacao;
+    return gravacao.then((_) async {
+      if (!mounted) return;
+      await _recontar();
+    });
   }
 
   /// Dedo rápido em duas chaves seguidas dispara duas contagens; só a última
@@ -628,9 +779,17 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
       // autorizado ou trocou de conta. A geração parou ali, o crédito
       // continua dela, e a seleção volta ao zero para ser revista.
       if (!mounted) return;
-      setState(() => _menstrual = MenstrualReadingScope.none(
-            userId: context.read<AuthProvider>().currentUser.id,
-          ));
+      setState(() {
+        _menstrual = MenstrualReadingScope.none(
+          userId: context.read<AuthProvider>().currentUser.id,
+        );
+        // A caixinha da fonte íntima guarda os dias marcados por dentro, e
+        // zerar só o escopo daqui deixava a tela dizendo duas coisas sobre a
+        // mesma fonte: "nada autorizado" aqui e "N dias incluídos" ali. A
+        // revisão nova troca a chave do widget, e ele volta do zero — que é
+        // o que a mensagem promete.
+        _revisaoDaFonteIntima++;
+      });
       messenger.showSnackBar(SnackBar(
         content: Text(l10n.cycleReadingMenstrualScopeChanged),
         backgroundColor: context.gc.warning,
@@ -915,16 +1074,27 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
           if (temMais)
             Center(
               child: TextButton.icon(
-                onPressed: () => Navigator.of(context).push(
-                  MaterialPageRoute(
-                    // O acervo já abre no chip da Leitura do Ciclo: quem
-                    // veio daqui não quer procurar as leituras no meio de
-                    // sonhos, tiragens e páginas de trilha.
-                    builder: (_) => const RecordsArchiveListPage(
-                      initialFilterId: FreeWritingSource.cycleReading,
+                // Aguarda a volta do acervo de propósito: lá dentro ela pode
+                // apagar uma página, e o número que esta tela promete é sobre
+                // o que EXISTE, não sobre o que existia quando ela abriu. A
+                // lista das recentes relê junto — a página apagada pode ser
+                // uma das leituras que ela acabou de ver aqui.
+                onPressed: () async {
+                  await Navigator.of(context).push(
+                    MaterialPageRoute(
+                      // O acervo já abre no chip da Leitura do Ciclo: quem
+                      // veio daqui não quer procurar as leituras no meio de
+                      // sonhos, tiragens e páginas de trilha.
+                      builder: (_) => const RecordsArchiveListPage(
+                        initialFilterId: FreeWritingSource.cycleReading,
+                      ),
                     ),
-                  ),
-                ),
+                  );
+                  if (!mounted) return;
+                  await _recarregarRecentes();
+                  if (!mounted) return;
+                  await _load();
+                },
                 icon: const Icon(Icons.auto_stories, size: 18),
                 label: Text(l10n.cycleReadingRecentSeeAll),
               ),
@@ -1024,6 +1194,7 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
               premium: context.watch<AuthProvider>().isPremiumEffective,
             ).isOffered)
               MenstrualSourceTile(
+                key: ValueKey('menstrual-$_revisaoDaFonteIntima'),
                 userId: context.read<AuthProvider>().currentUser.id,
                 period: _period,
                 premium: context.watch<AuthProvider>().isPremiumEffective,

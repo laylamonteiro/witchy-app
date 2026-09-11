@@ -9,6 +9,7 @@ import 'package:gal/gal.dart';
 import '../../../../core/sharing/image_download_stub.dart'
     if (dart.library.js_interop) '../../../../core/sharing/image_download_web.dart';
 import 'package:provider/provider.dart';
+import 'package:sqflite/sqflite.dart';
 import 'package:uuid/uuid.dart';
 import '../../../../core/database/database_helper.dart';
 import '../../../../core/services/data_sync_service.dart';
@@ -57,9 +58,12 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage>
   Map<String, WheelPosition>? _previousPositions;
   bool _isSaving = false;
 
-  /// Estado do salvamento no Diário de Desejos (independente do "Finalizar").
-  bool _isSavingToDesires = false;
-  bool _savedToDesires = false;
+  /// Ids criados UMA vez por tela, e não a cada toque: se a gravação falhar
+  /// no meio e ela tocar em "Finalizar" de novo, a repetição reescreve as
+  /// mesmas duas linhas em vez de fazer nascer um segundo sigilo e uma
+  /// segunda página no Diário.
+  final String _sigilId = const Uuid().v4();
+  final String _desireId = const Uuid().v4();
 
   /// O traço percorrendo os pontos da roda, uma vez.
   late final AnimationController _trace = AnimationController(
@@ -133,18 +137,56 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage>
     if (!settled) await WidgetsBinding.instance.endOfFrame;
   }
 
+  /// "Finalizar" faz o trabalho inteiro: guarda o sigilo E cria a página dele
+  /// no Diário de Desejos. Sem a segunda gravação a confirmação anunciava uma
+  /// guarda que ela nunca encontrava — a tabela `sigils` não é listada em
+  /// tela nenhuma, ela só é contada, exportada e lida pela Leitura de Ciclo;
+  /// o único acervo onde um sigilo vira página visível é o Diário.
+  ///
+  /// A ordem é deliberada (persistir primeiro, apresentar depois): a imagem é
+  /// capturada ANTES de qualquer escrita, para que uma falha de captura não
+  /// deixe metade guardada, e a confirmação só sai depois das DUAS gravações,
+  /// para que a frase nunca chegue antes do fato.
   Future<void> _saveAndFinish() async {
     if (_isSaving) return;
     setState(() => _isSaving = true);
-    // Lido antes de qualquer await: a confirmação continua acima do roteador
-    // mesmo depois que esta tela fechar.
+    // Tudo que depende do contexto é lido antes dos awaits: a confirmação
+    // continua acima do roteador mesmo depois que esta tela fechar.
     final recorder = ActionRecorder.of(context);
-    final id = const Uuid().v4();
+    final l10n = AppLocalizations.of(context);
+    final userId = context.read<AuthProvider>().currentUser.id;
+    // Nulável de propósito, como o ActionRecorder: uma árvore montada sem o
+    // provider (teste de widget, tela destacada) não pode explodir por isso.
+    final desireProvider = context.read<DesireProvider?>();
+    // Capturados antes do await: avisar do que aconteceu não pode depender de
+    // a tela ainda estar montada.
+    final messenger = ScaffoldMessenger.of(context);
+    final alertColor = context.gc.alert;
+    final successColor = context.gc.success;
     try {
+      await _settleForCapture();
+      final boundary = _drawingKey.currentContext?.findRenderObject()
+          as RenderRepaintBoundary?;
+      if (boundary == null) {
+        throw Exception(l10n.sigilDrawingNotReady);
+      }
+      // Miniatura leve (~320px): a imagem vai como base64 na descrição do
+      // desejo, que sincroniza como texto. Uma resolução menor mantém o
+      // sigilo legível no card e evita payloads grandes que falham no sync.
+      // (A exportação para a galeria continua em alta resolução.)
+      const targetWidth = 320.0;
+      final logicalWidth = boundary.size.width;
+      final ratio = logicalWidth > 0 ? targetWidth / logicalWidth : 1.0;
+      final image = await boundary.toImage(pixelRatio: ratio);
+      final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+      if (byteData == null) {
+        throw Exception(l10n.sigilImageError);
+      }
+
       final now = DateTime.now().millisecondsSinceEpoch;
       final data = <String, dynamic>{
-        'id': id,
-        'user_id': context.read<AuthProvider>().currentUser.id,
+        'id': _sigilId,
+        'user_id': userId,
         'intention': widget.sigil.intention,
         'image_path': jsonEncode({
           'letters': widget.sigil.processedLetters,
@@ -157,18 +199,61 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage>
         'synced': 0,
       };
       final db = await DatabaseHelper.instance.database;
-      await db.insert('sigils', data);
+      // Substituir em vez de inserir outra: uma segunda tentativa reescreve a
+      // linha do mesmo id, nunca duplica o sigilo.
+      await db.insert('sigils', data,
+          conflictAlgorithm: ConflictAlgorithm.replace);
       await DataSyncService().syncItem(SyncEntity.sigils, data);
-      // Só depois da gravação: o sigilo guardado é que rende XP e marco.
-      unawaited(recorder.record(origin: ActionOrigin.sigil, entityId: id));
-      if (mounted) Navigator.pop(context, true);
-    } catch (e) {
-      if (!mounted) return;
-      setState(() => _isSaving = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('${AppLocalizations.of(context).sigilSaveError}: $e')),
+
+      // Título fixo — a intenção do sigilo é secreta e não pode aparecer na
+      // lista do Diário; quem vai é o desenho, como PNG dentro da descrição.
+      // O DesireRepository também grava por substituição, então repetir com o
+      // mesmo id reescreve a página em vez de criar outra.
+      final desire = DesireModel(
+        id: _desireId,
+        title: l10n.diaryDesireSigilTitle,
+        description:
+            DesireModel.encodeSigilImage(byteData.buffer.asUint8List()),
       );
+      final saved = await desireProvider?.addDesire(desire);
+      if (saved == false) {
+        throw Exception(desireProvider?.error ?? l10n.errorsGeneric);
+      }
+
+      // UM registro só, e depois das duas gravações: o coordenador RECALCULA
+      // o XP em vez de somar, então um único cartão já mostra o total das
+      // duas linhas — um segundo registro apareceria com +0.
+      unawaited(
+          recorder.record(origin: ActionOrigin.sigil, entityId: _sigilId));
+      // O cartão global confirma a guarda; esta linha diz ONDE ela reencontra
+      // o sigilo, que é justamente o que faltava. Só aparece se a página do
+      // Diário existir de verdade.
+      if (saved == true) {
+        messenger.showSnackBar(SnackBar(
+          content: Text(l10n.sigilSavedToDesires),
+          backgroundColor: successColor,
+        ));
+      }
+    } catch (e) {
+      // O aviso sai pelo messenger guardado ANTES do await, e não depende de
+      // `mounted`: se ela já tiver saído da tela no meio da gravação, a falha
+      // continua sendo dita em vez de sumir em silêncio.
+      // O 'Exception: ' que o Dart prefixa não diz nada a ela.
+      final motivo = '$e'.replaceAll('Exception: ', '');
+      messenger.showSnackBar(SnackBar(
+        content: Text('${l10n.sigilSaveError}: $motivo'),
+        backgroundColor: alertColor,
+      ));
+      // Volta a aceitar toque: os ids são campos do State, então repetir o
+      // Finalizar reescreve as mesmas duas linhas em vez de criar um segundo
+      // sigilo e uma segunda página.
+      if (mounted) setState(() => _isSaving = false);
+      return;
     }
+    // Fechar a rota fica FORA do try de propósito: com tudo já guardado e a
+    // confirmação já dada, uma exceção ao sair (rota trocada por baixo) viraria
+    // um "falha ao salvar" mentiroso na tela.
+    if (mounted) Navigator.pop(context, true);
   }
 
   /// Exporta o desenho atual como PNG para a galeria (exclusivo Premium).
@@ -247,93 +332,6 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage>
       );
     } finally {
       if (mounted) setState(() => _isExporting = false);
-    }
-  }
-
-  /// Salva o sigilo no Diário de Desejos como IMAGEM (Premium, sincroniza na
-  /// nuvem via DesireProvider/DataSyncService). Guardamos o PNG do desenho —
-  /// não um texto — justamente por se tratar de um sigilo.
-  Future<void> _saveToDesires() async {
-    if (_isSavingToDesires || _savedToDesires) return;
-
-    final authProvider = context.read<AuthProvider>();
-    if (!authProvider.isPremiumEffective) {
-      showModalBottomSheet(
-        context: context,
-        isScrollControlled: true,
-        backgroundColor: Colors.transparent,
-        builder: (context) => const PremiumUpgradeSheet(),
-      );
-      return;
-    }
-
-    final l10n = AppLocalizations.of(context);
-    // Capturado antes dos awaits: o desejo deve ser salvo MESMO que a
-    // página morra no meio (use_build_context_synchronously).
-    final desireProvider = context.read<DesireProvider>();
-    final recorder = ActionRecorder.of(context);
-    // Capturados antes do await: avisar de uma falha não pode depender de a
-    // tela ainda estar montada.
-    final messenger = ScaffoldMessenger.of(context);
-    final alertColor = context.gc.alert;
-    setState(() => _isSavingToDesires = true);
-    try {
-      await _settleForCapture();
-      final boundary = _drawingKey.currentContext?.findRenderObject()
-          as RenderRepaintBoundary?;
-      if (boundary == null) {
-        throw Exception(l10n.sigilDrawingNotReady);
-      }
-      // Miniatura leve (~320px): guardamos a imagem como base64 na descrição
-      // do desejo, que sincroniza como texto. Uma resolução menor mantém o
-      // sigilo legível no card e evita payloads grandes que falham no sync.
-      // (A exportação para a galeria continua em alta resolução.)
-      const targetWidth = 320.0;
-      final logicalWidth = boundary.size.width;
-      final ratio = logicalWidth > 0 ? targetWidth / logicalWidth : 1.0;
-      final image = await boundary.toImage(pixelRatio: ratio);
-      final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
-      if (byteData == null) {
-        throw Exception(l10n.sigilImageError);
-      }
-      // Título fixo — a intenção do sigilo é secreta e não pode aparecer.
-      final desire = DesireModel(
-        title: l10n.diaryDesireSigilTitle,
-        description:
-            DesireModel.encodeSigilImage(byteData.buffer.asUint8List()),
-      );
-      // Persiste na hora (insere no banco e sincroniza) — não depende de
-      // tocar em "Finalizar".
-      final saved = await desireProvider.addDesire(desire);
-      if (!mounted) return;
-      if (!saved) {
-        setState(() => _isSavingToDesires = false);
-        messenger.showSnackBar(SnackBar(
-          content: Text(desireProvider.error ?? l10n.errorsGeneric),
-          backgroundColor: alertColor,
-        ));
-        return;
-      }
-      unawaited(recorder.record(origin: ActionOrigin.desire, entityId: desire.id));
-      setState(() {
-        _isSavingToDesires = false;
-        _savedToDesires = true;
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l10n.sigilSavedToDesires),
-          backgroundColor: context.gc.success,
-        ),
-      );
-    } catch (e) {
-      if (!mounted) return;
-      setState(() => _isSavingToDesires = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('$e'.replaceAll('Exception: ', '')),
-          backgroundColor: context.gc.alert,
-        ),
-      );
     }
   }
 
@@ -672,54 +670,6 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage>
               ),
             ),
             const SizedBox(height: 24),
-
-            // Salvar o sigilo no Diário de Desejos (Premium, sincroniza).
-            // Padding horizontal de 16 para acompanhar a largura dos cards
-            // (o MagicalCard tem margem lateral própria de 16).
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: OutlinedButton.icon(
-                onPressed: (_isSavingToDesires || _savedToDesires)
-                    ? null
-                    : _saveToDesires,
-                icon: _isSavingToDesires
-                    ? SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: context.gc.lilac,
-                        ),
-                      )
-                    : Icon(
-                        _savedToDesires
-                            ? Icons.check_circle
-                            : Icons.auto_awesome,
-                        size: 18,
-                      ),
-                label: Text(
-                  _savedToDesires
-                      ? AppLocalizations.of(context).sigilSavedToDesiresShort
-                      : AppLocalizations.of(context).sigilSaveToDesires,
-                ),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor:
-                      _savedToDesires ? context.gc.success : context.gc.lilac,
-                  // Mantém o verde/lilás mesmo com o botão desabilitado
-                  // (salvo ou salvando).
-                  disabledForegroundColor:
-                      _savedToDesires ? context.gc.success : context.gc.lilac,
-                  side: BorderSide(
-                    color: (_savedToDesires
-                            ? context.gc.success
-                            : context.gc.lilac)
-                        .withValues(alpha: 0.5),
-                  ),
-                  minimumSize: const Size.fromHeight(48),
-                ),
-              ),
-            ),
-            const SizedBox(height: 12),
 
             // Botão finalizar
             Padding(

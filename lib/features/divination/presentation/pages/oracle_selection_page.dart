@@ -5,9 +5,9 @@ import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/motion/tool_scene_frame.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
-import '../../../tarot/presentation/widgets/tarot_card_view.dart';
 import '../../domain/oracle_selection_session.dart';
 import '../widgets/card_selection_surface.dart';
+import '../widgets/grimoire_card_back.dart';
 import '../widgets/oracle_spread_board.dart';
 
 /// Pick each Oracle card from the same fan the tarot uses. Every partial
@@ -102,7 +102,7 @@ class _OracleSelectionPageState extends State<OracleSelectionPage> {
               spread: _session.spread, labels: widget.positionLabels, compact: true,
               nextPosition: selected.length,
               cardBuilder: (i, width) => i < selected.length
-                  ? TarotCardBack(key: ValueKey('oracle-selected-$i'), width: width,
+                  ? OracleCardBack(key: ValueKey('oracle-selected-$i'), width: width,
                       deckPosition: _session.positionOf(selected[i])) : null,
             ),
             const SizedBox(height: 12),
@@ -119,6 +119,7 @@ class _OracleSelectionPageState extends State<OracleSelectionPage> {
                 cardIds: [for (final i in available) _session.deck[i]],
                 deckPositions: available,
                 enabled: !_saving, lockedCardId: _pendingId,
+                back: GrimoireBackFace.oracle,
                 onSelected: _select,
               ),
             ] else if (!_saving)
