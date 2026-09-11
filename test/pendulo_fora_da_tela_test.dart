@@ -73,13 +73,17 @@ void main() {
     navigator.currentState!.push(MaterialPageRoute<void>(
       builder: (_) => const Scaffold(body: Center(child: Text('outra tela'))),
     ));
-    await tester.pumpAndSettle();
+    // Nunca `pumpAndSettle` aqui: o pêndulo balança sem parar, e esperar o
+    // silêncio seria esperar para sempre. A transição de rota dura 300 ms.
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
     expect(find.text('outra tela'), findsOneWidget);
     expect(sensor.hasListener, isFalse,
         reason: 'Coberto, o acelerômetro só gastaria bateria');
 
     navigator.currentState!.pop();
-    await tester.pumpAndSettle();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
     expect(sensor.hasListener, isTrue, reason: 'De volta, volta a ouvir');
     expect(tester.takeException(), isNull);
   });
