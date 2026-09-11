@@ -46,7 +46,7 @@ class ArchetypeConstellation extends StatelessWidget {
   }) {
     final keys = [for (final key in order) if ((scores[key] ?? 0) > 0) key];
     if (keys.isEmpty) return const [];
-    final highest = scores.values.fold(0, math.max);
+    final highest = scores.values.fold<int>(0, (a, b) => a > b ? a : b);
     final slots = order.isEmpty ? keys.length : order.length;
     return [
       for (var i = 0; i < keys.length; i++)
