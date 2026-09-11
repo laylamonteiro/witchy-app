@@ -181,8 +181,11 @@ void main() {
     final stats = await JourneyStatsRepository().load(user);
     expect(stats['tarot_readings'], 1);
     expect(stats['all_readings'], 2);
-    expect(JourneyStatsRepository.reachedSteps(stats), isEmpty);
+    // A leitura de runas cumpre o passo da primeira runa; o total de 25
+    // leituras continua longe, e é ele que soma o tarô.
+    expect(JourneyStatsRepository.reachedSteps(stats), {'ini_01_04'});
     expect(JourneyStatsRepository.stepById('div_01_04')?.targetEntity, 'all_readings');
+    expect(JourneyStatsRepository.stepById('div_01_04')?.requiredCount, 25);
   });
 
   test('the day closes through the service when the three rites are done', () async {

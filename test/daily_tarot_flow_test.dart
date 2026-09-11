@@ -1,3 +1,9 @@
+// Um teste que falha no meio de uma gravação deixa o cadeado do SQLite
+// preso para os seguintes: o limite por teste evita que isso vire dezenas
+// de minutos de CI em vez de uma falha legível.
+@Timeout(Duration(minutes: 2))
+library;
+
 import 'dart:async';
 import 'dart:io';
 

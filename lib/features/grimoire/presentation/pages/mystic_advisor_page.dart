@@ -521,12 +521,16 @@ class _AnswerCard extends StatelessWidget {
           children: [
             const Text('🌙', style: TextStyle(fontSize: 28)),
             const SizedBox(width: 12),
-            Text(
-              l10n.advisorAnswers,
-              style: TextStyle(
-                color: context.gc.lilac,
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
+            // O título é traduzido: em telas estreitas ele quebra a linha
+            // em vez de estourar o cartão.
+            Expanded(
+              child: Text(
+                l10n.advisorAnswers,
+                style: TextStyle(
+                  color: context.gc.lilac,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
           ],
@@ -550,7 +554,10 @@ class _AnswerCard extends StatelessWidget {
                   children: [
                     Icon(Icons.bookmark_added, color: context.gc.gold, size: 18),
                     const SizedBox(width: 6),
-                    Text(l10n.advisorSaved, style: TextStyle(color: context.gc.gold)),
+                    Flexible(
+                      child: Text(l10n.advisorSaved,
+                          style: TextStyle(color: context.gc.gold)),
+                    ),
                   ],
                 )
               : TextButton.icon(
