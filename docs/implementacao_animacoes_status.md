@@ -447,10 +447,39 @@ Entregue em 11/09.
   etiquetas distintos, símbolo igual nos três idiomas, o voo do card ao
   cabeçalho e de volta, título comprido sem estourar).
 
+## Ciclo menstrual: registro próprio (P16, primeira parte)
+
+Entregue em 11/09.
+
+- **Tabela própria (v28):** `menstrual_days`, por conta e por dia, guarda a
+  marca que a pessoa escolheu (começo, fluxo, escape, fim ou só uma
+  anotação), a intensidade quando ela quis dizer, sintomas, humor e nota.
+  Nenhuma coluna derivada: dia do ciclo, duração, média e estimativa são
+  resultado de quem lê, e é lá que o gate Premium se aplica.
+- **Escolha explícita:** um escape nunca vira começo, e um dia sem linha
+  significa “sem registro”, nunca “sem sintomas”.
+- **Corrigir não é registrar de novo:** a data de criação fica, a revisão
+  sobe, e a contagem de dias não muda.
+- **Apagar deixa lápide:** o dia sai do histórico e a linha permanece com uma
+  revisão maior, então a cópia antiga de outro aparelho não o ressuscita.
+  Escrever ali de novo traz o dia de volta — porque foi a pessoa que pediu.
+  `purge` apaga tudo de verdade, e só da conta que pediu.
+- **Fora dos caminhos indiretos:** o registro não entra na Leitura do Ciclo
+  (nem na contagem, nem no mapa de calor), não soma XP, não alimenta ofertas
+  nem telemetria, e não é enviado à IA — isso é assunto do P18, com
+  consentimento próprio. Entrar numa conta no mesmo aparelho leva o registro
+  junto, como as demais tabelas anônimas.
+- **Verificação:** `menstrual_cycle_repository_test.dart` (o que foi escrito
+  e nada além, escape que continua escape, correção com revisão, ausência de
+  registro, lápide que resiste ao aparelho antigo, revisão maior que vence,
+  isolamento entre contas, apagar tudo, e a Leitura do Ciclo sem ver nada) e
+  `daily_tarot_migration_test.dart` (um telefone vindo da v23 ganha a tabela).
+
 ## Dados e compatibilidade
 
 O schema local sobe de 23 para 24 (sessões e ledger), 25 (descobertas do
-Oráculo), 26 (consultas do Conselheiro) e 27 (marcos). As tabelas novas são
+Oráculo), 26 (consultas do Conselheiro), 27 (marcos) e 28 (registro
+menstrual, em tabela própria). As tabelas novas são
 `selection_sessions`, `tarot_day_state`, `usage_balances`, `usage_operations`,
 `oracle_discoveries`, `advisor_consultations` e `progress_milestones`. Instalação nova e
 migração usam a mesma definição. Exportação e limpeza local incluem as tabelas;
@@ -544,7 +573,8 @@ pendentes. Os testes automatizados não substituem essa avaliação.
 
 1. P14: revisão de tamanhos e hierarquia e o percurso completo pelas 12
    entradas em aparelho — o que resta do pacote é avaliação visual.
-2. P16/P17: registro menstrual manual Free; dados derivados e análises Premium.
+2. P16: cartão em Ciclos, consentimento, formulário e calendário do registro;
+   P17: roda comparativa e estações, com os cálculos atrás do Premium.
 3. P18: registros menstruais autorizados entram na análise completa do ciclo.
 4. P15: integração e validação final do lote.
 
