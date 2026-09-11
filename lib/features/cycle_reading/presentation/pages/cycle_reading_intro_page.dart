@@ -254,6 +254,7 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
       userId: userId,
       start: period.start,
       end: period.end,
+      options: _options,
     );
     final existing = await _service.repository.findForPeriod(
       userId,
@@ -360,6 +361,33 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
       default:
         return null;
     }
+  }
+
+  /// Ligar ou desligar uma fonte muda o que vai para a análise — então muda
+  /// também o número de registros que a tela promete. Recontar é barato e
+  /// evita a promessa que a leitura não cumpriria.
+  void _trocarFonte(VoidCallback mudanca) {
+    setState(mudanca);
+    unawaited(_recontar());
+  }
+
+  /// Dedo rápido em duas chaves seguidas dispara duas contagens; só a última
+  /// pedida pode escrever na tela, senão o número volta ao estado anterior.
+  int _contagemPedida = 0;
+
+  Future<void> _recontar() async {
+    final pedido = ++_contagemPedida;
+    final userId = context.read<AuthProvider>().currentUser.id;
+    final period = _period;
+    final options = _options;
+    final total = await _service.composer.countPeriodRecords(
+      userId: userId,
+      start: period.start,
+      end: period.end,
+      options: options,
+    );
+    if (!mounted || pedido != _contagemPedida) return;
+    setState(() => _recordCount = total);
   }
 
   CycleReadingSourceOptions get _options => CycleReadingSourceOptions(
@@ -965,28 +993,28 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
               contentPadding: EdgeInsets.zero,
               title: Text(l10n.cycleReadingIncludeDreams),
               value: _includeDreams,
-              onChanged: (v) => setState(() => _includeDreams = v),
+              onChanged: (v) => _trocarFonte(() => _includeDreams = v),
             ),
             SwitchListTile(
               contentPadding: EdgeInsets.zero,
               title: Text(l10n.cycleReadingIncludeFreeWriting),
               subtitle: Text(l10n.cycleReadingIncludeFreeWritingHint),
               value: _includeJournals,
-              onChanged: (v) => setState(() => _includeJournals = v),
+              onChanged: (v) => _trocarFonte(() => _includeJournals = v),
             ),
             SwitchListTile(
               contentPadding: EdgeInsets.zero,
               title: Text(l10n.cycleReadingIncludeQuestions),
               subtitle: Text(l10n.cycleReadingIncludeQuestionsHint),
               value: _includeDivination,
-              onChanged: (v) => setState(() => _includeDivination = v),
+              onChanged: (v) => _trocarFonte(() => _includeDivination = v),
             ),
             SwitchListTile(
               contentPadding: EdgeInsets.zero,
               title: Text(l10n.cycleReadingIncludePractice),
               subtitle: Text(l10n.cycleReadingIncludePracticeHint),
               value: _includePractice,
-              onChanged: (v) => setState(() => _includePractice = v),
+              onChanged: (v) => _trocarFonte(() => _includePractice = v),
             ),
             // Só para quem a área é oferecida: no masculino não há fonte,
             // nem menção a ela.

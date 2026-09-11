@@ -135,7 +135,7 @@ void main() {
         MenstrualProjection.none);
   });
 
-  test('a nota livre fica de fora enquanto ela não pedir', () {
+  test('escopo sem a nota livre não deixa a nota livre passar', () {
     final chosen = day(4, note: 'minhas palavras');
     final scope = scopeOf([chosen]);
     expect(scope.includesWrittenWords, isFalse);

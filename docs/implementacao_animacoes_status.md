@@ -637,8 +637,10 @@ ao compositor vêm em seguida.
   os campos escolhidos e a revisão do consentimento. Autorizar hoje não
   autoriza o que for escrito amanhã, e a data que vale é a observada, nunca a
   de digitação.
-- **A nota livre e a escrita da estação começam de fora:** são as palavras
-  dela, e incluí-las é uma escolha à parte.
+- **A nota livre e a escrita da estação têm chave própria:** são as palavras
+  dela, e precisam poder sair sozinhas, sem levar junto o resto do período.
+  O conjunto base do domínio (`defaultFields`) continua sem elas; quem as
+  acrescenta é a tela, ao abrir a fonte.
 - **Corrigir, apagar ou retirar o sim invalida:** a revisão de cada dia entra
   no contrato, então um registro alterado depois simplesmente não passa pelo
   recorte, e a geração que dependia dele deixa de valer.
@@ -661,12 +663,13 @@ ao compositor vêm em seguida.
   fontes da Leitura do Ciclo, e é a única fonte que nasce **desligada**. Sem
   Premium efetivo a chave nem abre — nada é lido, nada é mostrado. No
   masculino a fonte não existe na tela.
-- **Ligar não autoriza:** ligar a chave abre a prévia dos registros que
-  existem naquela janela, e autorizar é marcar, um a um ou por "incluir todos
-  deste período" — ação explícita sobre os registros que estão à vista. A
-  contagem do que foi incluído aparece ao lado das outras fontes.
-- **As palavras dela são escolha à parte:** a anotação do dia e a escrita da
-  estação só vão junto com um segundo sim, desmarcado por padrão.
+- **Ligar a chave é o sim, e a prévia é onde ela recorta:** ligar abre a
+  lista dos registros daquela janela já marcada por inteiro, relato incluso,
+  e daqui em diante ela DESmarca — dia a dia, por "incluir nenhum", ou só o
+  relato, pela chave das palavras. Continua sendo ação explícita sobre os
+  registros que estão à vista: a lista aparece antes de qualquer envio, e
+  desligar a fonte devolve um escopo vazio. A contagem do que foi incluído
+  aparece ao lado das outras fontes.
 - **A tela diz o alcance, inteiro:** a análise fica guardada no acervo e pode
   conter o que ela incluir — e, se a sincronização com a conta estiver ligada,
   o acervo vai para a nuvem, com a análise dentro. O registro do ciclo em si
@@ -833,6 +836,32 @@ flutter run -t lib/dev/motion_gallery.dart
 
 Validação visual em Android e web e medição de frames em aparelho continuam
 pendentes. Os testes automatizados não substituem essa avaliação.
+
+## Tudo ligado por padrão: fontes, relato e avisos
+
+Entregue em 11/09, a pedido da dona: o padrão passa a ser o "sim", e o
+trabalho da pessoa é tirar, não pôr.
+
+- **O contador promete o que vai ser enviado:** `countPeriodRecords` aceita
+  as opções de fonte e, com elas, pula as tabelas dos grupos desligados —
+  e corta o acervo por origem, porque `free_writings` é mista (reflexão e
+  lição contam como diário; quiromancia e conselho guardado, como
+  adivinhação). Sem opções — o cartão de oferta em Seu Dia e o cartão de
+  Ciclos — a conta continua sendo a do período inteiro, que é o que aquelas
+  telas querem dizer.
+- **A tela reconta a cada chave:** desligar uma fonte muda na hora o número
+  que a tela promete, e um pedido antigo nunca sobrescreve o mais novo
+  (guarda por sequência). Prometer material que não será enviado é prometer
+  uma leitura que não vai existir.
+- **A fonte íntima abre marcada:** ligar a chave do Ciclo Menstrual traz o
+  período inteiro já incluído, relato incluso — os sete campos. A prévia
+  continua aparecendo antes de qualquer envio, e agora ela serve para
+  DESmarcar: dia a dia, "incluir nenhum", ou só as palavras.
+- **Todos os avisos nascem ligados:** lua cheia, lua nova, sabás, água solar
+  e o lembrete diário. A água solar era a única de fora; a lua nova já
+  existia ligada, com aviso da véspera às 20h e do dia às 19h, em faixas de
+  id próprias. Quem desliga tem a escolha gravada nas prefs e não é
+  reativado — `avisos_ligados_por_padrao_test.dart` trava os dois lados.
 
 ## Continuação do lote
 

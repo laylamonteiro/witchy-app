@@ -438,6 +438,48 @@ class CycleReadingComposer {
     'sigils',
   ];
 
+  /// A que grupo de fontes cada tabela pertence — os mesmos quatro grupos
+  /// que a pessoa pode desligar antes de gerar.
+  ///
+  /// `free_writings` não está aqui porque é mista: reflexão, lição, página
+  /// de leitura e conselho guardado moram na mesma tabela, e ali o corte é
+  /// por origem ([_fontesDoGrupo]).
+  static const Map<String, String> _grupoDaTabela = {
+    'dreams': 'dreams',
+    'gratitudes': 'journals',
+    'desires': 'journals',
+    'affirmations': 'journals',
+    'sigils': 'journals',
+    'rune_readings': 'divination',
+    'oracle_readings': 'divination',
+    'pendulum_consultations': 'divination',
+    'tarot_readings': 'divination',
+    'ritual_logs': 'practice',
+    'guided_ritual_logs': 'practice',
+    'spells': 'practice',
+  };
+
+  static bool _grupoLigado(String grupo, CycleReadingSourceOptions options) =>
+      switch (grupo) {
+        'dreams' => options.includeDreams,
+        'journals' => options.includeJournals,
+        'divination' => options.includeDivination,
+        'practice' => options.includePractice,
+        _ => true,
+      };
+
+  /// As origens do acervo que continuam contando com estas opções.
+  static List<String> _fontesDoGrupo(CycleReadingSourceOptions options) => [
+        if (options.includeJournals) ...[
+          FreeWritingSource.free,
+          FreeWritingSource.grimorioVivo,
+        ],
+        if (options.includeDivination) ...[
+          FreeWritingSource.palmistry,
+          FreeWritingSource.advisor,
+        ],
+      ];
+
   /// A coluna de tempo de cada tabela: rito concluído marca `completed_at`;
   /// o resto, `created_at`.
   static String _timeColumnOf(String table) =>
@@ -582,16 +624,35 @@ class CycleReadingComposer {
   /// Contagem barata dos registros do período — usada pelo card de oferta
   /// no Seu Dia ("Sua lunação rendeu {N} registros") e pelo aviso de
   /// leitura rasa, sem montar o material inteiro.
+  /// Com [options], a conta passa a ser a do que VAI para a análise: o que
+  /// ela desligou some do número, porque prometer material que não será
+  /// enviado é prometer uma leitura que não vai existir. Sem [options] — o
+  /// caminho da oferta e do cartão de Ciclos — a conta continua sendo a do
+  /// período inteiro, que é o que aquelas telas querem dizer.
   Future<int> countPeriodRecords({
     required String userId,
     required DateTime start,
     required DateTime end,
+    CycleReadingSourceOptions? options,
   }) async {
     final db = await _db;
     var total = 0;
+    final fontesDoAcervo =
+        options == null ? const <String>[] : _fontesDoGrupo(options);
+    final fontesEmLista =
+        fontesDoAcervo.map((fonte) => "'" + fonte + "'").join(', ');
     for (final table in _recordTables) {
+      if (options != null) {
+        final grupo = _grupoDaTabela[table];
+        if (grupo != null && !_grupoLigado(grupo, options)) continue;
+        // O acervo inteiro fora: nenhum dos grupos que moram nele está de pé.
+        if (table == 'free_writings' && fontesDoAcervo.isEmpty) continue;
+      }
       final timeColumn = _timeColumnOf(table);
-      final preloadedFilter = _ownRecordsFilter(table);
+      final preloadedFilter = _ownRecordsFilter(table) +
+          (options != null && table == 'free_writings'
+              ? ' AND source IN ($fontesEmLista)'
+              : '');
       final apagadosFilter = _filtroDeApagados(table);
       try {
         final rows = await db.rawQuery(

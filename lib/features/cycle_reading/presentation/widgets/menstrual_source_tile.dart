@@ -81,6 +81,13 @@ class _MenstrualSourceTileState extends State<MenstrualSourceTile> {
         _consented = consented;
         _consentRevision = revision;
         _days = days;
+        // Abrir a fonte já traz o período inteiro marcado, e as palavras
+        // dela junto: o sim está na chave, e daqui em diante ela DESmarca o
+        // que não quiser mandar — dia a dia ou o relato inteiro de uma vez.
+        _chosen
+          ..clear()
+          ..addAll(days.map((day) => day.dayKey));
+        _words = true;
         _loading = false;
       });
     } catch (_) {

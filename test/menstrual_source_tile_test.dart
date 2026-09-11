@@ -87,7 +87,7 @@ void main() {
     expect(emitted, isEmpty);
   });
 
-  testWidgets('abrir mostra os dias, e nenhum vai junto sem ela marcar',
+  testWidgets('abrir traz o período marcado, e ela desmarca o que não quer',
       (tester) async {
     final emitted = await show(tester);
     await tester.tap(find.byKey(const ValueKey('cycle-reading-menstrual')));
@@ -100,26 +100,32 @@ void main() {
 
     expect(find.byKey(const ValueKey('cycle-reading-menstrual-2026-03-06')),
         findsOneWidget);
-    expect(find.text('No records included'), findsOneWidget,
-        reason: 'Abrir a prévia não autoriza nada');
-    expect(emitted.last.isEmpty, isTrue);
+    // O sim está na chave: abrir já traz o período inteiro marcado.
+    expect(find.text('2 records included'), findsOneWidget);
+    expect(emitted.last.recordCount, 2);
+    expect(emitted.last.start, period.start);
+    expect(emitted.last.end, period.end);
+    expect(emitted.last.includesWrittenWords, isTrue,
+        reason: 'Abrir a fonte manda o período inteiro, relato incluso');
 
+    // E daqui em diante ela DESmarca o que não quiser mandar.
     await tester.tap(
         find.byKey(const ValueKey('cycle-reading-menstrual-2026-03-04')));
     await tester.pump();
     expect(emitted.last.recordCount, 1);
-    expect(emitted.last.entries.single.dayKey, '2026-03-04');
-    expect(emitted.last.includesWrittenWords, isFalse,
-        reason: 'As palavras dela são uma escolha à parte');
+    expect(emitted.last.entries.single.dayKey, '2026-03-06');
+
+    await tester.tap(find.byKey(const ValueKey('cycle-reading-menstrual-none')));
+    await tester.pump();
+    expect(emitted.last.isEmpty, isTrue);
 
     await tester.tap(find.byKey(const ValueKey('cycle-reading-menstrual-all')));
     await tester.pump();
     expect(emitted.last.recordCount, 2);
-    expect(emitted.last.start, period.start);
-    expect(emitted.last.end, period.end);
   });
 
-  testWidgets('as palavras dela entram só quando ela pede', (tester) async {
+  testWidgets('as palavras dela saem no instante em que ela pede',
+      (tester) async {
     final emitted = await show(tester);
     await tester.tap(find.byKey(const ValueKey('cycle-reading-menstrual')));
     await settle(
@@ -128,16 +134,19 @@ void main() {
             .byKey(const ValueKey('cycle-reading-menstrual-all'))
             .evaluate()
             .isNotEmpty);
-    await tester.tap(find.byKey(const ValueKey('cycle-reading-menstrual-all')));
-    await tester.pump();
-    expect(emitted.last.includesWrittenWords, isFalse);
-
-    await tester.tap(
-        find.byKey(const ValueKey('cycle-reading-menstrual-words')));
-    await tester.pump();
     expect(emitted.last.includesWrittenWords, isTrue);
     expect(emitted.last.fields, contains(MenstrualField.note));
     expect(emitted.last.fields, contains(MenstrualField.seasonNote));
+
+    // Uma chave desliga o relato e deixa o resto do período de pé.
+    await tester.tap(
+        find.byKey(const ValueKey('cycle-reading-menstrual-words')));
+    await tester.pump();
+    expect(emitted.last.includesWrittenWords, isFalse);
+    expect(emitted.last.fields, isNot(contains(MenstrualField.note)));
+    expect(emitted.last.fields, isNot(contains(MenstrualField.seasonNote)));
+    expect(emitted.last.recordCount, 2,
+        reason: 'Tirar as palavras não tira os dias');
 
     // Desligar a fonte devolve um escopo vazio: nada fica autorizado.
     await tester.tap(find.byKey(const ValueKey('cycle-reading-menstrual')));

@@ -2,8 +2,9 @@ import 'menstrual_day.dart';
 
 /// Os campos de um registro que podem, ou não, acompanhar a leitura.
 ///
-/// A nota livre e a escrita da estação entram desmarcadas: são as palavras
-/// dela, e incluí-las tem de ser uma escolha à parte.
+/// A nota livre e a escrita da estação têm chave própria na tela: são as
+/// palavras dela, e precisam poder sair sozinhas, sem levar junto o resto
+/// do período.
 enum MenstrualField { mark, flow, symptoms, mood, note, season, seasonNote }
 
 /// Um registro autorizado, com a revisão que ela viu ao autorizar.
@@ -46,8 +47,8 @@ class MenstrualScopeEntry implements Comparable<MenstrualScopeEntry> {
 /// * os registros autorizados vêm listados um a um, com a revisão que ela
 ///   viu — nada de "tudo o que houver", e nada de dados futuros: autorizar
 ///   hoje não autoriza o que for escrito amanhã;
-/// * os campos são explícitos, e a nota livre e a escrita da estação começam
-///   de fora;
+/// * os campos são explícitos: o escopo diz quais vão, um a um, e a nota
+///   livre e a escrita da estação podem sair sem que os dias saiam;
 /// * a revisão do consentimento entra no contrato: retirar o sim invalida o
 ///   escopo mesmo que os registros não mudem.
 ///
@@ -88,7 +89,9 @@ class MenstrualReadingScope {
   /// geração antiga não seja retomada com regras novas.
   final int contentVersion;
 
-  /// O que vai por padrão: o que ela marcou, sem as palavras que escreveu.
+  /// O conjunto base: o que ela marcou nos dias. As palavras que escreveu
+  /// (nota do dia e nota da estação) entram por uma chave própria na tela,
+  /// para poderem sair sozinhas sem levar o resto do período junto.
   static const defaultFields = {
     MenstrualField.mark,
     MenstrualField.flow,
