@@ -5,6 +5,7 @@ import 'package:grimorio_de_bolso/features/encyclopedia/data/data_sources/archet
 import 'package:grimorio_de_bolso/features/encyclopedia/data/data_sources/archetypes_data.dart';
 import 'package:grimorio_de_bolso/features/encyclopedia/presentation/pages/archetype_quiz_page.dart';
 import 'package:grimorio_de_bolso/features/encyclopedia/presentation/widgets/archetype_constellation.dart';
+import 'package:grimorio_de_bolso/features/encyclopedia/presentation/widgets/archetype_glyph.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'support/short_test_timeout.dart';
@@ -152,7 +153,7 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('the symbol on screen does not change with the migration',
+  testWidgets('the prize is the drawing of the archetype, not its glyph',
       (tester) async {
     final entry = archetypesData[4];
     SharedPreferences.setMockInitialValues({
@@ -162,10 +163,15 @@ void main() {
     await show(tester);
     await settle(tester, () => resultName().evaluate().isNotEmpty, 'the migrated archetype');
 
-    // O desenho continua sendo o emoji do verbete, no mesmo tamanho — a troca
-    // foi só de identidade gravada.
-    final symbol = tester.widget<Text>(find.text(entry.emoji));
-    expect(symbol.style?.fontSize, 56);
+    // O prêmio deixou de ser o glifo da fonte do aparelho e passou a ser o
+    // desenho do MESMO arquétipo — a identidade gravada não mudou junto.
+    expect(find.text(entry.emoji), findsNothing,
+        reason: 'o emoji do arquétipo ainda está sendo escrito na tela');
+    final glyph = tester.widget<ArchetypeGlyph>(find.byType(ArchetypeGlyph));
+    expect(glyph.id, archetypeIds[4]);
+    // Na caixa que lhe dá o porte do emoji de 56 que estava aqui.
+    expect(glyph.size,
+        closeTo(ArchetypeGlyphArt.boxForEmojiSize(56), 0.001));
     expect(tester.takeException(), isNull);
   });
 

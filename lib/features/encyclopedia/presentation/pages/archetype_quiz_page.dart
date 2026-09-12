@@ -8,7 +8,9 @@ import '../../data/data_sources/arcane_categories.dart';
 import '../../data/data_sources/archetype_identity.dart';
 import '../../data/data_sources/archetype_quiz_data.dart';
 import '../../data/models/arcane_entry_model.dart';
+import '../widgets/arcane_glyph.dart';
 import '../widgets/archetype_constellation.dart';
+import '../widgets/archetype_glyph.dart';
 import 'arcane_detail_page.dart';
 import '../../../../core/tools/tool_identity.dart';
 
@@ -18,7 +20,8 @@ import '../../../../core/tools/tool_identity.dart';
 /// A pontuação e a persistência usam o ID do arquétipo (`archetype_identity`)
 /// como chave: ele é invariante entre idiomas, como o emoji era, mas não
 /// depende da fonte nem da grafia da sequência de emoji para casar com o
-/// catálogo. O emoji continua sendo só o desenho na tela.
+/// catálogo. O emoji continua no catálogo como chave do conteúdo; na tela,
+/// quem aparece é o DESENHO do arquétipo (`archetype_glyph.dart`).
 class ArchetypeQuizPage extends StatefulWidget {
   const ArchetypeQuizPage({super.key});
 
@@ -277,6 +280,23 @@ class _ArchetypeQuizPageState extends State<ArchetypeQuizPage> {
       if (archetype != null) energies.add(MapEntry(archetype, entry.value));
     }
 
+    // O prêmio, num widget só: os dois ramos abaixo (com constelação e sem)
+    // mostram exatamente o mesmo desenho, no mesmo tamanho. Quando eram duas
+    // cópias, era de dois lugares que o prêmio podia divergir.
+    //
+    // A caixa é a que faz o desenho ter o porte do emoji de 56 que estava
+    // aqui; a constelação deixa o meio livre e a estrela mais próxima fica a
+    // 99 pixels do centro, então os 83 de caixa não encostam nela.
+    final prize = _Reveal(
+      play: _justFinished,
+      child: ArcaneGlyph(
+        category: ArcaneCategory.archetypes,
+        entry: result,
+        size: ArchetypeGlyphArt.boxForEmojiSize(56),
+        emojiStyle: const TextStyle(fontSize: 56),
+      ),
+    );
+
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(vertical: 16),
       child: Column(
@@ -308,20 +328,13 @@ class _ArchetypeQuizPageState extends State<ArchetypeQuizPage> {
                               height: 200,
                             ),
                           ),
-                          _Reveal(
-                            play: _justFinished,
-                            child: Text(result.emoji,
-                                style: const TextStyle(fontSize: 56)),
-                          ),
+                          prize,
                         ],
                       ),
                     ),
                   )
                 else
-                  _Reveal(
-                    play: _justFinished,
-                    child: Text(result.emoji, style: const TextStyle(fontSize: 56)),
-                  ),
+                  prize,
                 const SizedBox(height: 12),
                 if (_savedDate != null) ...[
                   Text(
