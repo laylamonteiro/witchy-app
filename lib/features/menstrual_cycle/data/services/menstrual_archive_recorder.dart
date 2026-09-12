@@ -4,6 +4,7 @@ import '../../../../core/content/content_locale.dart';
 import '../../../diary/data/models/free_writing_model.dart';
 import '../../../diary/data/repositories/free_writing_repository.dart';
 import '../../domain/menstrual_day.dart';
+import '../menstrual_mood_labels.dart';
 
 /// Strings do idioma atual sem BuildContext, como no ReadingArchiveComposer:
 /// a página é "assada" no momento da gravação, igual às páginas das leituras.
@@ -70,8 +71,11 @@ class MenstrualArchiveRecorder {
       if (day.symptoms.isNotEmpty)
         '✦ ${l10n.menstrualArchiveSymptoms}\n'
             '${day.symptoms.map((id) => _symptomOf(l10n, id)).join(', ')}',
+      // O humor grava id, como os sintomas: a página diz "Sensível", não
+      // `sensitive` — e a palavra livre de um registro antigo passa inteira.
       if ((day.mood ?? '').trim().isNotEmpty)
-        '✦ ${l10n.menstrualArchiveMood}\n${day.mood!.trim()}',
+        '✦ ${l10n.menstrualArchiveMood}\n'
+            '${menstrualMoodLabel(l10n, day.mood!.trim())}',
       if (day.note.trim().isNotEmpty)
         '✦ ${l10n.menstrualArchiveNote}\n${day.note.trim()}',
     ];

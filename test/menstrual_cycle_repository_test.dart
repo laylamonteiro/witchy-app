@@ -118,6 +118,31 @@ void main() {
     expect(await repo.dayOf(userId: user, day: DateTime(2026, 3, 6)), isNull);
   });
 
+  test('the history is every living day, in order, across months', () async {
+    // Três meses, gravados fora de ordem, e um dia apagado no meio: o
+    // histórico devolve os três vivos do primeiro ao mais recente, sem a
+    // lápide — é o que "A Lua e você" lê.
+    await repo.save(MenstrualDay(
+        userId: user, day: DateTime(2026, 3, 4), mark: MenstrualMark.start));
+    await repo.save(MenstrualDay(
+        userId: user, day: DateTime(2026, 1, 8), mark: MenstrualMark.start));
+    await repo.save(MenstrualDay(
+        userId: user, day: DateTime(2026, 2, 5), mark: MenstrualMark.start));
+    await repo.save(MenstrualDay(
+        userId: user, day: DateTime(2026, 2, 20), mark: MenstrualMark.flow));
+    await repo.remove(userId: user, day: DateTime(2026, 2, 20));
+    await repo.save(day(9, owner: other));
+
+    final history = await repo.history(user);
+    expect(history.map((d) => d.day), [
+      DateTime(2026, 1, 8),
+      DateTime(2026, 2, 5),
+      DateTime(2026, 3, 4),
+    ]);
+    expect(history.every((d) => !d.deleted), isTrue,
+        reason: 'A headstone is not a day she recorded');
+  });
+
   test('deleting leaves a headstone that an older device cannot lift',
       () async {
     final saved = await repo.save(day(12, note: 'written here'));

@@ -581,10 +581,10 @@ Entregue em 11/09.
 - **Janela simétrica de ±2 dias** em torno da Nova e da Cheia estimadas, com
   versão de algoritmo registrada. A tela informa a janela e que as fases são
   estimativas do app.
-- **Lua estimada por dia no calendário (Premium):** cada dia do mês mostra a
-  fase estimada, com o nome em texto para quem ouve a tela, e uma legenda diz
-  o que é aquilo. No gratuito a Lua nem é calculada — cruzar registro com
-  fase é comparação, e comparação é Premium.
+- **Lua por dia no calendário (para todo mundo):** cada dia do mês mostra a
+  fase, com o nome em texto para quem ouve a tela — é a mesma Lua da página
+  inicial, e não há legenda explicando o que é. O que fica no Premium é a
+  roda, que cruza os dois anéis na mesma escala de datas.
 - **Você e a Lua:** as datas dos começos com a fase estimada de cada uma
   aparecem desde o primeiro começo. O resumo exige quatro começos — três
   intervalos completos — e conta quantos ficaram dentro da janela: "Em 2 de 3
@@ -1028,3 +1028,56 @@ calendário; fontes, tamanhos e posições padronizados na jornada inteira.
   novo (vazio, linha do tempo, resumo, emoções, histórico longo), e os nove
   testes que citavam a estação ajustados. O teste dos prompts deixou de exigir
   `chosen_by_her`, que não existe mais no material.
+
+### Onda 2 — uma folha só, e a mesma voz em toda a jornada
+
+- **A página, de cima para baixo:** "Sangue de Lua" (duas linhas que exaltam o
+  sangue, e um "ler mais" que abre o ensaio dentro do mesmo card — três
+  seções curtas, reverentes, sem "muitas culturas" e sem se justificar; a
+  única nota de cuidado é uma frase: procure quem cuida da sua saúde); o card
+  de hoje com a data por extenso, a Lua de hoje com halo (a única Lua
+  protagonista da página) e o estado do dia; "A Lua e você"; o calendário,
+  agora com a Lua de cada dia PARA TODO MUNDO — a fase é a mesma da página
+  inicial, e aqui é visual, não comparação — e a roda continua Premium. Os
+  dias de sangue são disco cheio; escape, contorno; fim, barra; anotação,
+  ponto; hoje, anel lilás. A página passou a ler o histórico inteiro
+  (`MenstrualCycleRepository.history`), que é o que "A Lua e você" precisa.
+- **O que saiu da tela:** o rodapé que explicava a Lua, o título "Hoje" (a
+  data já diz), o card separado de explicação, e todo "(opcional)",
+  "estimada" e frase do tipo "isto não afirma nada". O convite Premium virou
+  uma linha dentro do calendário, só para o gratuito. Os textos do card na aba
+  Ciclos e do consentimento encolheram para o que informa.
+- **A folha de registro, na ordem:** título; a linha da Lua do dia (glifo,
+  data, fase); UMA frase de convite por fase da Lua — é a camada editorial que
+  a estação fazia, agora amarrada ao céu daquele dia e com no máximo vinte
+  palavras; os chips de sempre (Começou, Dia de fluxo, Escape, Terminou, Só
+  uma anotação — palavra por palavra); intensidade; "Como você está?" com
+  seis chips de escolha única, neutros de gênero (Leve, Sensível, Irritável,
+  Triste, Forte, Em paz), gravados por id como os sintomas — um humor antigo
+  em texto livre continua legível e sobrevive a uma edição que não toque nos
+  chips; sintomas; e a anotação por último, com um convite no lugar do rótulo.
+  A confirmação diz sob que Lua o dia foi guardado. Nenhuma folha depois de
+  salvar.
+- **As emoções chegam ao insight:** "A Lua e você" e a página do Grimório
+  mostram o humor pelo rótulo, não pelo id; a Leitura do Ciclo recebe o id,
+  como já recebe marca, intensidade e sintomas.
+- **Coerência:** a escala tipográfica da jornada mora em
+  `menstrual_type.dart` (título de card, cabeçalho, corpo, discreto, legenda,
+  eyebrow — tudo derivado do `textTheme` e das cores do tema) e é usada pela
+  página, pela folha, por "A Lua e você" e pela roda; os espaços entre
+  cabeçalho, bloco e card são os mesmos em todos. O card "Ciclo Menstrual" da
+  aba Ciclos fala a língua dos vizinhos dele (Leitura do Ciclo, Eras), não a
+  da página — é lá que ele mora.
+- **A célula do calendário** soma 32dp (glifo, disco e faixa): a 360dp de
+  largura sobram uns 5dp de folga, e abaixo de ~320dp o Flutter acusaria
+  estouro. Os tamanhos são o que cabe.
+- **Verificação:** `menstrual_cycle_page_test.dart` refeito para o layout
+  novo (abertura e "ler mais", Lua de hoje, "A Lua e você" no gratuito,
+  convite Premium só no gratuito, chip de humor grava o id e desmarca ao tocar
+  de novo, texto livre antigo preservado, linha da Lua na folha, nenhum
+  "optional" na tela), `menstrual_cycle_repository_test.dart` (`history`
+  devolve em ordem e sem os apagados), `menstrual_archive_recorder_test.dart`
+  (humor localizado na página), `lua_e_voce_card_test.dart` (emoções pelo
+  rótulo) e `menstrual_about_text_test.dart`, que agora proíbe vocabulário de
+  causa no texto da Lua e nos oito convites, e vocabulário de boilerplate em
+  todos.

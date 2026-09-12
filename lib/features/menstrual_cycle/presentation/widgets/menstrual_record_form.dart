@@ -1,16 +1,22 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/grimoire_colors.dart';
+import '../../../../core/widgets/moon_glyph.dart';
 import '../../../../l10n/generated/app_localizations.dart';
+import '../../../grimoire/data/models/spell_model.dart';
+import '../../../lunar/presentation/providers/lunar_provider.dart';
+import '../../data/menstrual_mood_labels.dart';
+import '../../domain/lunar_comparison.dart';
 import '../../domain/menstrual_day.dart';
+import '../menstrual_type.dart';
 
-/// O painel de registro de um dia.
+/// A folha de registro de um dia, de cima para baixo: a Lua daquele dia e o
+/// convite dela, a marca, a intensidade, como ela está, os sintomas e, por
+/// último, uma palavra.
 ///
 /// A escolha é explícita: começou, dia de fluxo, escape, terminou ou só uma
 /// anotação. Nada é presumido a partir de outra coisa — marcar escape não
-/// escreve um começo. Intensidade, sintomas, humor e nota são opcionais, e a
-/// data em edição fica visível logo acima das ações, inclusive quando é um
-/// dia retroativo.
+/// escreve um começo.
 ///
 /// A saída sem gravar tem botão, e não só o gesto: no navegador não há alça
 /// de arrasto nem toque fora que se anuncie, então uma folha sem "Cancelar"
@@ -56,14 +62,22 @@ class _MenstrualRecordFormState extends State<MenstrualRecordForm> {
   late MenstrualMark _mark = widget.existing?.mark ?? MenstrualMark.flow;
   late MenstrualFlowLevel? _flow = widget.existing?.flow;
   late final Set<String> _symptoms = {...?widget.existing?.symptoms};
-  late final TextEditingController _mood =
-      TextEditingController(text: widget.existing?.mood ?? '');
+
+  /// O humor começa como veio gravado e só muda quando ela toca num chip.
+  /// Antes de virar chip ele era texto livre: um registro antigo com a
+  /// palavra dela abre sem chip marcado e, se ela não escolher nenhum, a
+  /// palavra volta para o banco como estava.
+  late String? _mood = widget.existing?.mood;
+
   late final TextEditingController _note =
       TextEditingController(text: widget.existing?.note ?? '');
 
+  /// A Lua do dia em edição, uma vez: o dia não muda enquanto a folha existe.
+  late final MoonPhase _phase =
+      LunarProvider.phaseOn(LunarComparison.noonOf(widget.day));
+
   @override
   void dispose() {
-    _mood.dispose();
     _note.dispose();
     super.dispose();
   }
@@ -99,8 +113,21 @@ class _MenstrualRecordFormState extends State<MenstrualRecordForm> {
         _ => l10n.menstrualSymptomMood,
       };
 
+  /// O convite da Lua do dia: uma frase por fase, que convida e não promete.
+  String _inviteOf(AppLocalizations l10n, MoonPhase phase) => switch (phase) {
+        MoonPhase.newMoon => l10n.menstrualMoonInviteNewMoon,
+        MoonPhase.waxingCrescent => l10n.menstrualMoonInviteWaxingCrescent,
+        MoonPhase.firstQuarter => l10n.menstrualMoonInviteFirstQuarter,
+        MoonPhase.waxingGibbous => l10n.menstrualMoonInviteWaxingGibbous,
+        MoonPhase.fullMoon => l10n.menstrualMoonInviteFullMoon,
+        MoonPhase.waningGibbous => l10n.menstrualMoonInviteWaningGibbous,
+        MoonPhase.lastQuarter => l10n.menstrualMoonInviteLastQuarter,
+        MoonPhase.waningCrescent => l10n.menstrualMoonInviteWaningCrescent,
+      };
+
   void _submit() {
     if (widget.saving) return;
+    final mood = _mood?.trim() ?? '';
     widget.onSubmit(MenstrualDay(
       userId: widget.userId,
       day: widget.day,
@@ -109,7 +136,7 @@ class _MenstrualRecordFormState extends State<MenstrualRecordForm> {
       symptoms: MenstrualRecordForm.symptoms
           .where(_symptoms.contains)
           .toList(growable: false),
-      mood: _mood.text.trim().isEmpty ? null : _mood.text.trim(),
+      mood: mood.isEmpty ? null : mood,
       note: _note.text.trim(),
     ));
   }
@@ -131,6 +158,7 @@ class _MenstrualRecordFormState extends State<MenstrualRecordForm> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final colors = context.gc;
+    final head = MenstrualType.sectionHead(context);
     return SingleChildScrollView(
       padding: EdgeInsets.fromLTRB(
           20, 20, 20, 20 + MediaQuery.viewInsetsOf(context).bottom),
@@ -142,8 +170,7 @@ class _MenstrualRecordFormState extends State<MenstrualRecordForm> {
             children: [
               Expanded(
                 child: Text(l10n.menstrualSheetTitle,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        color: colors.lilac, fontWeight: FontWeight.bold)),
+                    style: MenstrualType.cardTitle(context)),
               ),
               IconButton(
                 key: const ValueKey('menstrual-close'),
@@ -154,7 +181,33 @@ class _MenstrualRecordFormState extends State<MenstrualRecordForm> {
               ),
             ],
           ),
-          const SizedBox(height: 4),
+          // A data em edição e a Lua dela, no alto: um dia retroativo nunca
+          // é salvo por engano achando que é hoje. O glifo é enfeite; quem
+          // fala é a data e o nome da fase.
+          Row(
+            children: [
+              MoonGlyph(phase: _phase, size: 22, halo: false),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  l10n.menstrualEditingDay(
+                    MaterialLocalizations.of(context)
+                        .formatMediumDate(widget.day),
+                    _phase.displayName,
+                  ),
+                  key: const ValueKey('menstrual-editing-day'),
+                  style: MenstrualType.eyebrow(context),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            _inviteOf(l10n, _phase),
+            key: const ValueKey('menstrual-moon-invite'),
+            style: MenstrualType.body(context),
+          ),
+          const SizedBox(height: 12),
           Wrap(
             spacing: 8,
             runSpacing: 8,
@@ -169,12 +222,12 @@ class _MenstrualRecordFormState extends State<MenstrualRecordForm> {
             ],
           ),
           if (_asksFlow) ...[
-            const SizedBox(height: 16),
-            Text(l10n.menstrualFlowLabel,
-                style: TextStyle(color: colors.textSecondary, fontSize: 12)),
-            const SizedBox(height: 6),
+            const SizedBox(height: 12),
+            Text(l10n.menstrualFlowLabel, style: head),
+            const SizedBox(height: 8),
             Wrap(
               spacing: 8,
+              runSpacing: 8,
               children: [
                 for (final level in MenstrualFlowLevel.values)
                   ChoiceChip(
@@ -187,10 +240,27 @@ class _MenstrualRecordFormState extends State<MenstrualRecordForm> {
               ],
             ),
           ],
-          const SizedBox(height: 16),
-          Text(l10n.menstrualSymptomsLabel,
-              style: TextStyle(color: colors.textSecondary, fontSize: 12)),
-          const SizedBox(height: 6),
+          const SizedBox(height: 12),
+          Text(l10n.menstrualMoodLabel, style: head),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final id in menstrualMoods)
+                ChoiceChip(
+                  key: ValueKey('menstrual-mood-$id'),
+                  label: Text(menstrualMoodLabel(l10n, id)),
+                  selected: _mood == id,
+                  // Tocar de novo desmarca: ela pode não querer dizer nada.
+                  onSelected: (selected) =>
+                      setState(() => _mood = selected ? id : null),
+                ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(l10n.menstrualSymptomsLabel, style: head),
+          const SizedBox(height: 8),
           Wrap(
             spacing: 8,
             runSpacing: 8,
@@ -210,38 +280,23 @@ class _MenstrualRecordFormState extends State<MenstrualRecordForm> {
                 ),
             ],
           ),
-          const SizedBox(height: 16),
-          TextField(
-            key: const ValueKey('menstrual-mood'),
-            controller: _mood,
-            decoration: InputDecoration(labelText: l10n.menstrualMoodLabel),
-          ),
           const SizedBox(height: 12),
           TextField(
             key: const ValueKey('menstrual-note'),
             controller: _note,
-            maxLines: 4,
             minLines: 2,
-            decoration: InputDecoration(labelText: l10n.menstrualNoteLabel),
+            maxLines: 4,
+            decoration: InputDecoration(hintText: l10n.menstrualNoteLabel),
           ),
           if (widget.error != null) ...[
             const SizedBox(height: 12),
             Text(
               widget.error!,
               key: const ValueKey('menstrual-error'),
-              style: TextStyle(color: colors.alert),
+              style: MenstrualType.body(context).copyWith(color: colors.alert),
             ),
           ],
-          const SizedBox(height: 20),
-          // A data em edição fica colada nas ações: um dia retroativo nunca
-          // é salvo por engano achando que é hoje. Em linha própria porque,
-          // numa tela estreita, data + Cancelar + Salvar se espremeriam.
-          Text(
-            l10n.menstrualEditingDay(_readable(widget.day)),
-            key: const ValueKey('menstrual-editing-day'),
-            style: TextStyle(color: colors.textSecondary, fontSize: 12),
-          ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 16),
           Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
@@ -262,20 +317,21 @@ class _MenstrualRecordFormState extends State<MenstrualRecordForm> {
           ),
           if (widget.onDelete != null) ...[
             const SizedBox(height: 8),
-            TextButton.icon(
-              key: const ValueKey('menstrual-delete'),
-              onPressed: widget.saving ? null : widget.onDelete,
-              icon: const Icon(Icons.delete_outline, size: 18),
-              label: Text(l10n.menstrualDelete),
-              style: TextButton.styleFrom(foregroundColor: colors.alert),
+            // Na mesma margem que Cancelar e Salvar: as ações da folha
+            // ficam todas na mesma coluna, e não uma centralizada abaixo.
+            Align(
+              alignment: AlignmentDirectional.centerEnd,
+              child: TextButton.icon(
+                key: const ValueKey('menstrual-delete'),
+                onPressed: widget.saving ? null : widget.onDelete,
+                icon: const Icon(Icons.delete_outline, size: 18),
+                label: Text(l10n.menstrualDelete),
+                style: TextButton.styleFrom(foregroundColor: colors.alert),
+              ),
             ),
           ],
         ],
       ),
     );
   }
-
-  static String _readable(DateTime day) =>
-      '${day.day.toString().padLeft(2, '0')}/'
-      '${day.month.toString().padLeft(2, '0')}/${day.year}';
 }

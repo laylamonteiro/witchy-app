@@ -67,6 +67,7 @@ void main() {
     MenstrualMark mark = MenstrualMark.flow,
     MenstrualFlowLevel? flow,
     List<String> symptoms = const [],
+    String? mood,
     String note = '',
     String owner = user,
   }) =>
@@ -76,6 +77,7 @@ void main() {
         mark: mark,
         flow: flow,
         symptoms: symptoms,
+        mood: mood,
         note: note,
       );
 
@@ -111,6 +113,22 @@ void main() {
         reason: 'O sintoma aparece pelo rótulo, nunca pelo código');
     expect(conteudo, isNot(contains('cramps')));
     expect(conteudo, contains('um recado'));
+  });
+
+  test('o humor entra pelo rótulo quando é id, e pela palavra dela quando é',
+      () async {
+    // O humor grava id, como os sintomas — e a página tem de dizer "Em paz",
+    // nunca `at_peace`. Um registro de antes dos chips guarda a palavra
+    // livre, e ela passa inteira.
+    await repo.save(dia(9, mood: 'at_peace'));
+    var conteudo = (await paginas()).single['content'] as String;
+    expect(conteudo, contains(l10n.menstrualMoodAtPeace));
+    expect(conteudo, isNot(contains('at_peace')));
+
+    await repo.save(dia(9, mood: 'cansada'));
+    conteudo = (await paginas()).single['content'] as String;
+    expect(conteudo, contains('cansada'),
+        reason: 'A palavra dela não vira rótulo nenhum');
   });
 
   test('as duas datas da página são o dia OBSERVADO, não o da digitação',

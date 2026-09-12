@@ -25,11 +25,10 @@ import '../services/menstrual_archive_recorder.dart';
 /// direito de esquecer. Quem grava o dia grava a página; quem apaga
 /// o dia apaga a página — não há ordem em que uma exista sem a outra.
 ///
-/// Não há aqui um método que devolva o histórico inteiro, e isso é de
-/// propósito: levar os dados embora é trabalho do DataExportService, que lê a
-/// tabela direto — e de propósito leva também as lápides, que um `deleted = 0`
-/// esconderia do backup dela. Um `all()` existiu, ficou sem nenhum chamador em
-/// lib/ e foi apagado; quem for reabrir a exportação mexe no serviço, não aqui.
+/// [history] devolve o histórico VIVO — é o que "A Lua e você" lê. Levar os
+/// dados embora continua trabalho do DataExportService, que lê a tabela
+/// direto: de propósito, ele leva também as lápides, que o `deleted = 0`
+/// daqui esconderia do backup dela.
 class MenstrualCycleRepository {
   MenstrualCycleRepository({
     DatabaseHelper? dbHelper,
@@ -131,6 +130,20 @@ class MenstrualCycleRepository {
       _table,
       where: 'user_id = ? AND deleted = 0 AND day_key >= ? AND day_key <= ?',
       whereArgs: [userId, MenstrualDay.keyOf(from), MenstrualDay.keyOf(to)],
+      orderBy: 'day_key ASC',
+    );
+    return [for (final row in rows) MenstrualDay.fromRow(row)];
+  }
+
+  /// Todos os dias registrados, do primeiro ao mais recente, sem lápides.
+  /// Um começo de três meses atrás é tão começo quanto o de ontem, e por isso
+  /// "A Lua e você" lê daqui, e não do mês na tela.
+  Future<List<MenstrualDay>> history(String userId) async {
+    final db = await _dbHelper.database;
+    final rows = await db.query(
+      _table,
+      where: 'user_id = ? AND deleted = 0',
+      whereArgs: [userId],
       orderBy: 'day_key ASC',
     );
     return [for (final row in rows) MenstrualDay.fromRow(row)];

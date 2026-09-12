@@ -9,7 +9,9 @@ import 'package:grimorio_de_bolso/core/i18n/gender.dart';
 import 'package:grimorio_de_bolso/features/auth/data/models/user_model.dart';
 import 'package:grimorio_de_bolso/features/auth/presentation/providers/auth_provider.dart';
 import 'package:grimorio_de_bolso/features/menstrual_cycle/data/menstrual_consent_store.dart';
+import 'package:grimorio_de_bolso/features/lunar/presentation/providers/lunar_provider.dart';
 import 'package:grimorio_de_bolso/features/menstrual_cycle/data/repositories/menstrual_cycle_repository.dart';
+import 'package:grimorio_de_bolso/features/menstrual_cycle/domain/lunar_comparison.dart';
 import 'package:grimorio_de_bolso/features/menstrual_cycle/domain/menstrual_day.dart';
 import 'package:grimorio_de_bolso/features/menstrual_cycle/presentation/pages/menstrual_cycle_page.dart';
 import 'package:grimorio_de_bolso/features/menstrual_cycle/presentation/widgets/menstrual_cycle_card.dart';
@@ -176,8 +178,9 @@ void main() {
     await until(tester, () => find.text('Spotting').evaluate().isNotEmpty,
         'the day on screen');
 
-    // O que o gratuito recebe no lugar do que se calculava: a explicação.
-    expect(find.byKey(const ValueKey('menstrual-about')), findsOneWidget);
+    // A folha inteira é do gratuito: a abertura e "A Lua e você" também.
+    expect(find.byKey(const ValueKey('menstrual-opening')), findsOneWidget);
+    expect(find.byKey(const ValueKey('lua-e-voce')), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
@@ -201,9 +204,13 @@ void main() {
     });
 
     await show(tester);
-    expect(find.byKey(const ValueKey('menstrual-about')), findsOneWidget);
+    expect(find.byKey(const ValueKey('menstrual-opening')), findsOneWidget);
+    expect(find.byKey(const ValueKey('lua-e-voce')), findsOneWidget,
+        reason: 'The Moon beside her beginnings is for everyone');
     expect(find.byKey(const ValueKey('menstrual-premium-invite')), findsOneWidget,
-        reason: 'The offer now closes the explanation card, not one of its own');
+        reason: 'One line inside the calendar card, on the free plan only');
+    expect(find.byKey(const ValueKey('menstrual-view-toggle')), findsNothing,
+        reason: 'The wheel is still Premium');
 
     await show(tester, premium: true);
     await until(
@@ -211,9 +218,10 @@ void main() {
         () =>
             find.byKey(const ValueKey('menstrual-view-toggle')).evaluate().isNotEmpty,
         'the premium page');
-    // O que o Premium continua tendo: a roda e a mesma explicação. O que
+    // O que o Premium continua tendo: a roda e a mesma folha. O que
     // ninguém tem mais: qualquer número tirado do histórico.
-    expect(find.byKey(const ValueKey('menstrual-about')), findsOneWidget);
+    expect(find.byKey(const ValueKey('menstrual-opening')), findsOneWidget);
+    expect(find.byKey(const ValueKey('lua-e-voce')), findsOneWidget);
     expect(find.byKey(const ValueKey('menstrual-premium-invite')), findsNothing);
     expect(find.textContaining('28 days'), findsNothing,
         reason: 'No average survives anywhere');
@@ -222,30 +230,147 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('the explanation about menstruation is for everyone, and it '
-      'starts folded', (tester) async {
+  testWidgets('the opening is for everyone, and the essay starts folded',
+      (tester) async {
     SharedPreferences.setMockInitialValues(
         {'menstrual_consent_record_local_user': true});
     for (final premium in [false, true]) {
       await show(tester, premium: premium);
       await until(
           tester,
-          () => find.byKey(const ValueKey('menstrual-about')).evaluate().isNotEmpty,
-          'the explanation');
+          () => find.byKey(const ValueKey('menstrual-opening')).evaluate().isNotEmpty,
+          'the opening');
+      expect(find.text('Moon Blood'), findsOneWidget);
       expect(find.byKey(const ValueKey('menstrual-about-text')), findsNothing,
-          reason: 'Folded by default: the free page cannot come back longer');
+          reason: 'Folded by default: the page cannot come back longer');
+      expect(find.text('Read more'), findsOneWidget);
 
-      await tester.ensureVisible(find.byKey(const ValueKey('menstrual-about')));
+      await tester.ensureVisible(find.byKey(const ValueKey('menstrual-opening')));
       await tester.pump();
-      await tester.tap(find.byKey(const ValueKey('menstrual-about')));
+      await tester.tap(find.byKey(const ValueKey('menstrual-opening')));
       await tester.pump();
       expect(find.byKey(const ValueKey('menstrual-about-text')), findsOneWidget,
           reason: 'A tap opens it on both plans');
-      // O título mora no cabeçalho e está sempre à vista: procurá-lo não
-      // provaria abertura nenhuma. Quem prova é um subtítulo do corpo.
+      // O título está sempre à vista: procurá-lo não provaria abertura
+      // nenhuma. Quem prova é um subtítulo do corpo.
       expect(find.text('What the blood marks'), findsOneWidget,
           reason: 'The body is only there once it is open');
+      expect(find.text('Read less'), findsOneWidget);
     }
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('the sheet opens under the Moon of the day, and today wears it too',
+      (tester) async {
+    SharedPreferences.setMockInitialValues(
+        {'menstrual_consent_record_local_user': true});
+    await show(tester);
+    final phase = LunarProvider.phaseOn(LunarComparison.noonOf(today));
+    // A única lua protagonista da página: a de hoje, com a data por extenso.
+    final eyebrow =
+        tester.widget<Text>(find.byKey(const ValueKey('menstrual-today-moon')));
+    expect(eyebrow.data, contains(phase.displayName));
+    expect(eyebrow.data, contains('2026'));
+
+    await tester.tap(find.byKey(const ValueKey('menstrual-record-today')));
+    await openForm(tester);
+    final line =
+        tester.widget<Text>(find.byKey(const ValueKey('menstrual-editing-day')));
+    expect(line.data, contains(phase.displayName),
+        reason: 'The day in edition is named with its Moon');
+    expect(line.data, contains('12'));
+    expect(find.byKey(const ValueKey('menstrual-moon-invite')), findsOneWidget,
+        reason: 'One sentence from the Moon of the day, inside the sheet');
+    expect(find.textContaining('optional'), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('how she is: the chip writes the id, and tapping again clears it',
+      (tester) async {
+    SharedPreferences.setMockInitialValues(
+        {'menstrual_consent_record_local_user': true});
+    await show(tester);
+    await tester.tap(find.byKey(const ValueKey('menstrual-record-today')));
+    await openForm(tester);
+    await pressIn(tester, 'menstrual-mood-sensitive');
+    await pressIn(tester, 'menstrual-save');
+    await until(tester, () => find.byType(MenstrualRecordForm).evaluate().isEmpty,
+        'the form to close after the write');
+    expect(find.textContaining('Kept in your Grimoire, under the'), findsOneWidget,
+        reason: 'The confirmation names the Moon of the day');
+
+    var saved = await tester.runAsync(() =>
+        MenstrualCycleRepository().dayOf(userId: 'local_user', day: today));
+    expect(saved!.mood, 'sensitive', reason: 'The id is what is written');
+    await until(
+        tester,
+        () => find.byKey(const ValueKey('menstrual-today-mood')).evaluate().isNotEmpty,
+        'the mood on the day card');
+    expect(find.text('You marked: Sensitive'), findsOneWidget,
+        reason: 'The card speaks the label, never the id');
+
+    await tester.tap(find.byKey(const ValueKey('menstrual-record-today')));
+    await openForm(tester);
+    expect(
+        tester
+            .widget<ChoiceChip>(find.byKey(const ValueKey('menstrual-mood-sensitive')))
+            .selected,
+        isTrue);
+    await pressIn(tester, 'menstrual-mood-sensitive');
+    await pressIn(tester, 'menstrual-save');
+    await until(tester, () => find.byType(MenstrualRecordForm).evaluate().isEmpty,
+        'the form to close after clearing the mood');
+    saved = await tester.runAsync(() =>
+        MenstrualCycleRepository().dayOf(userId: 'local_user', day: today));
+    expect(saved!.mood, isNull, reason: 'Tapping the chosen chip again unchooses it');
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('an old free word for the mood survives a save that does not touch it',
+      (tester) async {
+    SharedPreferences.setMockInitialValues(
+        {'menstrual_consent_record_local_user': true});
+    // De antes dos chips: a palavra dela, gravada como texto livre.
+    await tester.runAsync(() => MenstrualCycleRepository().save(MenstrualDay(
+          userId: 'local_user',
+          day: today,
+          mark: MenstrualMark.flow,
+          mood: 'cansada',
+        )));
+    await show(tester);
+    expect(find.text('You marked: cansada'), findsOneWidget,
+        reason: 'An unknown id is shown as the word she wrote');
+
+    await tester.tap(find.byKey(const ValueKey('menstrual-record-today')));
+    await openForm(tester);
+    for (final id in ['light', 'sensitive', 'irritable', 'sad', 'strong', 'at_peace']) {
+      expect(
+          tester.widget<ChoiceChip>(find.byKey(ValueKey('menstrual-mood-$id'))).selected,
+          isFalse,
+          reason: 'No chip claims a word that is not one of theirs');
+    }
+    await tester.ensureVisible(find.byKey(const ValueKey('menstrual-note')));
+    await tester.pump();
+    await tester.enterText(find.byKey(const ValueKey('menstrual-note')), 'still tired');
+    await tester.pump();
+    await pressIn(tester, 'menstrual-save');
+    await until(tester, () => find.byType(MenstrualRecordForm).evaluate().isEmpty,
+        'the form to close');
+    var saved = await tester.runAsync(() =>
+        MenstrualCycleRepository().dayOf(userId: 'local_user', day: today));
+    expect(saved!.mood, 'cansada', reason: 'Untouched, the old word stays');
+    expect(saved.note, 'still tired');
+
+    // Escolher um chip é o único gesto que a substitui.
+    await tester.tap(find.byKey(const ValueKey('menstrual-record-today')));
+    await openForm(tester);
+    await pressIn(tester, 'menstrual-mood-strong');
+    await pressIn(tester, 'menstrual-save');
+    await until(tester, () => find.byType(MenstrualRecordForm).evaluate().isEmpty,
+        'the form to close after choosing');
+    saved = await tester.runAsync(() =>
+        MenstrualCycleRepository().dayOf(userId: 'local_user', day: today));
+    expect(saved!.mood, 'strong');
     expect(tester.takeException(), isNull);
   });
 
@@ -393,6 +518,9 @@ class _FailingRepository extends MenstrualCycleRepository {
     required DateTime to,
   }) async =>
       const [];
+
+  @override
+  Future<List<MenstrualDay>> history(String userId) async => const [];
 
   @override
   Future<MenstrualDay> save(MenstrualDay day) async =>

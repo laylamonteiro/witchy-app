@@ -7,8 +7,10 @@ import '../../../../core/widgets/moon_glyph.dart';
 import '../../../../core/widgets/staggered_entrance.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../grimoire/data/models/spell_model.dart';
+import '../../data/menstrual_mood_labels.dart';
 import '../../domain/lunar_comparison.dart';
 import '../../domain/menstrual_day.dart';
+import '../menstrual_type.dart';
 
 /// "A Lua e você": cada começo do sangue dela ao lado da Lua daquele dia, o
 /// resumo dos últimos ciclos completos e as emoções que ela mais anotou nos
@@ -39,15 +41,12 @@ class LuaEVoceCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final colors = context.gc;
-    final theme = Theme.of(context);
     final report = LunarComparison.report(days, today: today);
     final timeline = report.timeline;
     final summary = report.summary;
-    final head = TextStyle(
-        color: colors.lilac, fontSize: 12, fontWeight: FontWeight.bold);
-    final body = TextStyle(color: colors.textPrimary, height: 1.5);
-    final quiet =
-        TextStyle(color: colors.textSecondary, fontSize: 12, height: 1.4);
+    final head = MenstrualType.sectionHead(context);
+    final body = MenstrualType.body(context);
+    final quiet = MenstrualType.quiet(context);
 
     final shown = timeline.length <= shownStarts
         ? timeline
@@ -70,8 +69,7 @@ class LuaEVoceCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   l10n.menstrualLunarTitle,
-                  style: theme.textTheme.titleMedium?.copyWith(
-                      color: colors.lilac, fontWeight: FontWeight.bold),
+                  style: MenstrualType.cardTitle(context),
                 ),
               ),
             ],
@@ -129,23 +127,23 @@ class LuaEVoceCard extends StatelessWidget {
             ],
           ],
           if (report.moods.isNotEmpty) ...[
-            const SizedBox(height: 14),
+            const SizedBox(height: 12),
             Text(l10n.menstrualLunarMoodsTitle, style: head),
-            const SizedBox(height: 4),
+            const SizedBox(height: 8),
             Text(
-              l10n.menstrualLunarMoods(
-                  report.moods.map((tally) => tally.mood).join(', ')),
+              // Pelo rótulo, não pelo id gravado — e a palavra livre de um
+              // registro antigo continua sendo a palavra dela.
+              l10n.menstrualLunarMoods(report.moods
+                  .map((tally) => menstrualMoodLabel(l10n, tally.mood))
+                  .join(', ')),
               key: const ValueKey('lua-e-voce-moods'),
               style: body,
             ),
           ],
           if (!report.isEmpty) ...[
-            const SizedBox(height: 14),
-            Text(
-              l10n.menstrualLunarBlessing,
-              style: TextStyle(
-                  color: colors.textSecondary, fontSize: 11, height: 1.4),
-            ),
+            const SizedBox(height: 12),
+            Text(l10n.menstrualLunarBlessing,
+                style: MenstrualType.caption(context)),
           ],
         ],
       ),
@@ -153,7 +151,7 @@ class LuaEVoceCard extends StatelessWidget {
   }
 }
 
-/// Um começo: a data, a Lua estimada daquele dia e — quando é o caso — de
+/// Um começo: a data, a Lua daquele dia e — quando é o caso — de
 /// qual ponta ele ficou perto. O glifo é enfeite; quem fala é o nome da fase.
 class _StartRow extends StatelessWidget {
   const _StartRow({required this.observation});
@@ -178,7 +176,7 @@ class _StartRow extends StatelessWidget {
           // Sem halo: numa lista de datas o brilho viraria uma coluna de
           // manchas lilases, e a Lua daqui é referência, não protagonista.
           MoonGlyph(phase: observation.phase, size: 18, halo: false),
-          const SizedBox(width: 10),
+          const SizedBox(width: 8),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -186,15 +184,16 @@ class _StartRow extends StatelessWidget {
                 Text(
                   MaterialLocalizations.of(context)
                       .formatShortDate(observation.day),
-                  style: TextStyle(color: colors.textPrimary, fontSize: 13),
+                  style: MenstrualType.body(context),
                 ),
                 Text(
                   observation.phase.displayName,
-                  style: TextStyle(color: colors.textSecondary, fontSize: 12),
+                  style: MenstrualType.quiet(context),
                 ),
                 if (tag != null)
                   Text(tag,
-                      style: TextStyle(color: colors.lilac, fontSize: 11)),
+                      style: MenstrualType.caption(context)
+                          .copyWith(color: colors.lilac)),
               ],
             ),
           ),

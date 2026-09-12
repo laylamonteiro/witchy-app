@@ -34,45 +34,53 @@ class MenstrualCycleCard extends StatelessWidget {
 
     final l10n = AppLocalizations.of(context);
     final colors = context.gc;
+    final tema = Theme.of(context);
+    // A língua da aba Ciclos, não a da página do Ciclo: este cartão mora ao
+    // lado da Leitura e das Eras, e é com eles que precisa parecer irmão —
+    // o emblema, o título em textPrimary, a linha discreta e a seta.
     return MagicalCard(
       key: const ValueKey('menstrual-card'),
       onTap: () => Navigator.of(context).push(
         MaterialPageRoute(builder: (_) => const MenstrualCyclePage()),
       ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // A gota, não a lua: o card é do ciclo dela, e a lua já tem casa
           // em outros três cartões da mesma aba. Fora da semântica porque o
           // título logo ao lado já diz "Ciclo Menstrual" — anunciar "gota de
           // sangue" antes dele só atrapalha quem ouve a tela.
-          const ExcludeSemantics(child: Text('🩸', style: TextStyle(fontSize: 32))),
-          const SizedBox(width: 16),
+          const ExcludeSemantics(child: Text('🩸', style: TextStyle(fontSize: 34))),
+          const SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   l10n.menstrualCardTitle,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        color: colors.textPrimary,
-                        fontWeight: FontWeight.bold,
-                      ),
+                  style: tema.textTheme.titleLarge?.copyWith(
+                    color: colors.textPrimary,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 Text(
                   l10n.menstrualCardPoetic,
-                  style: TextStyle(color: colors.lilac, fontSize: 12),
+                  style:
+                      tema.textTheme.bodySmall?.copyWith(color: colors.lilac),
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: 8),
                 Text(
                   l10n.menstrualCardIntro,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: colors.textSecondary,
-                      ),
+                  style: tema.textTheme.bodySmall?.copyWith(
+                    color: colors.textSecondary,
+                    height: 1.45,
+                  ),
                 ),
               ],
             ),
           ),
-          Icon(Icons.arrow_forward_ios, color: colors.lilac, size: 16),
+          const SizedBox(width: 8),
+          Icon(Icons.arrow_outward, size: 18, color: colors.lilac),
         ],
       ),
     );

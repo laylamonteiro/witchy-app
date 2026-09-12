@@ -100,6 +100,22 @@ void main() {
         findsOneWidget);
   });
 
+  testWidgets('uma emoção escolhida no chip aparece pelo rótulo, não pelo id',
+      (tester) async {
+    // O chip grava `sensitive`; a frase diz "Sensitive". E a palavra livre
+    // de um registro antigo continua sendo a palavra dela, lado a lado.
+    await show(tester, [
+      start(DateTime(2025, 2, 12), mood: 'sensitive'),
+      flow(DateTime(2025, 2, 13), mood: 'sensitive'),
+      flow(DateTime(2025, 2, 14), mood: 'cansada'),
+    ]);
+    expect(
+        find.text(l10n.menstrualLunarMoods(
+            '${l10n.menstrualMoodSensitive}, cansada')),
+        findsOneWidget);
+    expect(find.textContaining('sensitive'), findsNothing);
+  });
+
   testWidgets('sem emoção escrita, a frase das emoções não aparece',
       (tester) async {
     await show(tester, fullMoonStarts);

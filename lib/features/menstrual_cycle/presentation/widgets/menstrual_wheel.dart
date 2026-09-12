@@ -9,10 +9,11 @@ import '../../../grimoire/data/models/spell_model.dart';
 import '../../../lunar/presentation/providers/lunar_provider.dart';
 import '../../domain/lunar_comparison.dart';
 import '../../domain/menstrual_day.dart';
+import '../menstrual_type.dart';
 
 /// A roda do mês, com dois anéis na MESMA escala de datas.
 ///
-/// O anel externo mostra a Lua estimada para cada dia do intervalo; o interno
+/// O anel externo mostra a Lua de cada dia do intervalo; o interno
 /// mostra somente os registros reais desse mesmo intervalo. Não há anel de 28
 /// dias esticado até coincidir com uma lunação: o intervalo é o mês que está
 /// na tela, e um dia é um dia nos dois anéis.
@@ -159,7 +160,7 @@ class _MenstrualWheelState extends State<MenstrualWheel> {
     return Semantics(
       key: const ValueKey('menstrual-wheel'),
       // Uma etiqueta por seleção, não por quadro: a árvore semântica fala do
-      // dia em foco, do que está registrado nele e da Lua estimada.
+      // dia em foco, do que está registrado nele e da Lua daquele dia.
       label: [
         '${selected.day}/${selected.month}/${selected.year}',
         if (record == null) l10n.menstrualNoRecordDay else l10n.menstrualHasRecordDay,
@@ -224,8 +225,7 @@ class _MenstrualWheelState extends State<MenstrualWheel> {
                             textAlign: TextAlign.center,
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                                color: colors.textSecondary, fontSize: 11)),
+                            style: MenstrualType.caption(context)),
                         if (record != null)
                           Padding(
                             padding: const EdgeInsets.only(top: 4),
@@ -262,7 +262,7 @@ class _WheelPainter extends CustomPainter {
   final DateTime month;
   final int total;
 
-  /// A luz estimada de cada dia do mês, já calculada.
+  /// A luz da Lua de cada dia do mês, já calculada.
   final List<double> lights;
 
   final Map<String, MenstrualDay> days;
@@ -293,7 +293,7 @@ class _WheelPainter extends CustomPainter {
       final angle = -math.pi / 2 + i * step;
       final direction = Offset(math.cos(angle), math.sin(angle));
 
-      // Anel externo: a Lua estimada daquele dia, do escuro ao claro.
+      // Anel externo: a Lua daquele dia, do escuro ao claro.
       final moon = Paint()
         ..style = PaintingStyle.fill
         ..color = Color.lerp(moonDark, moonLight,
