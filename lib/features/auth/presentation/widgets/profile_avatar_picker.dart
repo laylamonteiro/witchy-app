@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
+import 'package:grimorio_de_bolso/core/widgets/folha_com_saida.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -196,22 +197,28 @@ class _ProfileAvatarPickerState extends State<ProfileAvatarPicker> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Handle
-              Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: context.gc.surfaceBorder,
-                  borderRadius: BorderRadius.circular(2),
+              // A saída, visível: o retângulo de 40x4 que ficava aqui era
+              // decoração com cara de afordância — sem alvo de toque, sem
+              // realce e sem semântica. Esta folha pinta o próprio fundo, e
+              // por isso não usa a alça do Material (ela flutuaria sobre o
+              // escurecido, fora do cartão).
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: Row(
+                  children: [
+                    const SizedBox(width: 40),
+                    Expanded(
+                      child: Text(
+                        AppLocalizations.of(context).avatarSheetTitle,
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
+                    ),
+                    const BotaoFecharFolha(),
+                  ],
                 ),
               ),
-              const SizedBox(height: 20),
-              // Título
-              Text(
-                AppLocalizations.of(context).avatarSheetTitle,
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 12),
               // Opções
               ListTile(
                 leading: Container(

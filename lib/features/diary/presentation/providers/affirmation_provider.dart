@@ -100,15 +100,18 @@ class AffirmationProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> addAffirmation(AffirmationModel affirmation) async {
+  /// Returns whether the affirmation was persisted.
+  Future<bool> addAffirmation(AffirmationModel affirmation) async {
     try {
       await _repository.insert(
         affirmation.copyWith(userId: _currentUserId),
       );
       await loadAffirmations();
+      return true;
     } catch (e) {
       _error = e.toString();
       notifyListeners();
+      return false;
     }
   }
 

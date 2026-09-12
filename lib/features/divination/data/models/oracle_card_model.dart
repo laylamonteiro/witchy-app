@@ -141,11 +141,21 @@ class OracleReading {
   final List<OracleCardPosition> positions;
   final DateTime date;
 
+  /// Conselho do Conselheiro guardado junto da tiragem (P05); reabrir a
+  /// mesma mesa não pede outra geração.
+  final String? interpretation;
+
+  /// Sessão de escolha manual que produziu a tiragem. Tiragens antigas,
+  /// sorteadas pelo código, não têm esse vínculo.
+  final String? sessionId;
+
   const OracleReading({
     required this.id,
     required this.spreadType,
     required this.positions,
     required this.date,
+    this.interpretation,
+    this.sessionId,
   });
 
   Map<String, dynamic> toJson() {
@@ -154,6 +164,8 @@ class OracleReading {
       'spreadType': spreadType.name,
       'positions': positions.map((p) => p.toJson()).toList(),
       'date': date.toIso8601String(),
+      if (interpretation != null) 'interpretation': interpretation,
+      if (sessionId != null) 'session_id': sessionId,
     };
   }
 
@@ -171,6 +183,8 @@ class OracleReading {
           .map((p) => OracleCardPosition.fromJson(p))
           .toList(),
       date: DateTime.parse(json['date']),
+      interpretation: json['interpretation'] as String?,
+      sessionId: json['session_id'] as String?,
     );
   }
 

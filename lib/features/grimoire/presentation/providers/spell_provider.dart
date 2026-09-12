@@ -53,15 +53,18 @@ class SpellProvider with ChangeNotifier {
   }
 
 
-  Future<void> addSpell(SpellModel spell) async {
+  /// Returns whether the spell was persisted.
+  Future<bool> addSpell(SpellModel spell) async {
     try {
       await _repository.insert(
         spell.isPreloaded ? spell : spell.copyWith(userId: _currentUserId),
       );
       await loadSpells();
+      return true;
     } catch (e) {
       _error = e.toString();
       notifyListeners();
+      return false;
     }
   }
 

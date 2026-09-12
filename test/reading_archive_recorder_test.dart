@@ -80,6 +80,27 @@ void main() {
     expect(entrada!.content, contains('Conselheiro'));
   });
 
+  test('a sessão pode fornecer o dia original sem mudar a data ao reabrir', () async {
+    final started = DateTime(2026, 9, 9);
+    await recorder.record(
+      readingId: 'daily-session-result',
+      userId: userId,
+      source: FreeWritingSource.tarot,
+      createdAt: started,
+      page: (title: 'Daily card', content: 'A fixed choice'),
+    );
+    await recorder.record(
+      readingId: 'daily-session-result',
+      userId: userId,
+      source: FreeWritingSource.tarot,
+      createdAt: DateTime(2026, 9, 10),
+      page: (title: 'Daily card', content: 'With interpretation'),
+    );
+    final entry = await repository.getById('daily-session-result');
+    expect(entry!.createdAt, started);
+    expect(await todasAsEntradas(), hasLength(1));
+  });
+
   test('regravar preserva o instante da TIRAGEM, não o da reescrita',
       () async {
     // É por created_at que a Leitura do Ciclo põe a leitura no dia certo da

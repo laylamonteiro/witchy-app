@@ -1,24 +1,29 @@
 import 'package:flutter/material.dart';
 import '../theme/grimoire_colors.dart';
+import '../theme/grimoire_motion.dart';
 import '../../features/grimoire/data/models/spell_model.dart';
+import 'moon_glyph.dart';
 
-/// Widget que exibe a lua com animação de "respiração" (pulsação suave)
+/// A lua em destaque: o glifo da fase ([MoonGlyph]) com halo pulsante e, se
+/// pedido, estrelas piscando ao redor.
+///
+/// A fase chega como [MoonPhase] e não como emoji pronto: quem escolhe o
+/// glifo é o widget, para que o halo — que é desenhado em código, e é o que
+/// faltava no navegador — venha sempre junto dele.
 class BreathingMoon extends StatefulWidget {
-  final String moonEmoji;
+  final MoonPhase phase;
   final double size;
   final bool showStars;
   final bool showName;
   final bool showDescription;
-  final MoonPhase? phase;
 
   const BreathingMoon({
     super.key,
-    required this.moonEmoji,
+    required this.phase,
     this.size = 80,
     this.showStars = true,
     this.showName = false,
     this.showDescription = false,
-    this.phase,
   });
 
   @override
@@ -31,15 +36,20 @@ class _BreathingMoonState extends State<BreathingMoon>
   late Animation<double> _scaleAnimation;
   late Animation<double> _glowAnimation;
 
+  /// null = as dependências ainda não foram lidas uma primeira vez.
+  bool? _reduzido;
+
   @override
   void initState() {
     super.initState();
 
-    // Animação de respiração (loop infinito)
+    // O laço NÃO liga aqui: só depois de ler a preferência de movimento
+    // (ver didChangeDependencies). Ligar no initState também prenderia
+    // qualquer pumpAndSettle da suíte para sempre.
     _controller = AnimationController(
       duration: const Duration(seconds: 3),
       vsync: this,
-    )..repeat(reverse: true);
+    );
 
     _scaleAnimation = Tween<double>(
       begin: 1.0,
@@ -56,6 +66,22 @@ class _BreathingMoonState extends State<BreathingMoon>
       parent: _controller,
       curve: Curves.easeInOut,
     ));
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final reduzido = GrimoireMotion.reduced(context);
+    if (reduzido == _reduzido) return;
+    _reduzido = reduzido;
+    if (reduzido) {
+      _controller.stop();
+      // Meio do ciclo: a lua fica parada num brilho intermediário, nem
+      // apagada nem estourada.
+      _controller.value = 0.5;
+    } else {
+      _controller.repeat(reverse: true);
+    }
   }
 
   @override
@@ -85,7 +111,10 @@ class _BreathingMoonState extends State<BreathingMoon>
                     gradient: RadialGradient(
                       colors: [
                         context.gc.lilac.withValues(alpha: _glowAnimation.value),
-                        context.gc.background.withValues(alpha: 0),
+                        // A MESMA cor com alpha 0, e não o fundo transparente:
+                        // interpolar lilás → fundo atravessa um cinza morto no
+                        // meio do gradiente e suja o halo.
+                        context.gc.lilac.withValues(alpha: 0),
                       ],
                     ),
                   ),
@@ -93,20 +122,14 @@ class _BreathingMoonState extends State<BreathingMoon>
               },
             ),
 
-            // Lua com respiração
+            // Lua com respiração. O halo do disco fica desligado: o pulsante
+            // acima já é o halo desta cena, e dois somados viram neon.
             ScaleTransition(
               scale: _scaleAnimation,
-              child: Text(
-                widget.moonEmoji,
-                style: TextStyle(
-                  fontSize: widget.size,
-                  shadows: [
-                    Shadow(
-                      color: context.gc.lilac.withValues(alpha: 0.5),
-                      blurRadius: 20,
-                    ),
-                  ],
-                ),
+              child: MoonGlyph(
+                phase: widget.phase,
+                size: widget.size,
+                halo: false,
               ),
             ),
 
@@ -114,20 +137,20 @@ class _BreathingMoonState extends State<BreathingMoon>
             if (widget.showStars) ..._buildStars(),
           ],
         ),
-        if (widget.showName && widget.phase != null) ...[
+        if (widget.showName) ...[
           const SizedBox(height: 8),
           Text(
-            widget.phase!.displayName,
+            widget.phase.displayName,
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   color: context.gc.lilac,
                 ),
             textAlign: TextAlign.center,
           ),
         ],
-        if (widget.showDescription && widget.phase != null) ...[
+        if (widget.showDescription) ...[
           const SizedBox(height: 4),
           Text(
-            widget.phase!.description,
+            widget.phase.description,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: context.gc.textSecondary,
                 ),
@@ -177,6 +200,8 @@ class _BlinkingarState extends State<_BlinkingStar>
   late AnimationController _controller;
   late Animation<double> _opacityAnimation;
 
+  bool? _reduzido;
+
   @override
   void initState() {
     super.initState();
@@ -193,10 +218,25 @@ class _BlinkingarState extends State<_BlinkingStar>
       parent: _controller,
       curve: Curves.easeInOut,
     ));
+  }
 
-    // Aguardar delay antes de iniciar
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final reduzido = GrimoireMotion.reduced(context);
+    if (reduzido == _reduzido) return;
+    _reduzido = reduzido;
+    if (reduzido) {
+      _controller.stop();
+      // Estrelas congeladas a meia-luz: quem pediu calma não fica com um céu
+      // apagado, só com um céu quieto.
+      _controller.value = 0.5;
+      return;
+    }
+    // O atraso escalonado é o que faz as estrelas acenderem em sequência, e
+    // não todas no mesmo instante.
     Future.delayed(widget.delay, () {
-      if (mounted) {
+      if (mounted && _reduzido == false) {
         _controller.repeat(reverse: true);
       }
     });

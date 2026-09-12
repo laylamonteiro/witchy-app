@@ -9,6 +9,7 @@ import '../../../../core/i18n/gender.dart';
 import '../../../../core/services/debug_log_service.dart';
 import '../../../../core/services/payment_service.dart';
 import '../../../../core/services/premium_access.dart';
+import '../../../../core/services/usage_coordinator.dart';
 import '../../../../core/services/data_sync_service.dart';
 import '../../../../core/database/database_helper.dart';
 import '../../../../core/config/supabase_config.dart';
@@ -575,15 +576,48 @@ class AuthProvider extends ChangeNotifier {
   /// Quantas leituras de runas restam hoje
   int get remainingRuneReadings => _currentUser.remainingRuneReadings;
 
-  /// Incrementa contador de leituras de runas
+  /// Incrementa contador de leituras de runas.
+  ///
+  /// A escolha manual (P04) debita a cota dentro da transação da mesa; este
+  /// caminho é o espelho, para quem ainda registra fora dela.
   Future<void> incrementRuneReadings() async {
+    final userId = _currentUser.id;
+    await refreshRuneUsage();
+    if (_currentUser.id != userId) return;
     if (_currentUser.isFree) {
-      _currentUser = _currentUser.copyWith(
-        runeReadingsToday: _currentUser.runeReadingsToday + 1,
+      final used = await UsageCoordinator().record(
+        userId: userId,
+        category: UsageCoordinator.runes,
+        legacyUsed: _currentUser.runeReadingsToday,
       );
+      if (_currentUser.id != userId) return;
+      _currentUser = _currentUser.copyWith(runeReadingsToday: used);
       await _saveUser();
       notifyListeners();
     }
+  }
+
+  /// Restore the rune quota committed with a manual table, even if the
+  /// process stopped before the preferences mirror was written.
+  Future<void> refreshRuneUsage() async {
+    final userId = _currentUser.id;
+    final now = DateTime.now();
+    final prefs = await SharedPreferences.getInstance();
+    if (_currentUser.id != userId) return;
+    final reset = DateTime.tryParse(
+        prefs.getString('${_lastDailyLimitsResetKey}_$userId') ?? '');
+    final sameDay = reset == null ||
+        UsageCoordinator.dayKey(reset) == UsageCoordinator.dayKey(now);
+    final used = await UsageCoordinator().used(
+      userId: userId,
+      category: UsageCoordinator.runes,
+      day: now,
+      legacyUsed: sameDay ? _currentUser.runeReadingsToday : 0,
+    );
+    if (_currentUser.id != userId) return;
+    _currentUser = _currentUser.copyWith(runeReadingsToday: used);
+    await _saveUser();
+    notifyListeners();
   }
 
   /// Verifica se pode fazer leitura de oracle hoje
@@ -594,13 +628,44 @@ class AuthProvider extends ChangeNotifier {
 
   /// Incrementa contador de leituras de oracle
   Future<void> incrementOracleReadings() async {
+    final userId = _currentUser.id;
+    await refreshOracleUsage();
+    if (_currentUser.id != userId) return;
     if (_currentUser.isFree) {
+      final used = await UsageCoordinator().recordOracleUse(
+        userId: userId,
+        legacyUsed: _currentUser.oracleReadingsToday,
+      );
+      if (_currentUser.id != userId) return;
       _currentUser = _currentUser.copyWith(
-        oracleReadingsToday: _currentUser.oracleReadingsToday + 1,
+        oracleReadingsToday: used,
       );
       await _saveUser();
       notifyListeners();
     }
+  }
+
+  /// Restore the quota committed with a daily card, even if the process
+  /// stopped before the preferences mirror was written. Also handles an
+  /// open app crossing midnight before starting a new consultation.
+  Future<void> refreshOracleUsage() async {
+    final userId = _currentUser.id;
+    final now = DateTime.now();
+    final prefs = await SharedPreferences.getInstance();
+    if (_currentUser.id != userId) return;
+    final reset = DateTime.tryParse(
+        prefs.getString('${_lastDailyLimitsResetKey}_$userId') ?? '');
+    final sameDay = reset == null ||
+        UsageCoordinator.dayKey(reset) == UsageCoordinator.dayKey(now);
+    final used = await UsageCoordinator().oracleUsed(
+      userId: userId,
+      day: now,
+      legacyUsed: sameDay ? _currentUser.oracleReadingsToday : 0,
+    );
+    if (_currentUser.id != userId) return;
+    _currentUser = _currentUser.copyWith(oracleReadingsToday: used);
+    await _saveUser();
+    notifyListeners();
   }
 
   /// Verifica se pode consultar o Conselheiro Místico (P&R) hoje

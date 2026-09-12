@@ -36,13 +36,16 @@ class GratitudeProvider with ChangeNotifier {
     }
   }
 
-  Future<void> addGratitude(GratitudeModel gratitude) async {
+  /// Returns whether the gratitude was persisted.
+  Future<bool> addGratitude(GratitudeModel gratitude) async {
     try {
       await _repository.insert(gratitude.copyWith(userId: _currentUserId));
       await loadGratitudes();
+      return true;
     } catch (e) {
       _error = e.toString();
       notifyListeners();
+      return false;
     }
   }
 

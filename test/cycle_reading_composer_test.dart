@@ -159,6 +159,71 @@ void main() {
       expect(mapa.containsKey('2026-08-08'), isFalse);
     });
 
+    test('o que ela desliga sai do número que a tela promete', () async {
+      final db = await DatabaseHelper.instance.database;
+      await db.insert('dreams', {
+        'id': uuid.v4(),
+        'user_id': userId,
+        'title': 'um sonho',
+        'content': 'texto',
+        'date': inPeriod,
+        'created_at': inPeriod,
+        'updated_at': inPeriod,
+        'synced': 0,
+      });
+      await db.insert('gratitudes', {
+        'id': uuid.v4(),
+        'user_id': userId,
+        'title': 'grata',
+        'content': 'texto',
+        'date': inPeriod,
+        'created_at': inPeriod,
+        'updated_at': inPeriod,
+        'synced': 0,
+      });
+      await db.insert('pendulum_consultations', {
+        'id': uuid.v4(),
+        'user_id': userId,
+        'question': 'pergunta',
+        'answer': 'sim',
+        'date': inPeriod,
+        'created_at': inPeriod,
+        'updated_at': inPeriod,
+        'synced': 0,
+      });
+
+      final composer = CycleReadingComposer();
+      Future<int> contar([CycleReadingSourceOptions? options]) =>
+          composer.countPeriodRecords(
+            userId: userId,
+            start: periodStart,
+            end: periodEnd,
+            options: options,
+          );
+
+      expect(await contar(), 3, reason: 'Sem opções, o período inteiro');
+      expect(
+          await contar(const CycleReadingSourceOptions(includeDreams: false)),
+          2,
+          reason: 'O sonho desligado não conta');
+      expect(
+          await contar(const CycleReadingSourceOptions(
+              includeDreams: false, includeDivination: false)),
+          1);
+      expect(
+          await contar(const CycleReadingSourceOptions(
+            includeDreams: false,
+            includeJournals: false,
+            includeDivination: false,
+            includePractice: false,
+          )),
+          0,
+          reason: 'Tudo desligado é uma leitura sem material nenhum');
+      // A oferta continua vendo o período inteiro: ela não é a tela da
+      // escolha, e desligar uma fonte ali não muda o que o ciclo rendeu.
+      expect(await contar(), 3);
+    });
+
     test('registros de outra pessoa não esquentam o calendário', () async {
       final db = await DatabaseHelper.instance.database;
       await db.insert('gratitudes', {

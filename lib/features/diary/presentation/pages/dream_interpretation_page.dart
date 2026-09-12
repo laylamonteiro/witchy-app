@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
@@ -12,6 +13,9 @@ import '../../data/models/dream_model.dart';
 import '../providers/dream_provider.dart';
 import '../widgets/dream_interpretation_text.dart';
 import 'dream_form_page.dart';
+import '../../../journeys/domain/action_outcome.dart';
+import '../../../journeys/domain/action_recorder.dart';
+import '../../../../core/widgets/motion/retry_notice.dart';
 
 /// Interpretação personalizada de sonhos por IA (exclusiva Premium).
 ///
@@ -32,6 +36,10 @@ class _DreamInterpretationPageState extends State<DreamInterpretationPage> {
   final _notesController = TextEditingController();
 
   String? _interpretation;
+
+  /// A falha visível. Um aviso que some deixa a pessoa sem interpretação e
+  /// sem saber se pode tentar de novo.
+  String? _error;
   DateTime _dreamDate = DateTime.now();
   bool _isInterpreting = false;
   bool _saved = false;
@@ -74,6 +82,7 @@ class _DreamInterpretationPageState extends State<DreamInterpretationPage> {
     setState(() {
       _isInterpreting = true;
       _interpretation = null;
+      _error = null;
       _saved = false;
     });
 
@@ -91,12 +100,9 @@ class _DreamInterpretationPageState extends State<DreamInterpretationPage> {
       });
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('$e'.replaceAll('Exception: ', '')),
-          backgroundColor: context.gc.alert,
-        ),
-      );
+      // O relato continua na tela e a retomada é uma escolha: nada de
+      // sucesso anunciado, nada de tela presa.
+      setState(() => _error = '$e'.replaceAll('Exception: ', ''));
     } finally {
       if (mounted) setState(() => _isInterpreting = false);
     }
@@ -148,6 +154,9 @@ class _DreamInterpretationPageState extends State<DreamInterpretationPage> {
     // enquanto o salvamento/navegação acontecem.
     setState(() => _saved = true);
     final provider = context.read<DreamProvider>();
+    // Lido antes do await: a confirmação continua acima do roteador mesmo
+    // se esta tela sair no meio.
+    final recorder = ActionRecorder.of(context);
     await provider.addDream(dream);
     if (!mounted) return;
     if (provider.error != null) {
@@ -163,6 +172,9 @@ class _DreamInterpretationPageState extends State<DreamInterpretationPage> {
       );
       return;
     }
+    // Sonho gravado: entra na composição comum (XP, marcos, dia completo)
+    // pelo mesmo caminho do diário.
+    unawaited(recorder.record(origin: ActionOrigin.dream, entityId: dream.id));
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(AppLocalizations.of(context).dreamSavedToDiary),
@@ -261,6 +273,13 @@ class _DreamInterpretationPageState extends State<DreamInterpretationPage> {
               ],
             ),
           ),
+          // Falhou: o relato continua escrito e tentar de novo é um toque.
+          if (_error != null && !_isInterpreting)
+            RetryNotice(
+              retryKey: const ValueKey('dream-retry'),
+              message: _error!,
+              onRetry: _interpret,
+            ),
           if (_mostrarPrevia && _interpretation == null)
             MagicalCard(
               child: PremiumLockedPreview(

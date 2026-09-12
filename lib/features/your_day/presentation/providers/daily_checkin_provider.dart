@@ -128,6 +128,19 @@ class DailyCheckinProvider with ChangeNotifier, WidgetsBindingObserver {
 
   bool isRiteDone(String riteId) => _ritesToday.contains(riteId);
 
+  /// O fechamento de hoje já foi apresentado por uma ação (feedback comum),
+  /// então o card de ritos assenta o selo em silêncio em vez de celebrar
+  /// outra vez. Zera com o dia.
+  bool get dayCelebrationShown => _dayCelebrationShown;
+  bool _dayCelebrationShown = false;
+  String? _dayCelebrationDay;
+
+  void markDayCelebrationShown() {
+    _dayCelebrationShown = true;
+    _dayCelebrationDay = DailyCheckinRepository.dayKey(DateTime.now());
+    notifyListeners();
+  }
+
   Future<void> setUserId(String userId) async {
     if (_userId == userId && _loaded) return;
     _userId = userId;
@@ -147,6 +160,7 @@ class DailyCheckinProvider with ChangeNotifier, WidgetsBindingObserver {
     _bestStreak = await _repository.bestStreak(_userId);
     _ritesToday = await _repository.ritesToday(_userId);
     _loadedDay = DailyCheckinRepository.dayKey(DateTime.now());
+    if (_dayCelebrationDay != _loadedDay) _dayCelebrationShown = false;
     _loaded = true;
     notifyListeners();
   }

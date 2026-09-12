@@ -36,13 +36,17 @@ class DreamProvider with ChangeNotifier {
     }
   }
 
-  Future<void> addDream(DreamModel dream) async {
+  /// Returns whether the dream was persisted; the caller only records
+  /// progress for a save that actually happened.
+  Future<bool> addDream(DreamModel dream) async {
     try {
       await _repository.insert(dream.copyWith(userId: _currentUserId));
       await loadDreams();
+      return true;
     } catch (e) {
       _error = e.toString();
       notifyListeners();
+      return false;
     }
   }
 

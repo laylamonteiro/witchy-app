@@ -71,6 +71,21 @@ class ShareCard extends StatelessWidget {
                       'assets/app_icon.png',
                       width: 22,
                       height: 22,
+                      // Este cartão vira PNG e SAI do app — um X cinza
+                      // aqui é publicado junto com a imagem, no story de
+                      // outra pessoa. A reserva é o mesmo quadrado de 22
+                      // com o livro em lilás: a assinatura continua
+                      // legível e a Row não descentraliza.
+                      //
+                      // Lilás da paleta fixa do cartão (ver comentário da
+                      // classe), não de `context.gc`: a captura acontece
+                      // fora da tela, com o tema que a pessoa escolheu, e
+                      // a marca do app tem cor própria.
+                      errorBuilder: (_, __, ___) => Icon(
+                        Icons.auto_stories,
+                        size: 22,
+                        color: colors.lilac,
+                      ),
                     ),
                     const SizedBox(width: 8),
                     Text(

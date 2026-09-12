@@ -6,6 +6,8 @@ import '../../../../core/widgets/magical_card.dart';
 import '../../data/numerology_meanings_data.dart';
 import '../../domain/numerology_calculator.dart';
 import 'numerology_profile_page.dart';
+import '../widgets/number_reveal.dart';
+import '../../../../core/tools/tool_identity.dart';
 
 /// Hub de Numerologia: perfil pessoal, consulta de número,
 /// horas espelho e sequências repetidas.
@@ -16,7 +18,8 @@ class NumerologyPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: ResponsiveAppBarTitle(AppLocalizations.of(context).toolNumerologyTitle),
+        title: ToolHeading(tool: ToolId.numerology,
+            title: AppLocalizations.of(context).toolNumerologyTitle),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(vertical: 16),
@@ -173,8 +176,9 @@ class NumberMeaningCard extends StatelessWidget {
                   color: context.gc.lilac.withValues(alpha: 0.15),
                   border: Border.all(color: context.gc.lilac),
                 ),
-                child: Text(
-                  '$number',
+                // O número calculado chega contando; o que fica é sempre ele.
+                child: NumberReveal(
+                  value: number,
                   style: TextStyle(
                     color: context.gc.lilac,
                     fontSize: 20,

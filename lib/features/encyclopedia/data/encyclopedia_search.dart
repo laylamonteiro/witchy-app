@@ -23,9 +23,19 @@ import '../presentation/pages/herb_detail_page.dart';
 import '../presentation/pages/metal_detail_page.dart';
 
 /// Um resultado da busca global: verbete + seção de origem + destino.
+///
+/// [glyphId] é o id do DESENHO do verbete quando ele tem um (hoje, os onze
+/// arquétipos), e null quando o símbolo dele é o [emoji]. A busca é a única
+/// superfície que perde a categoria pelo caminho — ela mistura ervas, runas,
+/// sabbats e verbetes arcanos numa lista só — então a resposta viaja junto
+/// com o resultado, decidida no único lugar que ainda sabe a categoria. Sem
+/// isso, a linha da busca mostraria o emoji enquanto a lista e o verbete
+/// mostram o desenho; e adivinhar pelo emoji poria a coruja da Sábia no
+/// demônio Stolas, que usa o mesmo símbolo.
 typedef EncyclopediaHit = ({
   String name,
   String emoji,
+  String? glyphId,
   String section,
   String? subtitle,
   WidgetBuilder open,
@@ -56,6 +66,7 @@ List<EncyclopediaHit> searchEncyclopedia(
     required String emoji,
     required String section,
     String? subtitle,
+    String? glyphId,
     required WidgetBuilder open,
     required String haystack,
   }) {
@@ -64,6 +75,7 @@ List<EncyclopediaHit> searchEncyclopedia(
       byName.add((
         name: name,
         emoji: emoji,
+        glyphId: glyphId,
         section: section,
         subtitle: subtitle,
         open: open,
@@ -72,6 +84,7 @@ List<EncyclopediaHit> searchEncyclopedia(
       byContent.add((
         name: name,
         emoji: emoji,
+        glyphId: glyphId,
         section: section,
         subtitle: subtitle,
         open: open,
@@ -213,6 +226,7 @@ List<EncyclopediaHit> searchEncyclopedia(
       add(
         name: entry.name,
         emoji: entry.emoji,
+        glyphId: category.glyphIdFor(entry),
         section: section,
         subtitle: entry.summary,
         open: (_) => ArcaneDetailPage(entry: entry, category: category),

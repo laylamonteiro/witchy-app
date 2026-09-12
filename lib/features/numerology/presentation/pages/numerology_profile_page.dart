@@ -13,6 +13,7 @@ import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../auth/presentation/widgets/premium_blur_widget.dart';
 import '../../data/numerology_meanings_data.dart';
 import '../../domain/numerology_calculator.dart';
+import '../widgets/number_reveal.dart';
 
 /// Perfil pessoal: os 5 números-chave calculados de nome + nascimento.
 class NumerologyProfilePage extends StatefulWidget {
@@ -353,8 +354,9 @@ class _NumerologyProfilePageState extends State<NumerologyProfilePage> {
               color: context.gc.lilac.withValues(alpha: 0.15),
               border: Border.all(color: context.gc.lilac),
             ),
-            child: Text(
-              '$number',
+            // O número calculado chega contando; o que fica é sempre ele.
+            child: NumberReveal(
+              value: number,
               style: TextStyle(
                 color: context.gc.lilac,
                 fontSize: 20,

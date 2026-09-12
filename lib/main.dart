@@ -15,6 +15,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'core/theme/theme_provider.dart';
 import 'core/widgets/boot_error_app.dart';
 import 'core/widgets/web_mobile_frame.dart';
+import 'core/widgets/motion/action_feedback_host.dart';
+import 'features/journeys/domain/progress_coordinator.dart';
 import 'core/database/database_helper.dart';
 import 'core/database/records_archive_migration.dart';
 import 'core/providers/mascot_provider.dart';
@@ -624,6 +626,15 @@ class _GrimorioDeBolsoAppState extends State<GrimorioDeBolsoApp>
             return provider;
           },
         ),
+        // Progresso por ação (P07): XP, marcos e dia completo avaliados após
+        // cada gravação; o gatinho reage às celebrações.
+        ChangeNotifierProxyProvider<AuthProvider, ProgressCoordinator>(
+          create: (_) => ProgressCoordinator()..onCelebration = _mascotProvider.react,
+          update: (_, auth, coordinator) {
+            coordinator!.setUserId(auth.currentUser.id);
+            return coordinator;
+          },
+        ),
         // Check-in diário: registra a visita e mantém a sequência de dias.
         ChangeNotifierProxyProvider<AuthProvider, DailyCheckinProvider>(
           create: (_) => DailyCheckinProvider(),
@@ -738,8 +749,9 @@ class _GrimorioDeBolsoAppState extends State<GrimorioDeBolsoApp>
           localeResolutionCallback: LanguageProvider.resolve,
           theme: themeProvider.themeData,
           // Na web em desktop, enquadra o app numa largura de celular.
-          builder: (context, child) =>
-              WebMobileFrame(child: child ?? const SizedBox.shrink()),
+          builder: (context, child) => WebMobileFrame(
+            child: ActionFeedbackHost(child: child ?? const SizedBox.shrink()),
+          ),
           debugShowCheckedModeBanner: false,
         ),
       ),

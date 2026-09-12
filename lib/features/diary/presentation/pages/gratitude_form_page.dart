@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
@@ -5,6 +7,8 @@ import 'package:provider/provider.dart';
 import '../../../../core/i18n/tratamento_do_contexto.dart';
 import '../../data/models/gratitude_model.dart';
 import '../providers/gratitude_provider.dart';
+import '../../../journeys/domain/action_outcome.dart';
+import '../../../journeys/domain/action_recorder.dart';
 import '../../../../core/widgets/magical_button.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
@@ -19,6 +23,7 @@ class GratitudeFormPage extends StatefulWidget {
 }
 
 class _GratitudeFormPageState extends State<GratitudeFormPage> {
+  bool _saving = false;
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _titleController;
   late TextEditingController _contentController;
@@ -164,11 +169,30 @@ class _GratitudeFormPageState extends State<GratitudeFormPage> {
 
     final provider = context.read<GratitudeProvider>();
     if (widget.gratitude == null) {
-      provider.addGratitude(gratitude);
-    } else {
-      provider.updateGratitude(gratitude);
+      unawaited(_persistNew(provider, gratitude));
+      return;
     }
+    provider.updateGratitude(gratitude);
+    Navigator.pop(context);
+  }
 
+  /// A new gratitude: wait for the persistence, record the action (XP,
+  /// milestones and possibly the closed day), then leave.
+  Future<void> _persistNew(GratitudeProvider provider, GratitudeModel gratitude) async {
+    if (_saving) return;
+    setState(() => _saving = true);
+    final recorder = ActionRecorder.of(context);
+    final saved = await provider.addGratitude(gratitude);
+    if (!mounted) return;
+    if (!saved) {
+      setState(() => _saving = false);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(provider.error ?? AppLocalizations.of(context).errorsGeneric),
+        backgroundColor: context.gc.alert,
+      ));
+      return;
+    }
+    unawaited(recorder.record(origin: ActionOrigin.gratitude, entityId: gratitude.id));
     Navigator.pop(context);
   }
 

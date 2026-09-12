@@ -1,7 +1,14 @@
 import 'package:flutter/material.dart';
 import '../../features/grimoire/data/models/spell_model.dart';
 import '../theme/grimoire_colors.dart';
+import '../theme/grimoire_motion.dart';
+import 'moon_glyph.dart';
 
+/// A fase da lua com nome (e, se pedido, o significado) embaixo.
+///
+/// A lua vem do [MoonGlyph]: o glifo da fase com o brilho do app desenhado
+/// atrás. O brilho é o que faltava no navegador e fazia a mesma lua parecer
+/// apagada lá.
 class MoonPhaseWidget extends StatelessWidget {
   final MoonPhase phase;
   final bool showName;
@@ -18,22 +25,21 @@ class MoonPhaseWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Entrada única (não é laço), mas mesmo assim vai direto ao estado final
+    // para quem pediu movimento reduzido: a regra vale para todo efeito.
+    final reduzido = GrimoireMotion.reduced(context);
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        // Emoji da fase lunar
         TweenAnimationBuilder<double>(
-          tween: Tween(begin: 0.9, end: 1.0),
-          duration: const Duration(milliseconds: 500),
+          tween: Tween(begin: reduzido ? 1.0 : 0.9, end: 1.0),
+          duration: reduzido ? Duration.zero : GrimoireMotion.reveal,
+          curve: GrimoireMotion.enter,
           builder: (context, value, child) {
-            return Transform.scale(
-              scale: value,
-              child: Text(
-                phase.emoji,
-                style: TextStyle(fontSize: size),
-              ),
-            );
+            return Transform.scale(scale: value, child: child);
           },
+          child: MoonGlyph(phase: phase, size: size),
         ),
         if (showName) ...[
           const SizedBox(height: 8),

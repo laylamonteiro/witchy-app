@@ -81,7 +81,11 @@ const List<EsbatItem> moonEsbatItemsEn = [
         'Leave crystals and tools under the moonlight to renew their power',
   ),
   (
-    emoji: '🫙',
+    // Gota, e não o potinho: U+1FAD9 é emoji de 2021 e o minSdk do app
+    // é 24 — em Android antigo a fonte do sistema não o tem e a linha
+    // abria com um quadradinho. A gota é de 2010 e existe em todo
+    // aparelho.
+    emoji: '💧',
     title: 'Moon water',
     text: 'Make moon water at the height of lunar power',
   ),

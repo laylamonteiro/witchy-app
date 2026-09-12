@@ -4,10 +4,16 @@ import '../../data/models/sigil_wheel_model.dart';
 
 /// Painter para desenhar a Roda Alfabética das Bruxas
 /// Baseado no livro - 3 anéis concêntricos com letras dentro dos segmentos
+///
+/// Quando as letras trocam de lugar, [previousPositions] e [blend] deslizam
+/// cada uma pelo seu anel entre o ângulo antigo e o novo, em vez de fazê-las
+/// saltar. O anel de cada letra não muda no embaralhamento.
 class WitchWheelPainter extends CustomPainter {
   final bool showLetters;
   final Set<String> highlightedLetters;
   final Map<String, WheelPosition>? customPositions;
+  final Map<String, WheelPosition>? previousPositions;
+  final double blend;
   final Color borderColor;
   final Color starColor;
   final Color accentColor;
@@ -19,7 +25,21 @@ class WitchWheelPainter extends CustomPainter {
     this.showLetters = true,
     this.highlightedLetters = const {},
     this.customPositions,
+    this.previousPositions,
+    this.blend = 1,
   });
+
+  /// Ângulo apresentado para [letter]: o do arranjo atual, ou o caminho mais
+  /// curto entre o arranjo anterior e ele enquanto as letras se organizam.
+  double angleFor(String letter, WheelPosition position) {
+    final from = previousPositions?[letter];
+    if (from == null || blend >= 1) return position.angle;
+    final t = blend.clamp(0.0, 1.0).toDouble();
+    var delta = (position.angle - from.angle) % 360;
+    if (delta > 180) delta -= 360;
+    if (delta < -180) delta += 360;
+    return from.angle + delta * t;
+  }
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -84,6 +104,7 @@ class WitchWheelPainter extends CustomPainter {
           center,
           letter,
           position,
+          angleFor(letter, position),
           innerRingRadius,
           middleRingRadius,
           outerRingRadius,
@@ -129,6 +150,7 @@ class WitchWheelPainter extends CustomPainter {
     Offset center,
     String letter,
     WheelPosition position,
+    double angle,
     double innerRingRadius,
     double middleRingRadius,
     double outerRingRadius,
@@ -155,7 +177,7 @@ class WitchWheelPainter extends CustomPainter {
     }
 
     // Converte ângulo para radianos (subtrai 90° para começar do topo)
-    final angleRad = (position.angle - 90) * (math.pi / 180);
+    final angleRad = (angle - 90) * (math.pi / 180);
 
     // Posição da letra no centro do segmento
     final x = center.dx + ringRadius * math.cos(angleRad);
@@ -199,6 +221,8 @@ class WitchWheelPainter extends CustomPainter {
   bool shouldRepaint(covariant WitchWheelPainter oldDelegate) {
     return oldDelegate.highlightedLetters != highlightedLetters ||
         oldDelegate.customPositions != customPositions ||
+        oldDelegate.previousPositions != previousPositions ||
+        oldDelegate.blend != blend ||
         oldDelegate.showLetters != showLetters ||
         oldDelegate.borderColor != borderColor ||
         oldDelegate.starColor != starColor ||

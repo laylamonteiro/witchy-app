@@ -6,6 +6,7 @@ import '../../../../core/widgets/living_emblem.dart';
 import '../../../../core/widgets/staggered_entrance.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../data/models/rune_model.dart';
+import '../widgets/rune_stone_view.dart';
 import 'rune_detail_page.dart';
 
 /// Tela de lista de runas
@@ -88,7 +89,7 @@ class RunesListPage extends StatelessWidget {
               itemCount: runes.length,
               itemBuilder: (context, index) {
                 final rune = runes[index];
-                return _buildRuneCard(context, rune);
+                return _buildRuneCard(context, rune, index);
               },
             ),
             const SizedBox(height: 16),
@@ -98,7 +99,7 @@ class RunesListPage extends StatelessWidget {
     );
   }
 
-  Widget _buildRuneCard(BuildContext context, Rune rune) {
+  Widget _buildRuneCard(BuildContext context, Rune rune, int index) {
     return GestureDetector(
       onTap: () {
         Navigator.push(
@@ -116,13 +117,12 @@ class RunesListPage extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Símbolo da runa
-              Text(
-                rune.symbol,
-                style: TextStyle(
-                  fontSize: 42, // Reduzido de 48 para 42
-                  color: context.gc.starYellow,
-                ),
+              // A mesma pedra da tiragem: a runa está gravada nela, não
+              // solta no meio do card.
+              RuneStoneView(
+                size: 76,
+                deckPosition: index,
+                symbol: rune.symbol,
               ),
               const SizedBox(height: 8),
 

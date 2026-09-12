@@ -64,6 +64,7 @@ class ReadingArchiveRecorder {
     required String userId,
     required String source,
     required ArchiveEntry page,
+    DateTime? createdAt,
   }) async {
     try {
       // A data de criação é a da TIRAGEM, não a da reescrita: o Conselheiro
@@ -77,7 +78,7 @@ class ReadingArchiveRecorder {
           title: page.title,
           content: page.content,
           source: source,
-          createdAt: existing?.createdAt,
+          createdAt: existing?.createdAt ?? createdAt,
         ),
       );
     } catch (e) {
