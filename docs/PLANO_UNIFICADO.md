@@ -6,7 +6,10 @@
 > aqui cada item foi conferido contra o código de hoje, e o código andou
 > desde que os relatórios foram escritos.
 
-**Atualizado em:** 23/08/2026
+**Atualizado em:** 23/08/2026; a seção de Sincronização foi reconferida
+contra o código em 12/09/2026, depois de `24d4f18` e `e21a75a` — os dois
+commits que mudaram o comportamento descrito ali são posteriores a esta
+branch, e estão citados item a item
 **Branch:** `claude/tombstone-sync-qvki0e` (continua a
 `claude/artifact-access-aea6wn`, 28 commits) — nenhum PR aberto
 **Validação:** a CI da branch. Não há Flutter neste ambiente (o host do SDK
@@ -75,7 +78,7 @@ reabrem.
 - **Produto:** destravar — a pessoa gratuita nunca vê o que está comprando.
 - **Técnico:** *"mantém como está. Não mexer."*
 - **Código hoje:** a degustação **existe e é renderizada**
-  (`lesson_page.dart:567`, `TeaserReveal`). O que impede de vê-la são dois
+  (`lesson_page.dart`, `TeaserReveal`). O que impede de vê-la são dois
   interceptadores antes dela: `trail_page.dart:59` e `lesson_page.dart:86`.
   **O relatório técnico está factualmente errado sobre o estado** — ele
   descreve um teaser que não existe; ele existe e está atrás de porta.
@@ -179,14 +182,38 @@ equipe e ~20 testadoras, quase um terço da base não é usuária.
 
 **Sincronização**
 - aberta para todo mundo, nas duas pontas (era Premium)
+- **uma exceção, e só uma**: o registro do Ciclo Menstrual não sobe, em
+  plano nenhum e com a chave ligada ou não (`e21a75a`) — inclusive as
+  páginas que cada dia ganha no acervo. A promessa que ela leu para dizer
+  sim é essa, e o funil por onde toda varredura passa é quem a cumpre. A
+  única saída é um pedido dela: autorizar o Ciclo Menstrual como fonte de
+  uma Leitura do Ciclo
 - **tombstone/lápide**: item apagado não ressuscita mais no download. O
-  `deleteItem` grava a lápide antes de qualquer guarda de rede; as
-  varreduras sincronizam exclusões antes de entidades; edição/recriação
-  mais nova que a exclusão vence (regra `mostRecent`). Local na v23 do
-  banco; o lado do servidor é `sync_tombstones_migration.sql` (seção 7).
-  Teste antes-e-depois: o commit só com o teste ficou vermelho na CI
-  reproduzindo a ressurreição, o seguinte ficou verde. Sem dublê do
-  método de risco — só a borda de rede virou porta (`ServidorDeSync`)
+  `deleteItem` grava a lápide **depois** das guardas de conta e de
+  preferência de nuvem — a ordem foi invertida em `24d4f18`, e a inversão é
+  o ponto. A lápide guarda o `id` do que foi apagado, e id aqui é conteúdo
+  com frequência demais para tratar como opaco (`preloaded_<nome do
+  feitiço>`, o id do mapa no perfil mágico, `<conta>_<dia>` no check-in).
+  Gravada sem conta ou com a sincronização desligada, ela montava no
+  aparelho a lista do que a pessoa apagou — e `_subirLapidesLocais` a
+  mandava ao servidor na primeira varredura, inclusive sob a conta real,
+  depois da adoção dos dados anônimos. Por isso a tabela também saiu da
+  adoção anônima e entrou na limpeza de dados.
+- **A consequência aceita da inversão:** apagar com a nuvem desligada e
+  religar depois faz o item voltar. Guardar a memória da exclusão é guardar
+  o id, e com a nuvem desligada nada desce — não há ressurreição para
+  impedir enquanto ela ficar desligada. O caso que a lápide existe para
+  resolver continua coberto: com conta e sincronização ligadas, `isReady` é
+  verdadeiro mesmo sem rede, o aviso à nuvem morre no `catch`, a lápide fica
+  pendente e a varredura seguinte retenta — era esse o item que ressuscitava
+  ao sair do túnel.
+- **O resto da lápide segue como estava:** as varreduras sincronizam
+  exclusões antes de entidades; edição/recriação mais nova que a exclusão
+  vence (regra `mostRecent`). Local na v23 do banco; o lado do servidor é
+  `sync_tombstones_migration.sql` (seção 7). Teste antes-e-depois: o commit
+  só com o teste ficou vermelho na CI reproduzindo a ressurreição, o
+  seguinte ficou verde. Sem dublê do método de risco — só a borda de rede
+  virou porta (`ServidorDeSync`)
 
 **Convite ao Premium**
 - placar do plano Free trocado por convite que reage ao momento
@@ -228,6 +255,11 @@ equipe e ~20 testadoras, quase um terço da base não é usuária.
 **Custa dado se ficar aberto**
 - ~~Tombstone / exclusão suave~~ — **feito** (ver seção 5). O que restou
   dele é painel: rodar `sync_tombstones_migration.sql` (seção 7).
+- **Lápide pendente de antes de `24d4f18`** — a inversão da ordem protege
+  quem apagar de agora em diante, mas quem já tem lápide gravada sob a
+  conta, do tempo do código antigo, continua mandando esse id ao servidor
+  na primeira varredura depois de religar. O lugar de resolver é o
+  interruptor de sincronização: descartar as pendentes ao DESLIGAR.
 - ~~Teste de concorrência do acúmulo por seção~~ — **feito**
   (`test/acumulo_por_secao_test.dart`): duas seções em ordens controladas,
   quem chega depois soma em vez de substituir, no texto e no gravado; a
