@@ -315,7 +315,6 @@ void main() {
           final onde = '[$lang/${gender.name}]';
           expect(prompt, contains('menstrual'), reason: 'bloco $onde');
           expect(prompt, contains('not_recorded'), reason: 'ausente $onde');
-          expect(prompt, contains('chosen_by_her'), reason: 'escolha $onde');
           expect(prompt, contains('moon_estimated'), reason: 'estimativa $onde');
         }
       });

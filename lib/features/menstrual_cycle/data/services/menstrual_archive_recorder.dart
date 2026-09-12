@@ -4,7 +4,6 @@ import '../../../../core/content/content_locale.dart';
 import '../../../diary/data/models/free_writing_model.dart';
 import '../../../diary/data/repositories/free_writing_repository.dart';
 import '../../domain/menstrual_day.dart';
-import '../data_sources/menstrual_phase_content.dart';
 
 /// Strings do idioma atual sem BuildContext, como no ReadingArchiveComposer:
 /// a página é "assada" no momento da gravação, igual às páginas das leituras.
@@ -64,13 +63,6 @@ class MenstrualArchiveRecorder {
   /// `menstrualSaveError` e mantém o que ela escreveu.
   Future<void> record(MenstrualDay day) async {
     final l10n = _l10n;
-    // A estação e a escrita que veio com ela moram no mesmo bloco: separadas,
-    // a escrita apareceria como um parágrafo sem dono no meio da página.
-    final escrita = day.seasonNote.trim();
-    final estacao = day.season == null
-        ? ''
-        : MenstrualSeasonContentSource.of(day.season!).title +
-            (escrita.isEmpty ? '' : '\n$escrita');
     final blocos = <String>[
       '✦ ${l10n.menstrualArchiveMark}\n${_markOf(l10n, day.mark)}',
       if (day.flow != null)
@@ -82,7 +74,6 @@ class MenstrualArchiveRecorder {
         '✦ ${l10n.menstrualArchiveMood}\n${day.mood!.trim()}',
       if (day.note.trim().isNotEmpty)
         '✦ ${l10n.menstrualArchiveNote}\n${day.note.trim()}',
-      if (estacao.isNotEmpty) '✦ ${l10n.menstrualArchiveSeason}\n$estacao',
     ];
 
     // Tira primeiro qualquer página que este dia já tenha, mesmo com chave

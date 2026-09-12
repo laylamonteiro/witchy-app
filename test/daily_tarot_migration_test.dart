@@ -35,6 +35,7 @@ void main() {
         .map((row) => row['name'])
         .toSet();
     expect(columns, containsAll(['season', 'season_note']),
-        reason: 'The chosen season travels with the record');
+        reason: 'Inherited from v29 and left without a reader: the migration '
+            'only ever moves forward');
   });
 }

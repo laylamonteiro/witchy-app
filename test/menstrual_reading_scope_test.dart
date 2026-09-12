@@ -1,5 +1,4 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:grimorio_de_bolso/features/menstrual_cycle/domain/internal_season.dart';
 import 'package:grimorio_de_bolso/features/menstrual_cycle/domain/menstrual_day.dart';
 import 'package:grimorio_de_bolso/features/menstrual_cycle/domain/menstrual_reading_context.dart';
 import 'package:grimorio_de_bolso/features/menstrual_cycle/domain/menstrual_reading_scope.dart';
@@ -16,8 +15,6 @@ void main() {
     MenstrualMark mark = MenstrualMark.flow,
     List<String> symptoms = const [],
     String note = '',
-    InternalSeason? season,
-    String seasonNote = '',
     int revision = 1,
   }) =>
       MenstrualDay(
@@ -26,8 +23,6 @@ void main() {
         mark: mark,
         symptoms: symptoms,
         note: note,
-        season: season,
-        seasonNote: seasonNote,
         revision: revision,
       );
 
@@ -95,13 +90,10 @@ void main() {
     final chosen = day(4,
         mark: MenstrualMark.start,
         symptoms: ['cramps'],
-        note: 'um dia quieto',
-        season: InternalSeason.winter,
-        seasonNote: 'acolher');
+        note: 'um dia quieto');
     final scope = scopeOf([chosen], fields: {
       ...MenstrualReadingScope.defaultFields,
       MenstrualField.note,
-      MenstrualField.seasonNote,
     });
     final context = MenstrualReadingContext.of(scope, [chosen]);
 
@@ -109,8 +101,6 @@ void main() {
     final firstDay = (portrait['days'] as List).first as Map<String, dynamic>;
     expect(firstDay['observed'], containsPair('mark', 'start'));
     expect(firstDay['observed'], containsPair('note', 'um dia quieto'));
-    expect(firstDay['chosen_by_her'], containsPair('season', 'winter'),
-        reason: 'A estação é escolha dela, e vem marcada como escolha');
 
     final love = context.projectionFor('love')!;
     final loveDay = (love['days'] as List).first as Map<String, dynamic>;
@@ -123,9 +113,11 @@ void main() {
     expect(skyDay, isNot(contains('observed')),
         reason: 'O céu cruza datas, não sintomas');
 
-    final affirmation = context.projectionFor('affirmation')!;
-    expect(affirmation['chosen_seasons'], ['winter']);
-    expect(affirmation, isNot(contains('days')));
+    // As seções que só recebiam tema não recebem mais nada: sem a estação,
+    // não há tema — e datas ou sintomas nunca foram para lá.
+    for (final section in ['affirmation', 'rituals', 'forecast', 'seal']) {
+      expect(context.projectionFor(section), isNull, reason: section);
+    }
 
     expect(context.projectionFor('numbers'), isNull,
         reason: 'Os números recebem cobertura, não observações');

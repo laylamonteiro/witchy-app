@@ -1,7 +1,5 @@
 import 'dart:convert';
 
-import 'internal_season.dart';
-
 /// O que a pessoa escolheu marcar naquele dia. A escolha é sempre explícita:
 /// um escape nunca vira começo, e um dia sem registro é só isso — sem
 /// registro, e não "sem sintomas".
@@ -39,8 +37,6 @@ class MenstrualDay {
     this.symptoms = const [],
     this.mood,
     this.note = '',
-    this.season,
-    this.seasonNote = '',
     this.revision = 1,
     this.deleted = false,
     DateTime? createdAt,
@@ -59,17 +55,6 @@ class MenstrualDay {
   final List<String> symptoms;
   final String? mood;
   final String note;
-
-  /// A Estação Interna escolhida para o dia, quando houve escolha. É
-  /// vocabulário simbólico dela: o app nunca a preenche sozinho.
-  final InternalSeason? season;
-
-  /// A escrita que veio com o convite da estação. Mora no registro íntimo e
-  /// não vai para o Diário. Sai daqui por um caminho só, e com autorização
-  /// explícita: `MenstrualField.seasonNote`, que a chave das palavras da
-  /// Leitura do Ciclo inclui no escopo (menstrual_source_tile.dart).
-  final String seasonNote;
-
   final int revision;
   final bool deleted;
   final DateTime createdAt;
@@ -109,9 +94,6 @@ class MenstrualDay {
     String? mood,
     bool clearMood = false,
     String? note,
-    InternalSeason? season,
-    bool clearSeason = false,
-    String? seasonNote,
     int? revision,
     bool? deleted,
     DateTime? updatedAt,
@@ -124,8 +106,6 @@ class MenstrualDay {
         symptoms: symptoms ?? this.symptoms,
         mood: clearMood ? null : (mood ?? this.mood),
         note: note ?? this.note,
-        season: clearSeason ? null : (season ?? this.season),
-        seasonNote: seasonNote ?? this.seasonNote,
         revision: revision ?? this.revision,
         deleted: deleted ?? this.deleted,
         createdAt: createdAt,
@@ -140,8 +120,6 @@ class MenstrualDay {
         'symptoms': jsonEncode(symptoms),
         'mood': mood,
         'note': note,
-        'season': season?.name,
-        'season_note': seasonNote,
         'revision': revision,
         'deleted': deleted ? 1 : 0,
         'created_at': createdAt.millisecondsSinceEpoch,
@@ -149,6 +127,9 @@ class MenstrualDay {
         'synced': 0,
       };
 
+  /// Lê só o que o modelo conhece. Uma linha ou um registro remoto antigo
+  /// pode trazer `season` e `season_note`, de quando a Estação Interna
+  /// existia: são chaves ignoradas, não erro.
   static MenstrualDay fromRow(Map<String, Object?> row) {
     final rawSymptoms = row['symptoms'];
     var symptoms = const <String>[];
@@ -176,8 +157,6 @@ class MenstrualDay {
       symptoms: symptoms,
       mood: row['mood'] as String?,
       note: (row['note'] as String?) ?? '',
-      season: InternalSeason.named(row['season'] as String?),
-      seasonNote: (row['season_note'] as String?) ?? '',
       revision: (row['revision'] as num?)?.toInt() ?? 1,
       deleted: ((row['deleted'] as num?)?.toInt() ?? 0) == 1,
       createdAt:

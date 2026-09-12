@@ -17,9 +17,9 @@ import '../../domain/menstrual_day.dart';
 /// dias esticado até coincidir com uma lunação: o intervalo é o mês que está
 /// na tela, e um dia é um dia nos dois anéis.
 ///
-/// O centro mostra o dia em foco e, quando existe, a estação escolhida por
-/// ela. Registro, estimativa e escolha simbólica se distinguem por forma e
-/// por texto, não só por cor — a legenda fica fora da roda, na página.
+/// O centro mostra o dia em foco. Registro e estimativa se distinguem por
+/// forma e por texto, não só por cor — a legenda fica fora da roda, na
+/// página.
 ///
 /// O dedo percorre as datas na horizontal, para não disputar com a rolagem
 /// vertical nem com o gesto de voltar; o teclado percorre com as setas e abre
@@ -33,7 +33,6 @@ class MenstrualWheel extends StatefulWidget {
     required this.selected,
     required this.onSelect,
     required this.onOpen,
-    this.season,
     this.size = 260,
   });
 
@@ -46,9 +45,6 @@ class MenstrualWheel extends StatefulWidget {
   final DateTime selected;
   final ValueChanged<DateTime> onSelect;
   final ValueChanged<DateTime> onOpen;
-
-  /// O nome da estação escolhida para o dia em foco, quando existe.
-  final String? season;
 
   final double size;
 
@@ -168,7 +164,6 @@ class _MenstrualWheelState extends State<MenstrualWheel> {
         '${selected.day}/${selected.month}/${selected.year}',
         if (record == null) l10n.menstrualNoRecordDay else l10n.menstrualHasRecordDay,
         phase.displayName,
-        if (widget.season != null) widget.season!,
       ].join(' · '),
       button: true,
       // O nó é dela: o desenho fica fora da árvore, e o que se ouve é o
@@ -231,13 +226,6 @@ class _MenstrualWheelState extends State<MenstrualWheel> {
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
                                 color: colors.textSecondary, fontSize: 11)),
-                        if (widget.season != null)
-                          Text(widget.season!,
-                              textAlign: TextAlign.center,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style:
-                                  TextStyle(color: colors.lilac, fontSize: 11)),
                         if (record != null)
                           Padding(
                             padding: const EdgeInsets.only(top: 4),

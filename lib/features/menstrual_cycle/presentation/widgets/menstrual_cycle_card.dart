@@ -15,7 +15,7 @@ import '../pages/menstrual_cycle_page.dart';
 ///
 /// Antes de ativar, o cartão apresenta a área com as próprias palavras, sem
 /// “dados de exemplo” que pareçam registros de alguém. Depois de ativar, ele
-/// continua discreto: mostrar dia ou estação aqui dependeria de uma escolha
+/// continua discreto: mostrar o dia aqui dependeria de uma escolha
 /// explícita, e ela não existe ainda.
 class MenstrualCycleCard extends StatelessWidget {
   const MenstrualCycleCard({super.key});

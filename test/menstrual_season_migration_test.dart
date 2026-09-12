@@ -9,13 +9,18 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 /// A migração v28 → v29 mora em arquivo próprio: o DatabaseHelper é um
 /// singleton e guarda o banco que abriu primeiro, então cada história de
 /// migração precisa de um processo só seu.
+///
+/// As duas colunas que a v29 acrescenta ficaram sem leitor desde que a
+/// Estação Interna saiu do app; a migração continua, porque a casa só migra
+/// para a frente, e o que este teste guarda é que ela não perde o que já
+/// estava escrito.
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   sqfliteFfiInit();
   databaseFactory = databaseFactoryFfi;
 
-  test('a v28 phone gains the season columns without losing what was written',
-      () async {
+  test('a v28 phone goes through the v29 migration without losing what was '
+      'written', () async {
     SharedPreferences.setMockInitialValues({});
     final dir = await Directory.systemTemp.createTemp('menstrual_v28_upgrade');
     await databaseFactory.setDatabasesPath(dir.path);
@@ -52,7 +57,8 @@ void main() {
     expect(await upgraded.getVersion(), 29);
     final row = (await upgraded.query(MenstrualCycleSchema.table)).single;
     expect(row['note'], 'já estava aqui');
-    expect(row['season'], isNull, reason: 'Nobody chose a season for her');
+    expect(row['season'], isNull,
+        reason: 'Inherited columns arrive empty, and nothing fills them');
     expect(row['season_note'], '');
   });
 }

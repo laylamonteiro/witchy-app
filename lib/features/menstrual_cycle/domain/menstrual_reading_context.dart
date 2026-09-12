@@ -5,18 +5,16 @@ import 'menstrual_reading_scope.dart';
 
 /// O quanto da fonte íntima cada seção da leitura pode receber.
 enum MenstrualProjection {
-  /// Nada. É o padrão de qualquer chave que este arquivo não conheça.
+  /// Nada. É o padrão de qualquer chave que este arquivo não conheça — e a
+  /// escolha explícita das seções que só recebiam tema, desde que a Estação
+  /// Interna saiu: sem ela não há tema a dar.
   none,
-
-  /// Só os temas que ela escolheu — a estação, e mais nada. Sem datas, sem
-  /// sintomas, sem as palavras dela.
-  themes,
 
   /// As datas observadas e o contexto lunar calculado para elas.
   dates,
 
-  /// O que ela marcou naqueles dias: marca, intensidade, sintomas, humor e
-  /// a estação escolhida, conforme os campos autorizados.
+  /// O que ela marcou naqueles dias: marca, intensidade, sintomas e humor,
+  /// conforme os campos autorizados.
   observations,
 
   /// As observações e, quando ela autorizou esses campos, as palavras que
@@ -44,13 +42,13 @@ abstract final class MenstrualSectionAccess {
     'love': MenstrualProjection.observations,
     'work': MenstrualProjection.observations,
     'family': MenstrualProjection.observations,
-    // O que se anuncia respeita preferências de cuidado declaradas, sem
-    // prever menstruação, ovulação ou sintoma.
-    'forecast': MenstrualProjection.themes,
-    // Rituais e afirmação recebem só temas, nunca datas ou sintomas.
-    'rituals': MenstrualProjection.themes,
-    'affirmation': MenstrualProjection.themes,
-    'seal': MenstrualProjection.themes,
+    // O que se anuncia, os rituais, a afirmação e o selo recebiam só a
+    // estação escolhida — nunca datas ou sintomas. Sem a estação, não
+    // recebem nada; ficam listados para que a decisão continue visível.
+    'forecast': MenstrualProjection.none,
+    'rituals': MenstrualProjection.none,
+    'affirmation': MenstrualProjection.none,
+    'seal': MenstrualProjection.none,
   };
 
   static MenstrualProjection of(String section) =>
@@ -60,9 +58,8 @@ abstract final class MenstrualSectionAccess {
 /// O material autorizado desta geração, já recortado pelo escopo.
 ///
 /// Nada aqui consulta o histórico por fora da janela, e nada aqui infere:
-/// campo ausente aparece como ausente, dado observado aparece como
-/// observado, e a estação aparece como escolha dela. Um dia sem sintoma
-/// registrado não vira "sem sintomas".
+/// campo ausente aparece como ausente e dado observado aparece como
+/// observado. Um dia sem sintoma registrado não vira "sem sintomas".
 class MenstrualReadingContext {
   const MenstrualReadingContext({required this.scope, required this.days});
 
@@ -93,10 +90,6 @@ class MenstrualReadingContext {
     if (projection == MenstrualProjection.none || isEmpty) return null;
     return switch (projection) {
       MenstrualProjection.none => null,
-      MenstrualProjection.themes => {
-          'source': 'menstrual_authorized',
-          'chosen_seasons': _seasons,
-        },
       MenstrualProjection.dates => {
           'source': 'menstrual_authorized',
           'days': [
@@ -134,48 +127,35 @@ class MenstrualReadingContext {
         'scope': scope.fingerprint,
       };
 
-  List<String> get _seasons => [
-        for (final day in days)
-          if (day.season != null &&
-              scope.fields.contains(MenstrualField.season))
-            day.season!.name,
-      ].toSet().toList()
-        ..sort();
-
   static String _moonOf(DateTime day) =>
       LunarProvider.phaseOn(LunarComparison.noonOf(day)).name;
 
-  /// Um dia como ele foi registrado: o que ela observou, o que ela escolheu,
-  /// e a lista do que simplesmente não foi registrado.
+  /// Um dia como ele foi registrado: o que ela observou, e a lista do que
+  /// simplesmente não foi registrado.
   Map<String, dynamic> _dayOf(MenstrualDay day, {required bool withWords}) {
     final observed = <String, dynamic>{};
-    final chosen = <String, dynamic>{};
     final absent = <String>[];
 
-    void take(MenstrualField field, Object? value, Map<String, dynamic> into) {
+    void take(MenstrualField field, Object? value) {
       if (!scope.fields.contains(field)) return;
       if (value == null || (value is List && value.isEmpty)) {
         absent.add(field.name);
         return;
       }
-      into[field.name] = value;
+      observed[field.name] = value;
     }
 
-    take(MenstrualField.mark, day.mark.name, observed);
-    take(MenstrualField.flow, day.flow?.name, observed);
-    take(MenstrualField.symptoms, day.symptoms, observed);
-    take(MenstrualField.mood, day.mood, observed);
-    take(MenstrualField.season, day.season?.name, chosen);
+    take(MenstrualField.mark, day.mark.name);
+    take(MenstrualField.flow, day.flow?.name);
+    take(MenstrualField.symptoms, day.symptoms);
+    take(MenstrualField.mood, day.mood);
     if (withWords) {
-      take(MenstrualField.note, day.note.isEmpty ? null : day.note, observed);
-      take(MenstrualField.seasonNote,
-          day.seasonNote.isEmpty ? null : day.seasonNote, chosen);
+      take(MenstrualField.note, day.note.isEmpty ? null : day.note);
     }
 
     return {
       'date': day.dayKey,
       'observed': observed,
-      if (chosen.isNotEmpty) 'chosen_by_her': chosen,
       // Ausente é ausente: nunca "sem sintomas".
       if (absent.isNotEmpty) 'not_recorded': absent,
       'moon_estimated': _moonOf(day.day),

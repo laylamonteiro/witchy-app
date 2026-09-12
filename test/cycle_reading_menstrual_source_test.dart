@@ -2,7 +2,6 @@ import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:grimorio_de_bolso/features/cycle_reading/data/services/cycle_reading_composer.dart';
-import 'package:grimorio_de_bolso/features/menstrual_cycle/domain/internal_season.dart';
 import 'package:grimorio_de_bolso/features/menstrual_cycle/domain/menstrual_day.dart';
 import 'package:grimorio_de_bolso/features/menstrual_cycle/domain/menstrual_reading_context.dart';
 import 'package:grimorio_de_bolso/features/menstrual_cycle/domain/menstrual_reading_scope.dart';
@@ -21,8 +20,7 @@ void main() {
         day: DateTime(2026, 3, 4),
         mark: MenstrualMark.start,
         symptoms: const ['cramps'],
-        note: 'um dia quieto',
-        season: InternalSeason.winter),
+        note: 'um dia quieto'),
     MenstrualDay(
         userId: 'she', day: DateTime(2026, 3, 6), mark: MenstrualMark.spotting),
   ];
@@ -71,9 +69,10 @@ void main() {
         reason: 'O céu cruza datas, não sintomas');
     expect(skyDay['moon_estimated'], isNotNull);
 
-    final affirmation = decode(material.compactJsonFor('affirmation'));
-    expect((affirmation['menstrual'] as Map)['chosen_seasons'], ['winter']);
-    expect((affirmation['menstrual'] as Map).containsKey('days'), isFalse);
+    // A afirmação só recebia a estação escolhida; sem ela, não recebe fonte
+    // íntima nenhuma — nem datas, nem sintomas.
+    expect(decode(material.compactJsonFor('affirmation'))
+        .containsKey('menstrual'), isFalse);
 
     expect(decode(material.compactJsonFor('uma_secao_nova'))
         .containsKey('menstrual'), isFalse,

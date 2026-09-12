@@ -1213,8 +1213,9 @@ class DatabaseHelper {
     if (oldVersion < 28) {
       await MenstrualCycleSchema.create(db);
     }
-    // v29: a Estação Interna escolhida para o dia e a escrita que vem com o
-    // convite dela. Escolha explícita da pessoa, nunca deduzida.
+    // v29: as colunas da Estação Interna. A estação saiu do app e ninguém
+    // mais lê as colunas; a migração fica porque a casa só migra para a
+    // frente (menstrual_cycle_schema.dart explica).
     if (oldVersion < 29) {
       await MenstrualCycleSchema.addSeason(db);
     }

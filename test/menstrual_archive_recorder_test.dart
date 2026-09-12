@@ -29,7 +29,6 @@ import 'package:grimorio_de_bolso/features/diary/data/models/free_writing_model.
 import 'package:grimorio_de_bolso/features/diary/data/repositories/free_writing_repository.dart';
 import 'package:grimorio_de_bolso/features/menstrual_cycle/data/repositories/menstrual_cycle_repository.dart';
 import 'package:grimorio_de_bolso/features/menstrual_cycle/data/services/menstrual_archive_recorder.dart';
-import 'package:grimorio_de_bolso/features/menstrual_cycle/domain/internal_season.dart';
 import 'package:grimorio_de_bolso/features/menstrual_cycle/domain/menstrual_day.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -69,8 +68,6 @@ void main() {
     MenstrualFlowLevel? flow,
     List<String> symptoms = const [],
     String note = '',
-    InternalSeason? season,
-    String seasonNote = '',
     String owner = user,
   }) =>
       MenstrualDay(
@@ -80,8 +77,6 @@ void main() {
         flow: flow,
         symptoms: symptoms,
         note: note,
-        season: season,
-        seasonNote: seasonNote,
       );
 
   Future<List<Map<String, Object?>>> paginas() async {
@@ -165,9 +160,8 @@ void main() {
         reason: 'Apagar os registros de uma conta não toca na outra');
   });
 
-  test('a estação escolhida entra na página, e desescolher a tira de lá',
-      () async {
-    await repo.save(dia(9, season: InternalSeason.winter, seasonNote: 'devagar'));
+  test('a anotação entra na página, e apagá-la a tira de lá', () async {
+    await repo.save(dia(9, note: 'devagar'));
     var conteudo = (await paginas()).single['content'] as String;
     expect(conteudo, contains('devagar'));
 

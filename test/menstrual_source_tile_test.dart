@@ -159,7 +159,6 @@ void main() {
             .isNotEmpty);
     expect(emitted.last.includesWrittenWords, isTrue);
     expect(emitted.last.fields, contains(MenstrualField.note));
-    expect(emitted.last.fields, contains(MenstrualField.seasonNote));
 
     // Uma chave desliga o relato e deixa o resto do período de pé.
     await tester.tap(
@@ -167,7 +166,6 @@ void main() {
     await tester.pump();
     expect(emitted.last.includesWrittenWords, isFalse);
     expect(emitted.last.fields, isNot(contains(MenstrualField.note)));
-    expect(emitted.last.fields, isNot(contains(MenstrualField.seasonNote)));
     expect(emitted.last.recordCount, 2,
         reason: 'Tirar as palavras não tira os dias');
 

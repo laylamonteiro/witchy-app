@@ -3,17 +3,13 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:grimorio_de_bolso/core/content/content_locale.dart';
 import 'package:grimorio_de_bolso/core/database/database_helper.dart';
 import 'package:grimorio_de_bolso/core/database/menstrual_cycle_schema.dart';
 import 'package:grimorio_de_bolso/core/i18n/gender.dart';
 import 'package:grimorio_de_bolso/features/auth/data/models/user_model.dart';
 import 'package:grimorio_de_bolso/features/auth/presentation/providers/auth_provider.dart';
-import 'package:grimorio_de_bolso/features/diary/data/models/free_writing_model.dart';
-import 'package:grimorio_de_bolso/features/menstrual_cycle/data/data_sources/menstrual_phase_content.dart';
 import 'package:grimorio_de_bolso/features/menstrual_cycle/data/menstrual_consent_store.dart';
 import 'package:grimorio_de_bolso/features/menstrual_cycle/data/repositories/menstrual_cycle_repository.dart';
-import 'package:grimorio_de_bolso/features/menstrual_cycle/domain/internal_season.dart';
 import 'package:grimorio_de_bolso/features/menstrual_cycle/domain/menstrual_day.dart';
 import 'package:grimorio_de_bolso/features/menstrual_cycle/presentation/pages/menstrual_cycle_page.dart';
 import 'package:grimorio_de_bolso/features/menstrual_cycle/presentation/widgets/menstrual_cycle_card.dart';
@@ -215,9 +211,8 @@ void main() {
         () =>
             find.byKey(const ValueKey('menstrual-view-toggle')).evaluate().isNotEmpty,
         'the premium page');
-    // O que o Premium continua tendo: a roda, as Estações e a mesma
-    // explicação. O que ninguém tem mais: qualquer número tirado do histórico.
-    expect(find.byKey(const ValueKey('menstrual-season')), findsOneWidget);
+    // O que o Premium continua tendo: a roda e a mesma explicação. O que
+    // ninguém tem mais: qualquer número tirado do histórico.
     expect(find.byKey(const ValueKey('menstrual-about')), findsOneWidget);
     expect(find.byKey(const ValueKey('menstrual-premium-invite')), findsNothing);
     expect(find.textContaining('28 days'), findsNothing,
@@ -252,108 +247,6 @@ void main() {
           reason: 'The body is only there once it is open');
     }
     expect(tester.takeException(), isNull);
-  });
-
-  testWidgets('the season is her choice, and choosing already records it',
-      (tester) async {
-    // O nome das estações vem da camada de conteúdo, não do ARB.
-    ContentLocale.instance.setLocale(const Locale('en'));
-    addTearDown(
-        () => ContentLocale.instance.setLocale(const Locale('pt', 'BR')));
-    SharedPreferences.setMockInitialValues(
-        {'menstrual_consent_record_local_user': true});
-    await show(tester, premium: true);
-    await until(
-        tester,
-        () => find.byKey(const ValueKey('menstrual-season')).evaluate().isNotEmpty,
-        'the season card');
-    expect(find.byKey(const ValueKey('menstrual-season-invitation')), findsNothing,
-        reason: 'Nothing is chosen for her');
-
-    // "O que é isto?" chega antes da escolha, e chega recolhido.
-    expect(find.byKey(const ValueKey('menstrual-season-about')), findsOneWidget);
-    expect(find.byKey(const ValueKey('menstrual-season-about-text')), findsNothing);
-    await pressIn(tester, 'menstrual-season-about');
-    expect(find.byKey(const ValueKey('menstrual-season-about-text')),
-        findsOneWidget,
-        reason: 'The answer is one tap away, inside the recording area');
-    await pressIn(tester, 'menstrual-season-about');
-    expect(find.byKey(const ValueKey('menstrual-season-about-text')), findsNothing);
-
-    await pressIn(tester, 'menstrual-season-spring');
-    await until(
-        tester,
-        () => find
-            .byKey(const ValueKey('menstrual-season-invitation'))
-            .evaluate()
-            .isNotEmpty,
-        'the invitation');
-    final chosen = await tester.runAsync(() =>
-        MenstrualCycleRepository().dayOf(userId: 'local_user', day: today));
-    expect(chosen!.season, InternalSeason.spring);
-    expect(chosen.mark, MenstrualMark.note,
-        reason: 'Choosing a season says nothing about bleeding');
-
-    // Tocar num chip de estação É registrar, e todo registro vira página no
-    // Grimório — uma regra só, sem exceção que ninguém teria como adivinhar.
-    // `menstrualSeasonAboutUse` é o texto que promete isto na tela.
-    final pages = await tester.runAsync(() async {
-      final db = await DatabaseHelper.instance.database;
-      return db.query('free_writings',
-          where: 'source = ?', whereArgs: [FreeWritingSource.menstrual]);
-    });
-    expect(pages, hasLength(1), reason: 'The day now has a page');
-    expect(
-      pages!.single['content'],
-      contains(MenstrualSeasonContentSource.of(InternalSeason.spring).title),
-      reason: 'The season she chose is written on the page',
-    );
-    expect(find.byKey(const ValueKey('menstrual-season-link-citrine')),
-        findsOneWidget,
-        reason: 'The curated entry is right there, and it opens');
-
-    await tester
-        .ensureVisible(find.byKey(const ValueKey('menstrual-season-writing')));
-    await tester.pump();
-    await tester.enterText(
-        find.byKey(const ValueKey('menstrual-season-writing')), 'a first gesture');
-    await tester.pump();
-    await pressIn(tester, 'menstrual-season-save');
-    await until(
-        tester,
-        () => find
-            .byKey(const ValueKey('menstrual-season-sealed'))
-            .evaluate()
-            .isNotEmpty,
-        'the seal');
-    final written = await tester.runAsync(() =>
-        MenstrualCycleRepository().dayOf(userId: 'local_user', day: today));
-    expect(written!.seasonNote, 'a first gesture');
-
-    // Tocar de novo na mesma estação desmarca, sem levar o resto junto.
-    await pressIn(tester, 'menstrual-season-spring');
-    await until(
-        tester,
-        () => find
-            .byKey(const ValueKey('menstrual-season-invitation'))
-            .evaluate()
-            .isEmpty,
-        'the season cleared');
-    final cleared = await tester.runAsync(() =>
-        MenstrualCycleRepository().dayOf(userId: 'local_user', day: today));
-    expect(cleared!.season, isNull);
-    expect(cleared.seasonNote, 'a first gesture',
-        reason: 'Unchoosing a season never erases what she wrote');
-    expect(tester.takeException(), isNull);
-  });
-
-  testWidgets('the free plan is never offered a season', (tester) async {
-    SharedPreferences.setMockInitialValues(
-        {'menstrual_consent_record_local_user': true});
-    await show(tester);
-    expect(find.byKey(const ValueKey('menstrual-season')), findsNothing,
-        reason: 'Editorial content lives in Premium, and nothing is half shown');
-    expect(find.byKey(const ValueKey('menstrual-premium-invite')), findsOneWidget);
   });
 
   testWidgets('cancelling closes the sheet and writes nothing', (tester) async {

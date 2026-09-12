@@ -2,10 +2,9 @@ import 'menstrual_day.dart';
 
 /// Os campos de um registro que podem, ou não, acompanhar a leitura.
 ///
-/// A nota livre e a escrita da estação têm chave própria na tela: são as
-/// palavras dela, e precisam poder sair sozinhas, sem levar junto o resto
-/// do período.
-enum MenstrualField { mark, flow, symptoms, mood, note, season, seasonNote }
+/// A nota livre tem chave própria na tela: são as palavras dela, e precisam
+/// poder sair sozinhas, sem levar junto o resto do período.
+enum MenstrualField { mark, flow, symptoms, mood, note }
 
 /// Um registro autorizado, com a revisão que ela viu ao autorizar.
 ///
@@ -48,7 +47,7 @@ class MenstrualScopeEntry implements Comparable<MenstrualScopeEntry> {
 ///   viu — nada de "tudo o que houver", e nada de dados futuros: autorizar
 ///   hoje não autoriza o que for escrito amanhã;
 /// * os campos são explícitos: o escopo diz quais vão, um a um, e a nota
-///   livre e a escrita da estação podem sair sem que os dias saiam;
+///   livre pode sair sem que os dias saiam;
 /// * a revisão do consentimento entra no contrato: retirar o sim invalida o
 ///   escopo mesmo que os registros não mudem.
 ///
@@ -63,7 +62,7 @@ class MenstrualReadingScope {
     required this.entries,
     this.fields = defaultFields,
     this.consentRevision = 1,
-    this.contentVersion = 1,
+    this.contentVersion = 2,
   });
 
   /// Um escopo vazio: a fonte existe na tela, mas nada foi autorizado.
@@ -73,7 +72,7 @@ class MenstrualReadingScope {
         entries = const [],
         fields = defaultFields,
         consentRevision = 0,
-        contentVersion = 1;
+        contentVersion = 2;
 
   final String userId;
 
@@ -86,27 +85,25 @@ class MenstrualReadingScope {
   final int consentRevision;
 
   /// Versão do contrato. Muda quando a forma do material mudar, para que uma
-  /// geração antiga não seja retomada com regras novas.
+  /// geração antiga não seja retomada com regras novas. A v2 é a forma sem a
+  /// Estação Interna: um rascunho guardado com a estação não é retomado.
   final int contentVersion;
 
   /// O conjunto base: o que ela marcou nos dias. As palavras que escreveu
-  /// (nota do dia e nota da estação) entram por uma chave própria na tela,
-  /// para poderem sair sozinhas sem levar o resto do período junto.
+  /// (a nota do dia) entram por uma chave própria na tela, para poderem sair
+  /// sozinhas sem levar o resto do período junto.
   static const defaultFields = {
     MenstrualField.mark,
     MenstrualField.flow,
     MenstrualField.symptoms,
     MenstrualField.mood,
-    MenstrualField.season,
   };
 
   bool get isEmpty => entries.isEmpty;
   bool get isNotEmpty => entries.isNotEmpty;
   int get recordCount => entries.length;
 
-  bool get includesWrittenWords =>
-      fields.contains(MenstrualField.note) ||
-      fields.contains(MenstrualField.seasonNote);
+  bool get includesWrittenWords => fields.contains(MenstrualField.note);
 
   /// O dia está autorizado, na revisão em que ela o viu?
   bool covers(MenstrualDay day) =>

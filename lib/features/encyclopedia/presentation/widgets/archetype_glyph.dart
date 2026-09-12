@@ -30,9 +30,8 @@ class ArchetypeDot {
   final double alpha;
 }
 
-/// Os onze arquétipos DESENHADOS, no espírito das vinhetas de estação
-/// (`season_vignette.dart`) e dos emblemas de ferramenta: traço aberto, fino,
-/// no acento do tema.
+/// Os onze arquétipos DESENHADOS, no espírito dos emblemas de ferramenta:
+/// traço aberto, fino, no acento do tema.
 ///
 /// Por que desenhar: o emoji do arquétipo depende da fonte do aparelho. A
 /// Bruxa era uma sequência ZWJ (🧙 + ZWJ + ♀ + VS16) que se parte em dois

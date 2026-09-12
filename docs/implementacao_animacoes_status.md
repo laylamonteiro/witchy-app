@@ -977,5 +977,54 @@ Esperando decisão da dona (não mexer sem ela):
 
 As decisões mais recentes sobre menstruação estão mantidas no plano:
 registro, leitura dos dados inseridos, edição, exclusão e exportação Free;
-análises, estações estimadas e cruzamentos Premium; consentimento específico
-para participar da análise completa. Health/Flo é uma evolução secundária.
+a roda do mês e a fonte íntima da Leitura do Ciclo Premium; consentimento
+específico para participar da análise completa. "A Lua e você" passou a ser
+gratuita em 12/09 (abaixo). Health/Flo é uma evolução secundária.
+
+## O redesenho do Ciclo (12/09)
+
+A dona testou a jornada no aparelho e não quis escrever nela: "confusa,
+desorganizada, muita informação em texto, pouco acolhedora". As decisões que
+guiam as ondas seguintes, nas palavras dela: uma folha só, sem tantas telas;
+insights do ciclo em relação à Lua e às emoções; a menstruação exaltada como
+algo divino; os chips com os nomes de antes (Começou, Dia de fluxo, Escape,
+Terminou, Só uma anotação); fora os textos em que o app se justifica; **a
+estação sai**; **"A Lua e você" volta, gratuita**; as luas voltam ao
+calendário; fontes, tamanhos e posições padronizados na jornada inteira.
+
+### Onda 1 — a estação sai, a Lua volta
+
+- **A Estação Interna saiu inteira** (era P17, vinda de *Wild Power*): modelo,
+  conteúdo nos três idiomas, card, vinheta, campo na Leitura do Ciclo,
+  cláusula nos prompts de IA, bloco no espelho do Grimório, texto no centro da
+  roda e os treze textos dela nos quatro ARBs. `MenstrualField` perdeu
+  `season` e `seasonNote`, e `contentVersion` do escopo subiu para 2: um
+  rascunho de Leitura guardado com a estação não é retomado, que é o contrato
+  documentado do campo. As colunas `season`/`season_note` ficaram no SQLite
+  como colunas herdadas, sem leitor — a migração v29 já saiu em commit, e
+  subir versão para apagar duas colunas vazias não vale o risco; `fromRow`
+  simplesmente as ignora, inclusive num registro remoto de outro aparelho.
+- **"A Lua e você" voltou, gratuito e com as emoções.** O domínio
+  (`lunar_comparison.dart`) foi restaurado do commit 0253be5 e recebeu o que
+  faltava: os começos são extraídos do histórico dentro do próprio domínio
+  (sem `MenstrualInsights`), e as emoções anotadas nos dias de sangue viram
+  uma contagem — as três mais frequentes, empate desfeito por ordem
+  alfabética para a lista não trocar de lugar entre uma abertura e outra, e a
+  grafia mostrada é a que ela mais usa. Também existe a contagem por fase da
+  Lua, pronta e testada, que o card ainda não mostra (com pouco registro vira
+  ruído).
+- **O card** (`lua_e_voce_card.dart`) recebe o histórico e o dia de hoje por
+  parâmetro, sem provider: cada começo com o glifo da Lua daquele dia (sem
+  halo — numa lista o brilho viraria uma coluna de manchas), o resumo a partir
+  de quatro começos, a linha das emoções e uma frase de fecho. Os textos que
+  se justificavam no card antigo não voltaram.
+- **O que ainda não está na tela:** a página só carrega o mês visível, e o
+  card precisa do histórico inteiro. A integração é da Onda 2, junto com o
+  redesenho da página.
+- **Verificação:** `menstrual_lunar_comparison_test.dart` ampliado (Nova,
+  Cheia e nenhuma; a janela simétrica dos dois lados; sem quatro começos não
+  há resumo; o quarto fecha e não conta; a contagem de emoções normaliza,
+  desempata e ignora escape, anotação e lápide), `lua_e_voce_card_test.dart`
+  novo (vazio, linha do tempo, resumo, emoções, histórico longo), e os nove
+  testes que citavam a estação ajustados. O teste dos prompts deixou de exigir
+  `chosen_by_her`, que não existe mais no material.

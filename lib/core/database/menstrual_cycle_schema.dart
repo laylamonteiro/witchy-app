@@ -1,7 +1,7 @@
 import 'package:sqflite/sqflite.dart';
 
-/// O registro menstrual (v28, com a estação escolhida desde a v29), guardado
-/// por conta e por dia.
+/// O registro menstrual (v28; a v29 acrescentou `season` e `season_note`),
+/// guardado por conta e por dia.
 ///
 /// A tabela guarda apenas o que a pessoa escreveu: a marca escolhida por ela,
 /// e os campos opcionais. Nada derivado mora aqui — dia do ciclo, médias e
@@ -44,9 +44,12 @@ abstract final class MenstrualCycleSchema {
     );
   }
 
-  /// v29: a Estação Interna escolhida para o dia e a escrita que veio com o
-  /// convite dela. São escolha e texto da pessoa, não cálculo — e um telefone
-  /// que já estava na v28 ganha as duas colunas vazias, sem perder nada.
+  /// v29: `season` e `season_note` chegaram para a Estação Interna, e ficaram
+  /// sem leitor desde que a estação saiu do app. As colunas continuam aqui, e
+  /// esta migração também, porque a regra da casa é migrar para a frente: um
+  /// telefone que já estava na v28 ganha as duas colunas vazias, sem perder
+  /// nada, e uma linha antiga que ainda as traga é simplesmente ignorada
+  /// pelo modelo (MenstrualDay.fromRow).
   static Future<void> addSeason(DatabaseExecutor db) async {
     final columns = await db.rawQuery('PRAGMA table_info($table)');
     final existing = {for (final column in columns) '${column['name']}'};

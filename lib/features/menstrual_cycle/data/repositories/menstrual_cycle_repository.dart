@@ -19,10 +19,10 @@ import '../services/menstrual_archive_recorder.dart';
 ///
 /// Toda linha que entra ou sai daqui tem um espelho no Grimório: a página do
 /// dia em "Meus Registros", escrita pelo [MenstrualArchiveRecorder]. O espelho
-/// mora NESTE repositório, e não nas telas, porque são cinco os caminhos que
-/// mexem na linha (a folha do dia, o apagar da folha, os dois chips da estação
-/// e o "apagar meus registros do ciclo" da tela de Privacidade) e nenhum deles
-/// pode ter o direito de esquecer. Quem grava o dia grava a página; quem apaga
+/// mora NESTE repositório, e não nas telas, porque são três os caminhos que
+/// mexem na linha (a folha do dia, o apagar da folha e o "apagar meus
+/// registros do ciclo" da tela de Privacidade) e nenhum deles pode ter o
+/// direito de esquecer. Quem grava o dia grava a página; quem apaga
 /// o dia apaga a página — não há ordem em que uma exista sem a outra.
 ///
 /// Não há aqui um método que devolva o histórico inteiro, e isso é de
@@ -93,8 +93,6 @@ class MenstrualCycleRepository {
           'symptoms': '[]',
           'mood': null,
           'note': '',
-          'season': null,
-          'season_note': '',
           'deleted': 1,
           'revision': current.revision + 1,
           'updated_at': DateTime.now().millisecondsSinceEpoch,

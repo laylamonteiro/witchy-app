@@ -15,8 +15,8 @@ import '../../../menstrual_cycle/domain/menstrual_reading_scope.dart';
 /// autoriza nada sozinho: ela abre a prévia do que existe na janela, e
 /// autorizar é marcar.
 ///
-/// As palavras escritas nesses dias (a anotação e a escrita da estação) são
-/// uma escolha à parte, desmarcada, porque são as palavras dela.
+/// As palavras escritas nesses dias (a anotação) são uma escolha à parte,
+/// desmarcada, porque são as palavras dela.
 class MenstrualSourceTile extends StatefulWidget {
   const MenstrualSourceTile({
     super.key,
@@ -169,7 +169,7 @@ class _MenstrualSourceTileState extends State<MenstrualSourceTile> {
             entries: chosen,
             fields: {
               ...MenstrualReadingScope.defaultFields,
-              if (_words) ...[MenstrualField.note, MenstrualField.seasonNote],
+              if (_words) MenstrualField.note,
             },
             consentRevision: _consentRevision,
           ));
@@ -186,8 +186,7 @@ class _MenstrualSourceTileState extends State<MenstrualSourceTile> {
       },
       if (day.symptoms.isNotEmpty)
         l10n.cycleReadingMenstrualSymptoms(day.symptoms.length),
-      if (day.note.isNotEmpty || day.seasonNote.isNotEmpty)
-        l10n.cycleReadingMenstrualHasWords,
+      if (day.note.isNotEmpty) l10n.cycleReadingMenstrualHasWords,
     ];
     return parts.join(' · ');
   }

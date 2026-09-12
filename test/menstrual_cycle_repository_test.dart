@@ -6,7 +6,6 @@ import 'package:grimorio_de_bolso/core/database/menstrual_cycle_schema.dart';
 import 'package:grimorio_de_bolso/features/cycle_reading/data/services/cycle_reading_composer.dart';
 import 'package:grimorio_de_bolso/features/diary/data/models/free_writing_model.dart';
 import 'package:grimorio_de_bolso/features/menstrual_cycle/data/repositories/menstrual_cycle_repository.dart';
-import 'package:grimorio_de_bolso/features/menstrual_cycle/domain/internal_season.dart';
 import 'package:grimorio_de_bolso/features/menstrual_cycle/domain/menstrual_day.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
@@ -67,9 +66,9 @@ void main() {
     expect(saved.note, 'Quieter morning');
     expect(saved.day, DateTime(2026, 3, 8));
 
-    // Nothing derived is stored: no cycle day, no length, no estimate. The
-    // season and the writing that came with it are hers too — an explicit
-    // choice and her own words, never something the app worked out.
+    // Nothing derived is stored: no cycle day, no length, no estimate.
+    // `season` and `season_note` are inherited from v29 and have no reader
+    // any more; they stay because the schema only migrates forward.
     final db = await DatabaseHelper.instance.database;
     final columns = (await db.rawQuery(
             'PRAGMA table_info(${MenstrualCycleSchema.table})'))
@@ -139,30 +138,26 @@ void main() {
     expect(back.revision, greaterThan(saved.revision));
   });
 
-  test('the chosen season and what she wrote with it travel with the day',
+  test('a row that still carries a season from before is read as a plain day',
       () async {
-    await repo.save(day(9).copyWith(
-      season: InternalSeason.spring,
-      seasonNote: 'um primeiro gesto',
-    ));
+    // Uma linha antiga — ou a cópia de outro aparelho — pode chegar com
+    // `season` e `season_note` preenchidos. O modelo não os conhece mais, e
+    // isso não pode derrubar a leitura do dia.
+    final db = await DatabaseHelper.instance.database;
+    await db.insert(MenstrualCycleSchema.table, {
+      ...day(9, note: 'ainda aqui').toRow(),
+      'season': 'winter',
+      'season_note': 'um primeiro gesto',
+    });
     final saved = await repo.dayOf(userId: user, day: DateTime(2026, 3, 9));
-    expect(saved!.season, InternalSeason.spring);
-    expect(saved.seasonNote, 'um primeiro gesto');
-
-    // Desmarcar a estação não apaga o resto do registro.
-    await repo.save(saved.copyWith(clearSeason: true));
-    final cleared = await repo.dayOf(userId: user, day: DateTime(2026, 3, 9));
-    expect(cleared!.season, isNull);
-    expect(cleared.mark, saved.mark);
-    expect(cleared.seasonNote, 'um primeiro gesto');
+    expect(saved, isNotNull);
+    expect(saved!.note, 'ainda aqui');
+    expect(saved.toRow().containsKey('season'), isFalse,
+        reason: 'The model neither reads nor writes the inherited columns');
   });
 
-  test('erasing a day also erases the season and the writing with it',
-      () async {
-    await repo.save(day(10).copyWith(
-      season: InternalSeason.autumn,
-      seasonNote: 'o que pode ficar mais leve',
-    ));
+  test('erasing a day leaves a tombstone without what she wrote', () async {
+    await repo.save(day(10, note: 'o que pode ficar mais leve'));
     await repo.remove(userId: user, day: DateTime(2026, 3, 10));
     final db = await DatabaseHelper.instance.database;
     final row = (await db.query(MenstrualCycleSchema.table,
@@ -170,9 +165,7 @@ void main() {
             whereArgs: [user, '2026-03-10']))
         .single;
     expect(row['deleted'], 1);
-    expect(row['season'], isNull);
-    expect(row['season_note'], '',
-        reason: 'A lápide não guarda o que ela escreveu');
+    expect(row['note'], '', reason: 'A lápide não guarda o que ela escreveu');
   });
 
   test('a newer revision from another device wins', () async {

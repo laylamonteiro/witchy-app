@@ -44,11 +44,6 @@ class MenstrualAccess {
   /// Resultados calculados a partir do histórico.
   bool get canSeeDerived => canRecord && premium;
 
-  /// As Estações Internas — escolher uma, ler o convite dela e escrever ali.
-  /// Não é resultado calculado, é vocabulário simbólico; fica no Premium
-  /// porque é conteúdo editorial, e continua sendo escolha explícita dela.
-  bool get canChooseSeason => canRecord && premium;
-
   /// Um convite genérico para conhecer o Premium é aceitável; usar sintomas,
   /// datas ou a ausência de registro para oferecer nunca é.
   bool get showsGenericPremiumInvite => canRecord && !premium;

@@ -9,22 +9,18 @@ import '../../../../l10n/generated/app_localizations.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../grimoire/data/models/spell_model.dart';
 import '../../../lunar/presentation/providers/lunar_provider.dart';
-import '../../data/data_sources/menstrual_phase_content.dart';
 import '../../data/menstrual_consent_store.dart';
 import '../../data/repositories/menstrual_cycle_repository.dart';
-import '../../domain/internal_season.dart';
 import '../../domain/menstrual_access.dart';
 import '../../domain/menstrual_day.dart';
 import '../widgets/menstrual_record_form.dart';
-import '../widgets/menstrual_season_card.dart';
 import '../widgets/menstrual_wheel.dart';
 
 /// A roda pessoal: o registro do próprio ciclo.
 ///
 /// Antes de qualquer coisa, o consentimento — e ele explica o que é gratuito
 /// (registrar, consultar, corrigir, exportar e apagar) e o que é Premium (a
-/// roda do mês, a Lua estimada de cada dia e as Estações Internas). Recusar
-/// não apaga nada.
+/// roda do mês e a Lua estimada de cada dia). Recusar não apaga nada.
 ///
 /// O calendário mostra só os dias que a pessoa registrou. Um dia vazio é
 /// ausência de registro, e a tela não conta, não soma e não estima nada a
@@ -34,9 +30,9 @@ import '../widgets/menstrual_wheel.dart';
 ///
 /// Cada dia gravado aqui ganha uma página em "Meus Registros", no Grimório —
 /// e cada dia apagado a perde. Nenhuma tela decide isso: quem escreve e
-/// apaga o espelho é o próprio MenstrualCycleRepository, para que os cinco
-/// caminhos que mexem na linha (esta folha, o apagar dela, os dois chips da
-/// estação e o "apagar meus registros do ciclo") não possam divergir.
+/// apaga o espelho é o próprio MenstrualCycleRepository, para que os três
+/// caminhos que mexem na linha (esta folha, o apagar dela e o "apagar meus
+/// registros do ciclo") não possam divergir.
 class MenstrualCyclePage extends StatefulWidget {
   const MenstrualCyclePage({
     super.key,
@@ -210,55 +206,6 @@ class _MenstrualCyclePageState extends State<MenstrualCyclePage> {
     }
   }
 
-  /// A estação do dia. Escolher já é registrar: um dia sem linha ganha uma,
-  /// com a marca de anotação — que não diz nada sobre sangramento. Tocar de
-  /// novo na estação escolhida a desmarca, e desmarcar não apaga o resto.
-  ///
-  /// E porque escolher é registrar, escolher também escreve a página do dia
-  /// no Grimório, como qualquer outro registro. A regra é uma só — todo
-  /// registro vira página —, e abrir exceção para a estação seria inventar
-  /// uma segunda regra que ninguém teria como adivinhar na tela. Quem explica
-  /// isso é `menstrualSeasonAboutUse`, no bloco "O que é uma estação
-  /// interna?", e o rodapé do campo de escrita.
-  Future<bool> _chooseSeason(InternalSeason? season) async {
-    final record = (await _todayRecord()).copyWith(
-      season: season,
-      clearSeason: season == null,
-    );
-    return _persist(record);
-  }
-
-  /// A escrita que veio com o convite da estação. Fica no registro do dia (e
-  /// na página dele no Grimório) e não vai para o Diário; só sai deste
-  /// aparelho quando a própria pessoa a inclui numa Leitura do Ciclo, ligando
-  /// o interruptor das palavras.
-  Future<bool> _writeSeason(String text) async =>
-      _persist((await _todayRecord()).copyWith(seasonNote: text));
-
-  /// O registro de HOJE, lido do banco — nunca de `_days`.
-  ///
-  /// `_days` é o MÊS NA TELA: virar para abril troca o mapa inteiro, e o card
-  /// da estação continua visível. Lido dali, um toque num chip de estação em
-  /// abril devolveria um registro em branco para hoje e o gravaria por cima
-  /// do que ela tinha escrito — marca, fluxo, sintomas e anotação zerados. E
-  /// agora a perda apareceria também no Grimório, porque a página espelha o
-  /// que a linha virou.
-  Future<MenstrualDay> _todayRecord() async =>
-      await _repository.dayOf(userId: _userId, day: _today) ??
-      MenstrualDay(userId: _userId, day: _today, mark: MenstrualMark.note);
-
-  Future<bool> _persist(MenstrualDay record) async {
-    final l10n = AppLocalizations.of(context);
-    try {
-      await _repository.save(record);
-      await _refresh();
-      return true;
-    } catch (_) {
-      if (mounted) _say(l10n.menstrualSaveError);
-      return false;
-    }
-  }
-
   Future<void> _refresh() async {
     final userId = _userId;
     final days = await _monthOf(userId, _month);
@@ -411,16 +358,6 @@ class _MenstrualCyclePageState extends State<MenstrualCyclePage> {
             _wheel(context, l10n)
           else
             _calendar(context, l10n, access),
-          // A estação é escolha simbólica, não resultado — mas é conteúdo
-          // editorial, e por isso mora no Premium.
-          if (access.canChooseSeason)
-            MenstrualSeasonCard(
-              record: todayRecord,
-              invitesWinter: todayRecord?.mark == MenstrualMark.start ||
-                  todayRecord?.mark == MenstrualMark.flow,
-              onChoose: _chooseSeason,
-              onWrite: _writeSeason,
-            ),
           // Onde antes o histórico virava número, agora há palavra: o que é
           // menstruar, o que já foi lido nisso e o que a bruxaria faz com o
           // assunto. Fecha a página para os dois planos.
@@ -442,14 +379,12 @@ class _MenstrualCyclePageState extends State<MenstrualCyclePage> {
   /// outro — dois cards saíram da tela, e a página do gratuito (que é a que
   /// roda no navegador, de dobra curta) não pode voltar mais longa do que era.
   ///
-  /// O texto mora no ARB, e não na camada de conteúdo (menstrual_phase_content
-  /// _pt/_en/_es.dart): aquela camada é catálogo — itens com identidade
-  /// estável, ordem e correspondências que a Enciclopédia resolve, e é isso
-  /// que o teste de paridade dela verifica. Isto aqui é texto fixo de uma
-  /// tela, sem item nem chave de curadoria, e o ARB ainda cobre o pt_BR, que
-  /// a camada de conteúdo não tem (ela cai no pt). A fronteira de vocabulário
-  /// que a camada ganha de graça, este texto ganha em
-  /// test/menstrual_about_text_test.dart.
+  /// O texto mora no ARB, e não numa camada de conteúdo: camada de conteúdo
+  /// é catálogo — itens com identidade estável, ordem e correspondências que
+  /// a Enciclopédia resolve. Isto aqui é texto fixo de uma tela, sem item nem
+  /// chave de curadoria, e o ARB ainda cobre o pt_BR, que a camada de
+  /// conteúdo não tem (ela cai no pt). A fronteira de vocabulário deste texto
+  /// mora em test/menstrual_about_text_test.dart.
   Widget _about(
       BuildContext context, AppLocalizations l10n, MenstrualAccess access) {
     final colors = context.gc;
@@ -576,10 +511,9 @@ class _MenstrualCyclePageState extends State<MenstrualCyclePage> {
   }
 
   /// A roda do mês: o anel externo com a Lua estimada de cada dia e o interno
-  /// só com o que ela registrou. A legenda distingue registro, estimativa e
-  /// escolha por texto, não só por cor.
+  /// só com o que ela registrou. A legenda distingue registro e estimativa
+  /// por texto, não só por cor.
   Widget _wheel(BuildContext context, AppLocalizations l10n) {
-    final focused = _days[MenstrualDay.keyOf(_focused)];
     return MagicalCard(
       key: const ValueKey('menstrual-wheel-card'),
       child: Column(
@@ -591,9 +525,6 @@ class _MenstrualCyclePageState extends State<MenstrualCyclePage> {
               month: _month,
               days: _days,
               selected: _focused,
-              season: focused?.season == null
-                  ? null
-                  : MenstrualSeasonContentSource.of(focused!.season!).title,
               onSelect: (day) => setState(() => _focused = day),
               onOpen: _openDay,
             ),
