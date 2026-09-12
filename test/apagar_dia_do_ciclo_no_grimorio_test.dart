@@ -55,14 +55,19 @@ void main() {
   testWidgets('deleting the cycle page in the Grimoire deletes the day',
       (tester) async {
     final repository = MenstrualCycleRepository();
-    await repository.save(MenstrualDay(
-      userId: userId,
-      day: day,
-      mark: MenstrualMark.flow,
-      note: 'quiet day',
-    ));
     final provider = FreeWritingProvider();
-    await provider.setUserId(userId);
+    // Banco de verdade dentro do teste de widget: fora do `runAsync`, o
+    // relógio falso do testWidgets segura os futuros do SQLite para sempre
+    // — foi um timeout de dois minutos no CI que ensinou isto.
+    await tester.runAsync(() async {
+      await repository.save(MenstrualDay(
+        userId: userId,
+        day: day,
+        mark: MenstrualMark.flow,
+        note: 'quiet day',
+      ));
+      await provider.setUserId(userId);
+    });
     final page = provider.freeWritings
         .singleWhere((w) => w.source == FreeWritingSource.menstrual);
 
@@ -110,7 +115,9 @@ void main() {
         () => find.byType(RecordDetailPage).evaluate().isEmpty,
         'the detail page closing');
 
-    expect(await repository.dayOf(userId: userId, day: day), isNull,
+    final remaining = await tester.runAsync(
+        () => repository.dayOf(userId: userId, day: day));
+    expect(remaining, isNull,
         reason: 'The day itself is gone, not only its page');
     expect(
         provider.freeWritings
