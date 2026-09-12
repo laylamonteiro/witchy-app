@@ -1,6 +1,6 @@
 # Termos de Uso — Grimório de Bolso
 
-Última atualização: 19 de julho 2026
+Última atualização: 12 de setembro 2026
 
 Bem-vinda(o) ao Grimório de Bolso. Ao usar o aplicativo, você concorda com estes Termos. Leia com atenção.
 
@@ -33,6 +33,8 @@ Todo o conteúdo do aplicativo — leituras, interpretações, previsões, suges
 
 - Feitiços, diários, reflexões, sonhos e demais registros criados por você pertencem a você.
 - Ao usar recursos do Conselheiro Místico, o texto que você fornece é processado para gerar a resposta (ver Política de Privacidade).
+- Tudo o que você registra no aplicativo é guardado no seu Grimório — inclusive os dias que você registra na roda do Ciclo Menstrual, que viram páginas em "Meus Registros". Guardar no Grimório não é enviar: o envio a um provedor de inteligência artificial acontece quando você aciona um recurso que o usa, com o material daquele recurso.
+- O registro do Ciclo Menstrual tem regra própria, mais estreita, por ser informação sobre saúde: ele não vai para a nuvem em plano nenhum, e só chega à inteligência artificial dentro de uma Leitura do Ciclo que você autoriza, com os dias que você marca. A Política de Privacidade, seção 2, descreve o caminho inteiro.
 - Você é responsável pelo conteúdo que cria e por seu uso.
 
 ## 6. Conduta e limites

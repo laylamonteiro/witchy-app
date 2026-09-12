@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../features/sigils/presentation/widgets/sigil_icon.dart';
 import '../theme/app_theme.dart';
+import 'tool_emblem_art.dart';
 
 /// As doze ferramentas do Grimório, por identidade estável.
 ///
@@ -27,22 +27,34 @@ enum ToolId {
 abstract class ToolIdentity {
   ToolIdentity._();
 
-  static const Map<ToolId, String> emblems = {
+  /// As nove ferramentas cujo emblema é um emoji — desenho que TODO aparelho
+  /// tem, porque vem do próprio sistema.
+  static const Map<ToolId, String> emojis = {
     ToolId.livingGrimoire: '📖',
     ToolId.mysticAdvisor: '🔮',
-    ToolId.sigils: kSigilIconGlyph,
     ToolId.natureGuide: '🍃',
     ToolId.tarot: '🎴',
     ToolId.dreams: '🌙',
     ToolId.palmistry: '🖐️',
-    ToolId.runes: ' ᚱ ',
     ToolId.oracle: '🃏',
-    ToolId.pendulum: ' ⟟ ',
     ToolId.archetypes: '🎭',
     ToolId.numerology: '🔢',
   };
 
-  static String emblemOf(ToolId tool) => emblems[tool] ?? '✦';
+  /// As três que o app desenha. Eram glifos de blocos raros do Unicode (⛤, ᚱ
+  /// e ⟟): sem uma fonte de símbolos instalada, o aparelho mostrava o
+  /// quadradinho de glifo ausente no lugar do emblema. Ver [ToolDrawing].
+  static const Map<ToolId, ToolDrawing> drawings = {
+    ToolId.sigils: ToolDrawing.pentagram,
+    ToolId.runes: ToolDrawing.raidho,
+    ToolId.pendulum: ToolDrawing.pendulum,
+  };
+
+  /// O emoji da ferramenta, ou null quando o emblema dela é desenhado.
+  static String? emojiOf(ToolId tool) => emojis[tool];
+
+  /// O desenho da ferramenta, ou null quando o emblema dela é um emoji.
+  static ToolDrawing? drawingOf(ToolId tool) => drawings[tool];
 
   static String heroTag(ToolId tool) => 'tool-emblem-${tool.name}';
 }
@@ -51,8 +63,8 @@ abstract class ToolIdentity {
 ///
 /// Com [flies], o mesmo emblema do card viaja até o cabeçalho da ferramenta
 /// ao abri-la: a arte da entrada continua na cena, em vez de a tela começar
-/// do zero. O símbolo é desenhado num quadrado e ajustado por dentro, então
-/// os dois tamanhos são o mesmo desenho.
+/// do zero. Emoji ou desenho, a arte ocupa um quadrado e se ajusta por
+/// dentro dele, então os dois tamanhos são a mesma arte.
 class ToolEmblem extends StatelessWidget {
   const ToolEmblem({
     super.key,
@@ -67,17 +79,24 @@ class ToolEmblem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final art = SizedBox(
-      width: size,
-      height: size,
-      child: FittedBox(
-        fit: BoxFit.contain,
-        child: Text(
-          ToolIdentity.emblemOf(tool),
-          style: const TextStyle(fontSize: 40),
-        ),
-      ),
-    );
+    final drawing = ToolIdentity.drawingOf(tool);
+    final Widget art = drawing != null
+        // Sem rótulo de propósito: nos dois lugares em que o emblema aparece
+        // (o card do Grimório e o cabeçalho da tela) o nome da ferramenta
+        // está escrito ao lado, e rotular o desenho faria o leitor de tela
+        // dizer o mesmo nome duas vezes. Ver [ToolDrawingArt].
+        ? ToolDrawingArt(drawing: drawing, size: size)
+        : SizedBox(
+            width: size,
+            height: size,
+            child: FittedBox(
+              fit: BoxFit.contain,
+              child: Text(
+                ToolIdentity.emojiOf(tool) ?? '✦',
+                style: const TextStyle(fontSize: 40),
+              ),
+            ),
+          );
     if (!flies) return art;
     return Hero(
       tag: ToolIdentity.heroTag(tool),

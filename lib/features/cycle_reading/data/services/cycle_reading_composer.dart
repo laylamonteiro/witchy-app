@@ -502,8 +502,15 @@ class CycleReadingComposer {
   /// dois lados somaria toda leitura em dobro — na contagem que a pessoa vê
   /// ANTES de comprar. A quiromancia fica fora desta lista de propósito: sem
   /// tabela própria, o acervo é o único lugar onde ela conta.
+  ///
+  /// A página do dia do ciclo entra aqui pela mesma razão, e por uma segunda:
+  /// ela é espelho de uma linha de `menstrual_days`, e o dia registrado já
+  /// chega à leitura pelo caminho dele — a fonte íntima, que a pessoa
+  /// autoriza dia a dia. Contar a página seria contar o mesmo dia duas vezes
+  /// no mapa de calor do seletor e no número da oferta.
   static final String _fontesQueNaoContam = [
     FreeWritingSource.cycleReading,
+    FreeWritingSource.menstrual,
     ...FreeWritingSource.autoRecorded,
   ].map((source) => "'$source'").join(', ');
 
@@ -820,9 +827,19 @@ class CycleReadingComposer {
     }
 
     // ===== Escrita livre + leituras arquivadas =====
+    // O corte é AQUI, na definição de `writings`, e não só no
+    // `_fontesQueNaoContam` — aquele só governa o SQL de `_ownRecordsFilter`,
+    // que a contagem barata usa; esta lista é a que alimenta `recordCount`,
+    // `countsByDay` (e por ele `activeDays`, `longestStreak` e a fase "mais
+    // presente") e `countsBySource`. Fora ficam o relatório da própria
+    // Leitura do Ciclo e as páginas do Ciclo Menstrual: as duas são espelhos
+    // de registros que já contam noutro lugar, e a do ciclo é espelho de um
+    // dia que chega à leitura pela fonte íntima, autorizado dia a dia.
     final writings = (await rowsOf('free_writings'))
-        .where((row) =>
-            (row['source'] ?? 'free') != FreeWritingSource.cycleReading)
+        .where((row) => !const {
+              FreeWritingSource.cycleReading,
+              FreeWritingSource.menstrual,
+            }.contains(row['source'] ?? 'free'))
         .toList();
     // A página de uma tiragem e a tiragem são o MESMO registro — nascem com
     // o mesmo id. Só um dos lados pode contar, e é a tabela da ferramenta

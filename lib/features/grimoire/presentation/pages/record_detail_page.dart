@@ -20,6 +20,7 @@ String archiveSourceLabel(AppLocalizations l10n, String source) =>
       FreeWritingSource.tarot => l10n.recordsSourceTarot,
       FreeWritingSource.cycleReading => l10n.recordsSourceCycleReading,
       FreeWritingSource.advisor => l10n.recordsSourceAdvisor,
+      FreeWritingSource.menstrual => l10n.recordsSourceMenstrual,
       _ => l10n.recordsSourceReflection,
     };
 
@@ -27,6 +28,14 @@ String archiveSourceLabel(AppLocalizations l10n, String source) =>
 /// origem, conteúdo (com destaque das linhas ✦) e datas. Editável e
 /// excluível — a página veio do Grimório Vivo ou de uma leitura, mas é da
 /// Bruxa.
+///
+/// Com UMA exceção: a página do Ciclo Menstrual não se edita nem se apaga
+/// daqui. Ela é espelho de uma linha de `menstrual_days`, reescrita a cada
+/// gravação do dia — editá-la aqui duraria até a próxima correção na roda, e
+/// apagá-la aqui deixaria o dia vivo no registro com a vitrine vazia, que é
+/// exatamente a mentira que este espelho existe para não contar. Quem manda
+/// no dia é a roda do ciclo, e o rodapé diz isso em vez de esconder os
+/// botões sem explicação.
 class RecordDetailPage extends StatefulWidget {
   final FreeWritingModel entry;
 
@@ -38,6 +47,9 @@ class RecordDetailPage extends StatefulWidget {
 
 class _RecordDetailPageState extends State<RecordDetailPage> {
   late FreeWritingModel _entry = widget.entry;
+
+  /// Esta página é o espelho de um dia do ciclo?
+  bool get _espelhoDoCiclo => _entry.source == FreeWritingSource.menstrual;
 
   Future<void> _edit() async {
     final updated = await Navigator.push<FreeWritingModel>(
@@ -84,11 +96,13 @@ class _RecordDetailPageState extends State<RecordDetailPage> {
       appBar: AppBar(
         title: ResponsiveAppBarTitle(l10n.recordDetails),
         actions: [
-          IconButton(icon: const Icon(Icons.edit), onPressed: _edit),
-          IconButton(
-            icon: const Icon(Icons.delete),
-            onPressed: _confirmDelete,
-          ),
+          if (!_espelhoDoCiclo) ...[
+            IconButton(icon: const Icon(Icons.edit), onPressed: _edit),
+            IconButton(
+              icon: const Icon(Icons.delete),
+              onPressed: _confirmDelete,
+            ),
+          ],
         ],
       ),
       body: SingleChildScrollView(
@@ -151,6 +165,17 @@ class _RecordDetailPageState extends State<RecordDetailPage> {
                       l10n.spellUpdatedAt(dateFormat.format(_entry.updatedAt)),
                       style: Theme.of(context).textTheme.bodySmall,
                     ),
+                  if (_espelhoDoCiclo) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      l10n.menstrualArchiveOrigin,
+                      key: const ValueKey('record-menstrual-origin'),
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: context.gc.textSecondary,
+                            height: 1.4,
+                          ),
+                    ),
+                  ],
                 ],
               ),
             ),

@@ -1,8 +1,10 @@
+import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:sqflite/sqflite.dart';
 
 import '../../../../core/database/database_helper.dart';
 import '../../../../core/database/menstrual_cycle_schema.dart';
 import '../../domain/menstrual_day.dart';
+import '../services/menstrual_archive_recorder.dart';
 
 /// O registro menstrual da pessoa: grava, lê, corrige e apaga o que ela
 /// escreveu, e nada mais.
@@ -15,16 +17,28 @@ import '../../domain/menstrual_day.dart';
 /// revisão maior, para que a cópia antiga de outro aparelho não o traga de
 /// volta. Só [purge] remove de verdade, quando a pessoa pede para apagar tudo.
 ///
+/// Toda linha que entra ou sai daqui tem um espelho no Grimório: a página do
+/// dia em "Meus Registros", escrita pelo [MenstrualArchiveRecorder]. O espelho
+/// mora NESTE repositório, e não nas telas, porque são cinco os caminhos que
+/// mexem na linha (a folha do dia, o apagar da folha, os dois chips da estação
+/// e o "apagar meus registros do ciclo" da tela de Privacidade) e nenhum deles
+/// pode ter o direito de esquecer. Quem grava o dia grava a página; quem apaga
+/// o dia apaga a página — não há ordem em que uma exista sem a outra.
+///
 /// Não há aqui um método que devolva o histórico inteiro, e isso é de
 /// propósito: levar os dados embora é trabalho do DataExportService, que lê a
 /// tabela direto — e de propósito leva também as lápides, que um `deleted = 0`
 /// esconderia do backup dela. Um `all()` existiu, ficou sem nenhum chamador em
 /// lib/ e foi apagado; quem for reabrir a exportação mexe no serviço, não aqui.
 class MenstrualCycleRepository {
-  MenstrualCycleRepository({DatabaseHelper? dbHelper})
-      : _dbHelper = dbHelper ?? DatabaseHelper.instance;
+  MenstrualCycleRepository({
+    DatabaseHelper? dbHelper,
+    MenstrualArchiveRecorder? archive,
+  })  : _dbHelper = dbHelper ?? DatabaseHelper.instance,
+        _archive = archive ?? MenstrualArchiveRecorder();
 
   final DatabaseHelper _dbHelper;
+  final MenstrualArchiveRecorder _archive;
 
   static const _table = MenstrualCycleSchema.table;
 
@@ -33,14 +47,14 @@ class MenstrualCycleRepository {
   /// pessoa que pediu.
   Future<MenstrualDay> save(MenstrualDay day) async {
     final db = await _dbHelper.database;
-    return db.transaction((txn) async {
+    final saved = await db.transaction((txn) async {
       final current = await _rowOf(txn, day.userId, day.dayKey);
-      final saved = day.copyWith(
+      final gravado = day.copyWith(
         revision: (current?.revision ?? 0) + 1,
         deleted: false,
         updatedAt: day.updatedAt,
       );
-      final row = saved.toRow();
+      final row = gravado.toRow();
       if (current != null) {
         row['created_at'] = current.createdAt.millisecondsSinceEpoch;
       }
@@ -48,6 +62,21 @@ class MenstrualCycleRepository {
           conflictAlgorithm: ConflictAlgorithm.replace);
       return MenstrualDay.fromRow(row);
     });
+    // Fora da transação de propósito: a página é uma segunda tabela, e
+    // prender o commit do registro dela seria deixar o dia sem gravar por
+    // causa da vitrine. A ordem é esta — a linha primeiro, o espelho depois.
+    //
+    // E a falha da vitrine não pode virar "não salvei": o dia JÁ está
+    // gravado aqui. Deixar a exceção subir faria a folha mostrar erro em
+    // cima de uma gravação que deu certo, e não recarregar a tela. O
+    // espelho é idempotente, então a próxima gravação do mesmo dia o
+    // reconstrói sozinha.
+    try {
+      await _archive.record(saved);
+    } catch (e) {
+      debugPrint('espelho do ciclo não gravou: $e');
+    }
+    return saved;
   }
 
   /// Apaga um dia deixando a lápide.
@@ -75,6 +104,11 @@ class MenstrualCycleRepository {
         whereArgs: [userId, current.dayKey],
       );
     });
+    // Incondicional: a página tem de sair mesmo quando não havia linha viva
+    // para apagar. Um espelho órfão é justamente o modo de falha que este
+    // repositório não pode ter — ela apagaria o dia na roda, voltaria ao
+    // Grimório e o encontraria ali, inteiro.
+    await _archive.erase(userId: userId, day: day);
   }
 
   /// O dia pedido, se houver registro vivo.
@@ -115,9 +149,13 @@ class MenstrualCycleRepository {
     return (rows.first['total'] as num?)?.toInt() ?? 0;
   }
 
-  /// Apaga tudo desta conta, de verdade, inclusive as lápides.
+  /// Apaga tudo desta conta, de verdade, inclusive as lápides — e as páginas
+  /// que os dias tinham no Grimório, que somem no mesmo gesto. A confirmação
+  /// dessa tela conta dias, e há exatamente uma página por dia: o número que
+  /// ela lê antes de confirmar é o número de páginas que somem.
   Future<int> purge(String userId) async {
     final db = await _dbHelper.database;
+    await _archive.eraseAll(userId);
     return db.delete(_table, where: 'user_id = ?', whereArgs: [userId]);
   }
 
@@ -126,7 +164,8 @@ class MenstrualCycleRepository {
   /// volta quando um aparelho antigo se conecta com a cópia velha.
   Future<bool> mergeRemote(MenstrualDay incoming) async {
     final db = await _dbHelper.database;
-    return db.transaction((txn) async {
+    final row = incoming.toRow();
+    final venceu = await db.transaction((txn) async {
       final current = await _rowOf(txn, incoming.userId, incoming.dayKey);
       if (current != null) {
         final older = incoming.revision < current.revision;
@@ -134,7 +173,6 @@ class MenstrualCycleRepository {
             !incoming.updatedAt.isAfter(current.updatedAt);
         if (older || tie) return false;
       }
-      final row = incoming.toRow();
       row['synced'] = 1;
       if (current != null) {
         row['created_at'] = current.createdAt.millisecondsSinceEpoch;
@@ -143,6 +181,18 @@ class MenstrualCycleRepository {
           conflictAlgorithm: ConflictAlgorithm.replace);
       return true;
     });
+    // A página é função da linha, venha ela da tela ou de outro aparelho — e
+    // a lápide que chega de fora tira a página junto, senão o dia que ela
+    // apagou no celular continuaria no Grimório do navegador.
+    if (venceu) {
+      final vencedor = MenstrualDay.fromRow(row);
+      if (vencedor.deleted) {
+        await _archive.erase(userId: vencedor.userId, day: vencedor.day);
+      } else {
+        await _archive.record(vencedor);
+      }
+    }
+    return venceu;
   }
 
   Future<MenstrualDay?> _rowOf(

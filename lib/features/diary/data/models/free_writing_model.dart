@@ -23,6 +23,24 @@ abstract final class FreeWritingSource {
   /// sempre — a análise gerada é o recibo permanente da compra.
   static const cycleReading = 'cycle_reading';
 
+  /// Um dia do Ciclo Menstrual, escrito como página do Grimório.
+  ///
+  /// É ESPELHO, não original: a linha de verdade mora em `menstrual_days` e a
+  /// página é reescrita pelo MenstrualArchiveRecorder a cada gravação do dia,
+  /// com o id derivado de (conta, dia). Por isso ela não se edita nem se
+  /// apaga pelo acervo — mudar o dia é mudar o dia na roda do ciclo.
+  static const menstrual = 'menstrual';
+
+  /// As origens cuja página NUNCA sai deste aparelho.
+  ///
+  /// O registro do ciclo é a única coisa do app que fala do corpo em prosa, e
+  /// a promessa que a pessoa leu para dizer sim ("o registro fica neste
+  /// aparelho") não deixa de valer só porque ele ganhou uma segunda vitrine.
+  /// Quem faz essa promessa valer é o FreeWritingRepository, que barra as
+  /// três portas da nuvem — o upload, a lápide da exclusão e a varredura de
+  /// linhas não sincronizadas.
+  static const neverLeavesDevice = {menstrual};
+
   /// Leituras de adivinhação (filtro "Leituras" do acervo).
   static const readings = {palmistry, runes, pendulum, oracle, tarot};
 

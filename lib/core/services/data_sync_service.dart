@@ -8,6 +8,7 @@ import 'package:sqflite/sqflite.dart' show ConflictAlgorithm;
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../config/supabase_config.dart';
 import '../database/database_helper.dart';
+import '../../features/diary/data/models/free_writing_model.dart';
 import 'debug_log_service.dart';
 import 'servidor_de_sync.dart';
 
@@ -864,6 +865,15 @@ class DataSyncService {
   bool _isSyncableItem(String table, Map<String, dynamic> item) {
     if ((table == 'spells' || table == 'affirmations') &&
         item['is_preloaded'] == 1) {
+      return false;
+    }
+    // O registro do ciclo fala do corpo dela em prosa, e a promessa que ela
+    // leu para dizer sim é que ele não sai do aparelho. O repositório do
+    // acervo barra as portas que conhece, mas esta é a única por onde TODA
+    // varredura passa — inclusive a do primeiro login, que roda ANTES de o
+    // provedor recarregar e recarimbar as linhas adotadas.
+    if (table == 'free_writings' &&
+        FreeWritingSource.neverLeavesDevice.contains(item['source'])) {
       return false;
     }
     return true;

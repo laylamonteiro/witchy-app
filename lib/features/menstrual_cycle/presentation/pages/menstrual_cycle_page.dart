@@ -31,6 +31,12 @@ import '../widgets/menstrual_wheel.dart';
 /// partir do histórico: média, dia do ciclo, referência de próxima data e
 /// comparação com a Lua saíram daqui de vez — não foram escondidas atrás de
 /// um retrátil, e o histórico inteiro deixou de ser lido para isso.
+///
+/// Cada dia gravado aqui ganha uma página em "Meus Registros", no Grimório —
+/// e cada dia apagado a perde. Nenhuma tela decide isso: quem escreve e
+/// apaga o espelho é o próprio MenstrualCycleRepository, para que os cinco
+/// caminhos que mexem na linha (esta folha, o apagar dela, os dois chips da
+/// estação e o "apagar meus registros do ciclo") não possam divergir.
 class MenstrualCyclePage extends StatefulWidget {
   const MenstrualCyclePage({
     super.key,
@@ -170,7 +176,10 @@ class _MenstrualCyclePageState extends State<MenstrualCyclePage> {
             // que a gravação local terminou.
             if (ok) Navigator.of(sheetContext).pop();
           },
-          // Sair sem gravar: nada foi escrito até aqui, então fechar basta.
+          // Sair sem gravar: nada foi escrito até aqui, então fechar basta —
+          // e, como a página do Grimório só nasce dentro de
+          // `MenstrualCycleRepository.save`, cancelar também não deixa
+          // página nenhuma para trás.
           onCancel: () => Navigator.of(sheetContext).pop(),
           onDelete: existing == null
               ? null
@@ -204,22 +213,38 @@ class _MenstrualCyclePageState extends State<MenstrualCyclePage> {
   /// A estação do dia. Escolher já é registrar: um dia sem linha ganha uma,
   /// com a marca de anotação — que não diz nada sobre sangramento. Tocar de
   /// novo na estação escolhida a desmarca, e desmarcar não apaga o resto.
+  ///
+  /// E porque escolher é registrar, escolher também escreve a página do dia
+  /// no Grimório, como qualquer outro registro. A regra é uma só — todo
+  /// registro vira página —, e abrir exceção para a estação seria inventar
+  /// uma segunda regra que ninguém teria como adivinhar na tela. Quem explica
+  /// isso é `menstrualSeasonAboutUse`, no bloco "O que é uma estação
+  /// interna?", e o rodapé do campo de escrita.
   Future<bool> _chooseSeason(InternalSeason? season) async {
-    final record = _todayRecord().copyWith(
+    final record = (await _todayRecord()).copyWith(
       season: season,
       clearSeason: season == null,
     );
     return _persist(record);
   }
 
-  /// A escrita que veio com o convite da estação. Fica no registro íntimo do
-  /// dia e não vai para o Diário; só sai daqui quando a própria pessoa a
-  /// inclui numa Leitura do Ciclo, ligando a chave das palavras.
+  /// A escrita que veio com o convite da estação. Fica no registro do dia (e
+  /// na página dele no Grimório) e não vai para o Diário; só sai deste
+  /// aparelho quando a própria pessoa a inclui numa Leitura do Ciclo, ligando
+  /// o interruptor das palavras.
   Future<bool> _writeSeason(String text) async =>
-      _persist(_todayRecord().copyWith(seasonNote: text));
+      _persist((await _todayRecord()).copyWith(seasonNote: text));
 
-  MenstrualDay _todayRecord() =>
-      _days[MenstrualDay.keyOf(_today)] ??
+  /// O registro de HOJE, lido do banco — nunca de `_days`.
+  ///
+  /// `_days` é o MÊS NA TELA: virar para abril troca o mapa inteiro, e o card
+  /// da estação continua visível. Lido dali, um toque num chip de estação em
+  /// abril devolveria um registro em branco para hoje e o gravaria por cima
+  /// do que ela tinha escrito — marca, fluxo, sintomas e anotação zerados. E
+  /// agora a perda apareceria também no Grimório, porque a página espelha o
+  /// que a linha virou.
+  Future<MenstrualDay> _todayRecord() async =>
+      await _repository.dayOf(userId: _userId, day: _today) ??
       MenstrualDay(userId: _userId, day: _today, mark: MenstrualMark.note);
 
   Future<bool> _persist(MenstrualDay record) async {

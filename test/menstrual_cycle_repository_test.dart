@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:grimorio_de_bolso/core/database/database_helper.dart';
 import 'package:grimorio_de_bolso/core/database/menstrual_cycle_schema.dart';
 import 'package:grimorio_de_bolso/features/cycle_reading/data/services/cycle_reading_composer.dart';
+import 'package:grimorio_de_bolso/features/diary/data/models/free_writing_model.dart';
 import 'package:grimorio_de_bolso/features/menstrual_cycle/data/repositories/menstrual_cycle_repository.dart';
 import 'package:grimorio_de_bolso/features/menstrual_cycle/domain/internal_season.dart';
 import 'package:grimorio_de_bolso/features/menstrual_cycle/domain/menstrual_day.dart';
@@ -28,6 +29,10 @@ void main() {
     SharedPreferences.setMockInitialValues({});
     final db = await DatabaseHelper.instance.database;
     await db.delete(MenstrualCycleSchema.table);
+    // O acervo entra na limpeza porque gravar um dia passou a escrever
+    // também a página dele em `free_writings` — sobras de um teste anterior
+    // apareceriam no seguinte como registros da pessoa.
+    await db.delete('free_writings');
     repo = MenstrualCycleRepository();
   });
 
@@ -208,6 +213,18 @@ void main() {
 
   test('the record never reaches the Cycle Reading', () async {
     await repo.save(day(9, mark: MenstrualMark.start, note: 'private'));
+
+    // Saving now also writes the day's page in the archive. That page is a
+    // second face of the SAME day, and counting it would inflate the heat
+    // map of the period picker and the number shown before she pays — which
+    // is exactly what this test is here to catch. Asserting the page exists
+    // first is what turns the two expectations below into a real guard: the
+    // day IS in `free_writings`, and the reading still counts zero.
+    final db = await DatabaseHelper.instance.database;
+    final pages = await db.query('free_writings',
+        where: 'source = ?', whereArgs: [FreeWritingSource.menstrual]);
+    expect(pages, hasLength(1), reason: 'The mirror page must exist');
+
     final composer = CycleReadingComposer();
     final total = await composer.countPeriodRecords(
       userId: user,

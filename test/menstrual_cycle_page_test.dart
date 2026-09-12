@@ -9,6 +9,8 @@ import 'package:grimorio_de_bolso/core/database/menstrual_cycle_schema.dart';
 import 'package:grimorio_de_bolso/core/i18n/gender.dart';
 import 'package:grimorio_de_bolso/features/auth/data/models/user_model.dart';
 import 'package:grimorio_de_bolso/features/auth/presentation/providers/auth_provider.dart';
+import 'package:grimorio_de_bolso/features/diary/data/models/free_writing_model.dart';
+import 'package:grimorio_de_bolso/features/menstrual_cycle/data/data_sources/menstrual_phase_content.dart';
 import 'package:grimorio_de_bolso/features/menstrual_cycle/data/menstrual_consent_store.dart';
 import 'package:grimorio_de_bolso/features/menstrual_cycle/data/repositories/menstrual_cycle_repository.dart';
 import 'package:grimorio_de_bolso/features/menstrual_cycle/domain/internal_season.dart';
@@ -56,6 +58,9 @@ void main() {
     SharedPreferences.setMockInitialValues({});
     final db = await DatabaseHelper.instance.database;
     await db.delete(MenstrualCycleSchema.table);
+    // Gravar um dia passou a escrever também a página dele no acervo: sem
+    // esta limpeza, a sobra de um teste apareceria como registro no seguinte.
+    await db.delete('free_writings');
   });
 
   Future<void> until(WidgetTester tester, bool Function() ready, String stage) async {
@@ -288,6 +293,21 @@ void main() {
     expect(chosen!.season, InternalSeason.spring);
     expect(chosen.mark, MenstrualMark.note,
         reason: 'Choosing a season says nothing about bleeding');
+
+    // Tocar num chip de estação É registrar, e todo registro vira página no
+    // Grimório — uma regra só, sem exceção que ninguém teria como adivinhar.
+    // `menstrualSeasonAboutUse` é o texto que promete isto na tela.
+    final pages = await tester.runAsync(() async {
+      final db = await DatabaseHelper.instance.database;
+      return db.query('free_writings',
+          where: 'source = ?', whereArgs: [FreeWritingSource.menstrual]);
+    });
+    expect(pages, hasLength(1), reason: 'The day now has a page');
+    expect(
+      pages!.single['content'],
+      contains(MenstrualSeasonContentSource.of(InternalSeason.spring).title),
+      reason: 'The season she chose is written on the page',
+    );
     expect(find.byKey(const ValueKey('menstrual-season-link-citrine')),
         findsOneWidget,
         reason: 'The curated entry is right there, and it opens');

@@ -4,6 +4,7 @@ import 'package:path/path.dart';
 import 'package:flutter/foundation.dart' show kIsWeb, visibleForTesting;
 import '../../features/grimoire/data/models/spell_model.dart';
 import '../services/data_sync_service.dart';
+import '../../features/diary/data/models/free_writing_model.dart';
 import 'menstrual_cycle_schema.dart';
 import 'reading_session_schema.dart';
 
@@ -1383,6 +1384,11 @@ class DatabaseHelper {
 
   /// Associa dados anônimos/legados à primeira conta autenticada que os abrir.
   /// Registros já pertencentes a UUIDs reais nunca são alterados.
+  /// As origens do acervo que não saem do aparelho, prontas para o `IN`.
+  /// Vem do enum para não haver duas listas que possam divergir.
+  static final String _origensQueNaoSaem =
+      FreeWritingSource.neverLeavesDevice.map((f) => "'" + f + "'").join(', ');
+
   Future<void> claimLegacyData(String userId) async {
     if (userId == 'local_user' || userId == 'current_user') return;
 
@@ -1400,7 +1406,14 @@ class DatabaseHelper {
         await txn.update(
           table,
           {'user_id': userId, 'synced': 0},
-          where: "user_id IN ('local_user', 'current_user')",
+          // O acervo tem origens que não saem do aparelho (o registro do
+          // ciclo). Adotá-las com `synced: 0` seria carimbá-las como "a
+          // enviar" e entregá-las à primeira varredura do login — antes de
+          // qualquer tela recarregar.
+          where: table == 'free_writings'
+              ? "user_id IN ('local_user', 'current_user') "
+                  'AND source NOT IN ($_origensQueNaoSaem)'
+              : "user_id IN ('local_user', 'current_user')",
           // Tabelas com UNIQUE(user_id, date) podem já ter o dia gravado
           // sob a conta real: nesse caso a linha anônima é descartada em
           // vez de derrubar a adoção inteira.
