@@ -66,7 +66,9 @@ void main() {
         mark: MenstrualMark.flow,
         note: 'quiet day',
       ));
-      await provider.setUserId(userId);
+      // `setUserId` só carrega quando o dono MUDA — e o provedor já nasce
+      // com `local_user`, que é o dono daqui. Carregar explicitamente.
+      await provider.loadFreeWritings();
     });
     final page = provider.freeWritings
         .singleWhere((w) => w.source == FreeWritingSource.menstrual);
