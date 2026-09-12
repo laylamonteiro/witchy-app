@@ -863,14 +863,117 @@ trabalho da pessoa é tirar, não pôr.
   id próprias. Quem desliga tem a escolha gravada nas prefs e não é
   reativado — `avisos_ligados_por_padrao_test.dart` trava os dois lados.
 
+## A rodada dos testes em aparelho (11/09)
+
+A dona testou o webapp no celular e mandou uma lista. O que saiu dela:
+
+- **A folha do dia tinha três saídas invisíveis e nenhuma visível.** Fechava
+  por toque fora ou arrasto — no navegador, dois gestos que não se anunciam.
+  Ganhou X, "Cancelar" e a alça de arrasto DE VERDADE (a do Material, que
+  fica fora da área rolável, com alvo de 48x48 e semântica). Nenhuma das três
+  grava: nada vai ao banco antes do "Salvar".
+- **A varredura mostrou que não era caso isolado.** Nove telas desenhavam uma
+  alça PINTADA à mão — um retângulo de 40x4 dentro do conteúdo, sem alvo de
+  toque, sem realce e sem semântica: decoração com cara de afordância. A pior
+  era o portão do captcha (Entrar, Cadastrar, Esqueci a senha). Todas passaram
+  a ter saída por botão; as que pintam o próprio cartão sobre fundo
+  transparente ficam só com o botão, porque ali a alça do Material flutuaria
+  fora do cartão. `mostrarFolhaComSaida` + `BotaoFecharFolha` (lib/core/widgets/)
+  e uma catraca em test/folha_com_saida_test.dart com dois grupos de regra.
+- **A lua: duas correções, uma delas revertida.** Primeiro a fase virou
+  desenho, para fugir da fonte do aparelho. O desenho ficou coerente e pior —
+  disco chato, sem relevo. A dona vetou. Hoje a lua é o glifo com um HALO
+  desenhado em código atrás: o brilho é que faltava no navegador, não a forma.
+  [MoonGlyph], em lib/core/widgets/moon_glyph.dart. Nas linhas de lista o halo
+  fica desligado (oito brilhos empilhados viram faixa acesa) e na lua que
+  respira também, porque o halo dela pulsa.
+- **A bola do Conselheiro não pousava.** O topo do pedestal ficava ABAIXO do
+  fundo da esfera, era mais estreito que ela e tinha aro dourado forte: lia
+  como sombra solta. A geometria foi refeita e os degradês radiais passaram a
+  ser desenhados achatando o canvas — o RadialGradient do Flutter usa o MENOR
+  lado do retângulo como raio, então sobre uma elipse achatada o degradê vira
+  um disquinho no meio e transparente no resto.
+- **Glifos que não existem em todo aparelho.** O minSdk é 24 (Android 7):
+  emoji posterior vira quadradinho, e sequência ZWJ desenha duas coisas. O
+  potinho da Água de Lua (2021), o gato preto do Salem (ZWJ, 2020), a pessoa
+  em lótus e os símbolos planetários com seletor viraram ícone do Material,
+  que viaja dentro do app. Catraca em test/glifo_da_fonte_do_sistema_test.dart,
+  com lista explícita de arquivos.
+- **O Tarô ganhou a revelação das runas e do Oráculo**, e o Oráculo ganhou
+  verso próprio. A carta em foco deixou de empurrar as vizinhas: o Container
+  não tinha tamanho próprio e a borda de destaque engordava a caixa 2px, então
+  a mesa re-layoutava a cada toque.
+- **O contador da Leitura do Ciclo passou a acompanhar a realidade.** A
+  escolha das fontes é gravada por conta (CycleReadingSourcesStore) e volta
+  como ela deixou; o número é recontado quando a tela volta ao palco. Duas
+  corridas fechadas: a gravação virou fila (duas escritas concorrentes podiam
+  desfazer o "não" mais novo) e a prévia da fonte íntima ganhou contador de
+  geração (ligar e desligar antes de o banco responder deixava a chave
+  desligada na tela e o escopo povoado).
+- **O Sigilo parou de dizer que guardou sem guardar.** "Finalizar" grava o
+  sigilo, cria a página no Diário, registra o XP e só então confirma. O botão
+  separado saiu, e o fechamento da rota saiu de dentro do try — com tudo já
+  guardado, uma exceção ao fechar não pode mais aparecer como "falha ao
+  salvar".
+- **Os dois cards derivados do Ciclo saíram** ("O que seu histórico mostra" e
+  "Você e a Lua"), e com eles 330 linhas de domínio que perderam o último
+  chamador — MenstrualInsights inteiro e quase todo o LunarComparison, que se
+  citavam mutuamente e por isso pareciam vivos em qualquer busca. No lugar
+  entrou "A menstruação e a bruxaria", recolhido e livre, e a Estação Interna
+  ganhou o próprio "o que é isso?" dentro da área de registro.
+- **Duas promessas falsas caíram.** O rodapé do campo da estação dizia que a
+  escrita não ia "para o Diário, para o acervo nem para a IA" — e ela VAI,
+  quando a pessoa liga as palavras na Leitura do Ciclo. E os dois textos que
+  mandam ligar esse interruptor o chamavam de "a chave das palavras", que não
+  é rótulo de nada: agora citam o nome que está na tela, e um teste trava isso
+  (renomear o interruptor sem corrigir a instrução derruba o teste).
+
+Armadilhas que custaram ciclo de CI e vale não repetir:
+
+- `AnimatedSize` com `Duration.zero` sob movimento reduzido NÃO é "não
+  animar": o controlador completa dentro do layout e o render object se
+  re-suja ("A RenderAnimatedSize was mutated in its own performLayout"). Sob
+  movimento reduzido, não monte o AnimatedSize.
+- Dar saída a uma folha pode QUEBRAR a folha: no captcha, a alça (+48), o X
+  (+48) e o Cancelar (+48) somaram mais do que os 44px da alça pintada que
+  saiu, e a folha não tinha área rolável nem `isScrollControlled`.
+- Comentário que erra o diagnóstico é pior que comentário nenhum: sete diziam
+  que a alça pintada "não arrastava nada". Arrastava — `enableDrag` sempre foi
+  true. Faltava o anúncio.
+
+
 ## Continuação do lote
 
-1. P14: revisão de tamanhos e hierarquia e o percurso completo pelas 12
+1. **O registro do ciclo vira página no Grimório e vai para a IA** (decisão da
+   dona, 11/09: registrar já é o consentimento, com chip próprio no acervo).
+   Plano pronto, mas ele COMEÇA pelo caminho de apagar, não pelo de gravar: a
+   exclusão de uma página grava uma lápide local e a manda ao servidor sem
+   passar pelo porteiro da nuvem — um id que carregue a data menstruada faria
+   o calendário inteiro subir no ato em que a pessoa pede para apagar. E a
+   política de privacidade que o app EXIBE não fala em menstruação, saúde nem
+   dado sensível, e ainda afirma que a sincronização é exclusiva do Premium,
+   o que já é falso.
+2. **Sincronização do registro menstrual** (pedido da dona) — depende do item
+   1 estar resolvido, porque hoje o relatório derivado já sobe pelo acervo.
+3. P14: revisão de tamanhos e hierarquia e o percurso completo pelas 12
    entradas em aparelho — o que resta do pacote é avaliação visual.
-2. P16: cartão em Ciclos, consentimento, formulário e calendário do registro;
-   P17: roda comparativa e estações, com os cálculos atrás do Premium.
-3. P18: registros menstruais autorizados entram na análise completa do ciclo.
 4. P15: integração e validação final do lote.
+
+Esperando decisão da dona (não mexer sem ela):
+
+- **Quem já disse sim sob a promessa antiga** ("não vai para o Diário, para o
+  acervo nem para a IA"). É o que trava o item 1.
+- **Os emblemas de Sigilos, Runas e Pêndulo** (⛤, ᚱ, ⟟): não são emoji, são
+  símbolos raros que dependem de fonte de símbolos. Trocar por desenho muda a
+  identidade visual das três ferramentas.
+- **O prêmio do quiz de arquétipos**: o resultado é gravado no aparelho pelo
+  SÍMBOLO, não pelo nome — símbolo que não bate, resultado perdido em
+  silêncio.
+- **Os oito símbolos planetários** na lista de retrógrados, hoje o único
+  diferenciador visual entre as linhas.
+- **A altura da célula no seletor de período** (33-37px de alvo de toque,
+  abaixo do mínimo): subir desfaz a decisão de 23/08 de deixar o calendário
+  compacto.
 
 As decisões mais recentes sobre menstruação estão mantidas no plano:
 registro, leitura dos dados inseridos, edição, exclusão e exportação Free;

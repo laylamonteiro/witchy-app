@@ -116,4 +116,20 @@ void main() {
           reason: '${entry.key}: $texto');
     }
   });
+
+  test('quem manda ligar uma chave a chama pelo nome que está na tela', () {
+    // Os dois textos mandam a pessoa ligar o interruptor das palavras na
+    // Leitura do Ciclo. Antes diziam "a chave das palavras", que não é o
+    // rótulo de nada: na tela o interruptor se chama
+    // `cycleReadingMenstrualWords`. Instrução que não bate com o que a pessoa
+    // vê é pior do que instrução nenhuma — e renomear o interruptor sem
+    // corrigir a instrução tem de derrubar este teste.
+    for (final entry in locales.entries) {
+      final rotulo = entry.value.cycleReadingMenstrualWords;
+      expect(entry.value.menstrualSeasonAboutReading, contains(rotulo),
+          reason: entry.key);
+      expect(entry.value.menstrualSeasonPrivate, contains(rotulo),
+          reason: entry.key);
+    }
+  });
 }
