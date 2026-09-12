@@ -8,6 +8,7 @@ import 'package:grimorio_de_bolso/core/database/menstrual_cycle_schema.dart';
 import 'package:grimorio_de_bolso/core/i18n/gender.dart';
 import 'package:grimorio_de_bolso/features/auth/data/models/user_model.dart';
 import 'package:grimorio_de_bolso/features/auth/presentation/providers/auth_provider.dart';
+import 'package:grimorio_de_bolso/features/grimoire/data/models/spell_model.dart';
 import 'package:grimorio_de_bolso/features/menstrual_cycle/data/menstrual_consent_store.dart';
 import 'package:grimorio_de_bolso/features/lunar/presentation/providers/lunar_provider.dart';
 import 'package:grimorio_de_bolso/features/menstrual_cycle/data/repositories/menstrual_cycle_repository.dart';
