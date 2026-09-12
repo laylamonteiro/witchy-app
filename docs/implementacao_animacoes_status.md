@@ -944,36 +944,47 @@ Armadilhas que custaram ciclo de CI e vale não repetir:
 
 ## Continuação do lote
 
-1. **O registro do ciclo vira página no Grimório e vai para a IA** (decisão da
-   dona, 11/09: registrar já é o consentimento, com chip próprio no acervo).
-   Plano pronto, mas ele COMEÇA pelo caminho de apagar, não pelo de gravar: a
-   exclusão de uma página grava uma lápide local e a manda ao servidor sem
-   passar pelo porteiro da nuvem — um id que carregue a data menstruada faria
-   o calendário inteiro subir no ato em que a pessoa pede para apagar. E a
-   política de privacidade que o app EXIBE não fala em menstruação, saúde nem
-   dado sensível, e ainda afirma que a sincronização é exclusiva do Premium,
-   o que já é falso.
-2. **Sincronização do registro menstrual** (pedido da dona) — depende do item
-   1 estar resolvido, porque hoje o relatório derivado já sobe pelo acervo.
+1. ~~**O registro do ciclo vira página no Grimório e vai para a IA**~~ —
+   **entregue em `e21a75a`.** Cada dia tem página no acervo, com chip próprio
+   no filtro, e entra na Leitura do Ciclo; registrar é o consentimento, como
+   a dona decidiu em 11/09. O caminho de apagar, por onde o plano precisava
+   começar, foi resolvido antes, em `24d4f18`: a lápide passou a ser gravada
+   DEPOIS das guardas de conta e de nuvem, com a consequência aceita de que
+   apagar com a nuvem desligada e religar depois faz o item voltar. A
+   política de privacidade parou de dizer que a sincronização é exclusiva do
+   Premium (`24d4f18`) e passou a nomear o registro do ciclo, o que ele
+   guarda e por qual caminho ele sai (`e21a75a`).
+2. **Sincronização do registro menstrual** (pedido da dona) — continua
+   pendente, e já não espera por nada: o que a travava caiu com o item 1.
+   Mudou de natureza, porém. O registro e as páginas dele são hoje a única
+   coisa do app que NÃO sobe, em plano nenhum e com a chave ligada ou não,
+   barrada em quatro portas: as três do `FreeWritingRepository` (o upload, a
+   lápide da exclusão e a varredura das linhas não sincronizadas) e o funil
+   do `DataSyncService`, por onde toda varredura passa — inclusive a do
+   primeiro login. A política que o app exibe afirma isso, e é a promessa que
+   ela leu para dizer sim. Sincronizar o registro é reescrever essa promessa,
+   então o primeiro passo é um sim dela sobre a promessa nova, não código.
 3. P14: revisão de tamanhos e hierarquia e o percurso completo pelas 12
    entradas em aparelho — o que resta do pacote é avaliação visual.
 4. P15: integração e validação final do lote.
 
-Esperando decisão da dona (não mexer sem ela):
+A lista de "esperando decisão da dona" acabou — as cinco que estavam nela
+foram decididas e entregues:
 
-- **Quem já disse sim sob a promessa antiga** ("não vai para o Diário, para o
-  acervo nem para a IA"). É o que trava o item 1.
-- **Os emblemas de Sigilos, Runas e Pêndulo** (⛤, ᚱ, ⟟): não são emoji, são
-  símbolos raros que dependem de fonte de símbolos. Trocar por desenho muda a
-  identidade visual das três ferramentas.
-- **O prêmio do quiz de arquétipos**: o resultado é gravado no aparelho pelo
-  SÍMBOLO, não pelo nome — símbolo que não bate, resultado perdido em
-  silêncio.
-- **Os oito símbolos planetários** na lista de retrógrados, hoje o único
-  diferenciador visual entre as linhas.
-- **A altura da célula no seletor de período** (33-37px de alvo de toque,
-  abaixo do mínimo): subir desfaz a decisão de 23/08 de deixar o calendário
-  compacto.
+- **Quem já disse sim sob a promessa antiga**: a dona respondeu em 12/09 que
+  não há ninguém em produção, e por isso a regra nova foi escrita sem
+  migração e sem pedir sim de novo (`e21a75a`).
+- **Os emblemas de Sigilos, Runas e Pêndulo** (⛤, ᚱ, ⟟): viraram desenho do
+  app, em `tool_emblem_art.dart` (`e21a75a`).
+- **O prêmio do quiz de arquétipos**: passou a ser gravado por id estável, com
+  migração do que já existia — e a migração só regrava quando entendeu todas
+  as energias, em vez de apagar a que não soubesse ler (`24d4f18`).
+- **Os símbolos planetários** na lista de retrógrados: cada planeta ganhou cor
+  própria e uma segunda pista além da cor, para a linha continuar se
+  distinguindo sem o glifo e para quem não distingue cor (`e21a75a`).
+- **A altura da célula no seletor de período**: o alvo de toque subiu de 33px
+  para perto de 40, apertando as margens em volta para o calendário crescer o
+  mínimo — a decisão de 23/08 de deixá-lo compacto continua de pé (`e21a75a`).
 
 As decisões mais recentes sobre menstruação estão mantidas no plano:
 registro, leitura dos dados inseridos, edição, exclusão e exportação Free;
