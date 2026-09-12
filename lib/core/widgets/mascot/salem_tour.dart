@@ -343,8 +343,20 @@ class _SalemTourOverlayState extends State<SalemTourOverlay>
                       child: Image.asset(
                         'assets/icons/new_cat/cat_sit_happy.png',
                         fit: BoxFit.contain,
-                        errorBuilder: (_, __, ___) => const Center(
-                          child: Text('🐈‍⬛', style: TextStyle(fontSize: 68)),
+                        // Reserva de quando o PNG do Salem não carrega. Era
+                        // o emoji do gato preto (gato + ZWJ + quadrado preto,
+                        // de 2020): com minSdk 24 o aparelho antigo não une a
+                        // sequência e desenha DUAS coisas — um gato e um
+                        // quadrado — no lugar do gatinho. O ícone do Material
+                        // é um desenho só, igual em todo lugar. Segue fora da
+                        // semântica, como a Image.asset que ele substitui: o
+                        // mascote é ilustração, quem fala é o balão.
+                        errorBuilder: (_, __, ___) => Center(
+                          child: Icon(
+                            Icons.pets,
+                            size: _salemSize * 0.55,
+                            color: context.gc.lilac,
+                          ),
                         ),
                       ),
                     ),

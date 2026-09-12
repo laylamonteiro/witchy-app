@@ -3,6 +3,7 @@ import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../../../core/widgets/folha_com_saida.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
@@ -471,13 +472,13 @@ class BirthChartViewPage extends StatelessWidget {
 
   void _showExplanationDialog(
       BuildContext context, String title, Widget content) {
-    showModalBottomSheet(
+    // O detalhe do mapa é leitura longa e precisa de saída anunciada: a alça
+    // do Material fica FIXA no topo (fora da rolagem), e o X ao lado do título
+    // é a saída que se lê como botão — no navegador, nem o arrasto nem o toque
+    // fora se oferecem.
+    mostrarFolhaComSaida<void>(
       context: context,
-      backgroundColor: context.gc.surface,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
       builder: (context) => DraggableScrollableSheet(
         initialChildSize: 0.7,
         minChildSize: 0.5,
@@ -485,28 +486,24 @@ class BirthChartViewPage extends StatelessWidget {
         expand: false,
         builder: (context, scrollController) => SingleChildScrollView(
           controller: scrollController,
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.fromLTRB(20, 4, 20, 20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: context.gc.lilac.withValues(alpha: 0.3),
-                    borderRadius: BorderRadius.circular(2),
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      title,
+                      style: GoogleFonts.cinzelDecorative(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: context.gc.lilac,
+                      ),
+                    ),
                   ),
-                ),
-              ),
-              const SizedBox(height: 20),
-              Text(
-                title,
-                style: GoogleFonts.cinzelDecorative(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: context.gc.lilac,
-                ),
+                  const BotaoFecharFolha(key: ValueKey('birth-chart-close')),
+                ],
               ),
               const SizedBox(height: 8),
               Text(

@@ -26,6 +26,7 @@ import '../widgets/cycles_emblem.dart';
 import '../widgets/era_card.dart';
 import '../widgets/month_sky_card.dart';
 import 'life_eras_page.dart';
+import '../../../menstrual_cycle/presentation/widgets/menstrual_cycle_card.dart';
 
 /// A aba Ciclos, dentro de Ferramentas.
 ///
@@ -118,6 +119,9 @@ class _CyclesBodyState extends State<_CyclesBody> {
           // que a PESSOA viveu (as Eras e o mês falam do céu), a única que
           // muda toda semana, e a única que se compra.
           const _CartaoDaLeituraDoCiclo(),
+          // A roda pessoal vem depois da Leitura e antes das Eras. Ela só
+          // aparece para quem se identifica no feminino ou no neutro.
+          const MenstrualCycleCard(),
           if (estado == null || eras.carregando)
             const _Carregando()
           else
@@ -449,9 +453,46 @@ class _CartaoDaLeituraDoCicloState extends State<_CartaoDaLeituraDoCiclo> {
   /// Crédito comprado e ainda não gerado, se houver.
   CycleReadingModel? _pendente;
 
+  /// O cartão estava em cena na última vez que as dependências mudaram.
+  /// Começa `true` para a primeira passagem não disparar releitura: o
+  /// `initState` já carrega.
+  bool _estavaEmCena = true;
+
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _carregar();
+    });
+  }
+
+  /// O cartão está de fato diante da pessoa?
+  ///
+  /// Duas perguntas numa: a aba do Grimório está em cena (fora dela o shell
+  /// desliga o TickerMode desta subárvore) e não há tela empilhada por cima.
+  /// As duas respostas vêm de InheritedWidgets, então consultá-las REGISTRA
+  /// dependência — e é isso que faz o [didChangeDependencies] acordar quando
+  /// a aba volta ou a tela de cima é fechada. Mesmo truque do card de Ritos
+  /// de Hoje.
+  static bool _lerEmCena(BuildContext context) =>
+      TickerMode.of(context) && (ModalRoute.of(context)?.isCurrent ?? true);
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final emCena = _lerEmCena(context);
+    final voltou = emCena && !_estavaEmCena;
+    _estavaEmCena = emCena;
+    if (!voltou) return;
+
+    // O número conta registros que a pessoa pode ter APAGADO noutra tela —
+    // em "Meus Registros", nos Diários, no Grimório. A aba fica viva num
+    // IndexedStack e o cartão nunca era recriado, então ele mostrava o
+    // número de quando nasceu: apagar cinco sonhos não mexia em nada até
+    // alguém re-tocar o ícone da barra de baixo.
+    //
+    // Adiado para depois do frame porque `_carregar` chama setState, e isto
+    // roda no meio da construção da árvore.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _carregar();
     });

@@ -153,25 +153,37 @@ class SigilWheel {
     return points;
   }
 
+  /// As letras da intenção depois da normalização e ANTES da regra de
+  /// repetição: exatamente o que [textToSigilSequence] recebe. As telas usam
+  /// isto para mostrar quais letras a regra dissipou; a regra não muda.
+  static List<String> normalizedLetters(String text) {
+    final normalized = _normalizeText(text.toUpperCase())
+        .replaceAll(RegExp(r'[^A-Z]'), '');
+    return normalized.split('');
+  }
+
   // Converte texto em sequência para sigilo
   // Remove TODAS as letras duplicadas (método tradicional da Roda das Bruxas)
   static List<String> textToSigilSequence(String text) {
-    // Normaliza: maiúsculas e remove acentos
-    String normalized = _normalizeText(text.toUpperCase());
-
-    // Remove espaços e caracteres não-alfabéticos
-    normalized = normalized.replaceAll(RegExp(r'[^A-Z]'), '');
-
     // Remove TODAS as letras duplicadas, mantendo apenas primeira ocorrência
-    String uniqueLetters = '';
-    for (int i = 0; i < normalized.length; i++) {
-      if (!uniqueLetters.contains(normalized[i])) {
-        uniqueLetters += normalized[i];
-      }
+    final unique = <String>[];
+    for (final letter in normalizedLetters(text)) {
+      if (!unique.contains(letter)) unique.add(letter);
     }
+    return unique;
+  }
 
-    // Converte em lista de caracteres
-    return uniqueLetters.split('');
+  /// Índices de [normalizedLetters] que sobrevivem à regra de repetição:
+  /// a primeira ocorrência de cada letra. Serve só para apresentar a
+  /// transformação — quem decide continua sendo [textToSigilSequence].
+  static Set<int> keptIndexes(String text) {
+    final seen = <String>{};
+    final kept = <int>{};
+    final letters = normalizedLetters(text);
+    for (var i = 0; i < letters.length; i++) {
+      if (seen.add(letters[i])) kept.add(i);
+    }
+    return kept;
   }
   
   // Remove acentos e normaliza texto

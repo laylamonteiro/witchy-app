@@ -1,8 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
 import '../../data/models/affirmation_model.dart';
 import '../providers/affirmation_provider.dart';
+import '../../../journeys/domain/action_outcome.dart';
+import '../../../journeys/domain/action_recorder.dart';
 import '../../../../core/widgets/magical_button.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
@@ -337,9 +341,20 @@ class _AffirmationFormPageState extends State<AffirmationFormPage> {
 
     final provider = context.read<AffirmationProvider>();
     if (widget.affirmation == null) {
-      provider.addAffirmation(affirmation);
+      final recorder = ActionRecorder.of(context);
+      final saved = await provider.addAffirmation(affirmation);
+      if (!mounted) return;
+      if (!saved) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(provider.error ?? AppLocalizations.of(context).errorsGeneric),
+          backgroundColor: context.gc.alert,
+        ));
+        return;
+      }
       // Incrementar uso de afirmações
       await authProvider.incrementAffirmations();
+      unawaited(recorder.record(
+          origin: ActionOrigin.affirmation, entityId: affirmation.id));
     }
 
     if (!mounted) return;

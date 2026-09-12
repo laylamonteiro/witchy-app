@@ -336,19 +336,24 @@ class _CyclePeriodPickerSheetState extends State<CyclePeriodPickerSheet> {
                     color: context.gc.textSecondary,
                   ),
             ),
-            const SizedBox(height: 10),
+            // Os espaços desta faixa são os 10 pixels que pagam parte da
+            // célula de 40 do calendário (a conta inteira está em
+            // [_buildGrid]): 10->8 aqui, 8->6 depois dos atalhos, 4->2 dos
+            // dois lados da linha dos dias da semana e 8->6 antes do resumo.
+            // Apertar espaço morto custa menos que devolver alvo de toque.
+            const SizedBox(height: 8),
             // Os três atalhos ANTES do calendário (decisão da dona, 23/08):
             // quem quer o mês inteiro ou uma semana não precisa desenhar a
             // janela dia a dia — e "Outro período" limpa tudo e devolve o
             // calendário para a escolha a dedo.
             _buildPresets(l10n),
-            const SizedBox(height: 8),
+            const SizedBox(height: 6),
             _buildMonthHeader(l10n),
-            const SizedBox(height: 4),
+            const SizedBox(height: 2),
             _buildWeekdayRow(),
-            const SizedBox(height: 4),
+            const SizedBox(height: 2),
             _buildGrid(),
-            const SizedBox(height: 8),
+            const SizedBox(height: 6),
             _buildSummary(l10n),
             const SizedBox(height: 8),
             // Sem "usar este periodo" quando quem chama escuta a selecao:
@@ -455,15 +460,59 @@ class _CyclePeriodPickerSheetState extends State<CyclePeriodPickerSheet> {
     final diasNoMes =
         DateTime(_visibleMonth.year, _visibleMonth.month + 1, 0).day;
 
-    return GridView.count(
-      crossAxisCount: 7,
+    // ALVO DE TOQUE. A célula tem ALTURA FIXA (`mainAxisExtent: 40`) em vez
+    // de proporção: com `childAspectRatio` a altura saía dividida da largura
+    // disponível, então a MESMA tela dava alturas diferentes conforme o
+    // seletor estivesse embutido no card da tela de introdução ou aberto como
+    // folha — e era sempre a versão embutida, a que a pessoa usa de verdade,
+    // que ficava com o alvo menor.
+    //
+    // A conta, numa tela de 390 de largura (a referência):
+    //
+    //   folha:    390 - 16 - 16 (padding do seletor)      = 358 úteis
+    //   embutido: 390 - 16 - 16 (margem do MagicalCard)
+    //                  - 16 - 16 (padding do MagicalCard) = 326 úteis
+    //
+    //   ANTES (childAspectRatio 1.45, espaçamentos de 3):
+    //     folha:    largura (358 - 6*3)/7 = 48,6 -> altura 48,6/1,45 = 33,5
+    //     embutido: largura (326 - 6*3)/7 = 44,0 -> altura 44,0/1,45 = 30,3
+    //     33,5 (e 30,3!) contra o mínimo de 44 no iOS e 48 no Material: o
+    //     dedo acerta o dia vizinho e a pessoa desiste de escolher a mão.
+    //     Altura do grid: 5 linhas = 5*33,5 + 4*3 = 179,5 (folha) e 163,7
+    //     (embutido); 6 linhas = 6*33,5 + 5*3 = 216,0 e 197,1.
+    //
+    //   AGORA (mainAxisExtent 40, espaçamentos de 2):
+    //     folha:    largura (358 - 6*2)/7 = 49,4 x 40 de altura
+    //     embutido: largura (326 - 6*2)/7 = 44,9 x 40 de altura
+    //     Altura do grid, igual nos dois porque não depende mais da
+    //     largura: 5 linhas = 5*40 + 4*2 = 208,0;
+    //              6 linhas = 6*40 + 5*2 = 250,0.
+    //
+    //   PIOR CASO são 6 linhas — e não é fevereiro: neste grid, que
+    //   começa no domingo, fevereiro cabe sempre em 5 (29 dias a partir
+    //   do sábado dão exatas 6 + 29 = 35 células). Quem estoura é mês de
+    //   31 dias começando na sexta (5 + 31 = 36) ou no sábado (37), e de
+    //   30 começando no sábado (36).
+    //
+    //   Nesse pior caso o grid cresce +34,0 na folha e +52,9 embutido; os
+    //   espaçamentos apertados em volta (10->8 e 8->6 nos atalhos, 4->2 e
+    //   4->2 em torno da linha dos dias da semana, 8->6 antes do resumo)
+    //   devolvem 10, então o bloco inteiro do calendário cresce ~24 na
+    //   folha e ~43 embutido — o mínimo que os 40 de alvo permitem.
+    //
+    // 40 é o MEIO-TERMO (decisão da dona), não os 48 do Material: a célula
+    // segue MAIS LARGA QUE ALTA (49,4 x 40 na folha, 44,9 x 40 embutida), o
+    // calendário continua não tomando a tela inteira e a decisão de 23/08 —
+    // o resto da página aparecer já na abertura — continua de pé.
+    return GridView(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      mainAxisSpacing: 3,
-      crossAxisSpacing: 3,
-      // Mais largo que alto: o calendário deixa de tomar a tela inteira
-      // (decisão da dona, 23/08) e o resto da página aparece na abertura.
-      childAspectRatio: 1.45,
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 7,
+        mainAxisSpacing: 2,
+        crossAxisSpacing: 2,
+        mainAxisExtent: 40,
+      ),
       children: [
         for (var i = 0; i < vazios; i++) const SizedBox.shrink(),
         for (var dia = 1; dia <= diasNoMes; dia++)

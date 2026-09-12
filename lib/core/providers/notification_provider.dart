@@ -13,8 +13,9 @@ class NotificationProvider with ChangeNotifier {
   bool _fullMoonNotifications = true;
   bool _newMoonNotifications = true;
   bool _sabbatNotifications = true;
-  // Água solar é opt-in (semanal, aos domingos) para não virar spam.
-  bool _sunWaterNotifications = false;
+  // Água solar entra ligada como os outros avisos; quem achar demais desliga
+  // no painel e a escolha fica gravada nas prefs.
+  bool _sunWaterNotifications = true;
   // Lembrete diário do Salem: ligado por padrão (é o convite de volta ao
   // ritual do dia), com horário escolhido pela Bruxa. Quem desliga tem a
   // escolha gravada nas prefs e não é reativado.
@@ -105,7 +106,7 @@ class NotificationProvider with ChangeNotifier {
     _fullMoonNotifications = _prefs.getBool('fullMoonNotifications') ?? true;
     _newMoonNotifications = _prefs.getBool('newMoonNotifications') ?? true;
     _sabbatNotifications = _prefs.getBool('sabbatNotifications') ?? true;
-    _sunWaterNotifications = _prefs.getBool('sunWaterNotifications') ?? false;
+    _sunWaterNotifications = _prefs.getBool('sunWaterNotifications') ?? true;
     _dailyReminder = _prefs.getBool('dailyReminder') ?? true;
     _dailyReminderHour = _prefs.getInt('dailyReminderHour') ?? 9;
   }

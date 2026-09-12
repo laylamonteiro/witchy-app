@@ -230,6 +230,12 @@ class _DailyRitesCardState extends State<DailyRitesCard>
             if (mounted) _seal.value = alvo;
           });
         }
+      } else if (sealedNow && emCena && checkin.dayCelebrationShown) {
+        // O fechamento já foi apresentado junto da ação que o causou (P07):
+        // o selo assenta sem outra festa.
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) _seal.value = 1.0;
+        });
       } else if (sealedNow && emCena) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (!mounted) return;

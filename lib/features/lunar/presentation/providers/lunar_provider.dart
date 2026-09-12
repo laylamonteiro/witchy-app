@@ -24,6 +24,10 @@ class LunarProvider with ChangeNotifier {
   /// Ciclo lunar médio, em dias.
   static const double _lunarCycle = 29.53059;
 
+  /// A mesma constante, pública: quem mede proximidade de Nova ou Cheia
+  /// precisa dela e não deve repeti-la em outro arquivo.
+  static const double lunarCycleDays = _lunarCycle;
+
   // Calcula a fase da lua baseado no ciclo lunar (29.53 dias)
   MoonPhase getCurrentMoonPhase() => phaseOn(_selectedDate);
 
@@ -31,14 +35,7 @@ class LunarProvider with ChangeNotifier {
   /// como estática para quem precisa da fase de datas arbitrárias (ex.: a
   /// Leitura do Ciclo mapeia as fases da lunação inteira).
   static MoonPhase phaseOn(DateTime date) {
-    // Diferença em dias com precisão de minutos: arredondar para a hora
-    // cheia deslocava as viradas de fase em até uma hora, e a virada é
-    // justamente o que as "Próximas Fases" anunciam.
-    final difference = date.toUtc().difference(_knownNewMoon);
-    final daysSinceKnownNewMoon =
-        difference.inMinutes / Duration.minutesPerDay;
-
-    final phase = (daysSinceKnownNewMoon % _lunarCycle) / _lunarCycle;
+    final phase = lunationPositionOn(date);
 
     // Determinar a fase baseado na posição no ciclo
     // Thresholds ajustados para maior precisão (~12h de janela para cada fase principal)
@@ -60,6 +57,26 @@ class LunarProvider with ChangeNotifier {
     } else {
       return MoonPhase.waningCrescent; // Minguante: de 81.25% até 98.3%
     }
+  }
+
+  /// A posição contínua dentro da lunação em [date]: 0 na Lua Nova, 0,5 na
+  /// Cheia e de volta a 0 na Nova seguinte.
+  ///
+  /// É a MESMA conta de [phaseOn], sem os degraus — quem precisa de
+  /// proximidade, e não do nome da fase, usa esta e não duplica as
+  /// constantes. A aproximação é a de sempre: ciclo médio de 29,53059 dias a
+  /// partir de uma lua nova conhecida, com precisão de minutos. Não é
+  /// efeméride astronômica, e a tela precisa dizer isso a quem lê.
+  static double lunationPositionOn(DateTime date) {
+    // Diferença em dias com precisão de minutos: arredondar para a hora
+    // cheia deslocava as viradas de fase em até uma hora, e a virada é
+    // justamente o que as "Próximas Fases" anunciam.
+    final difference = date.toUtc().difference(_knownNewMoon);
+    final daysSinceKnownNewMoon =
+        difference.inMinutes / Duration.minutesPerDay;
+    // O resto em Dart nunca é negativo com divisor positivo: uma data
+    // anterior à referência cai no mesmo intervalo [0, 1).
+    return (daysSinceKnownNewMoon % _lunarCycle) / _lunarCycle;
   }
 
   /// Início da lunação que contém [date]: o instante da lua nova (ponto 0
@@ -89,10 +106,6 @@ class LunarProvider with ChangeNotifier {
 
   String getMoonPhaseName() {
     return getCurrentMoonPhase().displayName;
-  }
-
-  String getMoonPhaseEmoji() {
-    return getCurrentMoonPhase().emoji;
   }
 
   String getMoonPhaseDescription() {

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import '../../../../core/theme/grimoire_colors.dart';
+import '../../../../core/widgets/folha_com_saida.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../../data/models/feature_access.dart';
@@ -237,15 +238,16 @@ class FeatureGate extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: context.gc.textSecondary,
-                  borderRadius: BorderRadius.circular(2),
-                ),
+              // A saída, visível: o retângulo de 40x4 que ficava aqui era
+              // decoração com cara de afordância — sem alvo de toque, sem
+              // realce e sem semântica. Esta folha pinta o próprio fundo, e
+              // por isso não usa a alça do Material (ela flutuaria sobre o
+              // escurecido, fora do cartão).
+              const Align(
+                alignment: Alignment.centerRight,
+                child: BotaoFecharFolha(),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 8),
               const Icon(
                 Icons.lock_outline,
                 color: Color(0xFF9C27B0),

@@ -36,23 +36,29 @@ class DesireProvider with ChangeNotifier {
     }
   }
 
-  Future<void> addDesire(DesireModel desire) async {
+  /// Returns whether the wish was persisted.
+  Future<bool> addDesire(DesireModel desire) async {
     try {
       await _repository.insert(desire.copyWith(userId: _currentUserId));
       await loadDesires();
+      return true;
     } catch (e) {
       _error = e.toString();
       notifyListeners();
+      return false;
     }
   }
 
-  Future<void> updateDesire(DesireModel desire) async {
+  /// Returns whether the change was persisted.
+  Future<bool> updateDesire(DesireModel desire) async {
     try {
       await _repository.update(desire.copyWith(userId: _currentUserId));
       await loadDesires();
+      return true;
     } catch (e) {
       _error = e.toString();
       notifyListeners();
+      return false;
     }
   }
 

@@ -6,6 +6,11 @@
 #   /privacidade/ → política de privacidade
 #   /termos/      → termos de uso
 #
+# O endereço /baixar (o QR: Android → Play, iOS/resto → app web) NÃO é
+# montado aqui. Ele é uma Cloudflare Pages Function e vive em `functions/` na
+# raiz do repositório, de onde o `wrangler pages deploy` a compila sozinho —
+# ver docs/QR_CODE.md.
+#
 # As páginas estáticas existem porque o app é desenhado em canvas: um
 # rastreador (prévia de link, verificação de marca do Google) não lê nada
 # dentro dele. Elas são HTML puro, sem JavaScript, e ficam no mesmo domínio.

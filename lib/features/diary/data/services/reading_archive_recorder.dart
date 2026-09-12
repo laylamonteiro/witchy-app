@@ -1,5 +1,7 @@
 import 'package:flutter/foundation.dart';
 
+import '../../../../core/database/database_helper.dart';
+import '../../../../core/services/data_sync_service.dart';
 import '../models/free_writing_model.dart';
 import '../repositories/free_writing_repository.dart';
 import 'reading_archive_composer.dart';
@@ -21,10 +23,36 @@ import 'reading_archive_composer.dart';
 /// criar uma segunda, e reabrir uma mesa já tirada (o tarô é idempotente por
 /// assinatura) cai na mesma linha.
 class ReadingArchiveRecorder {
-  ReadingArchiveRecorder({FreeWritingRepository? repository})
-      : _repository = repository ?? FreeWritingRepository();
+  ReadingArchiveRecorder({
+    FreeWritingRepository? repository,
+    DatabaseHelper? dbHelper,
+  })  : _repository = repository ?? FreeWritingRepository(),
+        _dbHelper = dbHelper ?? DatabaseHelper.instance;
 
   final FreeWritingRepository _repository;
+  final DatabaseHelper _dbHelper;
+
+  /// Onde cada origem do acervo guarda a consulta que gerou a página.
+  ///
+  /// A quiromancia não está aqui porque não tem tabela: a página É a leitura.
+  static const Map<String, ({String table, SyncEntity entity})> _historico = {
+    FreeWritingSource.runes: (
+      table: 'rune_readings',
+      entity: SyncEntity.runeReadings,
+    ),
+    FreeWritingSource.pendulum: (
+      table: 'pendulum_consultations',
+      entity: SyncEntity.pendulumConsultations,
+    ),
+    FreeWritingSource.oracle: (
+      table: 'oracle_readings',
+      entity: SyncEntity.oracleReadings,
+    ),
+    FreeWritingSource.tarot: (
+      table: 'tarot_readings',
+      entity: SyncEntity.tarotReadings,
+    ),
+  };
 
   /// Grava (ou reescreve) a página da leitura [readingId].
   ///
@@ -36,6 +64,7 @@ class ReadingArchiveRecorder {
     required String userId,
     required String source,
     required ArchiveEntry page,
+    DateTime? createdAt,
   }) async {
     try {
       // A data de criação é a da TIRAGEM, não a da reescrita: o Conselheiro
@@ -49,11 +78,42 @@ class ReadingArchiveRecorder {
           title: page.title,
           content: page.content,
           source: source,
-          createdAt: existing?.createdAt,
+          createdAt: existing?.createdAt ?? createdAt,
         ),
       );
     } catch (e) {
       debugPrint('ReadingArchiveRecorder: falhou ao gravar $source: $e');
+    }
+  }
+
+  /// Apaga a consulta que deu origem à página [readingId], quando ela tem
+  /// uma tabela de histórico.
+  ///
+  /// Jogar a página fora tem que jogar a consulta junto: elas são o MESMO
+  /// registro, com o mesmo id, e só a página é visível. Sem isto, apagar uma
+  /// tiragem em "Meus Registros" deixava a linha da ferramenta viva — o
+  /// contador do Ciclo não baixava (é ela que conta) e, pior, a tiragem
+  /// voltava para o material da IA pelo bloco `oracle`, com pergunta e
+  /// resposta, depois de a pessoa ter mandado apagar.
+  ///
+  /// A lápide é o que faz a exclusão sobreviver à sincronização: sem ela,
+  /// outro aparelho traria a linha de volta.
+  Future<void> discardReading({
+    required String readingId,
+    required String source,
+  }) async {
+    final historico = _historico[source];
+    if (historico == null) return;
+    try {
+      final db = await _dbHelper.database;
+      await db.delete(
+        historico.table,
+        where: 'id = ?',
+        whereArgs: [readingId],
+      );
+      await DataSyncService().deleteItem(historico.entity, readingId);
+    } catch (e) {
+      debugPrint('ReadingArchiveRecorder: falhou ao apagar $source: $e');
     }
   }
 }

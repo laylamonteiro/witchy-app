@@ -1,8 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
 import '../../data/models/dream_model.dart';
 import '../providers/dream_provider.dart';
+import '../../../journeys/domain/action_outcome.dart';
+import '../../../journeys/domain/action_recorder.dart';
 import '../../../../core/widgets/magical_button.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
@@ -25,6 +29,7 @@ class _DreamFormPageState extends State<DreamFormPage> {
   late TextEditingController _tagsController;
   late TextEditingController _feelingController;
   late DateTime _selectedDate;
+  bool _saving = false;
 
   @override
   void initState() {
@@ -166,6 +171,7 @@ class _DreamFormPageState extends State<DreamFormPage> {
             MagicalButton(
               text: widget.dream == null ? AppLocalizations.of(context).diarySaveDream : AppLocalizations.of(context).commonUpdate,
               icon: Icons.save,
+              enabled: !_saving,
               onPressed: _saveDream,
             ),
           ],
@@ -214,11 +220,33 @@ class _DreamFormPageState extends State<DreamFormPage> {
         );
 
     if (widget.dream == null) {
-      context.read<DreamProvider>().addDream(dream);
-    } else {
-      context.read<DreamProvider>().updateDream(dream);
+      unawaited(_persistNew(dream));
+      return;
     }
+    context.read<DreamProvider>().updateDream(dream);
+    Navigator.pop(context);
+  }
 
+  /// A new dream: wait for the persistence, then let the progress
+  /// coordinator evaluate XP, milestones and the day, and only then leave.
+  /// The feedback is presented above the router, so the closing route is
+  /// never its home. Editing an existing dream is not a new creation.
+  Future<void> _persistNew(DreamModel dream) async {
+    if (_saving) return;
+    setState(() => _saving = true);
+    final provider = context.read<DreamProvider>();
+    final recorder = ActionRecorder.of(context);
+    final saved = await provider.addDream(dream);
+    if (!mounted) return;
+    if (!saved) {
+      setState(() => _saving = false);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(provider.error ?? AppLocalizations.of(context).errorsGeneric),
+        backgroundColor: context.gc.alert,
+      ));
+      return;
+    }
+    unawaited(recorder.record(origin: ActionOrigin.dream, entityId: dream.id));
     Navigator.pop(context);
   }
 

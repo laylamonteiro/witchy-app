@@ -110,12 +110,11 @@ class _MoonDayCarouselState extends State<MoonDayCarousel> {
             Flexible(
               child: phase == MoonPhase.fullMoon
                   ? BreathingMoon(
-                      moonEmoji: phase.emoji,
+                      phase: phase,
                       size: 62,
                       showStars: true,
                       showName: true,
                       showDescription: true,
-                      phase: phase,
                     )
                   : MoonPhaseWidget(
                       phase: phase,

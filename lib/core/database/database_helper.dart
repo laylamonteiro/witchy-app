@@ -4,6 +4,9 @@ import 'package:path/path.dart';
 import 'package:flutter/foundation.dart' show kIsWeb, visibleForTesting;
 import '../../features/grimoire/data/models/spell_model.dart';
 import '../services/data_sync_service.dart';
+import '../../features/diary/data/models/free_writing_model.dart';
+import 'menstrual_cycle_schema.dart';
+import 'reading_session_schema.dart';
 
 class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._init();
@@ -78,7 +81,7 @@ class DatabaseHelper {
     // é no-op — o sqflite envolve os dois numa transação).
     return await openDatabase(
       path,
-      version: 23,
+      version: 29,
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
     );
@@ -422,6 +425,10 @@ class DatabaseHelper {
     await db.execute(_createTarotReadingsSql);
     await db.execute(
         'CREATE INDEX idx_tarot_readings_user_id ON tarot_readings(user_id)');
+    await ReadingSessionSchema.create(db);
+    // O registro menstrual nasce com o banco, com a mesma definição da
+    // migração v28.
+    await MenstrualCycleSchema.create(db);
 
     // Lápides da sincronização (ver _createSyncTombstonesSql)
     await db.execute(_createSyncTombstonesSql);
@@ -1192,6 +1199,26 @@ class DatabaseHelper {
     if (oldVersion < 23) {
       await db.execute(_createSyncTombstonesSql);
     }
+    if (oldVersion < 24) {
+      await ReadingSessionSchema.create(db);
+    }
+    // v25: álbum do Oráculo (oracle_discoveries). Mesma definição idempotente.
+    // v26: consultas do Conselheiro (advisor_consultations).
+    // v27: marcos das jornadas (progress_milestones).
+    if (oldVersion < 27) {
+      await ReadingSessionSchema.create(db);
+    }
+    // v28: registro menstrual. Tabela própria, fora da Leitura do Ciclo, do
+    // XP, das ofertas e da telemetria.
+    if (oldVersion < 28) {
+      await MenstrualCycleSchema.create(db);
+    }
+    // v29: as colunas da Estação Interna. A estação saiu do app e ninguém
+    // mais lê as colunas; a migração fica porque a casa só migra para a
+    // frente (menstrual_cycle_schema.dart explica).
+    if (oldVersion < 29) {
+      await MenstrualCycleSchema.addSeason(db);
+    }
   }
 
   /// SQL da tabela de tiragens de Tarô — compartilhado entre onCreate e a
@@ -1340,14 +1367,29 @@ class DatabaseHelper {
           DataSyncService.localTableFor(entity),
         // Não sincroniza, mas também nasce anônima e precisa ser adotada.
         'guided_ritual_logs',
-        // As lápides também: o que foi apagado antes de entrar na conta
-        // precisa ser purgado da nuvem depois do login, senão o download
-        // seguinte ressuscita o item sob a conta nova.
-        'sync_tombstones',
+        'selection_sessions',
+        'tarot_day_state',
+        'oracle_discoveries',
+        'advisor_consultations',
+        'progress_milestones',
+        // O registro menstrual também é da pessoa: entrar na conta no mesmo
+        // aparelho não pode fazê-la perder o que já escreveu.
+        MenstrualCycleSchema.table,
+        // `sync_tombstones` NÃO entra, e essa ausência é a correção de um
+        // vazamento: adotada, a lápide anônima virava `synced = 0` sob a
+        // conta real e a primeira varredura mandava ao servidor o id de
+        // tudo que a pessoa apagou antes de existir conta. E não purgava
+        // nada — item apagado antes do login nunca subiu para lugar nenhum.
+        // Quem a remove do aparelho é [claimLegacyData].
       }..remove('spells');
 
   /// Associa dados anônimos/legados à primeira conta autenticada que os abrir.
   /// Registros já pertencentes a UUIDs reais nunca são alterados.
+  /// As origens do acervo que não saem do aparelho, prontas para o `IN`.
+  /// Vem do enum para não haver duas listas que possam divergir.
+  static final String _origensQueNaoSaem =
+      FreeWritingSource.neverLeavesDevice.map((f) => "'" + f + "'").join(', ');
+
   Future<void> claimLegacyData(String userId) async {
     if (userId == 'local_user' || userId == 'current_user') return;
 
@@ -1365,13 +1407,30 @@ class DatabaseHelper {
         await txn.update(
           table,
           {'user_id': userId, 'synced': 0},
-          where: "user_id IN ('local_user', 'current_user')",
+          // O acervo tem origens que não saem do aparelho (o registro do
+          // ciclo). Adotá-las com `synced: 0` seria carimbá-las como "a
+          // enviar" e entregá-las à primeira varredura do login — antes de
+          // qualquer tela recarregar.
+          where: table == 'free_writings'
+              ? "user_id IN ('local_user', 'current_user') "
+                  'AND source NOT IN ($_origensQueNaoSaem)'
+              : "user_id IN ('local_user', 'current_user')",
           // Tabelas com UNIQUE(user_id, date) podem já ter o dia gravado
           // sob a conta real: nesse caso a linha anônima é descartada em
           // vez de derrubar a adoção inteira.
           conflictAlgorithm: ConflictAlgorithm.ignore,
         );
       }
+
+      // As lápides anônimas somem em vez de serem adotadas. Elas guardam o
+      // id do que foi apagado ANTES de existir conta — conteúdo, muitas
+      // vezes: `preloaded_<nome do feitiço>`, o id do mapa no perfil mágico.
+      // Nada disso esteve na nuvem, então não há o que purgar lá; adotá-las
+      // só entregava essa lista ao servidor no primeiro sync da conta nova.
+      await txn.delete(
+        'sync_tombstones',
+        where: "user_id IN ('local_user', 'current_user')",
+      );
 
       final charts = await txn.query(
         'birth_charts',
@@ -1441,6 +1500,8 @@ class DatabaseHelper {
   Future<void> clearAllTables() async {
     final db = await database;
     final tables = [
+      ...ReadingSessionSchema.tables,
+      'tarot_readings',
       'spells',
       'dreams',
       'desires',
@@ -1461,6 +1522,15 @@ class DatabaseHelper {
       'guided_ritual_logs',
       'user_encyclopedia_entries',
       'cycle_readings',
+      // As lápides vão junto: elas guardam o id de tudo que a pessoa apagou,
+      // e sobreviver a um "apagar os dados" era manter no aparelho o índice
+      // exatamente daquilo que ela mandou sumir — pronto para ser enviado.
+      //
+      // Não ressuscita nada noutro aparelho: este método só roda quando a
+      // base local é a verdade sendo descartada inteira (conta anônima, ou
+      // conta sem cópia na nuvem). Quem tem sincronização mantém o banco no
+      // logout — ver `AuthProvider.signOut`.
+      'sync_tombstones',
     ];
 
     for (final table in tables) {

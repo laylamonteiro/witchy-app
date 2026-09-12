@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/expansion_magical_card.dart';
+import '../../../../core/widgets/moon_glyph.dart';
 import '../../../grimoire/data/models/spell_model.dart';
 import '../../../lunar/presentation/providers/lunar_provider.dart';
 
@@ -22,7 +23,10 @@ class NextMoonPhasesCard extends StatelessWidget {
     final lunarProvider = context.watch<LunarProvider>();
 
     return ExpansionMagicalCard(
-      emoji: '🌙',
+      // A lua de HOJE no cabeçalho, com o brilho do app atrás: é a mesma
+      // lua que o corpo lista, e o card fala dela.
+      leading: MoonGlyph(
+          phase: lunarProvider.getCurrentMoonPhase(), size: 26, halo: false),
       title: l10n.lunarNextPhases,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -111,10 +115,9 @@ class NextMoonPhasesCard extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            phase.emoji,
-            style: const TextStyle(fontSize: 32),
-          ),
+          // Sem halo: são oito itens de lista, não heróis — oito brilhos
+          // empilhados viram uma faixa acesa. O brilho fica no cabeçalho.
+          MoonGlyph(phase: phase, size: 32, halo: false),
           const SizedBox(width: 16),
           Expanded(
             child: Column(

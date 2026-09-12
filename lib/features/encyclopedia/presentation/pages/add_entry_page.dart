@@ -8,7 +8,6 @@ import 'package:provider/provider.dart';
 
 import '../../../../core/ai/ai_service.dart';
 import '../../../../core/services/debug_log_service.dart';
-import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/images/etapa_da_foto.dart';
 import '../../../../core/images/seletor_de_foto.dart';
@@ -25,6 +24,7 @@ import '../../data/models/user_entry_model.dart';
 import '../providers/encyclopedia_provider.dart';
 import 'crystal_detail_page.dart';
 import 'herb_detail_page.dart';
+import '../../../../core/tools/tool_identity.dart';
 
 /// Escolhe (câmera/galeria) e comprime a foto; null se a pessoa desistiu.
 typedef EscolherFoto = Future<Uint8List?> Function(ImageSource source);
@@ -520,8 +520,12 @@ class _AddEntryPageState extends State<AddEntryPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: ResponsiveAppBarTitle(
-          l10n.encyAddTitle(_categoryLabel(l10n)),
+        // A folha do Guia da Natureza acompanha a ficha que está nascendo.
+        title: ToolHeading(
+          tool: ToolId.natureGuide,
+          title: l10n.encyAddTitle(_categoryLabel(l10n)),
+          // O seletor de categoria já fechou: não há de onde o emblema voar.
+          flies: false,
         ),
       ),
       body: SingleChildScrollView(

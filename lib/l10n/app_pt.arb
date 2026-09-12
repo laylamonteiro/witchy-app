@@ -501,9 +501,9 @@
   "tarotPosAdvice": "Conselho",
   "tarotPosTendency": "Tendência",
   "tarotFreeLimitReached": "Você já usou sua pergunta gratuita de hoje. Assine Premium para perguntas ilimitadas!",
-  "tarotRepeatingToday": "Esta é a tiragem que você já fez hoje com esta pergunta",
   "tarotSpreadLabel": "Tiragem",
   "tarotReversed": "invertida",
+  "tarotTableHint": "Toque numa carta para vê-la de perto",
   "tarotBreathe": "Respire fundo, pense na sua pergunta e escolha a tiragem",
   "tarotNewSpread": "Nova tiragem",
   "tarotConsultingCards": "Consultando as cartas…",
@@ -652,8 +652,6 @@
   "sigilDrawingNotReady": "Desenho ainda não está pronto",
   "sigilImageError": "Falha ao gerar a imagem",
   "sigilSavedToGallery": "Sigilo salvo na galeria! ✨",
-  "sigilSaveToDesires": "Salvar no Diário de Desejos",
-  "sigilSavedToDesiresShort": "Salvo no Diário de Desejos",
   "sigilSavedToDesires": "Sigilo salvo no Diário de Desejos! ✨",
   "sigilGalleryPermission": "Permita o acesso à galeria para salvar o sigilo",
   "sigilImageSaveError": "Não foi possível salvar a imagem",
@@ -2850,5 +2848,292 @@
   "conviteFechamentoLinha": "Os planos estão do outro lado deste botão. Nada aqui expira, e nada some à meia-noite",
   "paywallLifetimeCycleReading": "Inclui a Leitura da Lunação — a leitura mais profunda do app, tecida do que você viveu, a cada lunação",
   "conviteDescobertaTitulo": "O que você ainda não viu",
-  "conviteSeloPremium": "Premium"
+  "conviteSeloPremium": "Premium",
+  "cardSelectionTitle": "Escolha sua carta",
+  "cardSelectionInstruction": "Deslize para explorar o leque. Toque em uma carta ou arraste-a para cima para escolher.",
+  "cardSelectionPosition": "Carta {position} de {total}",
+  "cardSelectionPrevious": "Carta anterior",
+  "cardSelectionNext": "Próxima carta",
+  "cardSelectionChoose": "Escolher esta carta",
+  "cardSelectionRetry": "Concluir minha escolha",
+  "cardSelectionDay": "Consulta de {date}",
+  "cardSelectionSaving": "Guardando sua escolha…",
+  "cardSelectionError": "Não foi possível concluir agora. Tente confirmar esta mesma carta novamente.",
+  "@cardSelectionPosition": {
+    "placeholders": {
+      "position": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "@cardSelectionDay": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "cardSelectionLoadError": "Não foi possível abrir a consulta. Tente novamente.",
+  "@cardSelectionLoadError": {
+    "description": "Error opening or restoring a reading before selection"
+  },
+  "tarotSelectionStep": "Escolha a carta {number} de {total} · {position}",
+  "tarotSelectionReady": "Todas as posições estão preenchidas",
+  "tarotSelectionSaveError": "Não foi possível concluir a tiragem. Tente novamente.",
+  "@tarotSelectionStep": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      },
+      "position": {
+        "type": "String"
+      }
+    }
+  },
+  "runeSelectionTitle": "Escolha suas pedras",
+  "runeSelectionInstruction": "As pedras estão viradas para baixo. Toque em uma pedra ou segure-a e puxe para cima para escolher.",
+  "runeSelectionPosition": "Pedra {position} de {total}",
+  "runeSelectionPrevious": "Pedra anterior",
+  "runeSelectionNext": "Próxima pedra",
+  "runeSelectionChoose": "Escolher esta pedra",
+  "runeSelectionStep": "Escolha a pedra {number} de {total} · {position}",
+  "runeSelectionReady": "Todas as posições estão preenchidas",
+  "runeSelectionSaveError": "Não foi possível concluir a leitura. Tente novamente.",
+  "runeTableHint": "Toque numa pedra para vê-la de perto",
+  "@runeSelectionPosition": {
+    "placeholders": {
+      "position": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "@runeSelectionStep": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      },
+      "position": {
+        "type": "String"
+      }
+    }
+  },
+  "oracleTableHint": "Toque em uma carta para vê-la de perto",
+  "oracleNewDiscovery": "{count, plural, =1{Nova carta no seu Oráculo} other{{count} novas cartas no seu Oráculo}}",
+  "@oracleNewDiscovery": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "advisorSave": "Guardar conselho",
+  "advisorSaved": "Conselho guardado em Meus Registros",
+  "advisorSaveError": "Não foi possível guardar o conselho agora. Tente novamente.",
+  "advisorRetry": "Tentar novamente",
+  "advisorPendingNote": "A resposta para esta pergunta não chegou. Sua pergunta foi preservada; você pode tentar de novo quando quiser.",
+  "advisorArchiveTitle": "Conselho do Conselheiro Místico",
+  "recordsSourceAdvisor": "Conselheiro",
+  "menstrualArchiveTitle": "Registro do ciclo",
+  "menstrualArchiveMark": "O que você marcou",
+  "menstrualArchiveFlow": "Intensidade",
+  "menstrualArchiveSymptoms": "Sintomas",
+  "menstrualArchiveMood": "Humor",
+  "menstrualArchiveNote": "Anotação",
+  "menstrualArchiveOrigin": "Esta página é escrita pelo seu registro do Ciclo Menstrual e acompanha o dia: para mudar ou apagar o que está aqui, abra o dia na roda do ciclo. Ela fica neste aparelho e não vai para a nuvem.",
+  "recordsSourceMenstrual": "Ciclo",
+  "feedbackXp": "+{xp} XP",
+  "feedbackMilestones": "{count, plural, =1{Marco alcançado} other{{count} marcos alcançados}}",
+  "feedbackLevelUp": "Novo título: {title}",
+  "feedbackDayComplete": "Os três ritos do dia cumpridos",
+  "feedbackDismiss": "Toque para fechar",
+  "feedbackOriginDream": "Sonho registrado",
+  "feedbackOriginGratitude": "Gratidão registrada",
+  "feedbackOriginDesire": "Desejo registrado",
+  "feedbackOriginAffirmation": "Afirmação registrada",
+  "feedbackOriginSpell": "Feitiço registrado",
+  "feedbackOriginSigil": "Sigilo guardado",
+  "feedbackOriginEncyclopedia": "Verbete guardado",
+  "feedbackOriginReading": "Leitura registrada",
+  "feedbackOriginRitual": "Ritual concluído",
+  "feedbackOriginLesson": "Página selada",
+  "feedbackOriginOther": "Registro guardado",
+  "@feedbackXp": {
+    "placeholders": {
+      "xp": {
+        "type": "int"
+      }
+    }
+  },
+  "@feedbackMilestones": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@feedbackLevelUp": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "learnShelfTitle": "{count, plural, =1{Estante · 1 volume encadernado} other{Estante · {count} volumes encadernados}}",
+  "@learnShelfTitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "feedbackOriginDesireManifested": "Desejo realizado ✦ selo posto",
+  "feedbackOriginDesireReleased": "Desejo liberado ao vento",
+  "guidedRitualLogFailed": "Não foi possível registrar a conclusão do ritual. Seus passos estão preservados.",
+  "sigilDrawingSemantics": "Desenho do seu sigilo",
+  "sigilTraceHint": "Toque para completar o traçado",
+  "sigilTraceReplay": "Refazer o traçado",
+  "oracleAlbumTitle": "Álbum do Oráculo",
+  "oracleAlbumProgress": "{found} de {total} cartas descobertas",
+  "oracleAlbumLocked": "Ainda não descoberta",
+  "oracleAlbumFoundOn": "Encontrada em {date}",
+  "oracleAlbumEmpty": "Nenhuma carta ainda. Confirme uma tiragem e elas começam a aparecer aqui.",
+  "oracleAlbumOpen": "Álbum das cartas",
+  "@oracleAlbumProgress": {"placeholders": {"found": {"type": "int"}, "total": {"type": "int"}}},
+  "@oracleAlbumFoundOn": {"placeholders": {"date": {"type": "String"}}},
+  "quizConstellationLabel": "Constelação das suas respostas",
+  "menstrualCardTitle": "Ciclo Menstrual",
+  "menstrualCardPoetic": "Sua roda pessoal",
+  "menstrualCardIntro": "Seu sangue, a Lua e o que você sente, dia a dia.",
+  "menstrualConsentTitle": "Seu registro, no seu ritmo",
+  "menstrualConsentBody": "Aqui você anota o que observou: começo, fluxo, escape, fim ou só um recado para você. Cada dia vira uma página no seu Grimório, em \"Meus Registros\". Tudo fica neste aparelho.",
+  "menstrualConsentControl": "Exportar ou apagar tudo: em Privacidade, quando quiser — e apagar leva as páginas junto.",
+  "menstrualConsentAccept": "Começar a registrar",
+  "menstrualOpeningTitle": "Sangue de Lua",
+  "menstrualOpeningLine": "O sangue marca o seu tempo. Registrar é um rito: você, a Lua e o que sente, dia a dia.",
+  "menstrualReadMore": "Ler mais",
+  "menstrualReadLess": "Ler menos",
+  "menstrualNoRecordToday": "Sem registro hoje",
+  "menstrualTodayMood": "Você marcou: {mood}",
+  "menstrualRecordAction": "Registrar",
+  "menstrualSheetTitle": "O que anotar neste dia?",
+  "menstrualMarkStart": "Começou",
+  "menstrualMarkFlow": "Dia de fluxo",
+  "menstrualMarkSpotting": "Escape",
+  "menstrualMarkEnd": "Terminou",
+  "menstrualMarkNote": "Só uma anotação",
+  "menstrualFlowLabel": "Intensidade",
+  "menstrualFlowLight": "Leve",
+  "menstrualFlowMedium": "Médio",
+  "menstrualFlowHeavy": "Intenso",
+  "menstrualSymptomsLabel": "Sintomas",
+  "menstrualSymptomCramps": "Cólica",
+  "menstrualSymptomHeadache": "Dor de cabeça",
+  "menstrualSymptomTired": "Cansaço",
+  "menstrualSymptomNausea": "Enjoo",
+  "menstrualSymptomBack": "Dor nas costas",
+  "menstrualSymptomMood": "Humor oscilante",
+  "menstrualMoodLabel": "Como você está?",
+  "menstrualMoodLight": "Leve",
+  "menstrualMoodSensitive": "Sensível",
+  "menstrualMoodIrritable": "Irritável",
+  "menstrualMoodSad": "Triste",
+  "menstrualMoodStrong": "Forte",
+  "menstrualMoodAtPeace": "Em paz",
+  "menstrualNoteLabel": "Uma palavra para você, se quiser…",
+  "menstrualEditingDay": "{date} · {phase}",
+  "menstrualMoonInviteNewMoon": "Lua Nova: tempo de semente e silêncio. Se quiser, anote o que começa em você.",
+  "menstrualMoonInviteWaxingCrescent": "Lua Crescente: o que cresce pede cuidado. Anote o que você está criando.",
+  "menstrualMoonInviteFirstQuarter": "Quarto Crescente: metade luz, metade sombra. Anote o que pede uma decisão.",
+  "menstrualMoonInviteWaxingGibbous": "Gibosa Crescente: quase cheia. Anote o que está amadurecendo em você.",
+  "menstrualMoonInviteFullMoon": "Lua Cheia: tudo à vista. Sangrar sob ela é força — anote o que transborda.",
+  "menstrualMoonInviteWaningGibbous": "Gibosa Minguante: a luz começa a recolher. Anote o que já pode descansar.",
+  "menstrualMoonInviteLastQuarter": "Quarto Minguante: tempo de soltar. Anote o que você está deixando ir.",
+  "menstrualMoonInviteWaningCrescent": "Lua Minguante: o fim do círculo. Anote o que você guarda para o próximo.",
+  "menstrualSaved": "Guardado no seu Grimório · {phase}.",
+  "menstrualSaveError": "Não foi possível salvar. O que você escreveu continua aqui.",
+  "menstrualDelete": "Apagar este dia",
+  "menstrualDeleted": "Registro apagado, e a página dele saiu do Grimório",
+  "menstrualEmptyMonth": "Nenhum registro neste mês",
+  "menstrualPremiumInvite": "A roda do mês faz parte do Premium.",
+  "menstrualAboutMeaningTitle": "O que o sangue marca",
+  "menstrualAboutMeaning": "O sangue é passagem: algo termina e recomeça no mesmo gesto. Por isso ele é lido como porta, como maré, como terra que descansa entre uma colheita e outra. É o corpo fazendo tempo em círculo, e não em linha reta — e cada volta é sua, nunca igual à anterior.",
+  "menstrualAboutMoonTitle": "E a Lua",
+  "menstrualAboutMoon": "A Lua também anda em círculo: dois calendários redondos, um no céu e outro em você. Ela não dita o seu sangue — ela o acompanha, e cada começo cai sob uma Lua diferente. Olhar os dois lado a lado é um jeito de se ver no tempo.",
+  "menstrualAboutCraftTitle": "Na bruxaria",
+  "menstrualAboutCraft": "Para quem pratica, o ciclo é um calendário íntimo, ao lado da roda do ano e da Lua: um jeito de saber em que ponto do próprio tempo você está. Os dias de sangue pedem recolhimento — escuta, altar pequeno, gesto mínimo. E o corpo é seu: não menstruar não tira ninguém da bruxaria.",
+  "menstrualAboutNote": "Se alguma coisa preocupar você, procure quem cuida da sua saúde.",
+  "menstrualPreviousMonth": "Mês anterior",
+  "menstrualNextMonth": "Próximo mês",
+  "@menstrualEditingDay": {"placeholders": {"date": {"type": "String"}, "phase": {"type": "String"}}},
+  "@menstrualSaved": {"placeholders": {"phase": {"type": "String"}}},
+  "@menstrualTodayMood": {"placeholders": {"mood": {"type": "String"}}},
+  "menstrualPrivacyErase": "Apagar meus registros do ciclo",
+  "menstrualPrivacyEraseCount": "{count, plural, =1{1 dia registrado neste aparelho} other{{count} dias registrados neste aparelho}}",
+  "menstrualPrivacyEraseConfirm": "{count, plural, =1{Isto apaga 1 dia registrado e a página dele no Grimório, e não pode ser desfeito. Seus outros dados continuam aqui.} other{Isto apaga {count} dias registrados e as páginas deles no Grimório, e não pode ser desfeito. Seus outros dados continuam aqui.}}",
+  "menstrualPrivacyErased": "Seus registros do ciclo foram apagados",
+  "@menstrualPrivacyEraseCount": {"placeholders": {"count": {"type": "int"}}},
+  "@menstrualPrivacyEraseConfirm": {"placeholders": {"count": {"type": "int"}}},
+  "menstrualViewCalendar": "Calendário",
+  "menstrualViewWheel": "Roda",
+  "menstrualWheelLegend": "Fora, a Lua de cada dia; dentro, o que você registrou.",
+  "menstrualNoRecordDay": "sem registro",
+  "menstrualHasRecordDay": "com registro",
+  "cycleReadingIncludeMenstrual": "Ciclo Menstrual",
+  "cycleReadingIncludeMenstrualHint": "O que você registrou do seu ciclo neste período — e só os dias que você marcar aqui.",
+  "cycleReadingMenstrualPremium": "Faz parte do Premium. Sem ele, nada do seu registro é lido nem enviado.",
+  "cycleReadingMenstrualEmpty": "Nenhum registro seu do ciclo neste período.",
+  "cycleReadingMenstrualSelected": "{count, plural, =0{Nenhum registro incluído} =1{1 registro incluído} other{{count} registros incluídos}}",
+  "cycleReadingMenstrualAll": "Incluir todos deste período",
+  "cycleReadingMenstrualNone": "Não incluir nenhum",
+  "cycleReadingMenstrualWords": "Incluir também o que escrevi nesses dias",
+  "cycleReadingMenstrualWordsHint": "As suas palavras: a anotação do dia.",
+  "cycleReadingMenstrualArchive": "A análise fica guardada no seu acervo e pode conter o que você incluir aqui. Se a sincronização com a sua conta estiver ligada, o acervo vai para a nuvem — e esta análise com ele. O seu registro do ciclo e as páginas dele no Grimório, esses, não saem deste aparelho.",
+  "cycleReadingMenstrualScopeNote": "A autorização vale para esta leitura. Registros novos não entram sozinhos, e um dia corrigido depois sai da conta.",
+  "cycleReadingMenstrualSymptoms": "{count, plural, =1{1 sintoma} other{{count} sintomas}}",
+  "cycleReadingMenstrualHasWords": "com escrita sua",
+  "@cycleReadingMenstrualSelected": {"placeholders": {"count": {"type": "int"}}},
+  "@cycleReadingMenstrualSymptoms": {"placeholders": {"count": {"type": "int"}}},
+  "cycleReadingMenstrualSummary": "{count, plural, =1{Ciclo Menstrual · 1 registro incluído} other{Ciclo Menstrual · {count} registros incluídos}}",
+  "@cycleReadingMenstrualSummary": {"placeholders": {"count": {"type": "int"}}},
+  "menstrualPrivacyEraseReadings": "{count, plural, =1{1 leitura levou esses registros junto, e o relatório dela será apagado também. Seu crédito de leitura continua seu.} other{{count} leituras levaram esses registros junto, e os relatórios delas serão apagados também. Seus créditos de leitura continuam seus.}}",
+  "@menstrualPrivacyEraseReadings": {"placeholders": {"count": {"type": "int"}}},
+  "cycleReadingMenstrualScopeChanged": "A autorização do Ciclo Menstrual mudou enquanto a leitura era escrita, então ela parou aqui. Seu crédito continua seu: revise o que quer incluir e gere de novo.",
+  "readingFocusPrevious": "Posição anterior",
+  "readingFocusNext": "Próxima posição",
+  "readingFocusCounter": "Posição {position} de {total}",
+  "readingFocusShowAll": "Ver a tiragem inteira",
+  "readingFocusHideAll": "Fechar a tiragem inteira",
+  "runeOpenEntry": "Ver a runa por inteiro",
+  "@readingFocusCounter": {"placeholders": {"position": {"type": "int"}, "total": {"type": "int"}}},
+  "menstrualLunarTitle": "A Lua e você",
+  "menstrualLunarEmpty": "Marque o primeiro dia do seu sangue e a Lua daquele dia aparece aqui.",
+  "menstrualLunarStartsTitle": "Seus começos",
+  "menstrualLunarTagNew": "perto da Lua Nova",
+  "menstrualLunarTagFull": "perto da Lua Cheia",
+  "menstrualLunarEarlier": "{count, plural, =1{e mais 1 começo antes desses} other{e mais {count} começos antes desses}}",
+  "menstrualLunarPending": "{count, plural, =1{A partir de quatro começos, a Lua conta a história dos seus ciclos. Você tem 1 até aqui.} other{A partir de quatro começos, a Lua conta a história dos seus ciclos. Você tem {count} até aqui.}}",
+  "menstrualLunarNearNew": "Em {near} de {total} ciclos completos, seu sangue começou perto da Lua Nova.",
+  "menstrualLunarNearFull": "Em {near} de {total} ciclos completos, seu sangue começou perto da Lua Cheia.",
+  "menstrualLunarNeither": "Nos seus {total} ciclos completos mais recentes, seu sangue começou no seu próprio tempo, longe da Nova e da Cheia.",
+  "menstrualLunarMoodsTitle": "Suas emoções",
+  "menstrualLunarMoods": "Nos seus dias de sangue, você anotou mais: {moods}.",
+  "menstrualLunarBlessing": "Cada sangue é um rito, e a Lua é sua testemunha.",
+  "@menstrualLunarEarlier": {"placeholders": {"count": {"type": "int"}}},
+  "@menstrualLunarPending": {"placeholders": {"count": {"type": "int"}}},
+  "@menstrualLunarNearNew": {"placeholders": {"near": {"type": "int"}, "total": {"type": "int"}}},
+  "@menstrualLunarNearFull": {"placeholders": {"near": {"type": "int"}, "total": {"type": "int"}}},
+  "@menstrualLunarNeither": {"placeholders": {"total": {"type": "int"}}},
+  "@menstrualLunarMoods": {"placeholders": {"moods": {"type": "String"}}}
 }
