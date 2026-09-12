@@ -669,6 +669,7 @@
   "recordContentRequired": "Write something before saving",
   "recordUpdated": "Record updated! ✨",
   "recordDeleteConfirm": "Do you really want to delete the record \"{name}\"?",
+  "recordDeleteCycleDayConfirm": "Delete this cycle day? Its page leaves the Grimoire with it.",
   "aiSpellDescribeFirst": "Describe your intention first",
   "aiSpellDailyLimit": "You've reached today's consultation limit. Come back tomorrow or go Premium!",
   "aiSpellGenericError": "The advisor couldn't manifest the spell. Please try again later",

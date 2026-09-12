@@ -225,7 +225,8 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
     // privacidade logo abaixo — e o calendário vira o "ler outro período",
     // mais adiante na página, em vez de ser a única coisa à vista.
     final janela =
-        widget.initialPeriod ?? _janelaDoAtalho(widget.initialPeriodType);
+        widget.initialPeriod ??
+            CycleReadingService.suggestedWindow(widget.initialPeriodType);
     _period = janela;
     _periodType =
         CycleReadingService.periodTypeForSpan(janela.start, janela.end);
@@ -1111,26 +1112,6 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
     return l10n.cycleReadingRecentRange(
       formato.format(leitura.periodStart),
       formato.format(leitura.periodEnd.subtract(const Duration(days: 1))),
-    );
-  }
-
-  /// A janela que o atalho do tipo pedido marcaria no seletor: o mês
-  /// corrente até hoje ("Lunação") ou o giro de 8 dias ("Semana"), sempre
-  /// com o fim EXCLUSIVO da feature.
-  ///
-  /// É de propósito a MESMA conta dos atalhos do seletor — não a lunação
-  /// astronômica, que começa em qualquer dia e não acende chip nenhum:
-  /// abrindo com esta janela, o chip correspondente já nasce selecionado
-  /// (decisão da dona, 23/08).
-  static ({DateTime start, DateTime end}) _janelaDoAtalho(String tipo) {
-    if (tipo == CycleReadingPeriodType.week) {
-      return CycleReadingService.currentWeek();
-    }
-    final agora = DateTime.now();
-    return (
-      start: DateTime(agora.year, agora.month, 1),
-      // Hoje vivido por inteiro; o construtor normaliza a virada de mês.
-      end: DateTime(agora.year, agora.month, agora.day + 1),
     );
   }
 
