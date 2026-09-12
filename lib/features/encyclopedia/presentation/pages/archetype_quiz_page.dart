@@ -286,7 +286,8 @@ class _ArchetypeQuizPageState extends State<ArchetypeQuizPage> {
     //
     // A caixa é a que faz o desenho ter o porte do emoji de 56 que estava
     // aqui; a constelação deixa o meio livre e a estrela mais próxima fica a
-    // 99 pixels do centro, então os 83 de caixa não encostam nela.
+    // uns 62 pixels do centro (0,70 × 0,44 × 200), então os 83 de caixa —
+    // 41 e meio de cada lado — não encostam nela nem no brilho dela.
     final prize = _Reveal(
       play: _justFinished,
       child: ArcaneGlyph(

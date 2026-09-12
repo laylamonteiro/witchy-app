@@ -1068,6 +1068,14 @@ calendário; fontes, tamanhos e posições padronizados na jornada inteira.
   cabeçalho, bloco e card são os mesmos em todos. O card "Ciclo Menstrual" da
   aba Ciclos fala a língua dos vizinhos dele (Leitura do Ciclo, Eras), não a
   da página — é lá que ele mora.
+- **A constelação do arquétipo** (fora do Ciclo, mas pedida no mesmo teste
+  em aparelho: "muito grandes e desorganizadas"): a figura passou a morar num
+  quadrado do menor lado da caixa, em vez de esticar com a largura — era isso
+  que jogava estrelas para fora do card no celular —, as estrelas presentes
+  dividem a volta entre si em vez de ocupar fatias arbitrárias das onze (o
+  que dava zigue-zague com cordas por cima do desenho), o anel fecha, e as
+  estrelas e halos encolheram pela metade. Continua determinística: a figura
+  gira com a posição da vencedora no catálogo.
 - **A célula do calendário** soma 32dp (glifo, disco e faixa): a 360dp de
   largura sobram uns 5dp de folga, e abaixo de ~320dp o Flutter acusaria
   estouro. Os tamanhos são o que cabe.
