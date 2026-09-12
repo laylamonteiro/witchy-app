@@ -115,8 +115,13 @@ class _RecordDetailPageState extends State<RecordDetailPage> {
     final l10n = AppLocalizations.of(context);
     final confirmed = await _confirm(l10n.recordDeleteCycleDayConfirm);
     if (!confirmed || !mounted) return;
+    // O modelo do acervo aceita página sem dono; a do ciclo sempre tem, mas
+    // o tipo não sabe disso. Sem dono não há dia a apagar, e fingir um dono
+    // apagaria o dia de outra pessoa.
+    final userId = _entry.userId;
+    if (userId == null) return;
     final repository = widget.menstrualRepository ?? MenstrualCycleRepository();
-    await repository.remove(userId: _entry.userId, day: _entry.createdAt);
+    await repository.remove(userId: userId, day: _entry.createdAt);
     if (!mounted) return;
     // A lista do acervo lê do provedor, e o repositório do ciclo escreve no
     // banco por baixo dele: sem recarregar, a página apagada continuaria na
