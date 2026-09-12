@@ -128,7 +128,9 @@ pendentes. Os testes automatizados não substituem essa avaliação.
 
 ## Continuação do lote
 
-1. P04–P14: runas, Oráculo, Conselheiro e demais ações/rituais do plano.
+1. P04: [Runas manuais](implementacao_runas_status.md), na branch dependente
+   `codex/runes-manual-selection`.
+2. P05–P14: Oráculo, Conselheiro e demais ações/rituais do plano.
 2. P16/P17: registro menstrual manual Free; dados derivados e análises Premium.
 3. P18: registros menstruais autorizados entram na análise completa do ciclo.
 4. P15: integração e validação final do lote.

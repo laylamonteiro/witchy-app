@@ -740,8 +740,8 @@
   "runesChooseLayout": "Choose a Layout",
   "runesQuestionOptional": "Your Question (optional)",
   "runesQuestionHint": "What should the runes reveal?",
-  "runesDrawing": "Drawing runes...",
-  "runesDraw": "Draw Runes",
+  "runesDrawing": "Preparing your reading…",
+  "runesDraw": "Choose the stones",
   "runesReversed": "Reversed",
   "runesListTitle": "Runes",
   "runesAbout": "About the Runes",
@@ -2024,6 +2024,39 @@
       },
       "position": {
         "type": "String"
+      }
+    }
+  },
+  "runesContinue": "Continue choosing",
+  "runesSelectionInstruction": "Tap to choose a stone. Swipe horizontally to explore.",
+  "runesSelectionStep": "Choose stone {number} of {total} · {position}",
+  "runesStonePosition": "Stone {number} of {total}",
+  "runesPreviousStone": "Previous stone",
+  "runesNextStone": "Next stone",
+  "runesChooseStone": "Choose this stone",
+  "runesRevealNow": "Reveal now",
+  "runesSelectMeaning": "Tap a rune to explore its meaning in this position.",
+  "runesOpenEncyclopedia": "View in the Encyclopedia",
+  "@runesSelectionStep": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      },
+      "position": {
+        "type": "String"
+      }
+    }
+  },
+  "@runesStonePosition": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
       }
     }
   }

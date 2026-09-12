@@ -956,8 +956,8 @@
   "runesChooseLayout": "Escolha um Layout",
   "runesQuestionOptional": "Sua Pergunta (opcional)",
   "runesQuestionHint": "O que as runas devem revelar?",
-  "runesDrawing": "Tirando runas...",
-  "runesDraw": "Tirar Runas",
+  "runesDrawing": "Preparando a consulta…",
+  "runesDraw": "Escolher as pedras",
   "runesReversed": "Invertida",
   "runesListTitle": "Runas",
   "runesAbout": "Sobre as Runas",
@@ -2400,20 +2400,68 @@
   "cycleReadingOneTime": "pagamento único",
   "cycleReadingPaywallWeekUpsell": "A Lunação completa traz ainda: sua prática, rituais para o próximo ciclo e as palavras-chave",
   "cyclePaywallMoreSections": "{count, plural, one{+ 1 outra seção incluída} other{+ {count} outras seções incluídas}}",
-  "@cyclePaywallMoreSections": {"placeholders": {"count": {"type": "int"}}},
+  "@cyclePaywallMoreSections": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "cycleHeroPower": "A HISTÓRIA",
   "cycleHeroMagic": "DO SEU CICLO",
   "cycleReadingSectionNumbers": "🔢 O ciclo em números",
   "cycleNumbersRecords": "{count} registros em {activeDays} de {totalDays} dias",
-  "@cycleNumbersRecords": {"placeholders": {"count": {"type": "int"}, "activeDays": {"type": "int"}, "totalDays": {"type": "int"}}},
+  "@cycleNumbersRecords": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "activeDays": {
+        "type": "int"
+      },
+      "totalDays": {
+        "type": "int"
+      }
+    }
+  },
   "cycleNumbersTopPhase": "Fase com mais registros: {phase} ({count})",
-  "@cycleNumbersTopPhase": {"placeholders": {"phase": {"type": "String"}, "count": {"type": "int"}}},
+  "@cycleNumbersTopPhase": {
+    "placeholders": {
+      "phase": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "cycleNumbersTopSource": "Fonte mais presente: {source} ({count})",
-  "@cycleNumbersTopSource": {"placeholders": {"source": {"type": "String"}, "count": {"type": "int"}}},
+  "@cycleNumbersTopSource": {
+    "placeholders": {
+      "source": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "cycleNumbersStreak": "{days, plural, one{Maior sequência: 1 dia} other{Maior sequência: {days} dias seguidos}}",
-  "@cycleNumbersStreak": {"placeholders": {"days": {"type": "int"}}},
+  "@cycleNumbersStreak": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
   "cycleNumbersPrevious": "Período anterior: {count} registros",
-  "@cycleNumbersPrevious": {"placeholders": {"count": {"type": "int"}}},
+  "@cycleNumbersPrevious": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "cycleSourceDreams": "Sonhos",
   "cycleSourceJournals": "Diários e intenções",
   "cycleSourceDivination": "Tiragens e leituras",
@@ -2894,6 +2942,39 @@
       },
       "position": {
         "type": "String"
+      }
+    }
+  },
+  "runesContinue": "Continuar escolha",
+  "runesSelectionInstruction": "Toque para escolher uma pedra. Deslize na horizontal para explorar.",
+  "runesSelectionStep": "Escolha a pedra {number} de {total} · {position}",
+  "runesStonePosition": "Pedra {number} de {total}",
+  "runesPreviousStone": "Pedra anterior",
+  "runesNextStone": "Próxima pedra",
+  "runesChooseStone": "Escolher esta pedra",
+  "runesRevealNow": "Revelar agora",
+  "runesSelectMeaning": "Toque em uma runa para explorar seu significado nesta posição.",
+  "runesOpenEncyclopedia": "Ver na Enciclopédia",
+  "@runesSelectionStep": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      },
+      "position": {
+        "type": "String"
+      }
+    }
+  },
+  "@runesStonePosition": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
       }
     }
   }

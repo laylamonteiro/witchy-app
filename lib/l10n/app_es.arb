@@ -740,8 +740,8 @@
   "runesChooseLayout": "Elige un Diseño",
   "runesQuestionOptional": "Tu Pregunta (opcional)",
   "runesQuestionHint": "¿Qué deben revelar las runas?",
-  "runesDrawing": "Sacando runas...",
-  "runesDraw": "Sacar Runas",
+  "runesDrawing": "Preparando tu lectura…",
+  "runesDraw": "Elegir las piedras",
   "runesReversed": "Invertida",
   "runesListTitle": "Runas",
   "runesAbout": "Sobre las Runas",
@@ -2024,6 +2024,39 @@
       },
       "position": {
         "type": "String"
+      }
+    }
+  },
+  "runesContinue": "Continuar eligiendo",
+  "runesSelectionInstruction": "Toca para elegir una piedra. Desliza horizontalmente para explorar.",
+  "runesSelectionStep": "Elige la piedra {number} de {total} · {position}",
+  "runesStonePosition": "Piedra {number} de {total}",
+  "runesPreviousStone": "Piedra anterior",
+  "runesNextStone": "Siguiente piedra",
+  "runesChooseStone": "Elegir esta piedra",
+  "runesRevealNow": "Revelar ahora",
+  "runesSelectMeaning": "Toca una runa para explorar su significado en esta posición.",
+  "runesOpenEncyclopedia": "Ver en la Enciclopedia",
+  "@runesSelectionStep": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      },
+      "position": {
+        "type": "String"
+      }
+    }
+  },
+  "@runesStonePosition": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
       }
     }
   }

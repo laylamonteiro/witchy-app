@@ -1,854 +1,491 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
-import 'package:uuid/uuid.dart';
 import 'package:provider/provider.dart';
-import 'dart:math';
-import '../../../../core/widgets/magical_card.dart';
+
+import '../../../../core/ai/ai_service.dart';
+import '../../../../core/haptics/toque_magico.dart';
 import '../../../../core/navigation/grimoire_route.dart';
+import '../../../../core/services/ad_service.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/theme/grimoire_motion.dart';
-import '../../data/models/rune_spread_model.dart';
+import '../../../../core/widgets/magical_card.dart';
+import '../../../../core/widgets/motion/tool_scene_frame.dart';
+import '../../../../core/widgets/premium_locked_preview.dart';
+import '../../../../l10n/generated/app_localizations.dart';
+import '../../../auth/data/models/user_model.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../auth/presentation/widgets/premium_blur_widget.dart';
 import '../../../diary/data/models/free_writing_model.dart';
 import '../../../diary/data/services/reading_archive_composer.dart';
 import '../../../diary/data/services/reading_archive_recorder.dart';
-import '../../data/data_sources/runes_data.dart';
-import '../../data/repositories/rune_reading_repository.dart';
-import 'rune_detail_page.dart';
-import '../../../auth/presentation/providers/auth_provider.dart';
-import '../../../auth/presentation/widgets/premium_blur_widget.dart';
-import '../../../auth/data/models/user_model.dart';
-import '../../../../core/services/ad_service.dart';
-import '../../../../core/ai/ai_service.dart';
-import '../../../../core/widgets/premium_locked_preview.dart';
 import '../../../your_day/presentation/providers/daily_checkin_provider.dart';
+import '../../data/data_sources/runes_data.dart';
+import '../../data/models/rune_spread_model.dart';
+import '../../data/repositories/rune_reading_repository.dart';
+import '../../data/repositories/rune_selection_repository.dart';
+import '../../domain/rune_selection_session.dart';
+import '../widgets/rune_selection_surface.dart';
+import '../widgets/rune_spread_board.dart';
+import '../widgets/rune_stone.dart';
+import 'rune_detail_page.dart';
 
-class RuneReadingPage extends StatefulWidget {
+class RuneReadingPage extends StatelessWidget {
   const RuneReadingPage({super.key});
-
   @override
-  State<RuneReadingPage> createState() => _RuneReadingPageState();
-}
-
-class _RuneReadingPageState extends State<RuneReadingPage>
-    with SingleTickerProviderStateMixin {
-  final _questionController = TextEditingController();
-  final _repository = RuneReadingRepository();
-
-  /// Escreve a leitura em "Meus Registros" assim que ela sai.
-  final _archive = ReadingArchiveRecorder();
-
-  RuneSpreadType _selectedSpread = RuneSpreadType.single;
-  List<RunePosition>? _drawnRunes;
-  late AnimationController _animController;
-  bool _isDrawing = false;
-
-  /// Cadência da queda das runas: cada uma leva [GrimoireMotion.reveal] para
-  /// assentar, com até 90ms entre vizinhas. Nas mesas grandes o passo aperta
-  /// para a entrada inteira caber em [_tetoEntradaMs].
-  static final int _duracaoQuedaMs = GrimoireMotion.reveal.inMilliseconds;
-  static const int _tetoEntradaMs = 1200;
-
-  int _passoQuedaMs(int quantas) {
-    if (quantas <= 1) return 0;
-    return min(90, (_tetoEntradaMs - _duracaoQuedaMs) ~/ (quantas - 1));
-  }
-
-  int _totalEntradaMs(int quantas) =>
-      (quantas - 1) * _passoQuedaMs(quantas) + _duracaoQuedaMs;
-
-  @override
-  void initState() {
-    super.initState();
-    _animController = AnimationController(
-      duration: const Duration(milliseconds: 800),
-      vsync: this,
-    );
-  }
-
-  @override
-  void dispose() {
-    _questionController.dispose();
-    _animController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _drawRunes() async {
-    // Verificar limite diário para usuários free
-    final authProvider = context.read<AuthProvider>();
-    if (!authProvider.canUseRunes) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-              AppLocalizations.of(context).oracleDailyLimit),
-          backgroundColor: context.gc.alert,
-          duration: Duration(seconds: 4),
-        ),
-      );
-      showModalBottomSheet(
-        context: context,
-        isScrollControlled: true,
-        backgroundColor: Colors.transparent,
-        builder: (context) => const PremiumUpgradeSheet(),
-      );
-      return;
-    }
-
-    setState(() {
-      _isDrawing = true;
-    });
-
-    // Aguardar um momento para efeito dramático
-    await Future.delayed(const Duration(milliseconds: 500));
-
-    // Embaralhar runas
-    final allRunes = List<RuneModel>.from(runesData)..shuffle();
-
-    // Tirar número de runas baseado no spread
-    final count = _selectedSpread.runeCount;
-    final drawn = <RunePosition>[];
-
-    for (int i = 0; i < count; i++) {
-      final rune = allRunes[i];
-      final isReversed = Random().nextBool(); // 50% chance de invertida
-
-      drawn.add(RunePosition(
-        position: i,
-        rune: rune,
-        isReversed: isReversed,
-        positionMeaning: _selectedSpread.getPositionMeaning(i),
-      ));
-    }
-
-    // Incrementar uso de runas
-    await authProvider.incrementRuneReadings();
-
-    // Anúncio ANTES de revelar as runas (free, cooldown interno).
-    await AdService.instance.showBeforeResult();
-    if (!mounted) return;
-
-    setState(() {
-      _drawnRunes = drawn;
-      _isDrawing = false;
-      _aiReading = null;
-    });
-
-    // A leitura acabou de se revelar: um único toque físico marca o momento.
-    HapticFeedback.lightImpact();
-
-    // Sob "reduzir movimento" as runas aparecem já assentadas; senão, a
-    // queda escalonada é dimensionada para a mesa sorteada.
-    if (GrimoireMotion.reduced(context)) {
-      _animController.value = 1.0;
-    } else {
-      _animController.duration =
-          Duration(milliseconds: _totalEntradaMs(drawn.length));
-      _animController.forward(from: 0);
-    }
-
-    // Salvar leitura
-    await _saveReading(drawn);
-    // A tiragem aconteceu: se as runas são o rito de hoje, está cumprido.
-    if (mounted) {
-      unawaited(
-          context.read<DailyCheckinProvider>().completeRite(DailyRites.runes));
-    }
-  }
-
-  /// Última leitura — o que o Conselheiro lê e o que já virou página do
-  /// acervo.
-  RuneReading? _lastReading;
-
-  /// Interpretação do Conselheiro Místico (Premium), como no Tarot.
-  String? _aiReading;
-  bool _isReadingAI = false;
-
-  Future<void> _saveReading(List<RunePosition> positions) async {
-    final reading = RuneReading(
-      id: const Uuid().v4(),
-      question: _questionController.text.isNotEmpty
-          ? _questionController.text
-          : AppLocalizations.of(context).runesNoQuestion,
-      spreadType: _selectedSpread,
-      positions: positions,
-      date: DateTime.now(),
-    );
-
-    final userId = context.read<AuthProvider>().currentUser.id;
-    await _repository.saveReading(reading, userId);
-    // A tiragem já nasce como página do acervo: não há botão de guardar
-    // porque não há nada a decidir — o que ela tirou é registro dela.
-    await _archive.record(
-      readingId: reading.id,
-      userId: userId,
-      source: FreeWritingSource.runes,
-      page: ReadingArchiveComposer.runes(reading),
-    );
-    if (mounted) setState(() => _lastReading = reading);
-  }
-
-  /// Resumo da tiragem — o material que o Conselheiro lê, seja para o
-  /// conselho completo ou para a degustação. O compositor do acervo já
-  /// produz o texto limpo.
-  String _readingSummary(RuneReading reading) {
-    final page = ReadingArchiveComposer.runes(reading);
-    return '${page.title}\n${page.content}';
-  }
-
-  /// Interpretação do Conselheiro Místico (Premium): tece a leitura das
-  /// runas já sorteadas — mesmo fluxo do Tarot.
-  Future<void> _askCounselor() async {
-    final reading = _lastReading;
-    if (reading == null || _isReadingAI) return;
-
-    // Sem acesso o botão nem aparece: o card mostra a degustação no lugar.
-    if (!context.read<AuthProvider>().isPremiumEffective) return;
-
-    setState(() => _isReadingAI = true);
-    try {
-      final question = reading.question.trim();
-      final noQuestion =
-          question.isEmpty || question == AppLocalizations.of(context).runesNoQuestion;
-      final interpretation = await AIService.instance.interpretRuneSpread(
-        summary: _readingSummary(reading),
-        question: noQuestion ? null : question,
-      );
-      if (!mounted) return;
-      setState(() => _aiReading = interpretation);
-      // Mesmo id da leitura: reescreve a página que já está no acervo, com
-      // o conselho junto — nunca cria uma segunda.
-      await _archive.record(
-        readingId: reading.id,
-        userId: context.read<AuthProvider>().currentUser.id,
-        source: FreeWritingSource.runes,
-        page: ReadingArchiveComposer.runes(
-          reading,
-          interpretation: interpretation,
-        ),
-      );
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('$e'.replaceAll('Exception: ', '')),
-          backgroundColor: context.gc.alert,
-        ),
-      );
-    } finally {
-      if (mounted) setState(() => _isReadingAI = false);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: ResponsiveAppBarTitle(AppLocalizations.of(context).runesReadingTitle),
-        backgroundColor: context.gc.darkBackground,
-      ),
-      backgroundColor: context.gc.darkBackground,
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            if (_drawnRunes == null) ...[
-              MagicalCard(
-                child: Column(
-                  children: [
-                    const Text('ᚱᚢᚾᚨ', style: TextStyle(fontSize: 48)),
-                    const SizedBox(height: 16),
-                    Text(
-                      AppLocalizations.of(context).runesReadingTitle,
-                      style:
-                          Theme.of(context).textTheme.headlineMedium?.copyWith(
-                                color: context.gc.lilac,
-                              ),
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      AppLocalizations.of(context).runesReadingIntro,
-                      style: TextStyle(
-                        color: context.gc.softWhite.withValues(alpha: 0.8),
-                        fontSize: 14,
-                        height: 1.5,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      AppLocalizations.of(context).runesReversedNote,
-                      style: TextStyle(
-                        color: context.gc.lilac.withValues(alpha: 0.7),
-                        fontSize: 12,
-                        fontStyle: FontStyle.italic,
-                        height: 1.4,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 16),
-
-              Text(
-                AppLocalizations.of(context).runesChooseLayout,
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      color: context.gc.lilac,
-                    ),
-                textAlign: TextAlign.center,
-              ),
-
-              const SizedBox(height: 12),
-
-              // Opções de spread
-              _buildSpreadOption(
-                RuneSpreadType.single,
-                Icons.crop_square,
-              ),
-              const SizedBox(height: 12),
-              _buildSpreadOption(
-                RuneSpreadType.threeCast,
-                Icons.view_column,
-              ),
-              const SizedBox(height: 12),
-              _buildSpreadOption(
-                RuneSpreadType.nordicCross,
-                Icons.add,
-              ),
-              const SizedBox(height: 12),
-              _buildSpreadOption(
-                RuneSpreadType.nineWorlds,
-                Icons.grid_3x3,
-              ),
-
-              const SizedBox(height: 16),
-
-              // Campo de pergunta
-              MagicalCard(
-                child: TextField(
-                  controller: _questionController,
-                  style: TextStyle(color: context.gc.softWhite),
-                  decoration: InputDecoration(
-                    labelText: AppLocalizations.of(context).runesQuestionOptional,
-                    labelStyle: TextStyle(color: context.gc.lilac),
-                    hintText: AppLocalizations.of(context).runesQuestionHint,
-                    hintStyle: TextStyle(
-                      color: context.gc.softWhite.withValues(alpha: 0.5),
-                    ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: context.gc.lilac),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(
-                        color: context.gc.lilac.withValues(alpha: 0.3),
-                      ),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: context.gc.lilac),
-                    ),
-                  ),
-                  maxLines: 2,
-                ),
-              ),
-
-              const SizedBox(height: 24),
-
-              ElevatedButton.icon(
-                onPressed: _isDrawing ? null : _drawRunes,
-                // Enquanto o sorteio prepara a mesa, os glifos do cartão de
-                // abertura se revezam no botão; sob "reduzir movimento" fica
-                // o indicador circular de sempre.
-                icon: !_isDrawing
-                    ? const Icon(Icons.auto_awesome)
-                    : GrimoireMotion.reduced(context)
-                        ? SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                context.gc.darkBackground,
-                              ),
-                            ),
-                          )
-                        : _GlifosDoSorteio(cor: context.gc.darkBackground),
-                label: Text(_isDrawing ? AppLocalizations.of(context).runesDrawing : AppLocalizations.of(context).runesDraw),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: context.gc.lilac,
-                  foregroundColor: context.gc.darkBackground,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 32,
-                    vertical: 16,
-                  ),
-                  disabledBackgroundColor: context.gc.lilac.withValues(alpha: 0.3),
-                ),
-              ),
-
-              // Exibir usos restantes para usuários free
-              Consumer<AuthProvider>(
-                builder: (context, authProvider, _) {
-                  if (authProvider.isPremium) return const SizedBox.shrink();
-                  final remaining =
-                      authProvider.currentUser.remainingRuneReadings;
-                  return Padding(
-                    padding: const EdgeInsets.only(top: 12),
-                    child: Text(
-                      AppLocalizations.of(context).oracleRemainingToday('$remaining/${UserModel.freeRuneReadingsLimit}'),
-                      style: TextStyle(
-                        color: remaining > 0
-                            ? context.gc.softWhite.withValues(alpha: 0.6)
-                            : context.gc.alert,
-                        fontSize: 12,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  );
-                },
-              ),
-            ],
-
-            // Resultado
-            if (_drawnRunes != null) ...[
-              _buildReadingResult(_drawnRunes!),
-              if (_lastReading != null) _buildCounselorCard(),
-              const SizedBox(height: 16),
-              OutlinedButton.icon(
-                onPressed: () {
-                  setState(() {
-                    _drawnRunes = null;
-                    _animController.reset();
-                    _questionController.clear();
-                  });
-                },
-                icon: const Icon(Icons.refresh),
-                label: Text(AppLocalizations.of(context).oracleNewReading),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: context.gc.lilac,
-                  side: BorderSide(color: context.gc.lilac),
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                ),
-              ),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSpreadOption(RuneSpreadType spread, IconData icon) {
-    final isSelected = _selectedSpread == spread;
-
-    return InkWell(
-      onTap: () {
-        setState(() {
-          _selectedSpread = spread;
-        });
-      },
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? context.gc.lilac.withValues(alpha: 0.2)
-              : context.gc.cardBackground,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: isSelected ? context.gc.lilac : context.gc.surfaceBorder,
-            width: 2,
-          ),
-        ),
-        child: Row(
-          children: [
-            Icon(
-              icon,
-              color: isSelected ? context.gc.lilac : context.gc.softWhite,
-              size: 32,
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    spread.displayName,
-                    style: TextStyle(
-                      color: isSelected ? context.gc.lilac : context.gc.softWhite,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    spread.description,
-                    style: TextStyle(
-                      color: context.gc.softWhite.withValues(alpha: 0.7),
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            if (isSelected)
-              Icon(
-                Icons.check_circle,
-                color: context.gc.lilac,
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildReadingResult(List<RunePosition> positions) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        MagicalCard(
-          child: Column(
-            children: [
-              const Text('✨', style: TextStyle(fontSize: 48)),
-              const SizedBox(height: 16),
-              Text(
-                AppLocalizations.of(context).oracleYourReading,
-                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                      color: context.gc.lilac,
-                    ),
-              ),
-              if (_questionController.text.isNotEmpty) ...[
-                const SizedBox(height: 8),
-                Text(
-                  _questionController.text,
-                  style: TextStyle(
-                    color: context.gc.softWhite.withValues(alpha: 0.8),
-                    fontStyle: FontStyle.italic,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ],
-            ],
-          ),
-        ),
-
-        const SizedBox(height: 16),
-
-        // Runas tiradas — cada uma entra como se lançada na mesa: cai de
-        // alguns pixels, assenta rotação e tamanho e acende, uma após a
-        // outra. As variações (altura da queda, lado da inclinação) derivam
-        // do índice da posição, nunca de sorteio novo: o resultado da
-        // tiragem é intocável.
-        ...positions.map((position) {
-          final indice = position.position;
-          final totalMs = _totalEntradaMs(positions.length);
-          final inicioMs = indice * _passoQuedaMs(positions.length);
-          final curva = Interval(
-            inicioMs / totalMs,
-            (inicioMs + _duracaoQuedaMs) / totalMs,
-            curve: GrimoireMotion.enter,
-          );
-          // Queda entre 48 e 72px (visível como "lançada na mesa", não um
-          // nudge); inclinação de 3–5° alternando o lado.
-          final queda = 48.0 + 8.0 * (indice % 4);
-          final angulo =
-              (indice.isEven ? 1 : -1) * (3 + indice % 3) * pi / 180;
-
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: AnimatedBuilder(
-              animation: _animController,
-              builder: (context, child) {
-                // Reduzir movimento: a runa aparece já assentada no lugar.
-                if (GrimoireMotion.reduced(context)) return child!;
-                final t = curva.transform(_animController.value);
-                if (t >= 1.0) return child!;
-                return Opacity(
-                  opacity: t.clamp(0.0, 1.0).toDouble(),
-                  child: Transform.translate(
-                    offset: Offset(0, -queda * (1 - t)),
-                    child: Transform.rotate(
-                      angle: angulo * (1 - t),
-                      child: Transform.scale(
-                        scale: 0.88 + 0.12 * t,
-                        child: child,
-                      ),
-                    ),
-                  ),
-                );
-              },
-              child: InkWell(
-                onTap: () {
-                  Navigator.of(context).push(
-                    GrimoireRoute(
-                      builder: (_) => RuneDetailPage(rune: position.rune),
-                    ),
-                  );
-                },
-                borderRadius: BorderRadius.circular(12),
-                child: MagicalCard(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Container(
-                            width: 60,
-                            height: 60,
-                            decoration: BoxDecoration(
-                              color: context.gc.lilac.withValues(alpha: 0.2),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Center(
-                              child: Text(
-                                position.rune.symbol,
-                                style: TextStyle(
-                                  fontSize: 32,
-                                  color: context.gc.lilac,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  position.positionMeaning,
-                                  style: TextStyle(
-                                    color: context.gc.softWhite.withValues(alpha: 0.7),
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  position.rune.name,
-                                  style: TextStyle(
-                                    color: context.gc.lilac,
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          if (position.isReversed)
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 4,
-                              ),
-                              decoration: BoxDecoration(
-                                color: context.gc.alert.withValues(alpha: 0.2),
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                              child: Text(
-                                AppLocalizations.of(context).runesReversed,
-                                style: TextStyle(
-                                  color: context.gc.alert,
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      // Palavras-chave, como nos cards da tiragem de Tarot.
-                      Wrap(
-                        spacing: 6,
-                        children: position.rune.keywords
-                            .map((k) => Text(
-                                  '· $k',
-                                  style: TextStyle(
-                                    color: context.gc.textSecondary,
-                                    fontSize: 12,
-                                  ),
-                                ))
-                            .toList(),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        position.isReversed &&
-                                position.rune.reversedMeaning != null
-                            ? position.rune.reversedMeaning!
-                            : position.rune.divination,
-                        style: TextStyle(
-                          color: context.gc.softWhite,
-                          height: 1.5,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          );
-        }).toList(),
-      ],
-    );
-  }
-
-  /// Card do Conselheiro Místico: botão premium que vira o texto tecido —
-  /// idêntico ao da tiragem de Tarot.
-  Widget _buildCounselorCard() {
-    return MagicalCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          if (_lastReading != null &&
-              !context.watch<AuthProvider>().isPremiumEffective)
-            // Sem acesso: no lugar do botão, o sumário do que o
-            // Conselheiro teceria sobre as runas que já estão na mesa.
-            _previaDoConselheiro(context)
-          else if (_aiReading == null)
-            ElevatedButton.icon(
-              onPressed: _isReadingAI ? null : _askCounselor,
-              icon: _isReadingAI
-                  ? SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: context.gc.onPrimary,
-                      ),
-                    )
-                  : const Icon(Icons.auto_awesome, size: 18),
-              label: Text(
-                _isReadingAI
-                    ? AppLocalizations.of(context).tarotConsultingCards
-                    : AppLocalizations.of(context).tarotAdvisorInterpretation,
-              ),
-            )
-          else ...[
-            Text(
-              AppLocalizations.of(context).tarotAdvisorInterpretation,
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: context.gc.lilac,
-                    fontWeight: FontWeight.bold,
-                  ),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              _aiReading!,
-              style:
-                  Theme.of(context).textTheme.bodyMedium?.copyWith(height: 1.6),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
-/// O que o Conselheiro Místico teceria sobre a tiragem que já está na mesa.
-///
-/// Sem Premium não sai chamada de IA nenhuma: os títulos são fixos, e o que
-/// eles mostram é a FORMA da leitura — como as peças conversam, a narrativa
-/// que formam, a resposta à pergunta e o conselho final. É mais informação
-/// do que a antiga degustação dava, e não custa geração.
-Widget _previaDoConselheiro(BuildContext context) {
-  final l10n = AppLocalizations.of(context);
-  return PremiumLockedPreview(
-    titles: [
-      l10n.counselorLockedTitle1,
-      l10n.counselorLockedTitle2,
-      l10n.counselorLockedTitle3,
-      l10n.counselorLockedTitle4,
-    ],
+  Widget build(BuildContext context) => _RuneReadingContent(
+    key: ValueKey(context.select<AuthProvider, String>((auth) => auth.currentUser.id)),
   );
 }
 
-/// Glifos que se revezam no botão enquanto o sorteio prepara a mesa — os
-/// mesmos caracteres do cartão de abertura ('ᚱᚢᚾᚨ'), acendendo e apagando
-/// um por vez. Puramente decorativo (o rótulo do botão já diz o estado),
-/// por isso fora da árvore de semântica.
-///
-/// Quem decide o fallback sob "reduzir movimento" é o chamador; ainda
-/// assim, o loop aqui segue a regra da casa: só começa depois de ler a
-/// preferência de acessibilidade, nunca no initState.
-class _GlifosDoSorteio extends StatefulWidget {
-  const _GlifosDoSorteio({required this.cor});
-
-  final Color cor;
-
+class _RuneReadingContent extends StatefulWidget {
+  const _RuneReadingContent({super.key});
   @override
-  State<_GlifosDoSorteio> createState() => _GlifosDoSorteioState();
+  State<_RuneReadingContent> createState() => _RuneReadingContentState();
 }
 
-class _GlifosDoSorteioState extends State<_GlifosDoSorteio>
+class _RuneReadingContentState extends State<_RuneReadingContent>
     with SingleTickerProviderStateMixin {
-  static const List<String> _glifos = ['ᚱ', 'ᚢ', 'ᚾ', 'ᚨ'];
-
-  late final AnimationController _c;
-  bool? _reduzido;
+  final _question = TextEditingController();
+  final _scroll = ScrollController();
+  final _meaningKey = GlobalKey();
+  final _repository = RuneReadingRepository();
+  final _sessions = RuneSelectionRepository();
+  final _archive = ReadingArchiveRecorder();
+  late final String _userId;
+  late final AnimationController _reveal = AnimationController(vsync: this)
+    ..addStatusListener((status) {
+      if (status == AnimationStatus.completed && mounted && _revealing) {
+        setState(() => _revealing = false);
+      }
+    });
+  RuneSpreadType _spread = RuneSpreadType.single;
+  RuneSelectionSession? _session;
+  RuneReading? _reading;
+  bool _restoring = true;
+  bool _busy = false;
+  bool _selecting = false;
+  bool _newRequested = false;
+  bool _revealing = false;
+  bool _readingAI = false;
+  int _activePosition = 0;
+  String? _pendingId;
+  String? _error;
 
   @override
   void initState() {
     super.initState();
-    _c = AnimationController(
-      duration: const Duration(milliseconds: 1400),
-      vsync: this,
-    );
+    _userId = context.read<AuthProvider>().currentUser.id;
+    _restore();
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    final reduzido = MediaQuery.disableAnimationsOf(context);
-    if (reduzido == _reduzido) return;
-    _reduzido = reduzido;
-    if (reduzido) {
-      _c.stop();
-      _c.value = 0.5;
-    } else {
-      _c.repeat();
+    if (_revealing && GrimoireMotion.reduced(context)) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _reveal.value = 1;
+      });
     }
   }
 
   @override
   void dispose() {
-    _c.dispose();
+    _question.dispose();
+    _scroll.dispose();
+    _reveal.dispose();
     super.dispose();
+  }
+
+  Future<void> _restore() async {
+    try {
+      final session = await _sessions.latest(_userId);
+      if (!mounted) return;
+      if (session != null) {
+        _session = session;
+        _spread = session.spread;
+        _question.text = session.question;
+        if (session.isCommitted) await _present(RuneSelectionUpdate(session));
+      }
+    } catch (_) {
+      if (mounted) _error = AppLocalizations.of(context).cardSelectionLoadError;
+    } finally {
+      if (mounted) setState(() => _restoring = false);
+    }
+  }
+
+  void _top() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && _scroll.hasClients) _scroll.jumpTo(0);
+    });
+  }
+
+  Future<void> _start() async {
+    if (_busy || _restoring) return;
+    final spread = _spread;
+    final question = _question.text.trim();
+    final auth = context.read<AuthProvider>();
+    setState(() { _busy = true; _error = null; });
+    try {
+      await auth.refreshRuneUsage();
+      if (!mounted || auth.currentUser.id != _userId) return;
+      final session = await _sessions.prepare(
+        userId: _userId, spread: spread, question: question, catalog: runesData,
+        premium: auth.isPremiumEffective, legacyRuneUsed: auth.currentUser.runeReadingsToday,
+        freeLimit: UserModel.freeRuneReadingsLimit, startNew: _newRequested,
+      );
+      if (!mounted || auth.currentUser.id != _userId) return;
+      _newRequested = false;
+      _question.clear();
+      _question.text = session.question;
+      FocusScope.of(context).unfocus();
+      if (session.isCommitted) {
+        await _present(RuneSelectionUpdate(session));
+      } else {
+        setState(() { _session = session; _selecting = true; _pendingId = null; });
+        _top();
+        // The last choice survived, but its result transaction was interrupted.
+        if (session.isComplete) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) _select(session.selectedIds.last);
+          });
+        }
+      }
+    } on RuneQuotaExceeded {
+      if (!mounted) return;
+      setState(() => _error = AppLocalizations.of(context).oracleDailyLimit);
+      await showModalBottomSheet<void>(context: context,
+          isScrollControlled: true, backgroundColor: Colors.transparent,
+          builder: (_) => const PremiumUpgradeSheet());
+    } catch (_) {
+      if (mounted) setState(() => _error = AppLocalizations.of(context).cardSelectionLoadError);
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Future<void> _select(String stoneId) async {
+    if (_busy || !_selecting || _session == null) return;
+    final session = _session!;
+    final auth = context.read<AuthProvider>();
+    setState(() { _busy = true; _pendingId ??= stoneId; _error = null; });
+    try {
+      final update = await _sessions.select(
+        userId: _userId, sessionId: session.id, stoneId: _pendingId!,
+        expectedCount: session.selectedIds.length, catalog: runesData,
+        positionLabels: [for (var i = 0; i < session.spread.runeCount; i++)
+          session.spread.getPositionMeaning(i)],
+        isCurrentUser: () => mounted && auth.currentUser.id == _userId,
+        isPremium: () => auth.isPremiumEffective, freeLimit: UserModel.freeRuneReadingsLimit,
+      );
+      if (!mounted || auth.currentUser.id != _userId) return;
+      if (update.session.isCommitted) {
+        // Keep the cloth visible until every result dependency is ready.
+        await _present(update);
+      } else {
+        setState(() { _session = update.session; _pendingId = null; });
+      }
+    } on RuneQuotaExceeded {
+      if (mounted) setState(() => _error = AppLocalizations.of(context).oracleDailyLimit);
+    } catch (_) {
+      if (mounted) setState(() => _error = AppLocalizations.of(context).tarotSelectionSaveError);
+    } finally {
+      if (mounted && _error != null) {
+        try {
+          final saved = await _sessions.read(_userId, session.id);
+          if (mounted) setState(() => _session = saved);
+        } catch (_) {
+          // Preserve the pending ID if storage itself is unavailable.
+        }
+      }
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Future<void> _present(RuneSelectionUpdate update) async {
+    final session = update.session;
+    final reading = await _repository.getReading(session.resultId!, userId: _userId);
+    if (!mounted) return;
+    if (reading == null) throw StateError('Rune result is no longer available');
+    final auth = context.read<AuthProvider>();
+    await auth.refreshRuneUsage();
+    if (!mounted || auth.currentUser.id != _userId) return;
+    if (update.created && !auth.isPremiumEffective) {
+      await AdService.instance.showBeforeResult();
+      if (!mounted || auth.currentUser.id != _userId) return;
+    }
+    final animate = update.created && !GrimoireMotion.reduced(context);
+    _reveal.duration = Duration(milliseconds: 450 + (reading.positions.length - 1) * 70);
+    _reveal.value = animate ? 0 : 1;
+    setState(() {
+      _session = session; _reading = reading; _spread = session.spread;
+      _selecting = false; _revealing = animate; _activePosition = 0; _pendingId = null;
+    });
+    _top();
+    unawaited(_record(reading));
+    unawaited(_repository.syncReading(reading.id, _userId));
+    if (update.created) {
+      ToqueMagico.leve();
+      unawaited(context.read<DailyCheckinProvider>().completeRite(DailyRites.runes));
+    }
+    if (animate) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && _reading?.id == reading.id && _revealing) _reveal.forward(from: 0);
+      });
+    }
+  }
+
+  Future<void> _record(RuneReading reading) => _archive.record(
+    readingId: reading.id, userId: _userId, source: FreeWritingSource.runes,
+    createdAt: reading.date,
+    page: ReadingArchiveComposer.runes(reading, interpretation: reading.interpretation),
+  );
+
+  void _backToMenu({bool newReading = false}) {
+    if (_busy || _readingAI) return;
+    setState(() {
+      _revealing = false; _selecting = false; _reading = null; _error = null;
+      _newRequested = newReading; _pendingId = null;
+      if (newReading) { _session = null; _question.clear(); }
+    });
+    _reveal.reset();
+    _top();
+  }
+
+  Future<void> _askCounselor() async {
+    final reading = _reading;
+    if (reading == null || _readingAI || !context.read<AuthProvider>().isPremiumEffective) return;
+    final l10n = AppLocalizations.of(context);
+    setState(() => _readingAI = true);
+    try {
+      final page = ReadingArchiveComposer.runes(reading);
+      final question = reading.question.trim();
+      final interpretation = await AIService.instance.interpretRuneSpread(
+        summary: '${page.title}\n${page.content}',
+        question: question.isEmpty || question == l10n.runesNoQuestion ? null : question,
+      );
+      if (!mounted || _reading?.id != reading.id) return;
+      final updated = await _repository.updateInterpretation(reading.id, _userId, interpretation);
+      if (!mounted || _reading?.id != reading.id || updated == null) return;
+      setState(() => _reading = updated);
+      unawaited(_record(updated));
+    } catch (_) {
+      if (mounted) setState(() => _error = l10n.tarotSelectionSaveError);
+    } finally {
+      if (mounted) setState(() => _readingAI = false);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return ExcludeSemantics(
-      child: SizedBox(
-        width: 20,
-        height: 20,
-        child: AnimatedBuilder(
-          animation: _c,
-          builder: (context, _) {
-            final volta = _c.value * _glifos.length;
-            final indice = volta.floor() % _glifos.length;
-            // Meia-senoide por glifo: acende e apaga sem sumir de vez.
-            final brilho = 0.35 + 0.65 * sin(pi * (volta % 1.0));
-            return Center(
-              child: Opacity(
-                opacity: brilho.clamp(0.0, 1.0).toDouble(),
-                child: Text(
-                  _glifos[indice],
-                  style: TextStyle(
-                    fontSize: 15,
-                    height: 1.0,
-                    fontWeight: FontWeight.bold,
-                    color: widget.cor,
-                  ),
-                ),
-              ),
-            );
-          },
-        ),
+    final l10n = AppLocalizations.of(context);
+    return PopScope(
+      canPop: !_busy && !_readingAI && !_selecting && _reading == null,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) _backToMenu();
+      },
+      child: Scaffold(
+        appBar: AppBar(title: ResponsiveAppBarTitle(l10n.runesReadingTitle)),
+        body: ToolSceneFrame(child: SingleChildScrollView(
+          controller: _scroll, padding: const EdgeInsets.all(16),
+          child: Center(child: ConstrainedBox(constraints: const BoxConstraints(maxWidth: 640),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+              if (_restoring) const LinearProgressIndicator()
+              else if (_selecting) ..._selection(context)
+              else if (_reading != null) ..._result(context)
+              else ..._menu(context),
+              if (_error != null) Padding(padding: const EdgeInsets.only(top: 16),
+                child: Semantics(liveRegion: true, child: Text(_error!,
+                  textAlign: TextAlign.center, style: TextStyle(color: context.gc.alert)))),
+              const SizedBox(height: 24),
+            ]),
+          )),
+        )),
       ),
     );
+  }
+
+  List<Widget> _menu(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final auth = context.watch<AuthProvider>();
+    final resumes = !_newRequested && _session != null && !_session!.isCommitted &&
+        _session!.spread == _spread && _session!.question.toLowerCase() == _question.text.trim().toLowerCase();
+    return [
+      MagicalCard(child: Column(children: [
+        const RunePouch(open: .7),
+        const SizedBox(height: 12),
+        Text(l10n.runesReadingIntro, textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.bodyMedium),
+        const SizedBox(height: 8),
+        Text(l10n.runesReversedNote, textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(color: context.gc.textSecondary)),
+      ])),
+      const SizedBox(height: 16),
+      Text(l10n.runesChooseLayout, style: Theme.of(context).textTheme.titleLarge),
+      const SizedBox(height: 12),
+      for (final spread in RuneSpreadType.values) Padding(
+        padding: const EdgeInsets.only(bottom: 10),
+        child: InkWell(onTap: _busy ? null : () => setState(() => _spread = spread),
+          borderRadius: BorderRadius.circular(16),
+          child: AnimatedContainer(duration: GrimoireMotion.reduced(context)
+              ? Duration.zero : GrimoireMotion.state,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(color: context.gc.surface,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(width: _spread == spread ? 2 : 1,
+                color: _spread == spread ? context.gc.lilac : context.gc.surfaceBorder)),
+            child: Row(children: [
+              RuneStone(slot: spread.index, size: 42,
+                  symbol: '${spread.runeCount}', highlighted: _spread == spread),
+              const SizedBox(width: 12),
+              Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text(spread.displayName, style: Theme.of(context).textTheme.titleMedium),
+                const SizedBox(height: 4),
+                Text(spread.description, style: Theme.of(context).textTheme.bodySmall
+                    ?.copyWith(color: context.gc.textSecondary)),
+              ])),
+              if (_spread == spread) Icon(Icons.check_circle_outline, color: context.gc.lilac),
+            ]),
+          ),
+        ),
+      ),
+      const SizedBox(height: 8),
+      TextField(controller: _question, enabled: !_busy, maxLines: 2,
+        onChanged: (_) => setState(() {}),
+        decoration: InputDecoration(labelText: l10n.runesQuestionOptional,
+          hintText: l10n.runesQuestionHint, border: const OutlineInputBorder())),
+      const SizedBox(height: 20),
+      FilledButton.icon(key: const ValueKey('runes-start'),
+        onPressed: _busy ? null : _start,
+        icon: _busy ? const SizedBox.square(dimension: 18,
+            child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.touch_app_outlined),
+        label: Text(_busy ? l10n.runesDrawing : resumes ? l10n.runesContinue : l10n.runesDraw)),
+      if (!auth.isPremiumEffective) Padding(padding: const EdgeInsets.only(top: 12),
+        child: Text(l10n.oracleRemainingToday(
+            '${auth.remainingRuneReadings}/${UserModel.freeRuneReadingsLimit}'),
+          textAlign: TextAlign.center, style: TextStyle(color: context.gc.textSecondary))),
+    ];
+  }
+
+  List<Widget> _selection(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final session = _session!;
+    final count = session.selectedIds.length;
+    return [
+      Text(session.spread.displayName, textAlign: TextAlign.center,
+          style: Theme.of(context).textTheme.headlineSmall),
+      const SizedBox(height: 8),
+      if (session.question.isNotEmpty) Text(session.question, textAlign: TextAlign.center),
+      Text(l10n.cardSelectionDay(MaterialLocalizations.of(context)
+          .formatMediumDate(session.startedAt)), textAlign: TextAlign.center,
+          style: Theme.of(context).textTheme.bodySmall),
+      const SizedBox(height: 12),
+      RuneSpreadBoard(spread: session.spread, compact: true, nextPosition: count,
+        stoneSlots: session.selectedIds.map(session.positionOf).toList()),
+      const SizedBox(height: 12),
+      Semantics(liveRegion: true, child: Text(session.isComplete ? l10n.tarotSelectionReady :
+        l10n.runesSelectionStep(count + 1, session.spread.runeCount,
+            session.spread.getPositionMeaning(count)), textAlign: TextAlign.center,
+        style: Theme.of(context).textTheme.titleMedium)),
+      const SizedBox(height: 8),
+      if (!session.isComplete) ...[
+        Text(l10n.runesSelectionInstruction, textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.bodySmall),
+        const SizedBox(height: 12),
+        RuneSelectionSurface(key: ValueKey(session.id),
+          stoneIds: session.deck.map((r) => r.id).toList(), selectedIds: session.selectedIds,
+          enabled: !_busy && _pendingId == null, onSelected: _select),
+      ],
+      if (_busy) ...[
+        const SizedBox(height: 12), const LinearProgressIndicator(),
+        Text(l10n.cardSelectionSaving, textAlign: TextAlign.center),
+      ] else if (_pendingId != null || session.isComplete)
+        FilledButton.icon(key: const ValueKey('runes-retry'),
+          onPressed: () => _select(_pendingId ?? session.selectedIds.last),
+          icon: const Icon(Icons.refresh), label: Text(l10n.cardSelectionRetry)),
+    ];
+  }
+
+  List<Widget> _result(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final reading = _reading!;
+    return [
+      Text(reading.spreadType.displayName, textAlign: TextAlign.center,
+          style: Theme.of(context).textTheme.headlineSmall),
+      const SizedBox(height: 8),
+      if (reading.question.isNotEmpty) Text(reading.question, textAlign: TextAlign.center),
+      Text(l10n.cardSelectionDay(MaterialLocalizations.of(context).formatMediumDate(reading.date)),
+          textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodySmall),
+      const SizedBox(height: 16),
+      RuneCloth(child: AnimatedBuilder(animation: _reveal, builder: (context, _) => RuneSpreadBoard(
+        spread: reading.spreadType, positions: reading.positions, progress: _reveal.value,
+        stoneSlots: _session!.selectedIds.map(_session!.positionOf).toList(),
+        activePosition: _revealing ? null : _activePosition,
+        onTap: (index) {
+          if (_revealing) { _reveal.value = 1; return; }
+          setState(() => _activePosition = index);
+          final target = _meaningKey.currentContext;
+          if (target != null) Scrollable.ensureVisible(target,
+            duration: GrimoireMotion.reduced(context) ? Duration.zero : GrimoireMotion.state,
+            alignmentPolicy: ScrollPositionAlignmentPolicy.keepVisibleAtEnd);
+        },
+      ))),
+      if (_revealing) TextButton(key: const ValueKey('runes-reveal-now'),
+          onPressed: () => _reveal.value = 1, child: Text(l10n.runesRevealNow))
+      else ...[
+        const SizedBox(height: 12),
+        Text(l10n.runesSelectMeaning, textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.bodySmall),
+        _meaning(context, reading.positions[_activePosition]),
+        _counselor(context),
+      ],
+      const SizedBox(height: 16),
+      OutlinedButton.icon(onPressed: _busy || _readingAI ? null : () => _backToMenu(newReading: true),
+        icon: const Icon(Icons.refresh), label: Text(l10n.oracleNewReading)),
+    ];
+  }
+
+  Widget _meaning(BuildContext context, RunePosition position) {
+    final l10n = AppLocalizations.of(context);
+    return MagicalCard(key: _meaningKey, child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Text(position.positionMeaning, style: Theme.of(context).textTheme.labelLarge
+            ?.copyWith(color: context.gc.gold)),
+        const SizedBox(height: 6),
+        Text(position.rune.name, key: const ValueKey('runes-active-name'),
+            style: Theme.of(context).textTheme.headlineSmall),
+        if (position.isReversed) Text(l10n.runesReversed,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(color: context.gc.textSecondary)),
+        const SizedBox(height: 8),
+        Wrap(spacing: 8, children: [for (final word in position.rune.keywords)
+          Text('· $word', style: TextStyle(color: context.gc.textSecondary))]),
+        const SizedBox(height: 12),
+        Text(position.isReversed && position.rune.reversedMeaning != null
+            ? position.rune.reversedMeaning! : position.rune.divination),
+        const SizedBox(height: 8),
+        TextButton.icon(onPressed: () => Navigator.of(context).push(GrimoireRoute<void>(
+          builder: (_) => RuneDetailPage(rune: position.rune))),
+          icon: const Icon(Icons.menu_book_outlined), label: Text(l10n.runesOpenEncyclopedia)),
+      ],
+    ));
+  }
+
+  Widget _counselor(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return MagicalCard(child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+      if (!context.watch<AuthProvider>().isPremiumEffective)
+        PremiumLockedPreview(titles: [l10n.counselorLockedTitle1, l10n.counselorLockedTitle2,
+          l10n.counselorLockedTitle3, l10n.counselorLockedTitle4])
+      else if (_reading!.interpretation == null)
+        FilledButton.icon(onPressed: _readingAI ? null : _askCounselor,
+          icon: _readingAI ? const SizedBox.square(dimension: 18,
+              child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.auto_awesome),
+          label: Text(_readingAI ? l10n.tarotConsultingCards : l10n.tarotAdvisorInterpretation))
+      else ...[
+        Text(l10n.tarotAdvisorInterpretation, style: Theme.of(context).textTheme.titleMedium),
+        const SizedBox(height: 12), Text(_reading!.interpretation!),
+      ],
+    ]));
   }
 }

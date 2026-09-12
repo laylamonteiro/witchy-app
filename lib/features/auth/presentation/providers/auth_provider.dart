@@ -571,20 +571,48 @@ class AuthProvider extends ChangeNotifier {
   }
 
   /// Verifica se pode fazer leitura de runas hoje
-  bool get canUseRunes => _currentUser.canUseRunes;
+  bool get canUseRunes => isPremiumEffective ||
+      _currentUser.runeReadingsToday < UserModel.freeRuneReadingsLimit;
 
   /// Quantas leituras de runas restam hoje
-  int get remainingRuneReadings => _currentUser.remainingRuneReadings;
+  int get remainingRuneReadings =>
+      isPremiumEffective ? -1 : _currentUser.remainingRuneReadings;
 
   /// Incrementa contador de leituras de runas
   Future<void> incrementRuneReadings() async {
-    if (_currentUser.isFree) {
-      _currentUser = _currentUser.copyWith(
-        runeReadingsToday: _currentUser.runeReadingsToday + 1,
+    final userId = _currentUser.id;
+    await refreshRuneUsage();
+    if (_currentUser.id != userId) return;
+    if (!isPremiumEffective) {
+      final used = await UsageCoordinator().recordUse(
+        userId: userId, legacyUsed: _currentUser.runeReadingsToday,
+        category: UsageCoordinator.runes,
       );
+      if (_currentUser.id != userId) return;
+      _currentUser = _currentUser.copyWith(runeReadingsToday: used);
       await _saveUser();
       notifyListeners();
     }
+  }
+
+  /// Restore the Rune quota from the result's local transaction.
+  Future<void> refreshRuneUsage() async {
+    final userId = _currentUser.id;
+    final now = DateTime.now();
+    final prefs = await SharedPreferences.getInstance();
+    if (_currentUser.id != userId) return;
+    final reset = DateTime.tryParse(
+        prefs.getString('${_lastDailyLimitsResetKey}_$userId') ?? '');
+    final sameDay = reset == null ||
+        UsageCoordinator.dayKey(reset) == UsageCoordinator.dayKey(now);
+    final used = await UsageCoordinator().used(
+      userId: userId, day: now, category: UsageCoordinator.runes,
+      legacyUsed: sameDay ? _currentUser.runeReadingsToday : 0,
+    );
+    if (_currentUser.id != userId) return;
+    _currentUser = _currentUser.copyWith(runeReadingsToday: used);
+    await _saveUser();
+    notifyListeners();
   }
 
   /// Verifica se pode fazer leitura de oracle hoje
