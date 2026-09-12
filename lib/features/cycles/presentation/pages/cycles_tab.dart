@@ -416,9 +416,10 @@ class _DeuErrado extends StatelessWidget {
 /// inventar urgência nenhuma. Tudo o que ele diz é verificável:
 ///
 /// - **O que já é seu e ainda não foi lido.** "23 registros desde a sua
-///   última leitura" é a conta real: quantos registros ela criou depois do
-///   instante em que a última leitura foi gerada. A matéria-prima já existe,
-///   é dela, e ninguém leu ainda — ver isso escrito vale mais que qualquer
+///   última leitura" é a conta real: quantos registros ela criou neste mês,
+///   depois do instante em que a última leitura foi gerada — a mesma janela
+///   e a mesma conta do calendário da leitura. A matéria-prima já existe, é
+///   dela, e ninguém leu ainda — ver isso escrito vale mais que qualquer
 ///   adjetivo sobre o produto.
 /// - **Uma medida honesta, não um prazo inventado.** A barra mostra o quanto
 ///   esse acúmulo já passa do mínimo em que a leitura ganha profundidade. Não
@@ -526,18 +527,21 @@ class _CartaoDaLeituraDoCicloState extends State<_CartaoDaLeituraDoCiclo> {
 
     final ultima = await _service.repository.lastGenerated(userId);
 
-    // A âncora é o INSTANTE DA GERAÇÃO, não o fim do período lido: as
-    // tabelas de registro guardam `created_at`, e o que a leitura não viu é
-    // exatamente o que nasceu depois dela. Com o fim do período, quem lia
-    // "até hoje" e registrava algo em seguida via zero — o registro caía
-    // dentro da janela já lida, mesmo tendo nascido depois do texto.
+    // A janela é a MESMA com que a tela da leitura abre — o mês até hoje,
+    // que é o que o seletor mostra selecionado e soma no rodapé. A dona
+    // conferiu os dois e achou o cartão errado: ele contava desde o instante
+    // da última leitura, e um registro de fim de agosto entrava aqui e não
+    // entrava lá. Dois números para a mesma pergunta é um deles mentindo.
     //
-    // Sem leitura anterior, conta o último ano — que é até onde o calendário
-    // deixa retroagir. Contar "desde sempre" prometeria um período que a
-    // leitura não aceita.
-    final desde = ultima?.createdAt ??
-        DateTime(hoje.year, hoje.month, hoje.day)
-            .subtract(const Duration(days: 365));
+    // Dentro dessa janela, só o que nasceu DEPOIS da última leitura: as
+    // tabelas guardam `created_at`, e o que a leitura não viu é o que veio
+    // depois dela. Uma leitura mais velha que o mês não corta nada.
+    final janela =
+        CycleReadingService.suggestedWindow(CycleReadingPeriodType.lunation);
+    final geradaEm = ultima?.createdAt;
+    final desde = geradaEm != null && geradaEm.isAfter(janela.start)
+        ? geradaEm
+        : janela.start;
 
     final naoLidos = desde.isBefore(amanha)
         ? await _service.composer.countPeriodRecords(

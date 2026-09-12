@@ -779,6 +779,7 @@
   "recordContentRequired": "Escreva algo antes de salvar",
   "recordUpdated": "Registro atualizado! ✨",
   "recordDeleteConfirm": "Deseja realmente excluir o registro \"{name}\"?",
+  "recordDeleteCycleDayConfirm": "Apagar o registro deste dia do ciclo? A página sai do Grimório junto.",
   "@spellDurationDays": {
     "placeholders": {
       "duration": {
