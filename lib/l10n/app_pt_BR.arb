@@ -669,6 +669,7 @@
   "recordContentRequired": "Escreva algo antes de salvar",
   "recordUpdated": "Registro atualizado! ✨",
   "recordDeleteConfirm": "Deseja realmente excluir o registro \"{name}\"?",
+  "recordDeleteCycleDayConfirm": "Apagar o registro deste dia do ciclo? A página sai do Grimório junto.",
   "aiSpellDescribeFirst": "Descreva sua intenção primeiro",
   "aiSpellDailyLimit": "Você atingiu o limite diário de consultas. Volte amanhã ou seja Premium!",
   "aiSpellGenericError": "O conselheiro não pôde manifestar o feitiço. Tente novamente mais tarde",
