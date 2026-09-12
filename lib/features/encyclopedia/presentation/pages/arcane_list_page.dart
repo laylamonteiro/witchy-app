@@ -9,6 +9,8 @@ import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import '../../data/data_sources/arcane_categories.dart';
 import '../../data/models/arcane_entry_model.dart';
 import 'arcane_detail_page.dart';
+import '../widgets/arcane_glyph.dart';
+import '../widgets/archetype_glyph.dart';
 import '../widgets/entry_pager.dart';
 
 /// Lista genérica para as categorias arcanas (Arquétipos, Anjos,
@@ -193,8 +195,15 @@ class _ArcaneListPageState extends State<ArcaneListPage> {
                                     color: context.gc.lilac.withAlpha((0.3 * 255).round()),
                                   ),
                                 ),
-                                child: Text(entry.emoji,
-                                    style: const TextStyle(fontSize: 24)),
+                                // Reserva da imagem do verbete: o mesmo
+                                // desenho (ou o mesmo emoji) que a linha de
+                                // referência abaixo mostra, só que maior.
+                                child: ArcaneGlyph(
+                                  category: widget.category,
+                                  entry: entry,
+                                  size: ArchetypeGlyphArt.boxForEmojiSize(24),
+                                  emojiStyle: const TextStyle(fontSize: 24),
+                                ),
                               ),
                             ),
                           ),
@@ -227,14 +236,24 @@ class _ArcaneListPageState extends State<ArcaneListPage> {
                                   ],
                                 ),
                                 const SizedBox(height: 4),
-                                // Linha de referência com emoji, como o
-                                // planeta nos Metais e a origem nas
-                                // Deusas: aqui, o emoji do PRÓPRIO verbete
-                                // (a espada de Miguel, a trombeta de
-                                // Gabriel...) + a origem cultural.
+                                // Linha de referência com o símbolo do
+                                // verbete, como o planeta nos Metais e a
+                                // origem nas Deusas: aqui, a arte do
+                                // PRÓPRIO verbete (o desenho, nos
+                                // Arquétipos; a espada de Miguel, a
+                                // trombeta de Gabriel...) + a origem
+                                // cultural.
                                 Row(
                                   children: [
-                                    Text(entry.emoji),
+                                    ArcaneGlyph(
+                                      category: widget.category,
+                                      entry: entry,
+                                      // O emoji desta linha herda o corpo de
+                                      // 14 do tema; esta é a caixa que faz o
+                                      // desenho parecer do mesmo tamanho.
+                                      size: ArchetypeGlyphArt
+                                          .boxForEmojiSize(14),
+                                    ),
                                     const SizedBox(width: 4),
                                     Expanded(
                                       child: Text(

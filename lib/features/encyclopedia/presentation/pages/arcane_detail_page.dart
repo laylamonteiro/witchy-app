@@ -8,6 +8,8 @@ import '../../data/data_sources/arcane_categories.dart';
 import '../../data/models/arcane_entry_model.dart';
 import '../../../auth/data/models/feature_access.dart';
 import '../../../auth/presentation/widgets/premium_blur_widget.dart';
+import '../widgets/arcane_glyph.dart';
+import '../widgets/archetype_glyph.dart';
 import '../widgets/related_link.dart';
 
 /// Detalhe genérico de uma entrada arcana da Enciclopédia.
@@ -32,12 +34,55 @@ class ArcaneDetailPage extends StatelessWidget {
     return entry.name;
   }
 
+  /// O título da barra: a arte do verbete e o nome dele.
+  ///
+  /// Com emoji cabia tudo num texto só ("<emoji> <nome>"), e o leitor de tela
+  /// anunciava o nome do emoji antes do nome do verbete. O desenho não cabe
+  /// dentro de um texto, então vira irmão do título.
+  ///
+  /// O [FittedBox] fica em volta dos DOIS, e não só do texto, porque é isso
+  /// que o [ResponsiveAppBarTitle] fazia quando o emoji morava dentro dele:
+  /// quando o nome não cabe na barra, desenho e nome encolhem JUNTOS e a
+  /// proporção entre eles não muda. Com o encolhimento só no texto, o pior
+  /// caso ("La Reina Sombría" em espanhol, com o botão de voltar comendo a
+  /// barra) viraria um nome miúdo ao lado de um desenho do tamanho de antes.
+  /// `mainAxisSize.min` mantém a linha do tamanho do que ela contém, e é o
+  /// que faz o `centerTitle` do tema continuar centrando o conjunto.
+  Widget _barTitle() {
+    if (category.glyphIdFor(entry) == null) {
+      return ResponsiveAppBarTitle('${entry.emoji} $displayTitle');
+    }
+    return FittedBox(
+      fit: BoxFit.scaleDown,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ArcaneGlyph(
+            category: category,
+            entry: entry,
+            size: ArchetypeGlyphArt.boxForEmojiSize(22),
+          ),
+          const SizedBox(width: 8),
+          // Sem [Flexible]: dentro de um [FittedBox] a largura é infinita, e
+          // um filho flexível ali é erro de layout. Quem aperta é o
+          // FittedBox, encolhendo a linha inteira.
+          Text(
+            displayTitle,
+            maxLines: 1,
+            softWrap: false,
+            overflow: TextOverflow.visible,
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: ResponsiveAppBarTitle('${entry.emoji} $displayTitle'),
+        title: _barTitle(),
       ),
       body: ListView(
         padding: const EdgeInsets.symmetric(vertical: 8),
@@ -65,8 +110,16 @@ class ArcaneDetailPage extends StatelessWidget {
                           color: context.gc.lilac.withValues(alpha: 0.35),
                         ),
                       ),
-                      child: Text(entry.emoji,
-                          style: const TextStyle(fontSize: 72)),
+                      // Reserva da imagem do verbete, no tamanho do
+                      // cabeçalho: a mesma arte do card da lista, ampliada —
+                      // a espessura do traço acompanha a caixa, então ela
+                      // não engrossa nem afina com o tamanho.
+                      child: ArcaneGlyph(
+                        category: category,
+                        entry: entry,
+                        size: ArchetypeGlyphArt.boxForEmojiSize(72),
+                        emojiStyle: const TextStyle(fontSize: 72),
+                      ),
                     ),
                   ),
                 ),
@@ -89,12 +142,40 @@ class ArcaneDetailPage extends StatelessWidget {
                     color: context.gc.surface,
                     borderRadius: BorderRadius.circular(16),
                   ),
-                  child: Text(
-                    '${entry.emoji} ${entry.origin}',
-                    style: TextStyle(
-                      color: context.gc.softWhite,
-                      fontSize: 14,
-                    ),
+                  // A pílula era um texto só ("<emoji> <origem>"). O desenho
+                  // não cabe dentro de um texto, então vira irmão dele —
+                  // `mainAxisSize.min` mantém a pílula do tamanho do que ela
+                  // contém, como era.
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      ArcaneGlyph(
+                        category: category,
+                        entry: entry,
+                        size: ArchetypeGlyphArt.boxForEmojiSize(14),
+                        // A cor volta junto com o corpo: aqui o emoji morava
+                        // DENTRO do texto da pílula ('<emoji> <origem>') e
+                        // herdava dele o `softWhite`. Emoji colorido ignora
+                        // a cor, mas o de desenho monocromático (⚗️, 🛡️ em
+                        // fonte sem a versão colorida) a usa — sem isto ele
+                        // sairia na cor do corpo do tema, diferente da
+                        // origem escrita ao lado.
+                        emojiStyle: TextStyle(
+                          color: context.gc.softWhite,
+                          fontSize: 14,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Flexible(
+                        child: Text(
+                          entry.origin,
+                          style: TextStyle(
+                            color: context.gc.softWhite,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 const SizedBox(height: 16),

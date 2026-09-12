@@ -20,19 +20,29 @@ void main() {
   final hoje = DateTime(agora.year, agora.month, agora.day);
   final umAnoAtras = hoje.subtract(const Duration(days: 365));
 
-  Widget tela({({DateTime start, DateTime end})? inicial}) => MaterialApp(
+  /// [margemDoCartao] reproduz o que o cartao que hospeda o seletor come de
+  /// cada lado na tela de introducao (margem 16 + padding 16 do MagicalCard).
+  /// Zero por padrao: os testes de comportamento nao dependem da largura.
+  Widget tela({
+    ({DateTime start, DateTime end})? inicial,
+    double margemDoCartao = 0,
+  }) =>
+      MaterialApp(
         locale: const Locale('pt', 'BR'),
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: Scaffold(
           body: SingleChildScrollView(
-            child: CyclePeriodPickerSheet(
-              embedded: true,
-              dailyCounts: const {},
-              firstDate: umAnoAtras,
-              lastDate: hoje,
-              initialRange: inicial,
-              onConfirm: (_) {},
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: margemDoCartao),
+              child: CyclePeriodPickerSheet(
+                embedded: true,
+                dailyCounts: const {},
+                firstDate: umAnoAtras,
+                lastDate: hoje,
+                initialRange: inicial,
+                onConfirm: (_) {},
+              ),
             ),
           ),
         ),
@@ -56,8 +66,12 @@ void main() {
     await tester.pump();
   }
 
-  Future<void> montar(WidgetTester tester, Widget host) async {
-    await tester.binding.setSurfaceSize(const Size(800, 1600));
+  Future<void> montar(
+    WidgetTester tester,
+    Widget host, {
+    Size tamanho = const Size(800, 1600),
+  }) async {
+    await tester.binding.setSurfaceSize(tamanho);
     addTearDown(() => tester.binding.setSurfaceSize(null));
     await tester.pumpWidget(host);
   }
@@ -152,5 +166,38 @@ void main() {
     expect(confirmarHabilitado(tester), isFalse);
     expect(find.text(l10n.cycleReadingCustomPeriodHint), findsOneWidget,
         reason: 'sem nada marcado, a dica de tamanho volta');
+  });
+
+  testWidgets('o dia tem alvo de toque de pelo menos 40 de altura',
+      (tester) async {
+    // Telefone de 390 e o seletor EMBUTIDO no cartão (32 comidos de cada
+    // lado) de propósito: é a geometria mais apertada das duas — e a única
+    // que a pessoa usa de verdade — então é nela que as duas medidas têm de
+    // valer ao mesmo tempo. Medir numa superfície de 800 provaria só a
+    // altura: com a célula passando de 110 de largura, "mais largo que alto"
+    // passaria mesmo com a altura em 100.
+    await montar(
+      tester,
+      tela(margemDoCartao: 32),
+      tamanho: const Size(390, 844),
+    );
+
+    // Quem recebe o toque é o InkWell que embrulha o número do dia, então é a
+    // altura DELE que precisa caber num dedo. O dia 15 existe em todo mês.
+    final celula = find
+        .ancestor(of: find.text('15'), matching: find.byType(InkWell))
+        .first;
+    final tamanho = tester.getSize(celula);
+
+    // A célula tem altura FIXA (mainAxisExtent), e não mais uma proporção da
+    // largura — é o que faz este número não depender da tela onde o seletor
+    // for montado.
+    expect(tamanho.height, greaterThanOrEqualTo(40.0),
+        reason: 'com 33 de altura o dedo acertava o dia vizinho');
+    // A decisão da dona (23/08) de manter o calendário mais largo que alto
+    // continua valendo: devolver alvo de toque não pode virar um calendário
+    // quadrado que toma a tela inteira. Aqui a folga é de ~4,9 (44,9 x 40).
+    expect(tamanho.width, greaterThan(tamanho.height),
+        reason: 'o calendário segue mais largo que alto');
   });
 }

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
-import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/magical_card.dart';
 import 'dream_interpretation_page.dart';
 import 'dream_themes_page.dart';
+import '../../../../core/tools/tool_identity.dart';
 
 /// Hub de Sonhos na aba Ferramentas: interpretação pelo Conselheiro
 /// Místico (Premium, gate dentro do fluxo) e a biblioteca gratuita de
@@ -17,7 +17,7 @@ class DreamToolsPage extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: ResponsiveAppBarTitle(l10n.toolDreamsTitle),
+        title: ToolHeading(tool: ToolId.dreams, title: l10n.toolDreamsTitle),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(vertical: 16),

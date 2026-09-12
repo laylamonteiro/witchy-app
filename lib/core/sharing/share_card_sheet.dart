@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:gal/gal.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
+import 'package:grimorio_de_bolso/core/widgets/folha_com_saida.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -178,14 +179,13 @@ class _ShareCardSheetState extends State<_ShareCardSheet> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              width: 40,
-              height: 4,
-              margin: const EdgeInsets.only(bottom: 12),
-              decoration: BoxDecoration(
-                color: context.gc.surfaceBorder,
-                borderRadius: BorderRadius.circular(2),
-              ),
+            // A saída, visível: o retângulo de 40x4 que ficava aqui era
+            // decoração com cara de afordância. Esta folha pinta o próprio
+            // cartão, então a alça do Material não serve — ela flutuaria
+            // sobre o escurecido, fora dele.
+            const Align(
+              alignment: Alignment.centerRight,
+              child: BotaoFecharFolha(),
             ),
             // O FittedBox só ENCOLHE a moldura em telas estreitas; o
             // RepaintBoundary fica por dentro, no tamanho lógico cheio,

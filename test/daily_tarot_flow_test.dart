@@ -1,3 +1,9 @@
+// Um teste que falha no meio de uma gravação deixa o cadeado do SQLite
+// preso para os seguintes: o limite por teste evita que isso vire dezenas
+// de minutos de CI em vez de uma falha legível.
+@Timeout(Duration(minutes: 2))
+library;
+
 import 'dart:async';
 import 'dart:io';
 
@@ -13,6 +19,7 @@ import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'support/short_test_timeout.dart';
 
 class _PremiumFixture extends AuthProvider {
   Completer<void>? pendingRefresh;
@@ -37,7 +44,7 @@ class _CheckinFixture extends DailyCheckinProvider {
 }
 
 void main() {
-  TestWidgetsFlutterBinding.ensureInitialized();
+  useShortTestTimeout();
 
   setUpAll(() async {
     SharedPreferences.setMockInitialValues({});

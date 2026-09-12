@@ -3,6 +3,7 @@ import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
 import '../providers/spell_provider.dart';
 import '../../../../core/widgets/magical_card.dart';
+import '../../../../core/widgets/moon_glyph.dart';
 import '../../../../core/widgets/loading_widget.dart';
 import '../../../../core/widgets/empty_state_widget.dart';
 import '../../../../core/widgets/magical_fab.dart';
@@ -267,10 +268,12 @@ class _UserSpellsListPageState extends State<UserSpellsListPage> {
                                 ),
                                 const SizedBox(width: 8),
                                 if (showMoon) ...[
-                                  Text(
-                                    spell.moonPhase!.emoji,
-                                    style: const TextStyle(fontSize: 20),
-                                  ),
+                                  // Sem halo: é uma linha de lista, e o brilho
+                                  // borraria o nome do feitiço ao lado.
+                                  MoonGlyph(
+                                      phase: spell.moonPhase!,
+                                      size: 20,
+                                      halo: false),
                                   const SizedBox(width: 8),
                                 ],
                                 Expanded(

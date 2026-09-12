@@ -7,6 +7,7 @@ import '../../../../core/widgets/magical_search_field.dart';
 import '../../data/encyclopedia_search.dart';
 import '../../data/models/user_entry_model.dart';
 import '../providers/encyclopedia_provider.dart';
+import '../widgets/archetype_glyph.dart';
 
 /// Busca global da Enciclopédia: um campo, todas as seções (e as entradas
 /// pessoais). Resultados agrupados por seção, cada um abrindo o verbete.
@@ -89,6 +90,9 @@ class _EncyclopediaSearchPageState extends State<EncyclopediaSearchPage> {
       itemCount: hits.length,
       itemBuilder: (context, index) {
         final hit = hits[index];
+        // Em variável local para o compilador saber que, no ramo de baixo,
+        // ela não é nula — campo de registro não promove sozinho.
+        final glyphId = hit.glyphId;
         // Cabeçalho de seção quando ela muda em relação ao item anterior.
         final showHeader = index == 0 || hits[index - 1].section != hit.section;
 
@@ -108,7 +112,20 @@ class _EncyclopediaSearchPageState extends State<EncyclopediaSearchPage> {
                 ),
               ),
             ListTile(
-              leading: Text(hit.emoji, style: const TextStyle(fontSize: 24)),
+              // O símbolo do resultado: o DESENHO quando o verbete tem um
+              // (os arquétipos), o emoji dele quando não — o mesmo que a
+              // lista da seção e o verbete mostram, para a busca não ser a
+              // única superfície fora de compasso. Mudo para o leitor de
+              // tela: quem fala é o nome, na linha ao lado.
+              leading: glyphId == null
+                  ? ExcludeSemantics(
+                      child: Text(hit.emoji,
+                          style: const TextStyle(fontSize: 24)),
+                    )
+                  : ArchetypeGlyph(
+                      id: glyphId,
+                      size: ArchetypeGlyphArt.boxForEmojiSize(24),
+                    ),
               title: Text(
                 hit.name,
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(

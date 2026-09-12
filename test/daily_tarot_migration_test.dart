@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:grimorio_de_bolso/core/database/database_helper.dart';
+import 'package:grimorio_de_bolso/core/database/menstrual_cycle_schema.dart';
 import 'package:grimorio_de_bolso/core/database/reading_session_schema.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
@@ -22,10 +23,19 @@ void main() {
         });
     await old.close();
     final upgraded = await DatabaseHelper.instance.database;
-    expect(await upgraded.getVersion(), 24);
+    expect(await upgraded.getVersion(), 29);
     expect((await upgraded.query('tarot_readings')).single['reading_data'], 'preserved');
     final tables = (await upgraded.rawQuery("SELECT name FROM sqlite_master WHERE type = 'table'"))
         .map((row) => row['name']).toSet();
     expect(tables, containsAll(ReadingSessionSchema.tables));
+    expect(tables, contains(MenstrualCycleSchema.table),
+        reason: 'A phone coming from v23 also gains the menstrual record');
+    final columns = (await upgraded
+            .rawQuery('PRAGMA table_info(${MenstrualCycleSchema.table})'))
+        .map((row) => row['name'])
+        .toSet();
+    expect(columns, containsAll(['season', 'season_note']),
+        reason: 'Inherited from v29 and left without a reader: the migration '
+            'only ever moves forward');
   });
 }

@@ -7,9 +7,6 @@ class Rune {
   final List<String> keywords;
   final String description;
 
-  /// The Futhark character is stable across the translated catalogs.
-  String get id => symbol;
-
   const Rune({
     required this.name,
     required this.symbol,

@@ -1,6 +1,7 @@
 import '../models/arcane_entry_model.dart';
 import 'angels_data.dart';
 import 'angels_data_pt.dart';
+import 'archetype_identity.dart';
 import 'archetypes_data.dart';
 import 'archetypes_data_pt.dart';
 import 'demons_data.dart';
@@ -38,6 +39,30 @@ enum ArcaneCategory {
         ArcaneCategory.angels => angelsPt,
         ArcaneCategory.demons => demonsPt,
         ArcaneCategory.sacredSymbols => sacredSymbolsPt,
+      };
+
+  /// O id do DESENHO de [entry], ou null quando a categoria ainda é escrita
+  /// com o emoji do próprio verbete.
+  ///
+  /// É a costura entre o desenho e o emoji, e ela mora AQUI porque é a
+  /// categoria que sabe a resposta — as páginas de verbete são genéricas e
+  /// servem às quatro. Quem decidisse olhando só para o emoji erraria: o
+  /// demônio Stolas usa 🦉 e o Buer usa 🌿, os mesmos símbolos da Sábia e da
+  /// Curandeira, e os dois passariam a aparecer com o desenho de um
+  /// arquétipo. Com a categoria na frente, o verbete de arquétipo mostra o
+  /// desenho e o de demônio continua com o emoji dele.
+  ///
+  /// Dentro dos Arquétipos a resolução é pelo emoji de propósito: ele é
+  /// invariante entre idiomas (paridade testada) e já é a chave que
+  /// `archetypeIdForEmoji` usa para achar o id gravado no aparelho — uma
+  /// segunda tabela de correspondência seria uma segunda coisa para
+  /// desencontrar.
+  String? glyphIdFor(ArcaneEntry entry) => switch (this) {
+        ArcaneCategory.archetypes => archetypeIdForEmoji(entry.emoji),
+        ArcaneCategory.angels ||
+        ArcaneCategory.demons ||
+        ArcaneCategory.sacredSymbols =>
+          null,
       };
 
   /// Caminho da imagem do verbete: slug do nome PT correspondente ao índice

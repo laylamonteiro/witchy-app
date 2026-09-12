@@ -82,7 +82,11 @@ const List<EsbatItem> moonEsbatItemsPt = [
         'Deixe cristais e instrumentos sob o luar para renovar o poder deles',
   ),
   (
-    emoji: '🫙',
+    // Gota, e não o potinho: U+1FAD9 é emoji de 2021 e o minSdk do app
+    // é 24 — em Android antigo a fonte do sistema não o tem e a linha
+    // abria com um quadradinho. A gota é de 2010 e existe em todo
+    // aparelho.
+    emoji: '💧',
     title: 'Água de lua',
     text: 'Prepare a água de lua no auge do poder lunar',
   ),

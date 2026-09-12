@@ -17,6 +17,8 @@ class SpreadBoard extends StatelessWidget {
     this.cross = false,
     this.compact = false,
     this.nextPosition,
+    this.selectedPosition,
+    this.onTap,
   }) : assert(labels.length == (cross ? 5 : 3));
 
   final List<String> labels;
@@ -24,6 +26,14 @@ class SpreadBoard extends StatelessWidget {
   final bool cross;
   final bool compact;
   final int? nextPosition;
+
+  /// Posição em foco no painel de leitura. Só marca o rótulo: quem desenha o
+  /// destaque na carta é a própria carta, que sabe se está virada.
+  final int? selectedPosition;
+
+  /// Tocar numa posição muda o foco do painel. Nulo nas mesas de seleção,
+  /// onde quem escolhe é o leque e a mesa é só espelho.
+  final ValueChanged<int>? onTap;
 
   @override
   Widget build(BuildContext context) => LayoutBuilder(builder: (context, constraints) {
@@ -41,7 +51,11 @@ class SpreadBoard extends StatelessWidget {
             padding: const EdgeInsets.all(4),
             child: Semantics(
               sortKey: OrdinalSortKey(index.toDouble()),
-              child: Column(mainAxisSize: MainAxisSize.min, children: [
+              child: InkWell(
+                key: ValueKey('tarot-slot-$index'),
+                onTap: onTap == null ? null : () => onTap!(index),
+                borderRadius: BorderRadius.circular(10),
+                child: Column(mainAxisSize: MainAxisSize.min, children: [
                 AnimatedSwitcher(
                   duration: GrimoireMotion.reduced(context)
                       ? Duration.zero : GrimoireMotion.state,
@@ -68,10 +82,13 @@ class SpreadBoard extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(labels[index], textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: nextPosition == index ? context.gc.lilac : context.gc.textSecondary,
-                      fontWeight: nextPosition == index ? FontWeight.bold : FontWeight.normal,
+                      color: nextPosition == index || selectedPosition == index
+                          ? context.gc.lilac : context.gc.textSecondary,
+                      fontWeight: nextPosition == index || selectedPosition == index
+                          ? FontWeight.bold : FontWeight.normal,
                     )),
-              ]),
+                ]),
+              ),
             ),
           ),
       ])],

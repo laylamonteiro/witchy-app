@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
-import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/widgets/magical_button.dart';
@@ -8,6 +7,7 @@ import '../../data/data_sources/sigil_content.dart';
 import '../../data/models/sigil_model.dart';
 import 'sigil_step2_letters_page.dart';
 import '../widgets/sigil_icon.dart';
+import '../../../../core/tools/tool_identity.dart';
 
 /// Etapa 1: Definir intenção para o sigilo
 class SigilStep1IntentionPage extends StatefulWidget {
@@ -61,7 +61,8 @@ class _SigilStep1IntentionPageState extends State<SigilStep1IntentionPage> {
     return Scaffold(
       backgroundColor: context.gc.background,
       appBar: AppBar(
-        title: ResponsiveAppBarTitle(AppLocalizations.of(context).sigilCreateTitle),
+        title: ToolHeading(tool: ToolId.sigils,
+            title: AppLocalizations.of(context).sigilCreateTitle),
         backgroundColor: context.gc.surface,
       ),
       body: SingleChildScrollView(

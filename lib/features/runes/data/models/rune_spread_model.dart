@@ -128,6 +128,10 @@ class RuneReading {
   final String? interpretation;
   final DateTime date;
 
+  /// Sessão de escolha manual que produziu a leitura (P04). Leituras
+  /// antigas, sorteadas pelo código, não têm esse vínculo.
+  final String? sessionId;
+
   const RuneReading({
     required this.id,
     required this.question,
@@ -135,6 +139,7 @@ class RuneReading {
     required this.positions,
     this.interpretation,
     required this.date,
+    this.sessionId,
   });
 
   Map<String, dynamic> toJson() {
@@ -145,6 +150,7 @@ class RuneReading {
       'positions': positions.map((p) => p.toJson()).toList(),
       'interpretation': interpretation,
       'date': date.toIso8601String(),
+      if (sessionId != null) 'session_id': sessionId,
     };
   }
 
@@ -164,6 +170,7 @@ class RuneReading {
           .toList(),
       interpretation: json['interpretation'],
       date: DateTime.parse(json['date']),
+      sessionId: json['session_id'] as String?,
     );
   }
 

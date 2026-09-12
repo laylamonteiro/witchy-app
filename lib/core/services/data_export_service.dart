@@ -6,7 +6,9 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../../features/diary/data/models/free_writing_model.dart';
 import '../database/database_helper.dart';
+import '../database/menstrual_cycle_schema.dart';
 import '../database/reading_session_schema.dart';
 import '../sharing/image_download_stub.dart'
     if (dart.library.js_interop) '../sharing/image_download_web.dart';
@@ -50,6 +52,9 @@ class DataExportService {
     // O relatório em si sai em free_writings; aqui vai o registro da compra
     // e do período coberto — exportar os dados dela é exportar tudo.
     'cycle_readings',
+    // O registro menstrual é dela: levar os próprios dados embora não
+    // depende de assinatura nem de o consentimento continuar de pé.
+    MenstrualCycleSchema.table,
   ];
 
   /// Lê todas as tabelas e devolve o JSON do backup.
@@ -62,7 +67,10 @@ class DataExportService {
 
     for (final table in tables) {
       try {
-        exportData[table] = await db.query(table);
+        final rows = await db.query(table);
+        exportData[table] = table == 'free_writings'
+            ? rows.where(_naoEhEspelho).toList()
+            : rows;
       } catch (_) {
         exportData[table] = [];
       }
@@ -73,6 +81,18 @@ class DataExportService {
 
     return const JsonEncoder.withIndent('  ').convert(exportData);
   }
+
+  /// As páginas-espelho ficam FORA do backup.
+  ///
+  /// O dia do ciclo vira uma página no Grimório, e o arquivo de "levar meus
+  /// dados embora" já leva a tabela `menstrual_days` inteira — com sintomas,
+  /// intensidade, revisão e lápides, que a prosa da página nem tem. Exportar
+  /// as duas coisas escreveria o mesmo dia duas vezes no mesmo arquivo, e a
+  /// segunda vez seria a pior: o relato do corpo em texto corrido, mais uma
+  /// cópia para ela guardar sem ter pedido. A página é derivável da linha;
+  /// a linha não é derivável da página.
+  static bool _naoEhEspelho(Map<String, Object?> row) =>
+      !FreeWritingSource.neverLeavesDevice.contains(row['source']);
 
   /// Nome de arquivo com carimbo de tempo, para backups não se sobrescreverem.
   String fileName() =>

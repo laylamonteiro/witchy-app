@@ -40,8 +40,12 @@ import '../../../sigils/presentation/pages/sigil_step1_intention_page.dart';
 import '../../../tarot/presentation/pages/tarot_learn_tab.dart';
 import '../../../tarot/presentation/pages/tarot_library_page.dart';
 import '../../../tarot/presentation/pages/tarot_page.dart';
+import '../../../journeys/domain/action_outcome.dart';
+import '../../../journeys/domain/progress_coordinator.dart';
+import '../../../your_day/presentation/providers/daily_checkin_provider.dart';
 import '../../data/models/trail_model.dart';
 import '../providers/learning_provider.dart';
+import '../widgets/lesson_celebration_card.dart';
 
 /// Uma lição do Grimório Vivo em três atos:
 /// 1) Ensino  2) Prática  3) A Página (preenchimento guiado, campo a campo).
@@ -304,13 +308,32 @@ class _LessonPageState extends State<LessonPage> {
     try {
       final recordBuilder = await _saveRecord();
       if (!mounted) return;
-      final reward = await context
-          .read<LearningProvider>()
-          .markCompleted(widget.trail, widget.lesson.id);
+      final learning = context.read<LearningProvider>();
+      final reward = await learning.markCompleted(widget.trail, widget.lesson.id);
 
       if (!mounted) return;
+      // Marcos, dia completo e o nível entram na MESMA cena da lição: o
+      // coordenador avalia sem apresentar nada por conta própria, e o XP
+      // exibido é o da recompensa (25 + bônus da trilha uma vez).
+      ActionOutcome? outcome;
+      final coordinator = context.read<ProgressCoordinator?>();
+      if (coordinator != null && reward.xpGained > 0) {
+        try {
+          outcome = await coordinator.record(
+            userId: context.read<AuthProvider>().currentUser.id,
+            origin: ActionOrigin.lesson,
+            entityId: widget.lesson.id,
+            learning: learning,
+            checkin: context.read<DailyCheckinProvider?>(),
+            present: false,
+          );
+        } catch (_) {
+          outcome = null; // A falha na avaliação não impede a página selada.
+        }
+      }
+      if (!mounted) return;
       final navigator = Navigator.of(context);
-      await _celebrate(reward);
+      await _celebrate(reward, outcome);
       if (!mounted) return;
       // "Que assim seja" leva direto ao registro criado.
       navigator.pop();
@@ -364,126 +387,21 @@ class _LessonPageState extends State<LessonPage> {
   }
 
   /// Selo de conclusão: XP ganho, subida de nível e encadernação da trilha.
-  Future<void> _celebrate(LessonReward reward) {
+  Future<void> _celebrate(LessonReward reward, ActionOutcome? outcome) {
     return showDialog(
       context: context,
       barrierDismissible: false,
       builder: (dialogContext) => Dialog(
         backgroundColor: Colors.transparent,
-        child: Container(
-          padding: const EdgeInsets.all(24),
-          decoration: BoxDecoration(
-            color: dialogContext.gc.surface,
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(
-              color: reward.trailBound
-                  ? dialogContext.gc.starYellow
-                  : dialogContext.gc.lilac,
-              width: 2,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: (reward.trailBound
-                        ? dialogContext.gc.starYellow
-                        : dialogContext.gc.lilac)
-                    .withValues(alpha: 0.35),
-                blurRadius: 30,
-              ),
-            ],
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TweenAnimationBuilder<double>(
-                tween: Tween(begin: 0.4, end: 1),
-                duration: const Duration(milliseconds: 600),
-                curve: Curves.elasticOut,
-                builder: (context, value, child) =>
-                    Transform.scale(scale: value, child: child),
-                child: Text(
-                  reward.trailBound ? '📕' : '📜',
-                  style: const TextStyle(fontSize: 64),
-                ),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                reward.trailBound
-                    ? AppLocalizations.of(context).learnTrailBound
-                    : AppLocalizations.of(context).learnPageDone,
-                style: Theme.of(dialogContext)
-                    .textTheme
-                    .headlineSmall
-                    ?.copyWith(color: dialogContext.gc.lilac),
-              ),
-              const SizedBox(height: 8),
-              if (reward.xpGained > 0)
-                Text(
-                  '+${reward.xpGained} XP',
-                  style: TextStyle(
-                    color: dialogContext.gc.starYellow,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              if (reward.trailBound) ...[
-                const SizedBox(height: 8),
-                Text(
-                  AppLocalizations.of(context)
-                      .learnChapterBound(widget.trail.title),
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: dialogContext.gc.textSecondary,
-                    height: 1.4,
-                  ),
-                ),
-              ],
-              if (reward.leveledUpTo != null) ...[
-                const SizedBox(height: 12),
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(16),
-                    color: dialogContext.gc.lilac.withValues(alpha: 0.15),
-                  ),
-                  child: Text(
-                    '${reward.leveledUpTo!.emoji} ${AppLocalizations.of(context).learnNewTitle}: '
-                    '${reward.leveledUpTo!.title}',
-                    style: TextStyle(
-                      color: dialogContext.gc.lilac,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ],
-              const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: () => Navigator.pop(dialogContext),
-                child: Text(AppLocalizations.of(context).learnSoBeIt),
-              ),
-              // Conquistas de verdade (trilha encadernada ou novo título)
-              // podem virar imagem: a evolução mágica vai para o mundo com
-              // o nome do app junto.
-              if (reward.trailBound || reward.leveledUpTo != null) ...[
-                const SizedBox(height: 4),
-                TextButton.icon(
-                  onPressed: () => _shareAchievement(dialogContext, reward),
-                  icon: Icon(
-                    Icons.share_outlined,
-                    size: 18,
-                    color: dialogContext.gc.lilac,
-                  ),
-                  label: Text(
-                    AppLocalizations.of(context).shareImageShare,
-                    style: TextStyle(
-                      color: dialogContext.gc.lilac,
-                      fontSize: 13,
-                    ),
-                  ),
-                ),
-              ],
-            ],
-          ),
+        child: LessonCelebrationCard(
+          trail: widget.trail,
+          reward: reward,
+          outcome: outcome,
+          onDone: () => Navigator.pop(dialogContext),
+          // Conquistas de verdade (trilha encadernada ou novo título)
+          // podem virar imagem: a evolução mágica vai para o mundo com
+          // o nome do app junto.
+          onShare: () => _shareAchievement(dialogContext, reward),
         ),
       ),
     );

@@ -1,18 +1,32 @@
+import 'dart:convert';
+
 import 'package:sqflite/sqflite.dart';
 import '../../../../core/database/database_helper.dart';
 import '../../../../core/services/data_sync_service.dart';
 import '../models/rune_spread_model.dart';
 
 class RuneReadingRepository {
-  final DatabaseHelper _dbHelper = DatabaseHelper.instance;
+  RuneReadingRepository({DatabaseHelper? dbHelper})
+      : _dbHelper = dbHelper ?? DatabaseHelper.instance;
+
+  final DatabaseHelper _dbHelper;
 
   // Salvar leitura
   final DataSyncService _syncService = DataSyncService();
 
-  Future<void> saveReading(RuneReading reading, String userId,
-      {DatabaseExecutor? executor}) async {
-    final db = executor ?? await _dbHelper.database;
+  Future<void> saveReading(RuneReading reading, String userId) async {
+    final data = await insertReading(reading, userId);
+    await _syncService.syncItem(SyncEntity.runeReadings, data);
+  }
 
+  /// Grava a linha local (dentro de [executor], quando a leitura faz parte
+  /// de uma transação maior) e devolve o payload para subir depois.
+  Future<Map<String, dynamic>> insertReading(
+    RuneReading reading,
+    String userId, {
+    DatabaseExecutor? executor,
+  }) async {
+    final db = executor ?? await _dbHelper.database;
     final data = {
       'id': reading.id,
       'user_id': userId,
@@ -29,40 +43,33 @@ class RuneReadingRepository {
       data,
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
-    // A local result/usage transaction must never wait on network I/O.
-    if (executor == null) {
-      await _syncService.syncItem(SyncEntity.runeReadings, data);
-    }
+    return data;
   }
 
-  Future<void> syncReading(String id, String userId) async {
+  /// Sobe uma leitura já gravada localmente (best-effort, como saveReading).
+  Future<void> syncReading(Map<String, dynamic> data) =>
+      _syncService.syncItem(SyncEntity.runeReadings, data);
+
+  /// Guarda a interpretação do Conselheiro junto da leitura, para que
+  /// reabrir a mesma mesa não peça outra geração.
+  Future<void> attachInterpretation({
+    required String readingId,
+    required String userId,
+    required String interpretation,
+  }) async {
     final db = await _dbHelper.database;
     final rows = await db.query('rune_readings',
-        where: 'id = ? AND user_id = ?', whereArgs: [id, userId], limit: 1);
-    if (rows.isNotEmpty) {
-      await _syncService.syncItem(SyncEntity.runeReadings, rows.single);
-    }
-  }
-
-  Future<RuneReading?> updateInterpretation(
-      String id, String userId, String interpretation) async {
-    final db = await _dbHelper.database;
-    final updated = await db.transaction((txn) async {
-      final rows = await txn.query('rune_readings',
-          where: 'id = ? AND user_id = ?', whereArgs: [id, userId], limit: 1);
-      if (rows.isEmpty) return null;
-      final old = RuneReading.fromJsonString(rows.single['reading_data'] as String);
-      final reading = RuneReading(id: old.id, question: old.question,
-          spreadType: old.spreadType, positions: old.positions,
-          interpretation: interpretation, date: old.date);
-      await txn.update('rune_readings', {
-        'reading_data': reading.toJsonString(),
-        'updated_at': DateTime.now().millisecondsSinceEpoch, 'synced': 0,
-      }, where: 'id = ? AND user_id = ?', whereArgs: [id, userId]);
-      return reading;
-    });
-    if (updated != null) await syncReading(id, userId);
-    return updated;
+        where: 'id = ? AND user_id = ?', whereArgs: [readingId, userId], limit: 1);
+    if (rows.isEmpty) return;
+    final row = Map<String, dynamic>.from(rows.single);
+    final json = jsonDecode(row['reading_data'] as String) as Map<String, dynamic>;
+    json['interpretation'] = interpretation;
+    row['reading_data'] = jsonEncode(json);
+    row['updated_at'] = DateTime.now().millisecondsSinceEpoch;
+    row['synced'] = 0;
+    await db.update('rune_readings', row,
+        where: 'id = ? AND user_id = ?', whereArgs: [readingId, userId]);
+    await _syncService.syncItem(SyncEntity.runeReadings, row);
   }
 
   // Buscar todas as leituras
@@ -81,13 +88,13 @@ class RuneReadingRepository {
   }
 
   // Buscar leitura por ID
-  Future<RuneReading?> getReading(String id, {required String userId}) async {
+  Future<RuneReading?> getReading(String id) async {
     final db = await _dbHelper.database;
 
     final maps = await db.query(
       'rune_readings',
-      where: 'id = ? AND user_id = ?',
-      whereArgs: [id, userId],
+      where: 'id = ?',
+      whereArgs: [id],
     );
 
     if (maps.isEmpty) {

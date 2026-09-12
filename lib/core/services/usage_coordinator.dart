@@ -4,7 +4,7 @@ import 'package:uuid/uuid.dart';
 import '../database/database_helper.dart';
 
 /// Preferences seed a day once; afterwards SQLite is the authority.
-/// Tarot and Oracle share a category; Runas keeps its own existing quota.
+/// Tarot and Oracle use the same existing quota category; runes have their own.
 class UsageCoordinator {
   UsageCoordinator({DatabaseHelper? dbHelper})
       : _dbHelper = dbHelper ?? DatabaseHelper.instance;
@@ -23,6 +23,14 @@ class UsageCoordinator {
     DateTime? day,
   }) => used(userId: userId, legacyUsed: legacyUsed, day: day);
 
+  Future<int> recordOracleUse({
+    required String userId,
+    required int legacyUsed,
+    DateTime? day,
+    String? operationId,
+  }) => record(userId: userId, legacyUsed: legacyUsed, day: day,
+      operationId: operationId);
+
   Future<int> used({
     required String userId,
     required int legacyUsed,
@@ -32,21 +40,13 @@ class UsageCoordinator {
     final db = await _dbHelper.database;
     final key = dayKey(day ?? DateTime.now());
     return db.transaction((txn) async {
-      await importBalance(txn,
-          userId: userId, dayKey: key, legacyUsed: legacyUsed, category: category);
+      await importBalance(txn, userId: userId, dayKey: key,
+          legacyUsed: legacyUsed, category: category);
       return usedIn(txn, userId: userId, dayKey: key, category: category);
     });
   }
 
-  Future<int> recordOracleUse({
-    required String userId,
-    required int legacyUsed,
-    DateTime? day,
-    String? operationId,
-  }) => recordUse(userId: userId, legacyUsed: legacyUsed,
-      day: day, operationId: operationId);
-
-  Future<int> recordUse({
+  Future<int> record({
     required String userId,
     required int legacyUsed,
     String category = oracle,
@@ -57,10 +57,10 @@ class UsageCoordinator {
     final key = dayKey(day ?? DateTime.now());
     final operation = operationId ?? const Uuid().v4();
     return db.transaction((txn) async {
-      await importBalance(txn,
-          userId: userId, dayKey: key, legacyUsed: legacyUsed, category: category);
-      await recordIn(txn,
-          userId: userId, dayKey: key, operationId: operation, category: category);
+      await importBalance(txn, userId: userId, dayKey: key,
+          legacyUsed: legacyUsed, category: category);
+      await recordIn(txn, userId: userId, dayKey: key,
+          operationId: operation, category: category);
       return usedIn(txn, userId: userId, dayKey: key, category: category);
     });
   }

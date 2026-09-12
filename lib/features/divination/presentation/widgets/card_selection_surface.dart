@@ -7,6 +7,7 @@ import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/theme/grimoire_motion.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../tarot/presentation/widgets/tarot_card_view.dart';
+import 'grimoire_card_back.dart';
 
 /// Only a small window is painted, but every deck position is reachable.
 /// Horizontal exploration never selects on release. A tap, keyboard action
@@ -19,6 +20,7 @@ class CardSelectionSurface extends StatefulWidget {
     this.enabled = true,
     this.lockedCardId,
     this.deckPositions,
+    this.back = GrimoireBackFace.tarot,
   }) : assert(cardIds.length > 0),
        assert(deckPositions == null || deckPositions.length == cardIds.length);
 
@@ -28,6 +30,10 @@ class CardSelectionSurface extends StatefulWidget {
   final String? lockedCardId;
   /// Original shuffled slots, preserved when previously chosen cards leave.
   final List<int>? deckPositions;
+
+  /// De que baralho é o verso do leque. O leque é o mesmo widget para o Tarô
+  /// e para o Oráculo; o padrão Tarô mantém quem já o usava sem mudança.
+  final GrimoireBackFace back;
 
   @override
   State<CardSelectionSurface> createState() => _CardSelectionSurfaceState();
@@ -254,10 +260,12 @@ class _CardSelectionSurfaceState extends State<CardSelectionSurface>
                                             blurRadius: i == _focused ? 15 : 4,
                                           )],
                                         ),
-                                        child: TarotCardBack(
+                                        child: GrimoireCardBack(
                                           width: cardWidth,
+                                          height: cardHeight,
                                           deckPosition: _deckPosition(i),
                                           highlighted: i == _focused,
+                                          face: widget.back,
                                         ),
                                       ),
                                     ),

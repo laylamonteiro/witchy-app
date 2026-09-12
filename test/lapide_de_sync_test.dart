@@ -28,10 +28,21 @@ void main() {
   final service = DataSyncService();
   late ServidorDeMentira servidor;
 
+  /// A preferência de nuvem, escrita na instância viva do
+  /// SharedPreferences. `setMockInitialValues` troca os valores INICIAIS, e
+  /// `getInstance()` guarda uma instância só por processo — um teste que
+  /// desliga a nuvem envenenaria os seguintes se a volta não fosse escrita.
+  Future<void> definirNuvem(bool ligada) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(DataSyncService.cloudSyncUserConfiguredKey, true);
+    await prefs.setBool(DataSyncService.cloudSyncPreferenceKey, ligada);
+  }
+
   setUp(() async {
     SharedPreferences.setMockInitialValues({});
     servidor = ServidorDeMentira();
     service.configurarParaTeste(servidor, uid);
+    await definirNuvem(true);
     final db = await DatabaseHelper.instance.database;
     await db.delete('dreams');
     await db.delete('sync_tombstones');
@@ -276,6 +287,97 @@ void main() {
         reason: 'o "baixar tudo" era o caminho mais largo da ressurreição',
       );
       expect(servidor.linhasDe('dreams'), isEmpty);
+    });
+  });
+
+  group('a lápide e a preferência de nuvem', () {
+    // O id não é um número opaco neste app: o feitiço pré-carregado é
+    // `preloaded_<nome>`, o perfil mágico herda o id do MAPA, o check-in
+    // reconstruído é `<conta>_<dia>`. Uma lápide é, portanto, uma frase
+    // sobre o que a pessoa apagou — e ela precisa parar na porta de quem
+    // desligou a nuvem.
+    test('com a nuvem ligada a lápide existe e sobe', () async {
+      final db = await DatabaseHelper.instance.database;
+      await db.insert('dreams', sonho('sonho-9'));
+      await service.syncAll();
+
+      await db.delete('dreams', where: 'id = ?', whereArgs: ['sonho-9']);
+      await service.deleteItem(SyncEntity.dreams, 'sonho-9');
+
+      final locais = await lapidesLocais();
+      expect(locais, hasLength(1),
+          reason: 'sem lápide, o item apagado ressuscita no próximo download');
+      expect(locais.first['item_id'], 'sonho-9');
+      expect(locais.first['user_id'], uid);
+      expect(servidor.linhasDe('sync_tombstones'), hasLength(1),
+          reason: 'é por ela que os outros aparelhos da pessoa sabem');
+      expect(servidor.linhasDe('dreams'), isEmpty);
+    });
+
+    test('com a nuvem desligada a lápide não existe — nem depois', () async {
+      final db = await DatabaseHelper.instance.database;
+      await definirNuvem(false);
+      await db.insert('dreams', sonho('sonho-10'));
+
+      await db.delete('dreams', where: 'id = ?', whereArgs: ['sonho-10']);
+      await service.deleteItem(SyncEntity.dreams, 'sonho-10');
+
+      expect(await lapidesLocais(), isEmpty,
+          reason: 'com a nuvem desligada nada DESCE, então não há '
+              'ressurreição a impedir — só um id guardado sem motivo');
+      expect(servidor.linhasDe('sync_tombstones'), isEmpty);
+
+      // E o id não pode viajar quando a nuvem voltar: é a varredura que
+      // reenvia lápide pendente, e não pode haver pendente nenhuma.
+      await definirNuvem(true);
+      final resultado = await service.syncAll();
+      expect(resultado.success, isTrue, reason: resultado.detailedError);
+      expect(servidor.linhasDe('sync_tombstones'), isEmpty,
+          reason: 'o que ela apagou com a nuvem desligada não é assunto '
+              'do servidor em varredura nenhuma');
+    });
+
+    test('a lápide anterior ao login não é adotada pela conta', () async {
+      final db = await DatabaseHelper.instance.database;
+      // Lápide de uma versão anterior, gravada quando ainda não havia conta.
+      // O item que ela descreve nunca subiu para lugar nenhum — adotá-la
+      // apenas entregava o nome do feitiço apagado ao servidor.
+      await db.insert('sync_tombstones', {
+        'entity': 'spells',
+        'item_id': 'preloaded_amarracao_amorosa',
+        'user_id': 'local_user',
+        'deleted_at': base,
+        'synced': 0,
+      });
+
+      await DatabaseHelper.instance.claimLegacyData(uid);
+
+      expect(await lapidesLocais(), isEmpty,
+          reason: 'lápide anônima não tem o que purgar na nuvem: some');
+
+      final resultado = await service.syncAll();
+      expect(resultado.success, isTrue, reason: resultado.detailedError);
+      expect(servidor.linhasDe('sync_tombstones'), isEmpty,
+          reason: 'entrar na conta não pode publicar o que foi apagado antes');
+    });
+
+    test('apagar os dados locais leva as lápides pendentes', () async {
+      final db = await DatabaseHelper.instance.database;
+      await db.insert('dreams', sonho('sonho-11'));
+      await service.syncAll();
+
+      // Apagado sem rede: a lápide fica pendente, esperando a varredura.
+      servidor.foraDoAr = true;
+      await db.delete('dreams', where: 'id = ?', whereArgs: ['sonho-11']);
+      await service.deleteItem(SyncEntity.dreams, 'sonho-11');
+      servidor.foraDoAr = false;
+      expect(await lapidesLocais(), hasLength(1));
+
+      await DatabaseHelper.instance.clearAllTables();
+
+      expect(await lapidesLocais(), isEmpty,
+          reason: 'o índice do que ela apagou não pode sobreviver ao '
+              'pedido de apagar tudo');
     });
   });
 }

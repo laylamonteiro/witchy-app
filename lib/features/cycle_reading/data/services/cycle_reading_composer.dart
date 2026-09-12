@@ -12,6 +12,9 @@ import '../../../diary/data/models/free_writing_model.dart';
 import '../../../grimoire/data/models/spell_model.dart'
     show MoonPhase, MoonPhaseExtension;
 import '../../../lunar/presentation/providers/lunar_provider.dart';
+import '../../../menstrual_cycle/data/repositories/menstrual_cycle_repository.dart';
+import '../../../menstrual_cycle/domain/menstrual_reading_context.dart';
+import '../../../menstrual_cycle/domain/menstrual_reading_scope.dart';
 import '../../../wheel_of_year/data/models/sabbat_model.dart'
     show SabbatType, SabbatTypeExtension;
 import '../../../your_day/data/daily_checkin_repository.dart';
@@ -63,11 +66,33 @@ class CycleReadingMaterial {
   /// sempre os entrega.
   final NumerosDoCiclo? numbers;
 
+  /// O que ela autorizou da fonte íntima, já recortado pelo escopo.
+  ///
+  /// Ele NÃO entra em [json] de propósito: as seções não cadastradas em
+  /// [_sectionFields] recebem o material inteiro, e a fonte íntima não pode
+  /// chegar a uma seção por esquecimento. Ela é injetada seção a seção, em
+  /// [compactJsonFor], e só onde a lista fechada do módulo permite.
+  final MenstrualReadingContext? menstrual;
+
   const CycleReadingMaterial({
     required this.json,
     required this.recordCount,
     this.numbers,
+    this.menstrual,
   });
+
+  /// Os registros que a leitura levou junto — os do período mais os dias do
+  /// corpo que ela autorizou.
+  ///
+  /// É contagem de LEITURA. [recordCount] continua sendo o sinal comercial
+  /// (a oferta e o aviso de leitura rasa), e saúde nunca entra nele.
+  int get readingIncludedRecordCount =>
+      recordCount + (menstrual?.days.length ?? 0);
+
+  /// A cobertura da fonte íntima, para o bloco determinístico e para a tela.
+  /// Fora do payload da IA: é contagem, não narrativa.
+  Map<String, dynamic>? get menstrualCoverage =>
+      menstrual == null || menstrual!.isEmpty ? null : menstrual!.coverage;
 
   String get compactJson => jsonEncode(json);
 
@@ -84,11 +109,17 @@ class CycleReadingMaterial {
   /// pessoa. Onde não há certeza, o material vai inteiro.
   String compactJsonFor(String sectionKey) {
     final campos = _sectionFields[sectionKey];
-    if (campos == null) return compactJson;
-    return jsonEncode({
-      for (final entry in json.entries)
-        if (campos.contains(entry.key)) entry.key: entry.value,
-    });
+    final base = campos == null
+        ? Map<String, dynamic>.from(json)
+        : <String, dynamic>{
+            for (final entry in json.entries)
+              if (campos.contains(entry.key)) entry.key: entry.value,
+          };
+    // A fonte íntima entra aqui, e só onde a lista fechada do módulo
+    // permite: uma seção desconhecida recebe null e segue sem ela.
+    final intimate = menstrual?.projectionFor(sectionKey);
+    if (intimate != null) base['menstrual'] = intimate;
+    return jsonEncode(base);
   }
 
   /// Só as seções listadas aqui recebem material reduzido. As demais (e
@@ -407,6 +438,48 @@ class CycleReadingComposer {
     'sigils',
   ];
 
+  /// A que grupo de fontes cada tabela pertence — os mesmos quatro grupos
+  /// que a pessoa pode desligar antes de gerar.
+  ///
+  /// `free_writings` não está aqui porque é mista: reflexão, lição, página
+  /// de leitura e conselho guardado moram na mesma tabela, e ali o corte é
+  /// por origem ([_fontesDoGrupo]).
+  static const Map<String, String> _grupoDaTabela = {
+    'dreams': 'dreams',
+    'gratitudes': 'journals',
+    'desires': 'journals',
+    'affirmations': 'journals',
+    'sigils': 'journals',
+    'rune_readings': 'divination',
+    'oracle_readings': 'divination',
+    'pendulum_consultations': 'divination',
+    'tarot_readings': 'divination',
+    'ritual_logs': 'practice',
+    'guided_ritual_logs': 'practice',
+    'spells': 'practice',
+  };
+
+  static bool _grupoLigado(String grupo, CycleReadingSourceOptions options) =>
+      switch (grupo) {
+        'dreams' => options.includeDreams,
+        'journals' => options.includeJournals,
+        'divination' => options.includeDivination,
+        'practice' => options.includePractice,
+        _ => true,
+      };
+
+  /// As origens do acervo que continuam contando com estas opções.
+  static List<String> _fontesDoGrupo(CycleReadingSourceOptions options) => [
+        if (options.includeJournals) ...[
+          FreeWritingSource.free,
+          FreeWritingSource.grimorioVivo,
+        ],
+        if (options.includeDivination) ...[
+          FreeWritingSource.palmistry,
+          FreeWritingSource.advisor,
+        ],
+      ];
+
   /// A coluna de tempo de cada tabela: rito concluído marca `completed_at`;
   /// o resto, `created_at`.
   static String _timeColumnOf(String table) =>
@@ -429,8 +502,15 @@ class CycleReadingComposer {
   /// dois lados somaria toda leitura em dobro — na contagem que a pessoa vê
   /// ANTES de comprar. A quiromancia fica fora desta lista de propósito: sem
   /// tabela própria, o acervo é o único lugar onde ela conta.
+  ///
+  /// A página do dia do ciclo entra aqui pela mesma razão, e por uma segunda:
+  /// ela é espelho de uma linha de `menstrual_days`, e o dia registrado já
+  /// chega à leitura pelo caminho dele — a fonte íntima, que a pessoa
+  /// autoriza dia a dia. Contar a página seria contar o mesmo dia duas vezes
+  /// no mapa de calor do seletor e no número da oferta.
   static final String _fontesQueNaoContam = [
     FreeWritingSource.cycleReading,
+    FreeWritingSource.menstrual,
     ...FreeWritingSource.autoRecorded,
   ].map((source) => "'$source'").join(', ');
 
@@ -551,16 +631,35 @@ class CycleReadingComposer {
   /// Contagem barata dos registros do período — usada pelo card de oferta
   /// no Seu Dia ("Sua lunação rendeu {N} registros") e pelo aviso de
   /// leitura rasa, sem montar o material inteiro.
+  /// Com [options], a conta passa a ser a do que VAI para a análise: o que
+  /// ela desligou some do número, porque prometer material que não será
+  /// enviado é prometer uma leitura que não vai existir. Sem [options] — o
+  /// caminho da oferta e do cartão de Ciclos — a conta continua sendo a do
+  /// período inteiro, que é o que aquelas telas querem dizer.
   Future<int> countPeriodRecords({
     required String userId,
     required DateTime start,
     required DateTime end,
+    CycleReadingSourceOptions? options,
   }) async {
     final db = await _db;
     var total = 0;
+    final fontesDoAcervo =
+        options == null ? const <String>[] : _fontesDoGrupo(options);
+    final fontesEmLista =
+        fontesDoAcervo.map((fonte) => "'" + fonte + "'").join(', ');
     for (final table in _recordTables) {
+      if (options != null) {
+        final grupo = _grupoDaTabela[table];
+        if (grupo != null && !_grupoLigado(grupo, options)) continue;
+        // O acervo inteiro fora: nenhum dos grupos que moram nele está de pé.
+        if (table == 'free_writings' && fontesDoAcervo.isEmpty) continue;
+      }
       final timeColumn = _timeColumnOf(table);
-      final preloadedFilter = _ownRecordsFilter(table);
+      final preloadedFilter = _ownRecordsFilter(table) +
+          (options != null && table == 'free_writings'
+              ? ' AND source IN ($fontesEmLista)'
+              : '');
       final apagadosFilter = _filtroDeApagados(table);
       try {
         final rows = await db.rawQuery(
@@ -599,6 +698,8 @@ class CycleReadingComposer {
     String periodType = CycleReadingPeriodType.lunation,
     CycleReadingSourceOptions options = const CycleReadingSourceOptions(),
     String? userName,
+    MenstrualReadingScope? menstrual,
+    MenstrualCycleRepository? menstrualRepository,
   }) async {
     final db = await _db;
     final json = <String, dynamic>{
@@ -726,9 +827,19 @@ class CycleReadingComposer {
     }
 
     // ===== Escrita livre + leituras arquivadas =====
+    // O corte é AQUI, na definição de `writings`, e não só no
+    // `_fontesQueNaoContam` — aquele só governa o SQL de `_ownRecordsFilter`,
+    // que a contagem barata usa; esta lista é a que alimenta `recordCount`,
+    // `countsByDay` (e por ele `activeDays`, `longestStreak` e a fase "mais
+    // presente") e `countsBySource`. Fora ficam o relatório da própria
+    // Leitura do Ciclo e as páginas do Ciclo Menstrual: as duas são espelhos
+    // de registros que já contam noutro lugar, e a do ciclo é espelho de um
+    // dia que chega à leitura pela fonte íntima, autorizado dia a dia.
     final writings = (await rowsOf('free_writings'))
-        .where((row) =>
-            (row['source'] ?? 'free') != FreeWritingSource.cycleReading)
+        .where((row) => !const {
+              FreeWritingSource.cycleReading,
+              FreeWritingSource.menstrual,
+            }.contains(row['source'] ?? 'free'))
         .toList();
     // A página de uma tiragem e a tiragem são o MESMO registro — nascem com
     // o mesmo id. Só um dos lados pode contar, e é a tabela da ferramenta
@@ -1125,11 +1236,42 @@ class CycleReadingComposer {
     json['numbers'] = numeros.toJson();
 
     json['recordCount'] = recordCount;
+
+    // A fonte íntima entra por último e por fora do JSON geral: só os dias
+    // que ela autorizou, na revisão autorizada, dentro desta janela. Um
+    // escopo vazio não lê nada do banco.
+    final context = await _menstrualContext(menstrual, menstrualRepository);
+
     return CycleReadingMaterial(
       json: json,
       recordCount: recordCount,
       numbers: numeros,
+      menstrual: context,
     );
+  }
+
+  /// Lê só o que a autorização cobre. Sem escopo, sem leitura — nem uma
+  /// consulta ao registro dela acontece.
+  Future<MenstrualReadingContext?> _menstrualContext(
+    MenstrualReadingScope? scope,
+    MenstrualCycleRepository? repository,
+  ) async {
+    if (scope == null || scope.isEmpty) return null;
+    final from = scope.start;
+    final to = scope.end;
+    if (from == null || to == null) return null;
+    try {
+      final days = await (repository ?? MenstrualCycleRepository()).between(
+        userId: scope.userId,
+        from: from,
+        // A janela da leitura é [start, end): o último dia é a véspera.
+        to: to.subtract(const Duration(days: 1)),
+      );
+      return MenstrualReadingContext.of(scope, days);
+    } catch (_) {
+      // Sem conseguir ler, a leitura segue sem a fonte — nunca com metade.
+      return null;
+    }
   }
 
   /// O retrato mágico dela, tirado da Análise Personalizada que ela já leu.

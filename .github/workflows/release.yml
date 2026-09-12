@@ -289,6 +289,13 @@ jobs:
       - name: 🧪 Suíte completa (bloqueante — sem || echo)
         run: flutter test
 
+      - name: 🧪 Redirecionamento do QR (Node)
+        # O `/baixar` é uma Cloudflare Pages Function: roda no servidor, e
+        # `flutter test` nunca chega nele. Um QR já impresso não se corrige,
+        # então um destino errado só apareceria depois do cartaz pronto — daí
+        # este gate. O runner já traz Node.
+        run: node test/redirecionamento_qr_test.mjs
+
       - name: 🔤 ARB key parity
         run: bash scripts/check_arb_sync.sh
 

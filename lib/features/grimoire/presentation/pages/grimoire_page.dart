@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
+import '../../../../core/tools/tool_identity.dart';
 import '../../../../core/widgets/living_emblem.dart';
 import '../../../../core/widgets/staggered_entrance.dart';
 import '../../../../core/widgets/magical_card.dart';
@@ -11,7 +12,6 @@ import '../../../runes/presentation/pages/rune_reading_page.dart';
 import '../../../divination/presentation/pages/pendulum_page.dart';
 import '../../../divination/presentation/pages/oracle_cards_page.dart';
 import '../../../sigils/presentation/pages/sigil_step1_intention_page.dart';
-import '../../../sigils/presentation/widgets/sigil_icon.dart';
 import '../../../numerology/presentation/pages/numerology_page.dart';
 import '../../../tarot/presentation/pages/tarot_page.dart';
 import '../../../palmistry/presentation/pages/palmistry_page.dart';
@@ -151,25 +151,25 @@ class _ToolsTab extends StatelessWidget {
     // e monótona, em que nada se destacava.
     final practice = <_Tool>[
       (
-        icon: const Text('📖', style: TextStyle(fontSize: 40)),
+        tool: ToolId.livingGrimoire,
         title: l10n.toolLivingGrimoireTitle,
         description: l10n.toolLivingGrimoireDesc,
         open: () => _push(context, const LearningHomePage()),
       ),
       (
-        icon: const Text('🔮', style: TextStyle(fontSize: 40)),
+        tool: ToolId.mysticAdvisor,
         title: l10n.toolMysticAdvisorTitle,
         description: l10n.toolMysticAdvisorDesc,
         open: () => _push(context, const MysticAdvisorPage()),
       ),
       (
-        icon: const SigilIcon(size: 40),
+        tool: ToolId.sigils,
         title: l10n.toolSigilsTitle,
         description: l10n.toolSigilsDesc,
         open: () => _push(context, const SigilStep1IntentionPage()),
       ),
       (
-        icon: const Text('🍃', style: TextStyle(fontSize: 40)),
+        tool: ToolId.natureGuide,
         title: l10n.toolNatureGuideTitle,
         description: l10n.toolNatureGuideDesc,
         // Antes da página vem o seletor: o que vamos identificar?
@@ -179,37 +179,37 @@ class _ToolsTab extends StatelessWidget {
 
     final divination = <_Tool>[
       (
-        icon: const Text('🎴', style: TextStyle(fontSize: 40)),
+        tool: ToolId.tarot,
         title: l10n.toolTarotTitle,
         description: l10n.toolTarotDesc,
         open: () => _push(context, const TarotPage()),
       ),
       (
-        icon: const Text('🌙', style: TextStyle(fontSize: 40)),
+        tool: ToolId.dreams,
         title: l10n.toolDreamsTitle,
         description: l10n.toolDreamsDesc,
         open: () => _push(context, const DreamToolsPage()),
       ),
       (
-        icon: const Text('🖐️', style: TextStyle(fontSize: 40)),
+        tool: ToolId.palmistry,
         title: l10n.toolPalmistryTitle,
         description: l10n.toolPalmistryDesc,
         open: () => _push(context, const PalmistryPage()),
       ),
       (
-        icon: const Text(' ᚱ ', style: TextStyle(fontSize: 40)),
+        tool: ToolId.runes,
         title: l10n.toolRunesTitle,
         description: l10n.toolRunesDesc,
         open: () => _push(context, const RuneReadingPage()),
       ),
       (
-        icon: const Text('🃏', style: TextStyle(fontSize: 40)),
+        tool: ToolId.oracle,
         title: l10n.toolOracleTitle,
         description: l10n.toolOracleDesc,
         open: () => _push(context, const OracleCardsPage()),
       ),
       (
-        icon: const Text(' ⟟ ', style: TextStyle(fontSize: 40)),
+        tool: ToolId.pendulum,
         title: l10n.toolPendulumTitle,
         description: l10n.toolPendulumDesc,
         open: () => _push(context, const PendulumPage()),
@@ -218,13 +218,13 @@ class _ToolsTab extends StatelessWidget {
 
     final selfKnowledge = <_Tool>[
       (
-        icon: const Text('🎭', style: TextStyle(fontSize: 40)),
+        tool: ToolId.archetypes,
         title: l10n.toolArchetypeTitle,
         description: l10n.toolArchetypeDesc,
         open: () => _push(context, const ArchetypeQuizPage()),
       ),
       (
-        icon: const Text('🔢', style: TextStyle(fontSize: 40)),
+        tool: ToolId.numerology,
         title: l10n.toolNumerologyTitle,
         description: l10n.toolNumerologyDesc,
         open: () => _push(context, const NumerologyPage()),
@@ -278,10 +278,12 @@ class _ToolsTab extends StatelessWidget {
     // O toque é do próprio MagicalCard: antes havia um InkWell POR FORA do
     // card, então o ripple vazava e o alvo de toque ficava duplicado.
     return MagicalCard(
+      key: ValueKey('tool-${tool.tool.name}'),
       onTap: tool.open,
       child: Row(
         children: [
-          tool.icon,
+          // O mesmo emblema que aparece no cabeçalho da ferramenta.
+          ToolEmblem(tool: tool.tool),
           const SizedBox(width: 16),
           Expanded(
             child: Column(
@@ -314,7 +316,7 @@ class _ToolsTab extends StatelessWidget {
 /// Uma ferramenta do Grimório: ícone, textos e a ação do toque (em geral
 /// um push aninhado; o Guia da Natureza abre um seletor antes).
 typedef _Tool = ({
-  Widget icon,
+  ToolId tool,
   String title,
   String description,
   VoidCallback open,

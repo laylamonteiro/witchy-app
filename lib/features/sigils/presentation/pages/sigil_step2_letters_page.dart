@@ -6,6 +6,7 @@ import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/widgets/magical_button.dart';
 import '../../data/data_sources/sigil_content.dart';
 import '../../data/models/sigil_model.dart';
+import '../widgets/sigil_letters_transition.dart';
 import 'sigil_step3_drawing_page.dart';
 
 /// Etapa 2: Mostrar letras mágicas processadas
@@ -92,37 +93,11 @@ class SigilStep2LettersPage extends StatelessWidget {
                         ),
                   ),
                   const SizedBox(height: 16),
-                  // Letras em destaque
-                  Wrap(
-                    alignment: WrapAlignment.center,
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: sigil.processedLetters.split('').map((letter) {
-                      return Container(
-                        width: 48,
-                        height: 48,
-                        decoration: BoxDecoration(
-                          color: context.gc.surface,
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(
-                            color: context.gc.lilac,
-                            width: 2,
-                          ),
-                        ),
-                        child: Center(
-                          child: Text(
-                            letter,
-                            style: Theme.of(context)
-                                .textTheme
-                                .headlineSmall
-                                ?.copyWith(
-                                  color: context.gc.starYellow,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                          ),
-                        ),
-                      );
-                    }).toList(),
+                  // Letras em destaque: as repetidas se dissipam e as que
+                  // ficam se organizam. O resultado é sempre o mesmo.
+                  SigilLettersTransition(
+                    intention: sigil.intention,
+                    letters: sigil.processedLetters,
                   ),
                 ],
               ),

@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../providers/wheel_of_year_provider.dart';
 import '../../data/models/sabbat_model.dart';
+import '../../../../core/widgets/folha_com_saida.dart';
 import '../../../../core/widgets/living_emblem.dart';
 import '../../../../core/widgets/staggered_entrance.dart';
 import '../../../../core/widgets/magical_button.dart';
@@ -264,30 +265,23 @@ class WheelOfYearPage extends StatelessWidget {
     Sabbat sabbat,
     DateFormat dateFormat,
   ) {
-    showModalBottomSheet(
+    // A folha abre pelo [mostrarFolhaComSaida]: no lugar do retângulo pintado
+    // à mão (decoração dentro do conteúdo, sem alvo nem rótulo) entra a alça
+    // do Material, fixa no topo, e o X vira a saída visível — no navegador do
+    // celular, nem o arrasto nem o toque fora se anunciam.
+    mostrarFolhaComSaida<void>(
       context: context,
-      backgroundColor: context.gc.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
       builder: (sheetContext) => Padding(
-        padding: const EdgeInsets.all(24.0),
+        padding: const EdgeInsets.fromLTRB(24, 4, 24, 24),
         child: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: context.gc.surfaceBorder,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
+              const Align(
+                alignment: Alignment.centerRight,
+                child: BotaoFecharFolha(key: ValueKey('sabbat-close')),
               ),
-              const SizedBox(height: 24),
               Center(
                 child: Text(
                   sabbat.emoji,

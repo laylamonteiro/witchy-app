@@ -229,6 +229,22 @@ class _SpellCategoriesHubPageState extends State<SpellCategoriesHubPage> {
         context.watch<FreeWritingProvider>().freeWritings.length;
 
     final cards = <Widget>[
+        // Meus Registros abre a lista: é o que ela escreveu — e o que o
+        // ciclo passou a alimentar todo dia. Os feitiços vêm depois
+        // (decisão da dona, 12/09).
+        _buildHubCard(
+          context,
+          emoji: '📖',
+          title: AppLocalizations.of(context).grimoireMyRecords,
+          subtitle: AppLocalizations.of(context).grimoireMyRecordsSub,
+          count: recordCount,
+          onTap: () => Navigator.push(
+            context,
+            GrimoireRoute(
+              builder: (_) => const RecordsArchiveListPage(),
+            ),
+          ),
+        ),
         _buildHubCard(
           context,
           emoji: '✨',
@@ -244,19 +260,6 @@ class _SpellCategoriesHubPageState extends State<SpellCategoriesHubPage> {
               builder: (_) => UserSpellsListPage(
                 title: AppLocalizations.of(context).grimoireMySpells,
               ),
-            ),
-          ),
-        ),
-        _buildHubCard(
-          context,
-          emoji: '📖',
-          title: AppLocalizations.of(context).grimoireMyRecords,
-          subtitle: AppLocalizations.of(context).grimoireMyRecordsSub,
-          count: recordCount,
-          onTap: () => Navigator.push(
-            context,
-            GrimoireRoute(
-              builder: (_) => const RecordsArchiveListPage(),
             ),
           ),
         ),

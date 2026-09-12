@@ -571,22 +571,24 @@ class AuthProvider extends ChangeNotifier {
   }
 
   /// Verifica se pode fazer leitura de runas hoje
-  bool get canUseRunes => isPremiumEffective ||
-      _currentUser.runeReadingsToday < UserModel.freeRuneReadingsLimit;
+  bool get canUseRunes => _currentUser.canUseRunes;
 
   /// Quantas leituras de runas restam hoje
-  int get remainingRuneReadings =>
-      isPremiumEffective ? -1 : _currentUser.remainingRuneReadings;
+  int get remainingRuneReadings => _currentUser.remainingRuneReadings;
 
-  /// Incrementa contador de leituras de runas
+  /// Incrementa contador de leituras de runas.
+  ///
+  /// A escolha manual (P04) debita a cota dentro da transação da mesa; este
+  /// caminho é o espelho, para quem ainda registra fora dela.
   Future<void> incrementRuneReadings() async {
     final userId = _currentUser.id;
     await refreshRuneUsage();
     if (_currentUser.id != userId) return;
-    if (!isPremiumEffective) {
-      final used = await UsageCoordinator().recordUse(
-        userId: userId, legacyUsed: _currentUser.runeReadingsToday,
+    if (_currentUser.isFree) {
+      final used = await UsageCoordinator().record(
+        userId: userId,
         category: UsageCoordinator.runes,
+        legacyUsed: _currentUser.runeReadingsToday,
       );
       if (_currentUser.id != userId) return;
       _currentUser = _currentUser.copyWith(runeReadingsToday: used);
@@ -595,7 +597,8 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  /// Restore the Rune quota from the result's local transaction.
+  /// Restore the rune quota committed with a manual table, even if the
+  /// process stopped before the preferences mirror was written.
   Future<void> refreshRuneUsage() async {
     final userId = _currentUser.id;
     final now = DateTime.now();
@@ -606,7 +609,9 @@ class AuthProvider extends ChangeNotifier {
     final sameDay = reset == null ||
         UsageCoordinator.dayKey(reset) == UsageCoordinator.dayKey(now);
     final used = await UsageCoordinator().used(
-      userId: userId, day: now, category: UsageCoordinator.runes,
+      userId: userId,
+      category: UsageCoordinator.runes,
+      day: now,
       legacyUsed: sameDay ? _currentUser.runeReadingsToday : 0,
     );
     if (_currentUser.id != userId) return;

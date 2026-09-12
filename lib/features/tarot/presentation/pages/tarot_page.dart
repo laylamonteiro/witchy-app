@@ -1,12 +1,16 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/ai/ai_service.dart';
-import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
+import '../../../../core/theme/grimoire_motion.dart';
+import '../../../../core/widgets/reading_focus_panel.dart';
 import '../../../auth/data/models/user_model.dart';
 import '../../data/repositories/daily_tarot_repository.dart';
 import '../../data/repositories/tarot_day_repository.dart';
@@ -30,6 +34,7 @@ import '../widgets/tarot_card_view.dart';
 import 'tarot_learn_tab.dart';
 import '../../../../core/services/ad_service.dart';
 import '../../../../core/widgets/premium_locked_preview.dart';
+import '../../../../core/tools/tool_identity.dart';
 
 /// Tarot: tiragens com significados + tutor de aprendizado.
 class TarotPage extends StatefulWidget {
@@ -54,7 +59,8 @@ class _TarotPageState extends State<TarotPage>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: ResponsiveAppBarTitle(AppLocalizations.of(context).toolTarotTitle),
+        title: ToolHeading(tool: ToolId.tarot,
+            title: AppLocalizations.of(context).toolTarotTitle),
         bottom: TabBar(
           controller: _tabController,
           indicatorColor: context.gc.lilac,
@@ -130,6 +136,31 @@ class _SpreadTabState extends State<_SpreadTab>
   TarotSpread? _activeSpread;
   List<TarotDrawnCard> _drawn = [];
   bool _revealed = false;
+
+  /// A cena tem dois tempos: primeiro as cartas viram, depois o texto entra.
+  /// Antes os dois aconteciam no mesmo quadro e a virada passava despercebida
+  /// porque a página já tinha crescido por baixo dela.
+  bool _textVisible = false;
+
+  /// Posição que o painel mostra. Trocar de posição não rola a página.
+  int _focused = 0;
+
+  /// Muda a cada troca de cena para o [AnimatedSwitcher] do palco reencenar a
+  /// entrada da carta grande; sem ele o switcher veria o mesmo filho e não
+  /// haveria transição ao andar para a posição seguinte.
+  int _sceneToken = 0;
+
+  /// Espera até o fim da virada para soltar o texto. Cancelável: uma mesa que
+  /// sai da tela não pode acordar uma página que já é outra.
+  Timer? _textTimer;
+
+  /// A caixa do palco — é para ela que a página olha quando precisa olhar.
+  final GlobalKey _stageKey = GlobalKey();
+
+  /// A tiragem inteira embaixo do painel, fechada por padrão: quem quiser ler
+  /// tudo de uma vez pede.
+  bool _showAll = false;
+
   bool _starting = false;
   String? _activeReadingSignature;
   List<int> _backPositions = [];
@@ -155,6 +186,21 @@ class _SpreadTabState extends State<_SpreadTab>
 
   late final String _userId;
 
+  /// Cadência da virada, a mesma conta do Oráculo e das Runas: cada carta
+  /// leva [GrimoireMotion.reveal] e o passo entre vizinhas é de até 90 ms;
+  /// na cruz de cinco o passo aperta para a cena inteira caber no teto.
+  static const int _tetoRevelacaoMs = 1200;
+
+  static int _passoRevelacaoMs(int quantas) {
+    if (quantas <= 1) return 0;
+    return min(90,
+        (_tetoRevelacaoMs - GrimoireMotion.reveal.inMilliseconds) ~/ (quantas - 1));
+  }
+
+  static int _totalRevelacaoMs(int quantas) =>
+      (quantas - 1) * _passoRevelacaoMs(quantas) +
+      GrimoireMotion.reveal.inMilliseconds;
+
   @override
   void initState() {
     super.initState();
@@ -166,6 +212,7 @@ class _SpreadTabState extends State<_SpreadTab>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _textTimer?.cancel();
     _questionController.dispose();
     _questionFocus.dispose();
     super.dispose();
@@ -336,6 +383,9 @@ class _SpreadTabState extends State<_SpreadTab>
         onError: (Object error, StackTrace? stack) {});
     if (!mounted || auth.currentUser.id != _userId) return;
     final position = AppLocalizations.of(context).tarotDailyCard;
+    // Mesa nova, cena nova: o relógio da anterior não pode sobrar.
+    _textTimer?.cancel();
+    _textTimer = null;
     setState(() {
       _activeSpread = TarotSpread.daily;
       _activeReadingSignature = completed.resultSignature;
@@ -346,7 +396,12 @@ class _SpreadTabState extends State<_SpreadTab>
       _question = completed.question;
       _drawn = [TarotDrawnCard(card: card, isReversed: entry.reversed,
           positionLabel: AppLocalizations.of(context).tarotDailyCard)];
+      // Mesa reaberta já nasce lida: a virada pertence ao EVENTO de tirar.
       _revealed = !committedResult.created;
+      _textVisible = !committedResult.created;
+      _focused = 0;
+      _sceneToken++;
+      _showAll = false;
       _aiReading = saved;
     });
     unawaited(_registrarMesa(
@@ -434,6 +489,9 @@ class _SpreadTabState extends State<_SpreadTab>
       await AdService.instance.showBeforeResult();
       if (!mounted || auth.currentUser.id != _userId) return;
     }
+    // Mesa nova, cena nova: o relógio da anterior não pode sobrar.
+    _textTimer?.cancel();
+    _textTimer = null;
     setState(() {
       _activeSpread = spread;
       _activeReadingSignature = completed.resultSignature;
@@ -441,7 +499,12 @@ class _SpreadTabState extends State<_SpreadTab>
       _backPositions = completed.selectedIds.map(completed.positionOf).toList();
       _question = completed.question;
       _drawn = drawn;
+      // Mesa reaberta já nasce lida: a virada pertence ao EVENTO de tirar.
       _revealed = !committedResult.created;
+      _textVisible = !committedResult.created;
+      _focused = 0;
+      _sceneToken++;
+      _showAll = false;
       _aiReading = saved;
     });
     unawaited(_registrarMesa(spread: spread, spreadLabel: title, drawn: drawn,
@@ -452,19 +515,115 @@ class _SpreadTabState extends State<_SpreadTab>
     if (!created || !mounted || _activeReadingSignature != signature) return;
     unawaited(context.read<DailyCheckinProvider>().completeRite(DailyRites.divination));
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted && _activeReadingSignature == signature) {
-        setState(() => _revealed = true);
-      }
+      if (!mounted || _activeReadingSignature != signature) return;
+      HapticFeedback.lightImpact();
+      // Com movimento reduzido a cena não tem dois tempos: o texto entra
+      // junto e nenhum relógio é armado. É aqui que se cumpre "o estado
+      // FINAL aparece de imediato" — sem isto a pessoa ficaria com o texto
+      // invisível para sempre, congelado no quadro inicial.
+      final reduced = GrimoireMotion.reduced(context);
+      setState(() {
+        _revealed = true;
+        _textVisible = reduced;
+        if (reduced) _sceneToken++;
+      });
+      if (reduced) return;
+      _textTimer?.cancel();
+      _textTimer = Timer(
+        Duration(milliseconds: _totalRevelacaoMs(_drawn.length)),
+        () {
+          _textTimer = null;
+          if (!mounted || _activeReadingSignature != signature) return;
+          setState(() {
+            _textVisible = true;
+            _sceneToken++;
+          });
+        },
+      );
+    });
+  }
+
+  /// Antecipar: um toque na mesa durante a virada mostra o texto na hora.
+  void _skipAhead() {
+    if (_textVisible) return;
+    _textTimer?.cancel();
+    _textTimer = null;
+    setState(() {
+      _textVisible = true;
+      _sceneToken++;
+    });
+  }
+
+  /// Tocar numa carta da mesa muda o que o painel mostra — e mais nada.
+  ///
+  /// A página só se mexe se o palco não couber inteiro na tela. Antes de
+  /// existir o painel, tocar numa carta rolava a página até o texto no mesmo
+  /// quadro em que a carta crescia: ela ia embora justamente ao abrir.
+  void _focusPosition(int index) {
+    if (!_revealed || index < 0 || index >= _drawn.length) return;
+    final jaVisivel = _textVisible;
+    _skipAhead();
+    setState(() {
+      if (_focused != index || jaVisivel) _sceneToken++;
+      _focused = index;
+    });
+    _bringStageIntoView();
+  }
+
+  /// Traz o palco para a tela — e só se ele não estiver nela.
+  ///
+  /// A conta é explícita em vez de `ensureVisible` porque `keepVisibleAtEnd`
+  /// encostaria a carta na borda de baixo, com o texto dela fora da tela.
+  void _bringStageIntoView() {
+    final target = _stageKey.currentContext;
+    if (target == null) return;
+    final box = target.findRenderObject();
+    final scrollable = Scrollable.maybeOf(target);
+    if (box is! RenderBox || scrollable == null) return;
+    final position = scrollable.position;
+    final viewport = RenderAbstractViewport.of(box);
+    final atTop = viewport.getOffsetToReveal(box, 0).offset;
+    final atBottom = viewport.getOffsetToReveal(box, 1).offset;
+    if (position.pixels >= atBottom && position.pixels <= atTop) return;
+    final destino =
+        (atTop - 8).clamp(position.minScrollExtent, position.maxScrollExtent);
+    if (GrimoireMotion.reduced(context)) {
+      position.jumpTo(destino);
+      return;
+    }
+    position.animateTo(destino,
+        duration: GrimoireMotion.state, curve: GrimoireMotion.enter);
+  }
+
+  /// Zera a mesa. Um lugar só para os dois caminhos que a fecham (o gesto de
+  /// voltar e o botão de nova tiragem): um relógio sobrevivente reabriria o
+  /// texto de uma tiragem que já saiu da tela.
+  void _limparMesa({required bool novaTiragem}) {
+    _textTimer?.cancel();
+    _textTimer = null;
+    setState(() {
+      _newSpreadRequested = novaTiragem;
+      _activeSpread = null;
+      _activeReadingSignature = null;
+      _drawn = [];
+      _aiReading = null;
+      _question = '';
+      _revealed = false;
+      _textVisible = false;
+      _focused = 0;
+      _showAll = false;
     });
   }
 
   Widget _resultCard(int index, double width) => TarotFlipCard(
     key: ValueKey('reading_${_activeReadingSignature}_$index'),
     revealed: _revealed,
-    delay: Duration(milliseconds: 90 * index),
+    delay: Duration(
+        milliseconds: _passoRevelacaoMs(_drawn.length) * index),
     back: TarotCardBack(width: width, deckPosition: _backPositions[index]),
     front: TarotCardView(card: _drawn[index].card, width: width,
-        reversed: _drawn[index].isReversed),
+        reversed: _drawn[index].isReversed,
+        highlighted: _drawn.length > 1 && _focused == index),
   );
 
   /// Resumo das cartas na mesa — o material que o Conselheiro lê, seja para
@@ -578,6 +737,297 @@ class _SpreadTabState extends State<_SpreadTab>
     }
   }
 
+  /// A mesa e, depois dela, o que as cartas dizem.
+  ///
+  /// Os dois tempos da cena vivem aqui: a mesa está sempre pronta e o bloco
+  /// de texto só ganha opacidade quando `_textVisible` abre. O texto continua
+  /// na árvore o tempo todo (por isso `IgnorePointer` e `ExcludeSemantics`):
+  /// assim a página não muda de altura no meio da virada.
+  Widget _buildResultado() {
+    final l10n = AppLocalizations.of(context);
+    final reduced = GrimoireMotion.reduced(context);
+    final varias = _drawn.length > 1;
+    final foco = _focused.clamp(0, _drawn.length - 1).toInt();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // Um toque em qualquer lugar da mesa antecipa o texto: quem já olhou
+        // as cartas não deve ficar esperando o relógio da cena.
+        GestureDetector(
+          key: const ValueKey('tarot-table'),
+          behavior: HitTestBehavior.translucent,
+          onTap: _skipAhead,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Column(
+              children: [
+                if (!varias)
+                  Center(child: _resultCard(0, 110))
+                else
+                  SpreadBoard(
+                    labels: _drawn.map((d) => d.positionLabel).toList(),
+                    cross: _activeSpread == TarotSpread.cross,
+                    selectedPosition: foco,
+                    onTap: _focusPosition,
+                    cardBuilder: _resultCard,
+                  ),
+                if (varias) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    l10n.tarotTableHint,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                        color: context.gc.textSecondary, fontSize: 12),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 8),
+        AnimatedSlide(
+          offset: _textVisible ? Offset.zero : const Offset(0, .04),
+          duration: reduced ? Duration.zero : GrimoireMotion.state,
+          curve: GrimoireMotion.enter,
+          child: AnimatedOpacity(
+            key: const ValueKey('tarot-text'),
+            opacity: _textVisible ? 1 : 0,
+            duration: reduced ? Duration.zero : GrimoireMotion.state,
+            child: IgnorePointer(
+              ignoring: !_textVisible,
+              child: ExcludeSemantics(
+                excluding: !_textVisible,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    ReadingFocusPanel(
+                      keyPrefix: 'tarot',
+                      index: foco,
+                      total: _drawn.length,
+                      onFocus: _focusPosition,
+                      // Com uma carta só a mesa já é o palco: repetir a
+                      // figura seria mostrá-la duas vezes à toa.
+                      stage: varias ? _stage(_drawn[foco]) : null,
+                      child: _focusBody(_drawn[foco]),
+                    ),
+                    if (varias) ...[
+                      Align(
+                        alignment: Alignment.center,
+                        child: TextButton.icon(
+                          key: const ValueKey('tarot-show-all'),
+                          onPressed: () => setState(() => _showAll = !_showAll),
+                          icon: Icon(_showAll
+                              ? Icons.keyboard_arrow_up
+                              : Icons.keyboard_arrow_down),
+                          label: Text(_showAll
+                              ? l10n.readingFocusHideAll
+                              : l10n.readingFocusShowAll),
+                        ),
+                      ),
+                      if (_showAll)
+                        for (var i = 0; i < _drawn.length; i++)
+                          _positionCard(i, _drawn[i]),
+                    ],
+                    _cardDoConselheiro(),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// A carta em foco, grande, numa caixa de tamanho FIXO — é por ser fixa que
+  /// o texto trocando embaixo nunca a empurra para fora da tela.
+  Widget _stage(TarotDrawnCard drawn) {
+    final reduced = GrimoireMotion.reduced(context);
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth.isFinite
+            ? min(210.0, constraints.maxWidth * .62)
+            : 210.0;
+        return SizedBox(
+          key: _stageKey,
+          width: width,
+          height: width / TarotCardView.aspectRatio,
+          child: AnimatedSwitcher(
+            key: const ValueKey('tarot-stage'),
+            duration: reduced ? Duration.zero : GrimoireMotion.state,
+            switchInCurve: GrimoireMotion.enter,
+            switchOutCurve: GrimoireMotion.exit,
+            child: TarotCardView(
+              key: ValueKey('$_focused-$_sceneToken'),
+              card: drawn.card,
+              reversed: drawn.isReversed,
+              width: width,
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  /// O que a carta em foco diz. É o miolo do cartão de posição, sem moldura e
+  /// sem miniatura: a figura já está grande logo acima.
+  Widget _focusBody(TarotDrawnCard drawn) {
+    final l10n = AppLocalizations.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Uma região viva só, e no bloco que troca: o leitor de tela anuncia
+        // a posição nova inteira sem reler a mesa.
+        Semantics(
+          container: true,
+          liveRegion: true,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                drawn.positionLabel,
+                style: TextStyle(
+                  color: context.gc.textSecondary,
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                '${drawn.card.name}'
+                '${drawn.isReversed ? ' (${l10n.tarotReversed})' : ''}',
+                style: TextStyle(
+                  color: context.gc.lilac,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 6,
+          children: [
+            for (final keyword in drawn.card.keywords)
+              Text(
+                '· $keyword',
+                style: TextStyle(
+                    color: context.gc.textSecondary, fontSize: 12),
+              ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Text(
+          drawn.meaning,
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(height: 1.5),
+        ),
+      ],
+    );
+  }
+
+  /// Uma posição da tiragem inteira, aberta sob o painel. A moldura marca a
+  /// que está em foco para quem lê tudo de uma vez não se perder.
+  Widget _positionCard(int index, TarotDrawnCard drawn) {
+    final destacada = _focused == index && _drawn.length > 1;
+    return AnimatedContainer(
+      duration:
+          GrimoireMotion.reduced(context) ? Duration.zero : GrimoireMotion.state,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: destacada ? context.gc.lilac : Colors.transparent,
+          width: 2,
+        ),
+      ),
+      child: MagicalCard(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '${drawn.positionLabel} — ${drawn.card.name}'
+              '${drawn.isReversed ? ' (${AppLocalizations.of(context).tarotReversed})' : ''}',
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    color: context.gc.lilac,
+                    fontWeight: FontWeight.bold,
+                  ),
+            ),
+            const SizedBox(height: 4),
+            Wrap(
+              spacing: 6,
+              children: drawn.card.keywords
+                  .map((k) => Text(
+                        '· $k',
+                        style: TextStyle(
+                          color: context.gc.textSecondary,
+                          fontSize: 12,
+                        ),
+                      ))
+                  .toList(),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              drawn.meaning,
+              style:
+                  Theme.of(context).textTheme.bodyMedium?.copyWith(height: 1.5),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// O Conselheiro Místico. Pende de `_textVisible` (e não de `_revealed`)
+  /// para não pipocar antes de as cartas assentarem.
+  Widget _cardDoConselheiro() => MagicalCard(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (!context.watch<AuthProvider>().isPremiumEffective)
+              // Sem acesso: no lugar do botão, o sumário do que o Conselheiro
+              // teceria sobre as cartas que já estão na mesa.
+              _previaDoConselheiro(context)
+            else if (_aiReading == null)
+              // Sem interpretação para estas cartas: mostra o botão.
+              ElevatedButton.icon(
+                onPressed: _isReadingAI ? null : _askCounselor,
+                icon: _isReadingAI
+                    ? SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: context.gc.onPrimary,
+                        ),
+                      )
+                    : const Icon(Icons.auto_awesome, size: 18),
+                label: Text(
+                  _isReadingAI
+                      ? AppLocalizations.of(context).tarotConsultingCards
+                      : AppLocalizations.of(context).tarotAdvisorInterpretation,
+                ),
+              )
+            else ...[
+              // Já interpretado: mostra só o texto. O botão volta apenas em
+              // uma nova tiragem (cartas diferentes).
+              Text(
+                AppLocalizations.of(context).tarotAdvisorInterpretation,
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      color: context.gc.lilac,
+                      fontWeight: FontWeight.bold,
+                    ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                _aiReading!,
+                style:
+                    Theme.of(context).textTheme.bodyMedium?.copyWith(height: 1.6),
+              ),
+            ],
+          ],
+        ),
+      );
+
   @override
   Widget build(BuildContext context) {
     // Voltar desfaz por camadas: com uma tiragem aberta, o gesto de voltar
@@ -586,14 +1036,7 @@ class _SpreadTabState extends State<_SpreadTab>
       canPop: _activeSpread == null,
       onPopInvokedWithResult: (didPop, _) {
         if (didPop) return;
-        setState(() {
-          _activeSpread = null;
-          _activeReadingSignature = null;
-          _newSpreadRequested = false;
-          _drawn = [];
-          _aiReading = null;
-          _question = '';
-        });
+        _limparMesa(novaTiragem: false);
       },
       child: SingleChildScrollView(
       padding: const EdgeInsets.symmetric(vertical: 12),
@@ -711,14 +1154,9 @@ class _SpreadTabState extends State<_SpreadTab>
                         ),
                   ),
                   TextButton.icon(
-                    onPressed: _isReadingAI ? null : () => setState(() {
-                      _newSpreadRequested = true;
-                      _activeReadingSignature = null;
-                      _activeSpread = null;
-                      _drawn = [];
-                      _aiReading = null;
-                      _question = '';
-                    }),
+                    onPressed: _isReadingAI
+                        ? null
+                        : () => _limparMesa(novaTiragem: true),
                     icon: const Icon(Icons.refresh, size: 16),
                     label: Text(AppLocalizations.of(context).tarotNewSpread),
                   ),
@@ -737,109 +1175,7 @@ class _SpreadTabState extends State<_SpreadTab>
                 ),
               ),
             const SizedBox(height: 8),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: _activeSpread == TarotSpread.daily
-                  ? Center(child: _resultCard(0, 110))
-                  : SpreadBoard(
-                      labels: _drawn.map((d) => d.positionLabel).toList(),
-                      cross: _activeSpread == TarotSpread.cross,
-                      cardBuilder: _resultCard,
-                    ),
-            ),
-            if (_revealed) ...[
-              for (final drawn in _drawn)
-                MagicalCard(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '${drawn.positionLabel} — ${drawn.card.name}'
-                        '${drawn.isReversed ? ' (${AppLocalizations.of(context).tarotReversed})' : ''}',
-                        style:
-                            Theme.of(context).textTheme.titleSmall?.copyWith(
-                                  color: context.gc.lilac,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                      ),
-                      const SizedBox(height: 4),
-                      Wrap(
-                        spacing: 6,
-                        children: drawn.card.keywords
-                            .map((k) => Text(
-                                  '· $k',
-                                  style: TextStyle(
-                                    color: context.gc.textSecondary,
-                                    fontSize: 12,
-                                  ),
-                                ))
-                            .toList(),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        drawn.meaning,
-                        style: Theme.of(context)
-                            .textTheme
-                            .bodyMedium
-                            ?.copyWith(height: 1.5),
-                      ),
-                    ],
-                  ),
-                ),
-              MagicalCard(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    if (!context.watch<AuthProvider>().isPremiumEffective)
-                      // Sem acesso: no lugar do botão, o sumário do que o
-                      // Conselheiro teceria sobre as cartas que já estão na
-                      // mesa.
-                      _previaDoConselheiro(context)
-                    else if (_aiReading == null)
-                      // Sem interpretação para estas cartas: mostra o botão.
-                      ElevatedButton.icon(
-                        onPressed: _isReadingAI ? null : _askCounselor,
-                        icon: _isReadingAI
-                            ? SizedBox(
-                                width: 18,
-                                height: 18,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: context.gc.onPrimary,
-                                ),
-                              )
-                            : const Icon(Icons.auto_awesome, size: 18),
-                        label: Text(
-                          _isReadingAI
-                              ? AppLocalizations.of(context).tarotConsultingCards
-                              : AppLocalizations.of(context)
-                                  .tarotAdvisorInterpretation,
-                        ),
-                      )
-                    else ...[
-                      // Já interpretado: mostra só o texto. O botão volta apenas
-                      // em uma nova tiragem (cartas diferentes).
-                      Text(
-                        AppLocalizations.of(context).tarotAdvisorInterpretation,
-                        style:
-                            Theme.of(context).textTheme.titleMedium?.copyWith(
-                                  color: context.gc.lilac,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        _aiReading!,
-                        style: Theme.of(context)
-                            .textTheme
-                            .bodyMedium
-                            ?.copyWith(height: 1.6),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-            ],
+            _buildResultado(),
           ],
           const SizedBox(height: 24),
         ],

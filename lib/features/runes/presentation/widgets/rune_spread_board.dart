@@ -5,94 +5,104 @@ import 'package:flutter/semantics.dart';
 
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/theme/grimoire_motion.dart';
-import '../../../../l10n/generated/app_localizations.dart';
 import '../../data/models/rune_spread_model.dart';
-import 'rune_stone.dart';
+import 'rune_stone_view.dart';
 
-/// Position labels stay still; only the stones settle and reveal.
+/// Positions of every rune table. Selection and result share the same slots:
+/// one stone; a row of three; the Nordic cross (result above, past/situation/
+/// future across, challenge below); nine worlds in a compact 3x3.
 class RuneSpreadBoard extends StatelessWidget {
-  const RuneSpreadBoard({super.key, required this.spread, required this.stoneSlots,
-    this.positions = const [], this.progress = 0, this.activePosition,
-    this.nextPosition, this.onTap, this.compact = false});
+  const RuneSpreadBoard({
+    super.key,
+    required this.spread,
+    required this.labels,
+    required this.stoneBuilder,
+    this.compact = false,
+    this.nextPosition,
+    this.selectedPosition,
+    this.onTap,
+  });
+
   final RuneSpreadType spread;
-  final List<int> stoneSlots;
-  final List<RunePosition> positions;
-  final double progress;
-  final int? activePosition, nextPosition;
-  final ValueChanged<int>? onTap;
+  final List<String> labels;
+  final Widget? Function(int index, double size) stoneBuilder;
   final bool compact;
+  final int? nextPosition;
+  final int? selectedPosition;
+  final ValueChanged<int>? onTap;
+
+  static List<List<int?>> rowsFor(RuneSpreadType spread) {
+    switch (spread) {
+      case RuneSpreadType.single:
+        return [[0]];
+      case RuneSpreadType.threeCast:
+        return [[0, 1, 2]];
+      case RuneSpreadType.nordicCross:
+        return [[null, 4, null], [2, 0, 3], [null, 1, null]];
+      case RuneSpreadType.nineWorlds:
+        return [[0, 1, 2], [3, 4, 5], [6, 7, 8]];
+    }
+  }
 
   @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final rows = switch (spread) {
-      RuneSpreadType.single => <List<int?>>[[0]],
-      RuneSpreadType.threeCast => <List<int?>>[[0, 1, 2]],
-      RuneSpreadType.nordicCross => <List<int?>>[[null, 4, null], [2, 0, 3], [null, 1, null]],
-      RuneSpreadType.nineWorlds => <List<int?>>[[0, 1, 2], [3, 4, 5], [6, 7, 8]],
-    };
-    return LayoutBuilder(builder: (context, constraints) {
-      final size = math.min((constraints.maxWidth - 24) / rows.first.length,
-          compact ? 38.0 : 76.0);
-      return Table(defaultVerticalAlignment: TableCellVerticalAlignment.middle,
-        children: [for (final row in rows) TableRow(children: [
-          for (final index in row)
-            if (index == null) const SizedBox.shrink()
-            else Builder(builder: (context) {
-              final hasStone = index < stoneSlots.length;
-              final t = positions.isEmpty ? 0.0 :
-                  ((progress * (450 + (spread.runeCount - 1) * 70) - index * 70) / 450)
-                      .clamp(0.0, 1.0).toDouble();
-              final face = t >= .5;
-              final position = positions.isEmpty ? null : positions[index];
-              final label = spread.getPositionMeaning(index);
-              return Padding(padding: const EdgeInsets.all(4), child: Semantics(
-                sortKey: OrdinalSortKey(index.toDouble()),
-                button: onTap != null && hasStone,
-                selected: activePosition == index,
-                label: face && position != null
-                    ? '$label: ${position.rune.name}${position.isReversed ? ', ${l10n.runesReversed}' : ''}'
-                    : label,
-                onTap: onTap == null || !hasStone ? null : () => onTap!(index),
-                excludeSemantics: true,
-                child: InkWell(
-                  key: ValueKey('rune-board-position-$index'),
-                  borderRadius: BorderRadius.circular(12),
-                  onTap: onTap == null || !hasStone ? null : () => onTap!(index),
-                  child: Column(mainAxisSize: MainAxisSize.min, children: [
-                    AnimatedSwitcher(
-                      duration: GrimoireMotion.reduced(context) ? Duration.zero : GrimoireMotion.state,
-                      transitionBuilder: (child, animation) => ScaleTransition(
-                        scale: Tween<double>(begin: .86, end: 1).animate(animation),
-                        child: FadeTransition(opacity: animation, child: child)),
-                      child: hasStone ? Transform.translate(
-                        key: ValueKey('rune-board-filled-$index'),
-                        offset: Offset(0, t > 0 && t < 1 ? -8 * math.sin(math.pi * t) : 0),
-                        child: Transform.scale(scaleX: (1 - 2 * t).abs().clamp(.04, 1.0).toDouble(),
-                          child: RuneStone(slot: stoneSlots[index], size: size,
-                            symbol: face ? position?.rune.symbol : null,
-                            reversed: face && (position?.isReversed ?? false),
-                            highlighted: activePosition == index),
-                        ),
-                      ) : SizedBox.square(dimension: size, child: DecoratedBox(
-                        decoration: BoxDecoration(shape: BoxShape.circle,
-                          border: Border.all(color: nextPosition == index
-                              ? context.gc.lilac : context.gc.surfaceBorder)),
-                        child: Center(child: Text('${index + 1}',
-                            style: TextStyle(color: context.gc.textSecondary))),
-                      )),
+  Widget build(BuildContext context) => LayoutBuilder(builder: (context, constraints) {
+    assert(labels.length == spread.runeCount, 'One label per table position');
+    final rows = rowsFor(spread);
+    final columns = rows.first.length;
+    final size = math.min((constraints.maxWidth - 8.0 * columns) / columns,
+        compact ? 52.0 : 84.0);
+    return Table(
+      defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+      children: [for (final row in rows) TableRow(children: [
+        for (final index in row)
+          if (index == null) const SizedBox.shrink()
+          else Padding(
+            padding: const EdgeInsets.all(4),
+            child: Semantics(
+              sortKey: OrdinalSortKey(index.toDouble()),
+              child: InkWell(
+                key: ValueKey('rune-slot-$index'),
+                onTap: onTap == null ? null : () => onTap!(index),
+                borderRadius: BorderRadius.circular(12),
+                child: Column(mainAxisSize: MainAxisSize.min, children: [
+                  AnimatedSwitcher(
+                    duration: GrimoireMotion.reduced(context)
+                        ? Duration.zero : GrimoireMotion.state,
+                    transitionBuilder: (child, animation) => FadeTransition(
+                      opacity: animation,
+                      child: ScaleTransition(
+                          scale: Tween<double>(begin: .85, end: 1).animate(animation),
+                          child: child),
                     ),
-                    const SizedBox(height: 4),
-                    Text(label, textAlign: TextAlign.center,
+                    child: stoneBuilder(index, size) ?? Container(
+                      key: ValueKey('rune-empty-$index'),
+                      width: size, height: size / RuneStoneView.aspectRatio,
+                      decoration: BoxDecoration(
+                        color: context.gc.surface,
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: nextPosition == index
+                              ? context.gc.lilac : context.gc.surfaceBorder,
+                          width: nextPosition == index ? 2 : 1,
+                        ),
+                      ),
+                      child: Center(child: Text('${index + 1}',
+                          style: TextStyle(color: context.gc.textSecondary))),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(labels[index], textAlign: TextAlign.center,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: activePosition == index || nextPosition == index
-                            ? context.gc.lilac : context.gc.textSecondary)),
-                  ]),
-                ),
-              ));
-            }),
-        ])],
-      );
-    });
-  }
+                        color: nextPosition == index || selectedPosition == index
+                            ? context.gc.lilac : context.gc.textSecondary,
+                        fontWeight: nextPosition == index || selectedPosition == index
+                            ? FontWeight.bold : FontWeight.normal,
+                      )),
+                ]),
+              ),
+            ),
+          ),
+      ])],
+    );
+  });
 }

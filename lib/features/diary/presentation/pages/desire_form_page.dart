@@ -1,8 +1,13 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
 import '../../data/models/desire_model.dart';
 import '../providers/desire_provider.dart';
+import '../../domain/desire_transition.dart';
+import '../../../journeys/domain/action_outcome.dart';
+import '../../../journeys/domain/action_recorder.dart';
 import '../../../../core/widgets/magical_button.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
@@ -22,6 +27,7 @@ class _DesireFormPageState extends State<DesireFormPage> {
   late TextEditingController _descriptionController;
   late TextEditingController _evolutionController;
   late DesireStatus _selectedStatus;
+  bool _saving = false;
 
   @override
   void initState() {
@@ -212,12 +218,34 @@ class _DesireFormPageState extends State<DesireFormPage> {
               : _evolutionController.text,
         );
 
-    if (widget.desire == null) {
-      context.read<DesireProvider>().addDesire(desire);
-    } else {
-      context.read<DesireProvider>().updateDesire(desire);
-    }
+    unawaited(_persist(desire));
+  }
 
+  /// Wait for the write, then record what it means: a new wish, or the
+  /// transition into fulfilled/released (editing a wish already in that
+  /// state is silent). Only then leave the form.
+  Future<void> _persist(DesireModel desire) async {
+    if (_saving) return;
+    setState(() => _saving = true);
+    final provider = context.read<DesireProvider>();
+    final recorder = ActionRecorder.of(context);
+    final previous = widget.desire;
+    final saved = previous == null
+        ? await provider.addDesire(desire)
+        : await provider.updateDesire(desire);
+    if (!mounted) return;
+    if (!saved) {
+      setState(() => _saving = false);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(provider.error ?? AppLocalizations.of(context).errorsGeneric),
+        backgroundColor: context.gc.alert,
+      ));
+      return;
+    }
+    final origin = previous == null
+        ? ActionOrigin.desire
+        : desireTransitionOrigin(previous.status, desire.status);
+    if (origin != null) unawaited(recorder.record(origin: origin, entityId: desire.id));
     Navigator.pop(context);
   }
 

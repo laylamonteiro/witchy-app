@@ -29,9 +29,10 @@ const _defaultFilterId = 'records';
 
 /// "Meus Registros": a janela do acervo unificado dentro do Meu Grimório.
 /// Abre com tudo à vista — páginas do Grimório Vivo, leituras salvas
-/// (quiromancia, runas, pêndulo, oráculo, tarot) e reflexões — e os chips
-/// recortam por origem. Não há botão de criar: as entradas nascem das
-/// lições, das leituras e da aba 💭 dos Diários.
+/// (quiromancia, runas, pêndulo, oráculo, tarot), os dias do Ciclo Menstrual
+/// e reflexões — e os chips recortam por origem. Não há botão de criar: as
+/// entradas nascem das lições, das leituras, da roda do ciclo e da aba 💭 dos
+/// Diários.
 class RecordsArchiveListPage extends StatefulWidget {
   /// Chip já escolhido ao abrir (o id é o `source` da entrada).
   ///
@@ -88,12 +89,32 @@ class _RecordsArchiveListPageState extends State<RecordsArchiveListPage> {
           label: archiveSourceLabel(l10n, source),
           matches: (FreeWritingModel e) => e.source == source,
         ),
+      if (present.contains(FreeWritingSource.advisor))
+        (
+          id: FreeWritingSource.advisor,
+          label: archiveSourceLabel(l10n, FreeWritingSource.advisor),
+          matches: (FreeWritingModel e) =>
+              e.source == FreeWritingSource.advisor,
+        ),
       if (present.contains(FreeWritingSource.cycleReading))
         (
           id: FreeWritingSource.cycleReading,
           label: archiveSourceLabel(l10n, FreeWritingSource.cycleReading),
           matches: (FreeWritingModel e) =>
               e.source == FreeWritingSource.cycleReading,
+        ),
+      // O chip próprio do Ciclo Menstrual. Ele NÃO tira os dias do filtro
+      // padrão: o pedido é que todo registro esteja no Grimório, e um acervo
+      // que abrisse dizendo "nenhum registro" para quem só registrou o ciclo
+      // seria o app desmentindo a si mesmo — o card "Meus Registros" do hub
+      // conta a lista inteira. O chip é o atalho para ir direto a eles; a
+      // discrição é comprada onde ela é gasta, no corpo do cartão.
+      if (present.contains(FreeWritingSource.menstrual))
+        (
+          id: FreeWritingSource.menstrual,
+          label: archiveSourceLabel(l10n, FreeWritingSource.menstrual),
+          matches: (FreeWritingModel e) =>
+              e.source == FreeWritingSource.menstrual,
         ),
       if (present.contains(FreeWritingSource.free))
         (
@@ -343,19 +364,34 @@ class _RecordsArchiveListPageState extends State<RecordsArchiveListPage> {
             ],
           ),
           const SizedBox(height: 4),
+          // A data da página do ciclo é o dia OBSERVADO, nas duas colunas
+          // (MenstrualArchiveRecorder), então este `updatedAt` mostra o dia
+          // que a página conta — e não o dia em que ela o digitou. É o que
+          // mantém um registro retroativo no lugar dele, também na ordenação
+          // por `updated_at DESC`.
           Text(
             dateFormat.format(entry.updatedAt),
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: context.gc.textSecondary,
                 ),
           ),
-          const SizedBox(height: 6),
-          Text(
-            entry.content,
-            maxLines: 3,
-            overflow: TextOverflow.ellipsis,
-            style: Theme.of(context).textTheme.bodySmall,
-          ),
+          // O cartão do ciclo mostra título, selinho e data — e para por aí.
+          //
+          // As três linhas de prévia são o que faz a lista ser navegável nas
+          // outras origens; aqui elas estampariam "✦ O que você marcou /
+          // Começou" na primeira tela do Grimório, para quem passar por perto
+          // do aparelho. Tirar a marca do TÍTULO não compraria nada: ela só
+          // mudaria de linha. O corpo do dia aparece quando ela abre a
+          // página, que é um gesto dela.
+          if (entry.source != FreeWritingSource.menstrual) ...[
+            const SizedBox(height: 6),
+            Text(
+              entry.content,
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+          ],
         ],
       ),
     );

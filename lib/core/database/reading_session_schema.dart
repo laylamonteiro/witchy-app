@@ -2,12 +2,20 @@ import 'package:sqflite/sqflite.dart';
 
 /// Local presentation sessions and usage share the result's transaction.
 /// None of these tables is uploaded by the generic content sync.
+/// Oracle discoveries (v25) feed the album of P11; they are local until the
+/// collections sync of P15 and never grant XP. Advisor consultations (v26)
+/// keep a received answer on the device so reopening never re-sends it.
+/// Progress milestones (v27) remember each journey step once reached, so a
+/// count that drops and recovers never celebrates the same step twice.
 abstract final class ReadingSessionSchema {
   static const tables = [
     'selection_sessions',
     'tarot_day_state',
     'usage_balances',
     'usage_operations',
+    'oracle_discoveries',
+    'advisor_consultations',
+    'progress_milestones',
   ];
 
   static Future<void> create(DatabaseExecutor db) async {
@@ -69,6 +77,44 @@ abstract final class ReadingSessionSchema {
     await db.execute('''
       CREATE INDEX IF NOT EXISTS idx_usage_by_day
       ON usage_operations(user_id, category, day_key)
+    ''');
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS oracle_discoveries (
+        user_id TEXT NOT NULL,
+        card_id INTEGER NOT NULL,
+        first_seen_at INTEGER NOT NULL,
+        source_reading_id TEXT,
+        catalog_version TEXT NOT NULL,
+        synced INTEGER NOT NULL DEFAULT 0,
+        PRIMARY KEY(user_id, card_id)
+      )
+    ''');
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS advisor_consultations (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL,
+        question TEXT NOT NULL,
+        answer TEXT,
+        status TEXT NOT NULL,
+        writing_id TEXT,
+        created_at INTEGER NOT NULL,
+        updated_at INTEGER NOT NULL,
+        synced INTEGER NOT NULL DEFAULT 0
+      )
+    ''');
+    await db.execute('''
+      CREATE INDEX IF NOT EXISTS idx_advisor_by_user
+      ON advisor_consultations(user_id, created_at)
+    ''');
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS progress_milestones (
+        user_id TEXT NOT NULL,
+        milestone_id TEXT NOT NULL,
+        first_reached_at INTEGER NOT NULL,
+        source_action_id TEXT,
+        synced INTEGER NOT NULL DEFAULT 0,
+        PRIMARY KEY(user_id, milestone_id)
+      )
     ''');
   }
 }

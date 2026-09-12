@@ -6,6 +6,7 @@ import '../providers/lunar_provider.dart';
 import '../../../../core/widgets/breathing_moon.dart';
 import '../../../../core/widgets/expansion_magical_card.dart';
 import '../../../../core/widgets/magical_card.dart';
+import '../../../../core/widgets/moon_glyph.dart';
 import '../../../../core/widgets/staggered_entrance.dart';
 import '../../../../core/widgets/starfield_background.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -45,13 +46,14 @@ class LunarCalendarPage extends StatelessWidget {
               child: Column(
                 children: [
                   // Slot de altura fixa: o hero da Lua e o do Sol têm o MESMO
-                  // tamanho e formato, com o ícone centrado (emojis variam
-                  // de métrica). A lua que respira é a fase de HOJE.
+                  // tamanho e formato, com o astro centrado. A lua que
+                  // respira é a fase de HOJE, e o halo dela transborda do
+                  // corpo — por isso o slot é maior que a lua.
                   SizedBox(
                     height: 110,
                     child: Center(
                       child: BreathingMoon(
-                        moonEmoji: nowPhase.emoji,
+                        phase: nowPhase,
                         size: 72,
                         showStars: false,
                       ),
@@ -67,8 +69,10 @@ class LunarCalendarPage extends StatelessWidget {
                         ),
                   ),
                   const SizedBox(height: 4),
+                  // Só o nome: o emoji aqui era uma segunda lua, três linhas
+                  // abaixo da que respira — a mesma fase desenhada duas vezes.
                   Text(
-                    '${nowPhase.emoji}  ${nowPhase.displayName}',
+                    nowPhase.displayName,
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.titleSmall?.copyWith(
                           fontWeight: FontWeight.w600,
@@ -106,7 +110,18 @@ class LunarCalendarPage extends StatelessWidget {
             ),
             child: Row(
               children: [
-                const Text('🫙', style: TextStyle(fontSize: 32)),
+                // O potinho da Água de Lua era emoji (U+1FAD9, Unicode 14 de
+                // 2021) e o minSdk do app é 24: em Android antigo a fonte do
+                // sistema não tem esse desenho e o card abria com um
+                // quadradinho. O ícone do Material vem dentro do app, então é
+                // o MESMO desenho em qualquer aparelho. Sem semanticLabel de
+                // propósito: quem carrega a informação é o nome do ritual ao
+                // lado, e um rótulo aqui só faria o leitor de tela repetir.
+                // A gota (e não um frasco genérico) porque a MESMA Água de
+                // Lua aparece mais abaixo NESTA PÁGINA, na lista de esbats,
+                // já desenhada como gota: dois desenhos para o mesmo ritual
+                // na mesma tela leem como duas coisas diferentes.
+                Icon(Icons.water_drop, size: 32, color: context.gc.lilac),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
@@ -212,7 +227,14 @@ class LunarCalendarPage extends StatelessWidget {
                   children: MoonPhase.values.map((moonPhase) {
                     final knowledge = MoonContent.phaseKnowledge[moonPhase]!;
                     return ExpansionMagicalCard(
-                      emoji: moonPhase.emoji,
+                      // Desenhada, como a do hero: eram oito emojis de fase
+                      // em coluna, ou seja, oito luas de arte alheia logo
+                      // abaixo da lua do app.
+                      leading: MoonGlyph(
+                        phase: moonPhase,
+                        size: 26,
+                        halo: false,
+                      ),
                       title: moonPhase.displayName,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,

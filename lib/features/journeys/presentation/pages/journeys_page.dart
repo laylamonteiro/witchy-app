@@ -3,11 +3,12 @@ import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
+import '../../../../core/widgets/folha_com_saida.dart';
 import '../../../../core/widgets/loading_widget.dart';
-import '../../../../core/database/database_helper.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../learning/presentation/providers/learning_provider.dart';
 import '../../data/models/journey_model.dart';
+import '../../data/repositories/journey_stats_repository.dart';
 
 /// Página de Jornadas Mágicas Gamificadas.
 ///
@@ -42,35 +43,10 @@ class _JourneysPageState extends State<JourneysPage> {
 
     try {
       final authProvider = context.read<AuthProvider>();
-      final odUserId = authProvider.currentUser.id;
-      final db = await DatabaseHelper.instance.database;
-
-      // Carregar contagens de cada entidade
-      _userStats = {
-        // Para feitiços, excluir os pré-carregados (is_preloaded = 1)
-        'spells': await _countUserSpells(db, odUserId),
-        'dreams': await _countRecords(db, 'dreams', odUserId),
-        'desires': await _countRecords(db, 'desires', odUserId),
-        'gratitudes': await _countRecords(db, 'gratitudes', odUserId),
-        'affirmations': await _countRecords(db, 'affirmations', odUserId),
-        'sigils': await _countRecords(db, 'sigils', odUserId),
-        'rune_readings': await _countRecords(db, 'rune_readings', odUserId),
-        'oracle_readings': await _countRecords(db, 'oracle_readings', odUserId),
-        'pendulum_consultations':
-            await _countRecords(db, 'pendulum_consultations', odUserId),
-        'birth_charts': await _countRecords(db, 'birth_charts', odUserId),
-        'desires_manifested':
-            await _countDesiresByStatus(db, odUserId, 'manifested'),
-        'gratitude_streak': await _calculateStreak(db, 'gratitudes', odUserId),
-        'guided_rituals':
-            await _countRecords(db, 'guided_ritual_logs', odUserId),
-      };
-
-      // Calcular all_readings
-      _userStats['all_readings'] = (_userStats['rune_readings'] ?? 0) +
-          (_userStats['oracle_readings'] ?? 0) +
-          (_userStats['pendulum_consultations'] ?? 0);
-
+      // Mesmas contagens que o coordenador de progresso usa para os marcos:
+      // a tela e a detecção nunca divergem, e o tarô entra no total.
+      _userStats = await JourneyStatsRepository()
+          .load(authProvider.currentUser.id);
       if (mounted) setState(() => _isLoading = false);
     } catch (e) {
       if (mounted) setState(() => _isLoading = false);
@@ -78,102 +54,8 @@ class _JourneysPageState extends State<JourneysPage> {
     }
   }
 
-  Future<int> _countRecords(dynamic db, String table, String odUserId) async {
-    try {
-      final result = await db.rawQuery(
-        'SELECT COUNT(*) as count FROM $table WHERE user_id = ?',
-        [odUserId],
-      );
-      return result.first['count'] as int? ?? 0;
-    } catch (e) {
-      return 0;
-    }
-  }
-
-  /// Conta apenas feitiços criados pelo usuário (excluindo os pré-carregados)
-  Future<int> _countUserSpells(dynamic db, String odUserId) async {
-    try {
-      final result = await db.rawQuery(
-        'SELECT COUNT(*) as count FROM spells WHERE user_id = ? AND is_preloaded = 0',
-        [odUserId],
-      );
-      return result.first['count'] as int? ?? 0;
-    } catch (e) {
-      return 0;
-    }
-  }
-
-  Future<int> _countDesiresByStatus(
-      dynamic db, String odUserId, String status) async {
-    try {
-      final result = await db.rawQuery(
-        'SELECT COUNT(*) as count FROM desires WHERE user_id = ? AND status = ?',
-        [odUserId, status],
-      );
-      return result.first['count'] as int? ?? 0;
-    } catch (e) {
-      return 0;
-    }
-  }
-
-  Future<int> _calculateStreak(
-      dynamic db, String table, String odUserId) async {
-    try {
-      final result = await db.rawQuery(
-        '''SELECT DISTINCT date(created_at / 1000, 'unixepoch', 'localtime') as day
-           FROM $table
-           WHERE user_id = ?
-           ORDER BY day DESC''',
-        [odUserId],
-      );
-
-      if (result.isEmpty) return 0;
-
-      int streak = 0;
-      DateTime? previousDay;
-
-      for (final row in result) {
-        final dayStr = row['day'] as String?;
-        if (dayStr == null) continue;
-
-        final day = DateTime.parse(dayStr);
-
-        if (previousDay == null) {
-          final today = DateTime.now();
-          final todayDate = DateTime(today.year, today.month, today.day);
-          final yesterdayDate = todayDate.subtract(const Duration(days: 1));
-
-          if (day == todayDate || day == yesterdayDate) {
-            streak = 1;
-            previousDay = day;
-          } else {
-            break;
-          }
-        } else {
-          final expectedDay = previousDay.subtract(const Duration(days: 1));
-          if (day == expectedDay) {
-            streak++;
-            previousDay = day;
-          } else {
-            break;
-          }
-        }
-      }
-
-      return streak;
-    } catch (e) {
-      return 0;
-    }
-  }
-
-  int _getStepProgress(JourneyStep step) {
-    if (step.type == StepType.streak) {
-      return _userStats['${step.targetEntity}_streak'] ??
-          _userStats['gratitude_streak'] ??
-          0;
-    }
-    return _userStats[step.targetEntity] ?? 0;
-  }
+  int _getStepProgress(JourneyStep step) =>
+      JourneyStatsRepository.progressOf(_userStats, step);
 
   @override
   Widget build(BuildContext context) {
@@ -461,41 +343,29 @@ class _JourneysPageState extends State<JourneysPage> {
   }
 
   void _showLevelsSheet() {
-    showModalBottomSheet(
+    // O fundo e o canto arredondado passaram para a folha em si (antes eram
+    // de um Container interno, com o fundo do modal transparente) porque a
+    // alça do Material é desenhada pela própria folha: com o modal
+    // transparente ela ficaria flutuando sobre o escurecido, fora da
+    // superfície. O X rola junto com a lista; quem fica fixo no topo é a alça.
+    mostrarFolhaComSaida<void>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
       builder: (context) => DraggableScrollableSheet(
         initialChildSize: 0.7,
         minChildSize: 0.5,
         maxChildSize: 0.95,
         expand: false,
-        builder: (context, scrollController) => Container(
-          decoration: BoxDecoration(
-            color: context.gc.surface,
-            borderRadius:
-                const BorderRadius.vertical(top: Radius.circular(20)),
-          ),
-          child: Column(
-            children: [
-              Container(
-                margin: const EdgeInsets.only(top: 12),
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: context.gc.textSecondary,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              Expanded(
-                child: ListView(
-                  controller: scrollController,
-                  padding: const EdgeInsets.all(20),
-                  children: [_buildLevelsSection()],
-                ),
-              ),
-            ],
-          ),
+        builder: (context, scrollController) => ListView(
+          controller: scrollController,
+          padding: const EdgeInsets.fromLTRB(20, 4, 20, 20),
+          children: [
+            const Align(
+              alignment: Alignment.centerRight,
+              child: BotaoFecharFolha(key: ValueKey('journeys-levels-close')),
+            ),
+            _buildLevelsSection(),
+          ],
         ),
       ),
     );
@@ -802,215 +672,199 @@ class _JourneysPageState extends State<JourneysPage> {
   }
 
   void _showJourneyDetails(JourneyModel journey) {
-    showModalBottomSheet(
+    // O fundo e o canto arredondado passaram para a folha em si (antes eram
+    // de um Container interno, com o modal transparente) porque a alça do
+    // Material é desenhada pela própria folha: com o modal transparente ela
+    // ficaria flutuando sobre o escurecido, fora da superfície. O X rola junto
+    // com a lista; quem fica fixo no topo é a alça.
+    mostrarFolhaComSaida<void>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
       builder: (context) => DraggableScrollableSheet(
         initialChildSize: 0.7,
         minChildSize: 0.5,
         maxChildSize: 0.95,
         expand: false,
-        builder: (context, scrollController) => Container(
-          decoration: BoxDecoration(
-            color: context.gc.surface,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-          ),
-          child: Column(
-            children: [
-              Container(
-                margin: const EdgeInsets.only(top: 12),
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: context.gc.textSecondary,
-                  borderRadius: BorderRadius.circular(2),
+        builder: (context, scrollController) => ListView(
+          controller: scrollController,
+          padding: const EdgeInsets.fromLTRB(20, 4, 20, 20),
+          children: [
+            // Header
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: journey.color.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Icon(journey.icon,
+                      color: journey.color, size: 40),
                 ),
-              ),
-              Expanded(
-                child: ListView(
-                  controller: scrollController,
-                  padding: const EdgeInsets.all(20),
-                  children: [
-                    // Header
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: journey.color.withValues(alpha: 0.2),
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: Icon(journey.icon,
-                              color: journey.color, size: 40),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        journey.localizedTitle,
+                        style: TextStyle(
+                          color: context.gc.textPrimary,
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
                         ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                journey.localizedTitle,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        journey.localizedDescription,
+                        style: TextStyle(
+                          color: context.gc.textSecondary,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const BotaoFecharFolha(key: ValueKey('journey-close')),
+              ],
+            ),
+            const SizedBox(height: 24),
+
+            // Etapas
+            Text(
+              'Etapas da Jornada',
+              style: TextStyle(
+                color: context.gc.textPrimary,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            ...journey.steps.asMap().entries.map((entry) {
+              final index = entry.key;
+              final step = entry.value;
+              final progress = _getStepProgress(step);
+              final isCompleted = progress >= step.requiredCount;
+              final progressPercent = step.requiredCount > 0
+                  ? (progress / step.requiredCount).clamp(0.0, 1.0)
+                  : 0.0;
+
+              return Container(
+                margin: const EdgeInsets.only(bottom: 12),
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: isCompleted
+                      ? Colors.green.withValues(alpha: 0.1)
+                      : context.gc.textPrimary.withValues(alpha: 0.05),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: isCompleted ? Colors.green : context.gc.textPrimary10,
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 32,
+                      height: 32,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: isCompleted
+                            ? Colors.green
+                            : journey.color.withValues(alpha: 0.3),
+                      ),
+                      child: Center(
+                        child: isCompleted
+                            ? Icon(Icons.check,
+                                color: context.gc.textPrimary, size: 18)
+                            : Text(
+                                '${index + 1}',
                                 style: TextStyle(
-                                  color: context.gc.textPrimary,
-                                  fontSize: 22,
+                                  color: journey.color,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
-                              const SizedBox(height: 4),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            step.localizedTitle,
+                            style: TextStyle(
+                              color: isCompleted
+                                  ? Colors.green
+                                  : context.gc.textPrimary,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            step.localizedDescription,
+                            style: TextStyle(
+                              color: context.gc.textSecondary,
+                              fontSize: 12,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: ClipRRect(
+                                  borderRadius:
+                                      BorderRadius.circular(2),
+                                  child: LinearProgressIndicator(
+                                    value: progressPercent,
+                                    backgroundColor: context.gc.textPrimary10,
+                                    valueColor: AlwaysStoppedAnimation(
+                                      isCompleted
+                                          ? Colors.green
+                                          : journey.color,
+                                    ),
+                                    minHeight: 4,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
                               Text(
-                                journey.localizedDescription,
+                                '$progress/${step.requiredCount}',
                                 style: TextStyle(
-                                  color: context.gc.textSecondary,
-                                  fontSize: 14,
+                                  color: isCompleted
+                                      ? Colors.green
+                                      : context.gc.textSecondary,
+                                  fontSize: 12,
                                 ),
                               ),
                             ],
                           ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 24),
-
-                    // Etapas
-                    Text(
-                      'Etapas da Jornada',
-                      style: TextStyle(
-                        color: context.gc.textPrimary,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
+                        ],
                       ),
                     ),
-                    const SizedBox(height: 16),
-
-                    ...journey.steps.asMap().entries.map((entry) {
-                      final index = entry.key;
-                      final step = entry.value;
-                      final progress = _getStepProgress(step);
-                      final isCompleted = progress >= step.requiredCount;
-                      final progressPercent = step.requiredCount > 0
-                          ? (progress / step.requiredCount).clamp(0.0, 1.0)
-                          : 0.0;
-
-                      return Container(
-                        margin: const EdgeInsets.only(bottom: 12),
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: isCompleted
-                              ? Colors.green.withValues(alpha: 0.1)
-                              : context.gc.textPrimary.withValues(alpha: 0.05),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: isCompleted ? Colors.green : context.gc.textPrimary10,
-                          ),
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color:
+                            context.gc.starYellow.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        '+${step.xpReward} XP',
+                        style: TextStyle(
+                          color: context.gc.starYellow,
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
                         ),
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 32,
-                              height: 32,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: isCompleted
-                                    ? Colors.green
-                                    : journey.color.withValues(alpha: 0.3),
-                              ),
-                              child: Center(
-                                child: isCompleted
-                                    ? Icon(Icons.check,
-                                        color: context.gc.textPrimary, size: 18)
-                                    : Text(
-                                        '${index + 1}',
-                                        style: TextStyle(
-                                          color: journey.color,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    step.localizedTitle,
-                                    style: TextStyle(
-                                      color: isCompleted
-                                          ? Colors.green
-                                          : context.gc.textPrimary,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    step.localizedDescription,
-                                    style: TextStyle(
-                                      color: context.gc.textSecondary,
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Row(
-                                    children: [
-                                      Expanded(
-                                        child: ClipRRect(
-                                          borderRadius:
-                                              BorderRadius.circular(2),
-                                          child: LinearProgressIndicator(
-                                            value: progressPercent,
-                                            backgroundColor: context.gc.textPrimary10,
-                                            valueColor: AlwaysStoppedAnimation(
-                                              isCompleted
-                                                  ? Colors.green
-                                                  : journey.color,
-                                            ),
-                                            minHeight: 4,
-                                          ),
-                                        ),
-                                      ),
-                                      const SizedBox(width: 8),
-                                      Text(
-                                        '$progress/${step.requiredCount}',
-                                        style: TextStyle(
-                                          color: isCompleted
-                                              ? Colors.green
-                                              : context.gc.textSecondary,
-                                          fontSize: 12,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 8, vertical: 4),
-                              decoration: BoxDecoration(
-                                color:
-                                    context.gc.starYellow.withValues(alpha: 0.2),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Text(
-                                '+${step.xpReward} XP',
-                                style: TextStyle(
-                                  color: context.gc.starYellow,
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    }),
+                      ),
+                    ),
                   ],
                 ),
-              ),
-            ],
-          ),
+              );
+            }),
+          ],
         ),
       ),
     );
