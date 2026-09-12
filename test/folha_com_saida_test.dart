@@ -10,15 +10,16 @@ import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 /// A dona testa no navegador do celular, onde arrastar a folha para baixo não
 /// se anuncia e tocar fora não se oferece. Os dois gestos FUNCIONAVAM (o
 /// padrão do Material já traz `enableDrag` e `isDismissible`); o que faltava
-/// era dizer isso a quem olha. Cinco folhas grandes desenhavam uma alça de
+/// era dizer isso a quem olha. As folhas grandes desenhavam uma alça de
 /// 40x4 PINTADA à mão — retângulo dentro do conteúdo, sem alvo de toque nem
 /// semântica — e nenhuma tinha botão de sair. A pior delas era o portão do
 /// captcha: quem não conseguisse resolver o desafio não via nenhuma porta.
 ///
 /// A primeira metade destes testes olha o comportamento do
 /// [mostrarFolhaComSaida]; a segunda é uma catraca de código-fonte, para que a
-/// alça pintada e o `showModalBottomSheet` cru não voltem sorrateiramente a
-/// estes cinco arquivos.
+/// alça pintada e o `showModalBottomSheet` cru não voltem sorrateiramente aos
+/// arquivos já consertados. A lista cresce a cada folha achada, por isso
+/// nenhum número entra neste texto: número em comentário envelhece calado.
 void main() {
   Widget app(Widget child) => MaterialApp(
         locale: const Locale('pt', 'BR'),
@@ -94,7 +95,7 @@ void main() {
     });
   });
 
-  group('catraca das cinco folhas', () {
+  group('catraca das folhas sem saída', () {
     // Os arquivos varridos, com o nome que a dona usa para cada tela.
     const arquivos = <String, String>{
       'lib/features/auth/presentation/widgets/captcha_gate.dart':
@@ -122,11 +123,24 @@ void main() {
           'a escolha de foto do perfil',
       'lib/core/sharing/share_card_sheet.dart':
           'o cartão de compartilhar',
+      'lib/features/divination/presentation/pages/oracle_album_page.dart':
+          'a carta encontrada no álbum do Oráculo',
     };
 
-    // A alça pintada: um retângulo de 40x4 prometendo um gesto que não
+    // A alça pintada: um retângulo baixinho prometendo um gesto que não
     // existia. Entre as duas medidas cabia margem ou comentário, daí o `\s+`.
-    final alcaPintada = RegExp(r'width: 40,\s+height: 4,');
+    // A largura vai de 40 a 49 porque as alças que sobraram em lib/ variam
+    // entre 40 e 42 — travar no 40 deixaria a mesma decoração voltar com dois
+    // pixels a mais; o `height: 4` é o que a torna específica.
+    final alcaPintada = RegExp(r'width: 4\d,\s+height: 4,');
+
+    // O `showModalBottomSheet` cru — com ou sem tipo explícito. Era o tipo que
+    // deixava a folha do álbum do Oráculo escapar de uma busca por texto
+    // simples por `showModalBottomSheet(`: ela chamava
+    // `showModalBottomSheet<void>(`. Casar só `[<(]` logo depois do nome evita
+    // repetir o mesmo furo com genérico aninhado — `showModalBottomSheet<Map<
+    // String, int>>(` passaria por um `<[^>]*>`, que para no primeiro `>`.
+    final folhaCrua = RegExp(r'showModalBottomSheet\s*[<(]');
 
     arquivos.forEach((caminho, tela) {
       test('$tela tem saída de verdade', () {
@@ -138,7 +152,7 @@ void main() {
         expect(alcaPintada.hasMatch(fonte), isFalse,
             reason: '$caminho voltou a desenhar a alça à mão — retângulo sem '
                 'alvo de toque nem semântica, que só PARECE afordância');
-        expect(fonte.contains('showModalBottomSheet('), isFalse,
+        expect(folhaCrua.hasMatch(fonte), isFalse,
             reason: '$caminho abriu folha sem passar pelo '
                 'mostrarFolhaComSaida, e aí a alça de arrasto some');
         expect(fonte.contains('BotaoFecharFolha'), isTrue,

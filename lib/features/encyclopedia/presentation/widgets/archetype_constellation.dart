@@ -9,10 +9,11 @@ import '../../../../core/theme/grimoire_motion.dart';
 /// mais alta quanto mais pontos, ligadas na ordem do céu.
 ///
 /// O desenho é determinístico — as mesmas respostas dão sempre a mesma
-/// figura, porque a posição vem da chave invariante do arquétipo (o emoji)
-/// e não de sorteio. As estrelas acendem uma a uma; com movimento reduzido a
-/// constelação já aparece inteira. Nada aqui pontua: a contagem é a mesma
-/// que a tela já calculou.
+/// figura, porque a posição vem da posição da chave no catálogo e não de
+/// sorteio. A chave é opaca aqui: o que importa é ser a mesma em [scores],
+/// [order] e [winner] (hoje é o id do arquétipo). As estrelas acendem uma a
+/// uma; com movimento reduzido a constelação já aparece inteira. Nada aqui
+/// pontua: a contagem é a mesma que a tela já calculou.
 class ArchetypeConstellation extends StatelessWidget {
   const ArchetypeConstellation({
     super.key,
@@ -23,7 +24,7 @@ class ArchetypeConstellation extends StatelessWidget {
     this.animate = false,
   });
 
-  /// Pontos por arquétipo, na chave invariante (emoji).
+  /// Pontos por arquétipo, na chave invariante do catálogo.
   final Map<String, int> scores;
 
   /// Todas as chaves do catálogo, em ordem estável entre idiomas.

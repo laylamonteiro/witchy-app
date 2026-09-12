@@ -5,8 +5,8 @@ import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/theme/grimoire_motion.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../data/data_sources/arcane_categories.dart';
+import '../../data/data_sources/archetype_identity.dart';
 import '../../data/data_sources/archetype_quiz_data.dart';
-import '../../data/data_sources/archetypes_data.dart';
 import '../../data/models/arcane_entry_model.dart';
 import '../widgets/archetype_constellation.dart';
 import 'arcane_detail_page.dart';
@@ -15,9 +15,10 @@ import '../../../../core/tools/tool_identity.dart';
 /// Teste de Arquétipo: 8 perguntas, resultado abre o verbete da Enciclopédia.
 ///
 /// As perguntas vêm de `archetype_quiz_data.dart` (ContentLocale, pt/en/es).
-/// A pontuação e a persistência usam o EMOJI do arquétipo como chave — o
-/// emoji é invariante entre idiomas, então o resultado sobrevive a trocas de
-/// idioma (os nomes são traduzidos e não servem de chave).
+/// A pontuação e a persistência usam o ID do arquétipo (`archetype_identity`)
+/// como chave: ele é invariante entre idiomas, como o emoji era, mas não
+/// depende da fonte nem da grafia da sequência de emoji para casar com o
+/// catálogo. O emoji continua sendo só o desenho na tela.
 class ArchetypeQuizPage extends StatefulWidget {
   const ArchetypeQuizPage({super.key});
 
@@ -31,9 +32,15 @@ class _ArchetypeQuizPageState extends State<ArchetypeQuizPage> {
   static const _dateKey = 'archetype_date';
 
   int _index = 0;
+
+  /// Pontos por id de arquétipo — a mesma chave que vai para o aparelho.
   final Map<String, int> _scores = {};
   List<MapEntry<String, int>> _topThree = [];
-  ArcaneEntry? _result;
+
+  /// O arquétipo do resultado, guardado pelo id: o verbete é resolvido no
+  /// idioma da vez a cada build, então trocar de idioma reescreve a tela sem
+  /// reescrever o que está gravado.
+  String? _resultId;
   String? _savedDate;
 
   /// A constelação e a revelação só acontecem na sessão que acabou de
@@ -46,40 +53,80 @@ class _ArchetypeQuizPageState extends State<ArchetypeQuizPage> {
     _loadSaved();
   }
 
-  /// Resolve a chave persistida (emoji ou, em registros antigos, o nome em
-  /// português) para o verbete no idioma atual.
-  ArcaneEntry _entryForKey(String key) {
-    return archetypesData.firstWhere(
-      (e) => e.emoji == key || e.name == key,
-      orElse: () => archetypesData.first,
-    );
+  /// Converte as energias gravadas para os ids de hoje, descartando as que
+  /// não casam com arquétipo nenhum.
+  List<MapEntry<String, int>> _migrateEnergies(List<String> stored) {
+    final energies = <MapEntry<String, int>>[];
+    for (final raw in stored) {
+      // O separador é o ÚLTIMO '|': a chave antiga era conteúdo, não um
+      // número, e é ela que pode ter forma inesperada.
+      final cut = raw.lastIndexOf('|');
+      if (cut < 0) continue;
+      final id = archetypeIdForStoredKey(raw.substring(0, cut));
+      if (id == null) continue;
+      energies.add(MapEntry(id, int.tryParse(raw.substring(cut + 1)) ?? 0));
+    }
+    return energies;
   }
 
+  /// Lê o resultado gravado e, se ele veio numa identidade antiga (emoji, ou
+  /// o nome em português antes disso), converte e regrava na de hoje — quem
+  /// já fez o teste não perde o resultado. Um valor que não casa com nenhum
+  /// arquétipo é ausência, não erro: a tela abre o teste em vez de mostrar
+  /// um arquétipo que não foi o da pessoa.
   Future<void> _loadSaved() async {
     final prefs = await SharedPreferences.getInstance();
-    final saved = prefs.getString(_resultKey);
-    if (saved == null || !mounted) return;
+    final stored = prefs.getString(_resultKey);
+    if (stored == null) return;
+    final id = archetypeIdForStoredKey(stored);
+    if (id == null || archetypeForId(id) == null) return;
+
+    final storedEnergies = prefs.getStringList(_topThreeKey) ?? const <String>[];
+    final energies = _migrateEnergies(storedEnergies);
+    final migrated = [for (final e in energies) '${e.key}|${e.value}'];
+    // As energias só são regravadas quando TODAS foram entendidas. Uma linha
+    // que não casa com arquétipo nenhum é a mesma ausência do resultado: não
+    // se apaga o que não se entende — ela some da tela, continua no aparelho
+    // e é convertida de novo na próxima abertura. Sem isto, a regravação
+    // filtrada apagaria de vez a energia ilegível (e ainda criaria a chave
+    // vazia em quem nunca teve top3).
+    final rewriteEnergies = migrated.length == storedEnergies.length &&
+        !_sameKeys(storedEnergies, migrated);
+    if (stored != id || rewriteEnergies) {
+      await _rewrite(id, rewriteEnergies ? migrated : null);
+    }
+
+    if (!mounted) return;
     setState(() {
-      _result = _entryForKey(saved);
-      _topThree = (prefs.getStringList(_topThreeKey) ?? [])
-          .map((raw) {
-            final parts = raw.split('|');
-            return MapEntry(parts.first, int.tryParse(parts.last) ?? 0);
-          })
-          .toList();
+      _resultId = id;
+      _topThree = energies;
       _savedDate = prefs.getString(_dateKey);
     });
   }
 
+  /// Regrava o resultado na identidade de hoje sem tocar na data: a pessoa
+  /// fez o teste no dia em que fez, e a migração não é um teste novo.
+  Future<void> _rewrite(String id, List<String>? energies) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_resultKey, id);
+      if (energies != null) await prefs.setStringList(_topThreeKey, energies);
+    } catch (_) {
+      // A regravação é oportunista: se o aparelho recusar a escrita agora, a
+      // leitura converte de novo na próxima abertura.
+      return;
+    }
+  }
+
   /// Grava o resultado e devolve a data gravada, ou null se a gravação
   /// falhou — a tela só mostra a data que existe de verdade no aparelho.
-  Future<String?> _persist(String winnerEmoji) async {
+  Future<String?> _persist(String winnerId) async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final now = DateTime.now();
       final date = '${now.day.toString().padLeft(2, '0')}/'
           '${now.month.toString().padLeft(2, '0')}/${now.year}';
-      await prefs.setString(_resultKey, winnerEmoji);
+      await prefs.setString(_resultKey, winnerId);
       await prefs.setStringList(
         _topThreeKey,
         [for (final e in _topThree) '${e.key}|${e.value}'],
@@ -92,13 +139,18 @@ class _ArchetypeQuizPageState extends State<ArchetypeQuizPage> {
   }
 
   Future<void> _answer(ArchetypeQuizOption option) async {
-    _scores[option.archetypeEmoji] =
-        (_scores[option.archetypeEmoji] ?? 0) + 1;
+    // O conteúdo aponta a opção para o arquétipo pelo emoji; o ponto vai
+    // para o id, que é o que será gravado. Uma opção sem arquétipo
+    // correspondente (impossível pela paridade de conteúdo, testada) deixa
+    // de pontuar em vez de virar chave inválida no aparelho.
+    final id = archetypeIdForEmoji(option.archetypeEmoji);
+    if (id != null) _scores[id] = (_scores[id] ?? 0) + 1;
 
     if (_index < archetypeQuizQuestions.length - 1) {
       setState(() => _index++);
       return;
     }
+    if (_scores.isEmpty) return;
 
     // Cada resposta soma 1 ponto ao arquétipo correspondente; vence o de
     // maior pontuação (empate: o que atingiu a pontuação primeiro). A
@@ -117,7 +169,7 @@ class _ArchetypeQuizPageState extends State<ArchetypeQuizPage> {
     setState(() {
       _savedDate = date;
       _justFinished = true;
-      _result = _entryForKey(winner);
+      _resultId = winner;
     });
   }
 
@@ -126,20 +178,33 @@ class _ArchetypeQuizPageState extends State<ArchetypeQuizPage> {
       _index = 0;
       _scores.clear();
       _topThree = [];
-      _result = null;
+      _resultId = null;
       _savedDate = null;
       _justFinished = false;
     });
   }
 
+  /// Duas listas de chaves iguais item a item — evita regravar o que já está
+  /// na identidade de hoje.
+  static bool _sameKeys(List<String> a, List<String> b) {
+    if (a.length != b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      if (a[i] != b[i]) return false;
+    }
+    return true;
+  }
+
   @override
   Widget build(BuildContext context) {
+    // O verbete é resolvido aqui, e não guardado no estado, para acompanhar
+    // o idioma atual: o que está gravado é o id.
+    final result = _resultId == null ? null : archetypeForId(_resultId!);
     return Scaffold(
       appBar: AppBar(
         title: ToolHeading(tool: ToolId.archetypes,
             title: AppLocalizations.of(context).quizTitle),
       ),
-      body: _result != null ? _buildResult(_result!) : _buildQuestion(),
+      body: result != null ? _buildResult(result) : _buildQuestion(),
     );
   }
 
@@ -203,6 +268,15 @@ class _ArchetypeQuizPageState extends State<ArchetypeQuizPage> {
   }
 
   Widget _buildResult(ArcaneEntry result) {
+    // As energias mais fortes já resolvidas no idioma atual; um id sem
+    // arquétipo correspondente não vira linha em branco, simplesmente não
+    // entra na lista.
+    final energies = <MapEntry<ArcaneEntry, int>>[];
+    for (final entry in _topThree) {
+      final archetype = archetypeForId(entry.key);
+      if (archetype != null) energies.add(MapEntry(archetype, entry.value));
+    }
+
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(vertical: 16),
       child: Column(
@@ -228,8 +302,8 @@ class _ArchetypeQuizPageState extends State<ArchetypeQuizPage> {
                           Positioned.fill(
                             child: ArchetypeConstellation(
                               scores: Map<String, int>.from(_scores),
-                              order: [for (final entry in archetypesData) entry.emoji],
-                              winner: result.emoji,
+                              order: archetypeIds,
+                              winner: _resultId ?? '',
                               animate: _justFinished,
                               height: 200,
                             ),
@@ -307,7 +381,7 @@ class _ArchetypeQuizPageState extends State<ArchetypeQuizPage> {
               ],
             ),
           ),
-          if (_topThree.length > 1)
+          if (energies.length > 1)
             MagicalCard(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -320,7 +394,7 @@ class _ArchetypeQuizPageState extends State<ArchetypeQuizPage> {
                         ),
                   ),
                   const SizedBox(height: 10),
-                  for (final entry in _topThree)
+                  for (final entry in energies)
                     Padding(
                       padding: const EdgeInsets.only(bottom: 8),
                       child: Row(
@@ -328,7 +402,7 @@ class _ArchetypeQuizPageState extends State<ArchetypeQuizPage> {
                           Expanded(
                             flex: 3,
                             child: Text(
-                              _entryForKey(entry.key).name,
+                              entry.key.name,
                               style: TextStyle(
                                 color: context.gc.textPrimary,
                                 fontSize: 13,

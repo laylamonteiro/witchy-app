@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:sqflite/sqflite.dart';
 import '../../../../core/database/database_helper.dart';
 import '../../../../core/services/data_sync_service.dart';
@@ -54,6 +56,15 @@ class FreeWritingRepository {
     return result;
   }
 
+  /// Apaga a reflexão. Este é o caminho por onde o "apagar o registro
+  /// menstrual" da tela de Privacidade derruba os relatórios derivados, em
+  /// laço — por isso o aviso à nuvem é condicionado a ter havido exclusão de
+  /// verdade: sem linha apagada não há cópia remota para purgar, e mandar o
+  /// id assim mesmo era falar do que já não existe aqui.
+  ///
+  /// Continua sem `await` de propósito: `deleteItem` engole os próprios
+  /// erros e faz uma ida à rede, e a tela não deve esperar por ela para
+  /// mostrar que a reflexão saiu. O `unawaited` diz isso em voz alta.
   Future<int> delete(String id) async {
     final db = await _dbHelper.database;
     final result = await db.delete(
@@ -61,7 +72,9 @@ class FreeWritingRepository {
       where: 'id = ?',
       whereArgs: [id],
     );
-    _syncService.deleteItem(SyncEntity.freeWritings, id);
+    if (result > 0) {
+      unawaited(_syncService.deleteItem(SyncEntity.freeWritings, id));
+    }
     return result;
   }
 }

@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/theme/grimoire_motion.dart';
+import '../../../../core/widgets/folha_com_saida.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
@@ -72,6 +73,16 @@ class _OracleAlbumPageState extends State<OracleAlbumPage> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // A saída, visível. Arrastar e tocar fora sempre fecharam
+                // esta folha, mas no navegador do celular nenhum dos dois
+                // gestos se anuncia — e folha sem saída anunciada é folha
+                // sem saída. A alça do Material não serve aqui: esta folha
+                // pinta o próprio cartão sobre fundo transparente, e a alça
+                // flutuaria no escurecido, fora dele.
+                const Align(
+                  alignment: Alignment.centerRight,
+                  child: BotaoFecharFolha(),
+                ),
                 Center(child: OracleCardFace(card: card, width: 120)),
                 const SizedBox(height: 12),
                 Text(card.name,

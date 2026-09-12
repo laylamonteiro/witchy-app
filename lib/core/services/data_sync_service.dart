@@ -1201,12 +1201,24 @@ class DataSyncService {
   /// Sem paywall, e é essencial que seja assim: se o apagar local não
   /// chegasse à nuvem, o próximo download traria o registro de volta.
   ///
-  /// A lápide vem ANTES de qualquer guarda: sem rede, sem conta ou com o
-  /// sync desligado, o aviso à nuvem não acontece agora — e a lápide é o que
-  /// lembra a exclusão até ele acontecer. Era exatamente por faltar essa
-  /// memória que o item apagado num túnel ressuscitava quando a rede
-  /// voltava.
+  /// A lápide vem DEPOIS das guardas, e isso é o ponto. Ela guarda o `id` do
+  /// que foi apagado, e id aqui é conteúdo com frequência demais para tratar
+  /// como opaco: `preloaded_<nome do feitiço>`, o id do MAPA no perfil
+  /// mágico, `<conta>_<dia>` no check-in reconstruído. Gravada sem conta ou
+  /// com a sincronização desligada, ela montava no aparelho a lista do que a
+  /// pessoa apagou — lista que [_subirLapidesLocais] manda ao servidor na
+  /// primeira varredura, inclusive depois de a lápide anônima ser adotada
+  /// sob a conta real. Com a nuvem desligada nada DESCE, logo não há
+  /// ressurreição para impedir: não há o que lembrar.
+  ///
+  /// O caso que a lápide existe para resolver continua coberto: com conta e
+  /// sincronização ligadas, [isReady] é verdadeiro mesmo sem rede — o aviso
+  /// à nuvem morre no catch, a lápide fica pendente e a varredura seguinte
+  /// retenta. Era esse o item que ressuscitava ao sair do túnel.
   Future<void> deleteItem(SyncEntity entity, dynamic id) async {
+    if (!isReady) return;
+    if (!await cloudSyncEnabled) return;
+
     final int deletedAt;
     try {
       deletedAt = await _gravarLapideLocal(entity, id);
@@ -1214,12 +1226,10 @@ class DataSyncService {
       // deleteItem sempre foi chamado sem await pelos repositórios e não
       // pode virar erro solto. Sem banco utilizável não há o que lembrar —
       // e também não houve exclusão local para ressuscitar.
-      unawaited(debugLog('SYNC', 'falha ao gravar lapide de ${entity.name}: $e'));
+      unawaited(
+          debugLog('SYNC', 'falha ao gravar lapide de ${entity.name}: $e'));
       return;
     }
-
-    if (!isReady) return;
-    if (!await cloudSyncEnabled) return;
 
     try {
       final completa =
@@ -1236,6 +1246,10 @@ class DataSyncService {
   }
 
   /// Grava a lápide local de um item apagado e devolve o instante (ms).
+  ///
+  /// `currentUserId!` e não um `?? 'local_user'`: só há lápide com conta (o
+  /// [deleteItem] barra antes), e a lápide anônima que o fallback criava era
+  /// justamente a que a adoção do login passava a mandar para o servidor.
   Future<int> _gravarLapideLocal(SyncEntity entity, dynamic id) async {
     final db = await _db.database;
     final deletedAt = DateTime.now().millisecondsSinceEpoch;
@@ -1244,7 +1258,7 @@ class DataSyncService {
       {
         'entity': entity.name,
         'item_id': id.toString(),
-        'user_id': currentUserId ?? 'local_user',
+        'user_id': currentUserId!,
         'deleted_at': deletedAt,
         'synced': 0,
       },

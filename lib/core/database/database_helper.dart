@@ -1373,10 +1373,12 @@ class DatabaseHelper {
         // O registro menstrual também é da pessoa: entrar na conta no mesmo
         // aparelho não pode fazê-la perder o que já escreveu.
         MenstrualCycleSchema.table,
-        // As lápides também: o que foi apagado antes de entrar na conta
-        // precisa ser purgado da nuvem depois do login, senão o download
-        // seguinte ressuscita o item sob a conta nova.
-        'sync_tombstones',
+        // `sync_tombstones` NÃO entra, e essa ausência é a correção de um
+        // vazamento: adotada, a lápide anônima virava `synced = 0` sob a
+        // conta real e a primeira varredura mandava ao servidor o id de
+        // tudo que a pessoa apagou antes de existir conta. E não purgava
+        // nada — item apagado antes do login nunca subiu para lugar nenhum.
+        // Quem a remove do aparelho é [claimLegacyData].
       }..remove('spells');
 
   /// Associa dados anônimos/legados à primeira conta autenticada que os abrir.
@@ -1405,6 +1407,16 @@ class DatabaseHelper {
           conflictAlgorithm: ConflictAlgorithm.ignore,
         );
       }
+
+      // As lápides anônimas somem em vez de serem adotadas. Elas guardam o
+      // id do que foi apagado ANTES de existir conta — conteúdo, muitas
+      // vezes: `preloaded_<nome do feitiço>`, o id do mapa no perfil mágico.
+      // Nada disso esteve na nuvem, então não há o que purgar lá; adotá-las
+      // só entregava essa lista ao servidor no primeiro sync da conta nova.
+      await txn.delete(
+        'sync_tombstones',
+        where: "user_id IN ('local_user', 'current_user')",
+      );
 
       final charts = await txn.query(
         'birth_charts',
@@ -1496,6 +1508,15 @@ class DatabaseHelper {
       'guided_ritual_logs',
       'user_encyclopedia_entries',
       'cycle_readings',
+      // As lápides vão junto: elas guardam o id de tudo que a pessoa apagou,
+      // e sobreviver a um "apagar os dados" era manter no aparelho o índice
+      // exatamente daquilo que ela mandou sumir — pronto para ser enviado.
+      //
+      // Não ressuscita nada noutro aparelho: este método só roda quando a
+      // base local é a verdade sendo descartada inteira (conta anônima, ou
+      // conta sem cópia na nuvem). Quem tem sincronização mantém o banco no
+      // logout — ver `AuthProvider.signOut`.
+      'sync_tombstones',
     ];
 
     for (final table in tables) {

@@ -9,6 +9,10 @@
 /// invariante entre idiomas (os nomes são traduzidos, então não servem de
 /// chave). A paridade e o mapeamento resposta→arquétipo são verificados em
 /// `test/encyclopedia_content_parity_test.dart`.
+///
+/// Isto é apontamento de CONTEÚDO, não identidade gravada: o que vai para o
+/// aparelho é o id de `data_sources/archetype_identity.dart`, que não depende
+/// da fonte nem da grafia da sequência de emoji.
 class ArchetypeQuizQuestion {
   final String text;
   final List<ArchetypeQuizOption> options;
