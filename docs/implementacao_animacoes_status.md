@@ -1068,6 +1068,23 @@ calendário; fontes, tamanhos e posições padronizados na jornada inteira.
   cabeçalho, bloco e card são os mesmos em todos. O card "Ciclo Menstrual" da
   aba Ciclos fala a língua dos vizinhos dele (Leitura do Ciclo, Eras), não a
   da página — é lá que ele mora.
+- **Apagar o dia do ciclo pelo Grimório** (pedido da dona, 12/09): a página
+  do dia em "Meus Registros" ganhou o botão de apagar — e apagar ali é
+  apagar o DIA, pelo repositório do ciclo, que grava a lápide da linha e
+  tira a página junto, o mesmo caminho do "Apagar este dia" da roda. Editar
+  continua sendo na roda. A lista do acervo é recarregada em seguida, porque
+  ela lê do provedor e o repositório do ciclo escreve por baixo dele. Teste:
+  `apagar_dia_do_ciclo_no_grimorio_test.dart`.
+- **Uma conta só de registros** (a dona viu o cartão de Ciclos dizer 16 e o
+  rodapé do calendário da leitura somar 15): eram duas consultas parecidas —
+  a total deduplicava e respeitava lápides, a do calendário não — e duas
+  janelas — o cartão contava desde o instante da última leitura, o calendário
+  contava o mês até hoje. Agora `countPeriodRecords` é a soma de
+  `dailyRecordCounts` (uma consulta só, com dedup e lápides), e a janela com
+  que a leitura abre mora em `CycleReadingService.suggestedWindow`, usada
+  pela tela da leitura e pelo cartão; o cartão só corta o que nasceu antes
+  da última leitura quando ela é deste mês. Testes: `janela_da_leitura_test`
+  e "uma cópia conta uma vez" em `cycle_reading_composer_test`.
 - **A constelação do arquétipo** (fora do Ciclo, mas pedida no mesmo teste
   em aparelho: "muito grandes e desorganizadas"): a figura passou a morar num
   quadrado do menor lado da caixa, em vez de esticar com a largura — era isso
