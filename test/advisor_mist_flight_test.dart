@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:grimorio_de_bolso/core/theme/grimoire_colors.dart';
@@ -45,6 +47,7 @@ void main() {
     final voo = AdvisorMistFlight.play(context: context, from: bola, to: card);
     await tester.pump();
     expect(find.byType(AdvisorMistFlight), findsOneWidget);
+    expect(voo, isA<Future<void>>());
 
     // No meio do caminho ela está desenhando, sem estourar.
     await tester.pump(const Duration(milliseconds: 500));
@@ -71,6 +74,27 @@ void main() {
     expect(find.byType(AdvisorMistFlight), findsNothing);
     await tester.pump();
     expect(pousou, isTrue);
+  });
+
+  testWidgets('a tela saindo de baixo do voo avisa quem espera', (tester) async {
+    // Quem espera é a escrita da resposta. Se o voo ficasse preso a um
+    // relógio solto, ela esperaria uma cena que já não existe — e o teste
+    // ainda acusaria um timer pendurado depois do fim.
+    final bola = GlobalKey();
+    final card = GlobalKey();
+    final context = await palco(tester, bola, card);
+
+    var pousou = false;
+    unawaited(AdvisorMistFlight.play(context: context, from: bola, to: card)
+        .then((_) => pousou = true));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(pousou, isFalse, reason: 'o voo ainda está no meio');
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
+    expect(pousou, isTrue);
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('sem retângulo medido o voo é dispensado', (tester) async {

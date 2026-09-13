@@ -92,6 +92,24 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('se a névoa nunca pousar, a resposta aparece assim mesmo',
+      (tester) async {
+    // O voo pode não terminar (a tela saiu de baixo dele, o ticker do
+    // Overlay ficou mudo). A resposta não pode ficar presa atrás de um
+    // enfeite: o relógio conta a espera e mostra tudo.
+    await show(tester, spans: const [RevealSpan(body)], started: false);
+    await tester.pump(const Duration(seconds: 3));
+    expect(written(tester), 0);
+
+    await tester.pump(MistTypewriterText.wait +
+        MistTypewriterText.durationFor(body.length) +
+        MistTypewriterText.guard +
+        const Duration(milliseconds: 100));
+    await tester.pump();
+    expect(written(tester), body.length);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('tocar no texto ou em "Mostrar tudo" completa na hora',
       (tester) async {
     await show(tester, spans: const [RevealSpan(body)], skipLabel: 'Show all');

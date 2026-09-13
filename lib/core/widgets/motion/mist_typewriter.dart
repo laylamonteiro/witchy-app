@@ -78,6 +78,11 @@ class MistTypewriterText extends StatefulWidget {
   /// Folga do relógio de segurança depois do fim previsto da escrita.
   static const Duration guard = Duration(seconds: 2);
 
+  /// Quanto se tolera esperar por [started] — a névoa a caminho, ou o que
+  /// mais segure a escrita. Depois disso a resposta aparece de qualquer
+  /// jeito: um enfeite que não termina não pode calar o Conselheiro.
+  static const Duration wait = Duration(seconds: 6);
+
   static Duration durationFor(int chars) => Duration(
       milliseconds:
           (chars * msPerChar).clamp(600, ceiling.inMilliseconds).toInt());
@@ -158,16 +163,30 @@ class _MistTypewriterTextState extends State<MistTypewriterText>
   void _sync() {
     if (!widget.reveal || GrimoireMotion.reduced(context)) {
       _running = true;
+      _guard?.cancel();
       if (_type.value != 1) _type.value = 1;
       return;
     }
+    if (!_running) {
+      // Enquanto a escrita não começa, o relógio conta a espera pela névoa
+      // — se ela nunca pousar, a resposta aparece assim mesmo.
+      _guard ??= _protect(MistTypewriterText.wait);
+    }
     if (!widget.started || _running) return;
     _running = true;
+    _guard?.cancel();
+    _guard = _protect(Duration.zero);
     _type.forward();
-    _guard = Timer(_type.duration! + MistTypewriterText.guard, () {
-      if (mounted && _type.value < 1) _type.value = 1;
-    });
   }
+
+  /// Relógio que mostra a resposta inteira [folga] depois do fim previsto da
+  /// escrita. Não depende de ticker: é ele que segura o caso do ticker mudo.
+  Timer _protect(Duration folga) => Timer(
+        folga + _type.duration! + MistTypewriterText.guard,
+        () {
+          if (mounted && _type.value < 1) _type.value = 1;
+        },
+      );
 
   static bool _sameShape(List<RevealSpan> a, List<RevealSpan> b) {
     if (a.length != b.length) return false;

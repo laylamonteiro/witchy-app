@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -20,6 +21,7 @@ class AdvisorMistFlight extends StatefulWidget {
     required this.from,
     required this.to,
     required this.colors,
+    required this.onLanded,
     this.fromAnchor = Alignment.center,
     this.toAnchor = Alignment.center,
     this.toNudge = Offset.zero,
@@ -41,6 +43,10 @@ class AdvisorMistFlight extends StatefulWidget {
   final Offset toNudge;
 
   final GrimoireColors colors;
+
+  /// Avisa quem espera: a névoa pousou, ou a tela saiu de baixo dela. Nas
+  /// duas, a escrita da resposta tem de começar.
+  final VoidCallback onLanded;
 
   /// O voo inteiro. Sem pressa: a névoa desce devagar, e é ela que dá o
   /// tempo de quem lê chegar ao começo do parágrafo.
@@ -66,6 +72,12 @@ class AdvisorMistFlight extends StatefulWidget {
       return;
     }
     final colors = context.gc;
+    // Quem espera é a escrita da resposta, e o fim do voo é do WIDGET, não
+    // de um relógio solto: um `Future.delayed` continuaria correndo depois
+    // de a tela sair, e quem esperava ficaria esperando uma cena que já não
+    // existe (nos testes isso aparece como um timer pendurado; no app, como
+    // uma resposta que demora a ser escrita à toa).
+    final pousou = Completer<void>();
     final entrada = OverlayEntry(
       builder: (_) => IgnorePointer(
         child: AdvisorMistFlight(
@@ -75,12 +87,15 @@ class AdvisorMistFlight extends StatefulWidget {
           toAnchor: toAnchor,
           toNudge: toNudge,
           colors: colors,
+          onLanded: () {
+            if (!pousou.isCompleted) pousou.complete();
+          },
         ),
       ),
     );
     overlay.insert(entrada);
     try {
-      await Future<void>.delayed(duration);
+      await pousou.future;
     } finally {
       if (entrada.mounted) entrada.remove();
     }
@@ -99,9 +114,14 @@ class AdvisorMistFlight extends StatefulWidget {
 
 class _AdvisorMistFlightState extends State<AdvisorMistFlight>
     with SingleTickerProviderStateMixin {
-  late final AnimationController _voo = AnimationController(
-      vsync: this, duration: AdvisorMistFlight.duration)
-    ..forward();
+  late final AnimationController _voo =
+      AnimationController(vsync: this, duration: AdvisorMistFlight.duration);
+
+  /// Rede de segurança do aviso de pouso: o ticker desta árvore pode estar
+  /// mudo, e o relógio não depende de ticker nenhum. Cancelado no dispose,
+  /// para não sobreviver à tela.
+  Timer? _rede;
+  bool _avisado = false;
 
   /// As letras são desenhadas por um `TextPainter` por partícula, medido uma
   /// vez: repetir a medida a cada quadro custaria mais que o voo inteiro.
@@ -122,7 +142,25 @@ class _AdvisorMistFlightState extends State<AdvisorMistFlight>
   };
 
   @override
+  void initState() {
+    super.initState();
+    _voo.forward().whenCompleteOrCancel(_pousar);
+    _rede = Timer(
+        AdvisorMistFlight.duration + const Duration(milliseconds: 300),
+        _pousar);
+  }
+
+  void _pousar() {
+    if (_avisado) return;
+    _avisado = true;
+    _rede?.cancel();
+    _rede = null;
+    widget.onLanded();
+  }
+
+  @override
   void dispose() {
+    _pousar();
     for (final painter in _letras.values) {
       painter.dispose();
     }
