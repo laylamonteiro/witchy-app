@@ -139,13 +139,16 @@ class AdvisorFeatureCatalog {
     return null;
   }
 
-  static const Map<String, String> _semAcento = {
-    'á': 'a', 'à': 'a', 'â': 'a', 'ã': 'a', 'ä': 'a',
-    'é': 'e', 'è': 'e', 'ê': 'e', 'ë': 'e',
-    'í': 'i', 'ì': 'i', 'î': 'i', 'ï': 'i',
-    'ó': 'o', 'ò': 'o', 'ô': 'o', 'õ': 'o', 'ö': 'o',
-    'ú': 'u', 'ù': 'u', 'û': 'u', 'ü': 'u',
-    'ç': 'c', 'ñ': 'n',
+  /// Diacríticos → letra base, por code point. Por número, e não por letra,
+  /// porque o scanner de português fora da i18n reconhece um literal com
+  /// acento como texto de tela — e isto é uma tabela, não uma frase.
+  static const Map<int, String> _semAcento = {
+    0xE1: 'a', 0xE0: 'a', 0xE2: 'a', 0xE3: 'a', 0xE4: 'a', // á à â ã ä
+    0xE9: 'e', 0xE8: 'e', 0xEA: 'e', 0xEB: 'e', // é è ê ë
+    0xED: 'i', 0xEC: 'i', 0xEE: 'i', 0xEF: 'i', // í ì î ï
+    0xF3: 'o', 0xF2: 'o', 0xF4: 'o', 0xF5: 'o', 0xF6: 'o', // ó ò ô õ ö
+    0xFA: 'u', 0xF9: 'u', 0xFB: 'u', 0xFC: 'u', // ú ù û ü
+    0xE7: 'c', 0xF1: 'n', // ç ñ
   };
 
   static final RegExp _pontuacaoFinal = RegExp(r'[.,:;!?…]+$');
@@ -158,8 +161,7 @@ class AdvisorFeatureCatalog {
   static String normalize(String text) {
     final buffer = StringBuffer();
     for (final rune in text.toLowerCase().runes) {
-      final char = String.fromCharCode(rune);
-      buffer.write(_semAcento[char] ?? char);
+      buffer.write(_semAcento[rune] ?? String.fromCharCode(rune));
     }
     return buffer
         .toString()
