@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../widgets/encyclopedia_image.dart';
+import '../widgets/entry_attribute.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 
 import '../../data/models/herb_model.dart';
@@ -120,15 +121,13 @@ class HerbDetailPage extends StatelessWidget {
                     spacing: 24,
                     runSpacing: 8,
                     children: [
-                      _buildAttribute(
-                        context,
-                        herb.element.emoji,
-                        herb.element.displayName,
+                      EntryAttribute(
+                        emoji: herb.element.emoji,
+                        label: herb.element.displayName,
                       ),
-                      _buildAttribute(
-                        context,
-                        herb.planet.emoji,
-                        herb.planet.displayName,
+                      EntryAttribute(
+                        emoji: herb.planet.emoji,
+                        label: herb.planet.displayName,
                       ),
                     ],
                   ),
@@ -359,27 +358,6 @@ class HerbDetailPage extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
-
-  /// Um par emoji + nome (elemento, planeta) como bloco indivisível.
-  ///
-  /// `mainAxisSize.min` para o Wrap medir o par inteiro, e `Flexible` no
-  /// nome porque um par sozinho ainda pode ser mais largo que o cartão
-  /// quando a fonte do sistema está no máximo.
-  Widget _buildAttribute(BuildContext context, String emoji, String label) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(emoji, style: const TextStyle(fontSize: 24)),
-        const SizedBox(width: 8),
-        Flexible(
-          child: Text(
-            label,
-            style: Theme.of(context).textTheme.titleMedium,
-          ),
-        ),
-      ],
     );
   }
 }

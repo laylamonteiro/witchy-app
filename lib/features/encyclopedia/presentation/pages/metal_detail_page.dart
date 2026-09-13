@@ -7,6 +7,7 @@ import '../../data/models/herb_model.dart'; // Para PlanetExtension
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
+import '../widgets/entry_attribute.dart';
 import '../../../../core/utils/accents.dart';
 import '../../../auth/auth.dart';
 
@@ -59,15 +60,13 @@ class MetalDetailPage extends StatelessWidget {
                     spacing: 16,
                     runSpacing: 8,
                     children: [
-                      _buildAttribute(
-                        context,
-                        metal.planet.emoji,
-                        metal.planet.displayName,
+                      EntryAttribute(
+                        emoji: metal.planet.emoji,
+                        label: metal.planet.displayName,
                       ),
-                      _buildAttribute(
-                        context,
-                        metal.element.emoji,
-                        metal.element.displayName,
+                      EntryAttribute(
+                        emoji: metal.element.emoji,
+                        label: metal.element.displayName,
                       ),
                     ],
                   ),
@@ -308,27 +307,6 @@ class MetalDetailPage extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
-
-  /// Um par emoji + nome (planeta, elemento) como bloco indivisível.
-  ///
-  /// `mainAxisSize.min` para o Wrap medir o par inteiro, e `Flexible` no
-  /// nome porque um par sozinho ainda pode ser mais largo que o cartão
-  /// quando a fonte do sistema está no máximo.
-  Widget _buildAttribute(BuildContext context, String emoji, String label) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(emoji, style: const TextStyle(fontSize: 24)),
-        const SizedBox(width: 8),
-        Flexible(
-          child: Text(
-            label,
-            style: Theme.of(context).textTheme.titleMedium,
-          ),
-        ),
-      ],
     );
   }
 

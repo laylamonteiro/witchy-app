@@ -58,9 +58,29 @@
 // 4. ERRO QUE NÃO É DE LAYOUT NÃO REPROVA. Uma foto que não carrega ou um
 //    canal de plugin ausente no teste são ruído do ambiente, não defeito da
 //    tela. Mas uma página que EXPLODE ao construir reprova sim, pela outra
-//    porta: um ErrorWidget na árvore, ou uma página sem texto nenhum, é
-//    aprovação vazia — e catraca que não pega nada é pior que nenhuma,
-//    porque dá sensação de proteção.
+//    porta: um ErrorWidget na árvore, uma página sem texto nenhum ou um véu
+//    ainda fechado na hora de medir é aprovação vazia — e catraca que não
+//    pega nada é pior que nenhuma, porque dá sensação de proteção.
+//
+// 5. LISTA PREGUIÇOSA MEDE SÓ O QUE COUBE NA TELA. `ListView.builder` e
+//    `GridView.builder` constroem o item quando ele chega perto do écran;
+//    em Deusas, Arquétipos e Biblioteca do Tarô a catraca vê algumas
+//    dezenas de cartões, nunca os noventa. E são listas ordenadas por NOME,
+//    não pelo que se quer medir: o cartão de origem comprida ("deusa
+//    mesopotâmica") só entra na conta se aquela deusa cair cedo no
+//    alfabeto. A terceira condição — tela estreita e MUITO comprida — não
+//    fecha esse buraco, só alarga. Fechar exige rolar a lista dentro do
+//    teste, écran por écran; quem for fazer, comece por aqui.
+//
+// 6. O VÉU PREMIUM ESCONDE JUSTO O QUE SE QUER MEDIR. Sem plano, a
+//    `PremiumContentSection` nem chama o `contentBuilder`: entra um
+//    placeholder desfocado no lugar. Ou seja, a bruxa sem plano é o pior
+//    caso da MOLDURA e o melhor caso do MIOLO. Por isso a quarta condição
+//    monta as mesmas telas com assinatura ativa — é ela que mede as seções
+//    fechadas (as pílulas de ligação do Sol, os blocos de cristal, erva,
+//    metal, deusa e arquétipo). Continuam cegas as seções premium que vivem
+//    em páginas fora desta lista: Ritual Guiado, Roda do Ano e Calendário
+//    Lunar.
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -72,7 +92,6 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 import 'package:grimorio_de_bolso/core/theme/app_theme.dart';
 import 'package:grimorio_de_bolso/features/astrology/presentation/pages/zodiac_signs_page.dart';
-import 'package:grimorio_de_bolso/features/auth/data/models/user_model.dart';
 import 'package:grimorio_de_bolso/features/auth/presentation/pages/forgot_password_page.dart';
 import 'package:grimorio_de_bolso/features/auth/presentation/pages/welcome_page.dart';
 import 'package:grimorio_de_bolso/features/auth/presentation/providers/auth_provider.dart';
@@ -115,30 +134,61 @@ class _Tela {
 /// Uma condição dura de exibição.
 ///
 /// 320 é o telefone estreito que ainda existe (e é a largura em que a
-/// própria `PremiumOfferPanel` já é testada, em regression_fixes_test).
-/// A fonte ampliada é o que a pessoa liga quando não enxerga bem — e é
-/// exatamente aí que uma linha rígida demais corta a palavra.
+/// `PremiumOfferPanel` já é medida, em regression_fixes_test). A fonte
+/// ampliada é o que a pessoa liga quando não enxerga bem — e é exatamente
+/// aí que uma linha rígida demais corta a palavra.
 class _Condicao {
-  const _Condicao(this.nome, this.tamanho, this.fonte);
+  const _Condicao(this.nome, this.tamanho, this.fonte, {this.plano = false});
 
   final String nome;
   final Size tamanho;
   final double fonte;
+
+  /// Com assinatura ativa. É a única maneira de a `PremiumContentSection`
+  /// chamar o `contentBuilder` de verdade — ver o item 6 do cabeçalho.
+  final bool plano;
 }
 
 const List<_Condicao> _condicoes = [
   _Condicao('tela de 320 com fonte a 130%', Size(320, 640), 1.3),
   _Condicao('tela de 360 com fonte a 150%', Size(360, 740), 1.5),
+  // Estreita e comprida: a largura que aperta continua a mesma, e a altura
+  // faz as listas preguiçosas construírem dezenas de itens em vez dos três
+  // que cabem num écran de 640. Remédio parcial para o item 5.
+  _Condicao('tela de 320 estreita e comprida', Size(320, 2400), 1.3),
+  // A mesma tela apertada, agora com o miolo premium destravado.
+  _Condicao(
+    'tela de 320 com fonte a 130%, com plano',
+    Size(320, 640),
+    1.3,
+    plano: true,
+  ),
 ];
 
-/// Bruxa sem plano: é o pior caso de conteúdo na tela (véus, cadeados e
-/// convites aparecem), e é a maioria de quem usa o app.
+/// Bruxa sem plano: a maioria de quem usa o app, e o pior caso da MOLDURA —
+/// véus, cadeados e convites aparecem e empurram a tela.
+///
+/// Só `isPremiumEffective` é sobrescrito, e é de propósito: sobrescrever
+/// `currentUser` seria enfeite morto, porque `checkFeatureAccess` lê o campo
+/// privado `_currentUser`, não o getter. Pior que inútil — daria a quem
+/// viesse depois a impressão de que trocar o usuário ali muda alguma coisa.
+/// O `_currentUser` padrão do AuthProvider já é `UserModel.defaultUser()`,
+/// que é exatamente a bruxa sem plano; o que faltava travar era o caminho da
+/// assinatura, que passa por um singleton de pagamento fora do teste.
 class _BruxaSemPlano extends AuthProvider {
   @override
-  UserModel get currentUser => UserModel.defaultUser();
-
-  @override
   bool get isPremiumEffective => false;
+}
+
+/// Bruxa com plano: destrava as seções que a outra nem chega a construir.
+///
+/// Também aqui basta `isPremiumEffective`, e não é atalho: é esse mesmo
+/// valor que `checkFeatureAccess` entrega a `FeatureAccess.checkAccess`, que
+/// devolve acesso total quando ele é true. O portão atravessado é o de
+/// verdade, não um de mentira montado para o teste passar.
+class _BruxaComPlano extends AuthProvider {
+  @override
+  bool get isPremiumEffective => true;
 }
 
 /// O item de nome mais comprido da lista — o pior caso honesto de cada
@@ -191,7 +241,7 @@ void main() {
     try {
       await tester.binding.setSurfaceSize(condicao.tamanho);
       await tester.pumpWidget(ChangeNotifierProvider<AuthProvider>(
-        create: (_) => _BruxaSemPlano(),
+        create: (_) => condicao.plano ? _BruxaComPlano() : _BruxaSemPlano(),
         child: MaterialApp(
           locale: const Locale('pt', 'BR'),
           localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -217,8 +267,16 @@ void main() {
       // Nem pump() puro nem pumpAndSettle(): a entrada em cascata agenda um
       // Timer por item (sem andar o relógio o teste morre com timer
       // pendente) e a página nunca chega ao repouso.
+      //
+      // São DOIS avanços, e o segundo não é zelo. O primeiro faz os Timers
+      // dispararem; só aí cada controlador de entrada começa a andar, e o
+      // único quadro desenhado no fim desse avanço é o PRIMEIRO tique de
+      // todos eles — ou seja, ainda em zero. Medir ali é medir com os véus
+      // fechados (ver a guarda dos véus, adiante). Um `pump()` seco não
+      // adianta relógio nenhum e deixaria tudo em zero. O segundo avanço
+      // leva a entrada, que dura 420ms, até o fim.
       await tester.pump(const Duration(seconds: 2));
-      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 600));
     } finally {
       FlutterError.onError = anterior;
     }
@@ -228,13 +286,37 @@ void main() {
         if (_ehEstouroDeLayout(detalhes)) detalhes.exceptionAsString(),
     }.toList();
 
-    // As duas guardas contra aprovação vazia: uma tela que explodiu ao
-    // construir vira ErrorWidget, e ErrorWidget nunca estoura.
+    // As guardas contra aprovação vazia: uma tela que explodiu ao construir
+    // vira ErrorWidget, e ErrorWidget nunca estoura.
     if (find.byType(ErrorWidget).evaluate().isNotEmpty) {
       problemas.add('a página não chegou a ser construída (ErrorWidget)');
     }
     if (find.byType(Text).evaluate().isEmpty) {
       problemas.add('a página montou sem texto nenhum — não há o que medir');
+    }
+
+    // A guarda mais sorrateira das três, e a que já falhou de verdade: um
+    // véu ainda fechado (`FadeTransition` em alfa zero) faz o `RenderOpacity`
+    // voltar SEM pintar o filho — e quem denuncia estouro é justamente o
+    // `paint` do `RenderFlex`. A tela mede como se o conteúdo não estivesse
+    // lá, e aprova. Foi o que aconteceu com os seis primeiros blocos de
+    // Elementos, Altar e Sol: o `StaggeredEntrance` anima sem perguntar por
+    // `disableAnimations`, ao contrário do `CascadeIn` ao lado dele. O
+    // segundo pump conserta isso hoje; esta linha é para a próxima animação,
+    // que ninguém vai lembrar de conferir. As outras duas guardas não pegam:
+    // `find` anda na árvore de ELEMENTOS, onde o filho do véu existe direito.
+    final fechados = find.byType(FadeTransition).evaluate().where((elemento) {
+      // O corte é exato: alfa é (opacidade * 255).round(), e é só em alfa
+      // zero que o pintor desiste do filho. Um véu meio aberto pinta.
+      final veu = elemento.widget as FadeTransition;
+      return veu.opacity.value < 0.5 / 255;
+    }).length;
+    if (fechados > 0) {
+      problemas.add(
+        '$fechados véu(s) ainda fechados na hora de medir: o que está '
+        'embaixo deles não foi pintado, e o que não é pintado não denuncia '
+        'estouro',
+      );
     }
     return problemas;
   }
@@ -244,15 +326,23 @@ void main() {
     _Tela('Elementos', () => const ElementsPage()),
     _Tela('Altar', () => const AltarPage()),
     _Tela('Deusas (lista)', () => const GoddessesListPage()),
+    // Duas destas páginas não trazem Scaffold próprio: na vida real elas
+    // são o corpo do Scaffold da Enciclopédia (ArcaneListPage) e da aba do
+    // Sol. Montá-las cruas em `home:` não é só infidelidade: o TextField da
+    // busca começa com `assert(debugCheckHasMaterial(context))` e a página
+    // inteira vira ErrorWidget. O envelope abaixo é o mesmo que
+    // `folha_com_saida_test` já usa.
     _Tela(
       'Arquétipos (lista)',
-      () => ArcaneListPage(
-        category: ArcaneCategory.archetypes,
-        title: lookupAppLocalizations(const Locale('pt', 'BR'))
-            .encyTabArchetypes,
-        intro: lookupAppLocalizations(const Locale('pt', 'BR'))
-            .encyArcaneIntroArchetypes,
-        entries: archetypesData,
+      () => Scaffold(
+        body: ArcaneListPage(
+          category: ArcaneCategory.archetypes,
+          title: lookupAppLocalizations(const Locale('pt', 'BR'))
+              .encyTabArchetypes,
+          intro: lookupAppLocalizations(const Locale('pt', 'BR'))
+              .encyArcaneIntroArchetypes,
+          entries: archetypesData,
+        ),
       ),
     ),
 
@@ -293,7 +383,7 @@ void main() {
 
     // --- Outras seções que montam sozinhas ---
     _Tela('Signos', () => const ZodiacSignsPage()),
-    _Tela('Sol', () => const SunPage()),
+    _Tela('Sol', () => const Scaffold(body: SunPage())),
     _Tela('Numerologia', () => const NumerologyPage()),
     _Tela('Biblioteca do Tarô', () => const TarotLibraryPage()),
     _Tela('Ferramentas de sonho', () => const DreamToolsPage()),
