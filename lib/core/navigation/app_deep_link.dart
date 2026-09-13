@@ -57,8 +57,26 @@ enum AppDeepLink {
       encyclopediaSection: EncyclopediaSection.sun,
       ritualId: 'sun_water'),
 
+  /// Enciclopédia Mágica → seção Cristais (sugestões do Conselheiro).
+  crystalsEncyclopedia('encyclopedia/crystals',
+      homeTab: 1, encyclopediaSection: EncyclopediaSection.crystals),
+
+  /// Enciclopédia Mágica → seção Ervas.
+  herbsEncyclopedia('encyclopedia/herbs',
+      homeTab: 1, encyclopediaSection: EncyclopediaSection.herbs),
+
   /// Diários → aba Sonhos (diário onírico).
   dreamsDiary('diary/dreams', homeTab: 3, diaryTab: 3),
+
+  /// Diários → aba Gratidão. As abas dos Diários, na ordem: 0 Gratidão,
+  /// 1 Afirmações, 2 escrita livre, 3 Sonhos, 4 Desejos.
+  gratitudeDiary('diary/gratitude', homeTab: 3, diaryTab: 0),
+
+  /// Diários → aba Afirmações.
+  affirmationsDiary('diary/affirmations', homeTab: 3, diaryTab: 1),
+
+  /// Diários → aba Desejos.
+  desiresDiary('diary/desires', homeTab: 3, diaryTab: 4),
 
   /// Leitura do Ciclo: a notificação de "sua próxima leitura já pode nascer"
   /// abre a própria tela da leitura. Diferente dos outros destinos, que só

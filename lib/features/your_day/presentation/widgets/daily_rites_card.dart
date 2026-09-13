@@ -10,6 +10,7 @@ import '../../../../core/navigation/app_deep_link.dart';
 import '../../../../core/navigation/grimoire_route.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/theme/grimoire_motion.dart';
+import '../../../../core/tools/tool_emblem_art.dart';
 import '../../../../core/widgets/estrela_de_quatro_pontas.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
@@ -24,6 +25,14 @@ import '../../../palmistry/presentation/pages/palmistry_page.dart';
 import '../../../runes/presentation/pages/rune_reading_page.dart';
 import '../../../tarot/presentation/pages/tarot_page.dart';
 import '../providers/daily_checkin_provider.dart';
+
+/// O corpo do emoji na linha de um rito.
+const TextStyle _emblemaDoRito = TextStyle(fontSize: 18);
+
+/// O lado do quadrado do emblema DESENHADO na linha de um rito. Dois pontos
+/// acima do emoji de propósito: o desenho pinta cerca de 85% da própria
+/// caixa, e a 18 sairia visivelmente menor que os emojis dos outros ritos.
+const double _emblemaDesenhado = 20;
 
 /// Os ritos de hoje: três práticas curtas que fecham o dia da Bruxa.
 ///
@@ -97,32 +106,64 @@ class _DailyRitesCardState extends State<DailyRitesCard>
     return TickerMode.of(context) && (route?.isCurrent ?? true);
   }
 
-  /// Emoji, rótulo e ação do rito exploratório do dia (emojis do
-  /// ShortcutRegistry, para a identidade se manter).
-  static (String, String, VoidCallback) _featuredSpec(
+  /// Emblema, rótulo e ação do rito exploratório do dia (os mesmos emblemas
+  /// das ferramentas, para a identidade se manter).
+  ///
+  /// O emblema é um Widget, e não mais um texto: Runas e Pêndulo têm emblema
+  /// DESENHADO, porque os símbolos deles (ᚱ e ⟟) são caracteres de blocos
+  /// raros do Unicode — no aparelho sem fonte de símbolos, o rito do dia
+  /// aparecia com o quadradinho de glifo ausente nos dias dessas duas, e o
+  /// revezamento perdia justamente o convite de conhecer a ferramenta.
+  ///
+  /// Os desenhos NÃO voam (é [ToolDrawingArt] direto, e não o `ToolEmblem`):
+  /// a etiqueta de Hero de cada ferramenta pertence ao card do Grimório, e a
+  /// aba do Grimório vive no mesmo IndexedStack do shell que a aba do Seu Dia
+  /// — dois donos da mesma etiqueta na mesma rota derrubariam a tela.
+  static (Widget, String, VoidCallback) _featuredSpec(
     BuildContext context,
     AppLocalizations l10n,
     String riteId,
   ) {
     switch (riteId) {
       case DailyRites.oracle:
-        return ('🃏', l10n.yourDayRiteOracle,
-            () => _push(context, const OracleCardsPage()));
+        return (
+          const Text('🃏', style: _emblemaDoRito),
+          l10n.yourDayRiteOracle,
+          () => _push(context, const OracleCardsPage())
+        );
       case DailyRites.palmistry:
-        return ('🖐️', l10n.yourDayRitePalm,
-            () => _push(context, const PalmistryPage()));
+        return (
+          const Text('🖐️', style: _emblemaDoRito),
+          l10n.yourDayRitePalm,
+          () => _push(context, const PalmistryPage())
+        );
       case DailyRites.runes:
-        return (' ᚱ ', l10n.yourDayRiteRunes,
-            () => _push(context, const RuneReadingPage()));
+        return (
+          const ToolDrawingArt(
+              drawing: ToolDrawing.raidho, size: _emblemaDesenhado),
+          l10n.yourDayRiteRunes,
+          () => _push(context, const RuneReadingPage())
+        );
       case DailyRites.natureIdentify:
-        return ('🍃', l10n.yourDayRiteNature, () => openNatureGuide(context));
+        return (
+          const Text('🍃', style: _emblemaDoRito),
+          l10n.yourDayRiteNature,
+          () => openNatureGuide(context)
+        );
       case DailyRites.pendulum:
-        return (' ⟟ ', l10n.yourDayRitePendulum,
-            () => _push(context, const PendulumPage()));
+        return (
+          const ToolDrawingArt(
+              drawing: ToolDrawing.pendulum, size: _emblemaDesenhado),
+          l10n.yourDayRitePendulum,
+          () => _push(context, const PendulumPage())
+        );
       case DailyRites.divination:
       default:
-        return ('🎴', l10n.yourDayRiteTarot,
-            () => _push(context, const TarotPage()));
+        return (
+          const Text('🎴', style: _emblemaDoRito),
+          l10n.yourDayRiteTarot,
+          () => _push(context, const TarotPage())
+        );
     }
   }
 
@@ -325,13 +366,13 @@ class _DailyRitesCardState extends State<DailyRitesCard>
         const SizedBox(height: 12),
         _RiteTile(
           done: gratitudeDone,
-          emoji: '🙏',
+          emblema: const Text('🙏', style: _emblemaDoRito),
           label: l10n.yourDayRiteGratitude,
           onStart: () => _writeGratitude(context),
         ),
         _RiteTile(
           done: dreamDone,
-          emoji: '🌙',
+          emblema: const Text('🌙', style: _emblemaDoRito),
           label: l10n.yourDayRiteDream,
           // Só leva até lá: quem marca é o sonho registrado.
           onStart: () =>
@@ -340,7 +381,7 @@ class _DailyRitesCardState extends State<DailyRitesCard>
         // Terceiro slot rotativo: quem marca é a ferramenta, lá dentro.
         _RiteTile(
           done: featuredDone,
-          emoji: featured.$1,
+          emblema: featured.$1,
           label: featured.$2,
           onStart: featured.$3,
           premium: featuredPremium,
@@ -540,14 +581,17 @@ class _GratitudeSheetState extends State<_GratitudeSheet> {
   }
 }
 
-/// Uma linha de rito: emoji, rótulo e o círculo que marca a conclusão.
+/// Uma linha de rito: emblema, rótulo e o círculo que marca a conclusão.
 ///
 /// O pop do check é do próprio tile: `didUpdateWidget` vê o `done` virar
 /// true e corre a animação uma vez. Montado já feito, nasce no estado final
 /// (controller em 1) — reconstrução nunca re-anima.
 class _RiteTile extends StatefulWidget {
   final bool done;
-  final String emoji;
+
+  /// Emoji do sistema ou o desenho do app (ver `_featuredSpec`). Widget, e
+  /// não String, porque desenho não cabe num `Text`.
+  final Widget emblema;
   final String label;
   final VoidCallback onStart;
 
@@ -558,7 +602,7 @@ class _RiteTile extends StatefulWidget {
 
   const _RiteTile({
     required this.done,
-    required this.emoji,
+    required this.emblema,
     required this.label,
     required this.onStart,
     this.premium = false,
@@ -647,7 +691,7 @@ class _RiteTileState extends State<_RiteTile>
               ),
             ),
             const SizedBox(width: 12),
-            Text(widget.emoji, style: const TextStyle(fontSize: 18)),
+            widget.emblema,
             const SizedBox(width: 8),
             Expanded(
               child: Text(

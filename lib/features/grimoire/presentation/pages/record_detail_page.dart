@@ -30,13 +30,15 @@ String archiveSourceLabel(AppLocalizations l10n, String source) =>
 /// excluível — a página veio do Grimório Vivo ou de uma leitura, mas é da
 /// Bruxa.
 ///
-/// Com UMA exceção: a página do Ciclo Menstrual não se edita nem se apaga
-/// daqui. Ela é espelho de uma linha de `menstrual_days`, reescrita a cada
-/// gravação do dia — editá-la aqui duraria até a próxima correção na roda, e
-/// apagá-la aqui deixaria o dia vivo no registro com a vitrine vazia, que é
-/// exatamente a mentira que este espelho existe para não contar. Quem manda
-/// no dia é a roda do ciclo, e o rodapé diz isso em vez de esconder os
-/// botões sem explicação.
+/// Com UMA exceção: a página do Ciclo Menstrual não se EDITA daqui. Ela é
+/// espelho de uma linha de `menstrual_days`, reescrita a cada gravação do
+/// dia — editá-la aqui duraria até a próxima correção no Ciclo, e o rodapé
+/// diz isso em vez de esconder o botão sem explicação.
+///
+/// Apagar, sim (pedido da dona, 12/09): o botão daqui chama o repositório do
+/// ciclo, porque apagar a página é apagar o DIA. Apagá-la sozinha deixaria o
+/// dia vivo no registro com a vitrine vazia, que é exatamente a mentira que
+/// este espelho existe para não contar.
 class RecordDetailPage extends StatefulWidget {
   final FreeWritingModel entry;
 
@@ -175,22 +177,26 @@ class _RecordDetailPageState extends State<RecordDetailPage> {
                       Icon(Icons.auto_stories,
                           size: 16, color: context.gc.lilac),
                       const SizedBox(width: 6),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: context.gc.lilac.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(
-                            color: context.gc.lilac.withValues(alpha: 0.4),
+                      // O selinho é texto traduzido: solto na Row, ele
+                      // estoura com fonte ampliada em vez de quebrar.
+                      Flexible(
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: context.gc.lilac.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: context.gc.lilac.withValues(alpha: 0.4),
+                            ),
                           ),
-                        ),
-                        child: Text(
-                          archiveSourceLabel(l10n, _entry.source),
-                          style:
-                              Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    color: context.gc.lilac,
-                                  ),
+                          child: Text(
+                            archiveSourceLabel(l10n, _entry.source),
+                            style:
+                                Theme.of(context).textTheme.bodySmall?.copyWith(
+                                      color: context.gc.lilac,
+                                    ),
+                          ),
                         ),
                       ),
                     ],

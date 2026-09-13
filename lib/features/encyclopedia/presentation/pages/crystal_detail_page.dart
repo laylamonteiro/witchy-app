@@ -72,9 +72,11 @@ class CrystalDetailPage extends StatelessWidget {
                       Text(crystal.element.emoji,
                           style: const TextStyle(fontSize: 24)),
                       const SizedBox(width: 8),
-                      Text(
-                        crystal.element.displayName,
-                        style: Theme.of(context).textTheme.titleMedium,
+                      Flexible(
+                        child: Text(
+                          crystal.element.displayName,
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
                       ),
                     ],
                   ),
@@ -108,15 +110,20 @@ class CrystalDetailPage extends StatelessWidget {
                             size: 28,
                           ),
                           const SizedBox(width: 8),
-                          Text(
-                            AppLocalizations.of(context).encySectionSafety,
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleLarge
-                                ?.copyWith(
-                                  color: context.gc.alert,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                          // "Avisos de Segurança" em titleLarge ao lado de um
+                          // ícone de 28 não cabe em 320 com a fonte grande —
+                          // e é justamente o aviso que não pode sumir.
+                          Flexible(
+                            child: Text(
+                              AppLocalizations.of(context).encySectionSafety,
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .titleLarge
+                                  ?.copyWith(
+                                    color: context.gc.alert,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                            ),
                           ),
                         ],
                       ),

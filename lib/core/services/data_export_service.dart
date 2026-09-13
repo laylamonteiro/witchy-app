@@ -8,8 +8,7 @@ import 'package:share_plus/share_plus.dart';
 
 import '../../features/diary/data/models/free_writing_model.dart';
 import '../database/database_helper.dart';
-import '../database/menstrual_cycle_schema.dart';
-import '../database/reading_session_schema.dart';
+import '../database/tabelas_locais.dart';
 import '../sharing/image_download_stub.dart'
     if (dart.library.js_interop) '../sharing/image_download_web.dart';
 
@@ -25,37 +24,18 @@ class DataExportService {
 
   static final DataExportService instance = DataExportService._();
 
-  /// Tabelas incluídas no backup. Ao criar uma tabela de conteúdo da usuária,
-  /// acrescente aqui — senão ela fica de fora da exportação.
-  static const List<String> tables = [
-    ...ReadingSessionSchema.tables,
-    'spells',
-    'dreams',
-    'desires',
-    'gratitudes',
-    'affirmations',
-    'daily_rituals',
-    'ritual_logs',
-    'sigils',
-    'birth_charts',
-    'magical_profiles',
-    'rune_readings',
-    'pendulum_consultations',
-    'oracle_readings',
-    'tarot_readings',
-    'daily_magical_weather',
-    'learning_progress',
-    'guided_ritual_logs',
-    'user_encyclopedia_entries',
-    'free_writings',
-    'daily_checkins',
-    // O relatório em si sai em free_writings; aqui vai o registro da compra
-    // e do período coberto — exportar os dados dela é exportar tudo.
-    'cycle_readings',
-    // O registro menstrual é dela: levar os próprios dados embora não
-    // depende de assinatura nem de o consentimento continuar de pé.
-    MenstrualCycleSchema.table,
-  ];
+  /// Tabelas incluídas no backup: a lista canônica de [TabelasLocais.conteudo],
+  /// a mesma que a limpeza local e a exclusão de conta consomem.
+  ///
+  /// Era escrita à mão aqui, e por isso podia divergir das outras três cópias —
+  /// divergiu. Derivando da lista única, tabela nova nasce exportada, e o que a
+  /// pessoa leva embora é exatamente o que os gestos de apagar alcançam: se um
+  /// deles esquecesse algo, o outro esconderia o esquecimento.
+  ///
+  /// Fora ficam só as duas tabelas que não são registro dela: o catálogo de
+  /// Códigos Premium e as lápides da sincronização (que guardam o id do que ela
+  /// apagou, e não há o que levar embora num id de coisa apagada).
+  static final List<String> tables = TabelasLocais.conteudo;
 
   /// Lê todas as tabelas e devolve o JSON do backup.
   ///

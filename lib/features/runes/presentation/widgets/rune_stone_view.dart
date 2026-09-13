@@ -4,17 +4,27 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/theme/grimoire_motion.dart';
+import 'rune_art.dart';
 
 /// A pebble drawn in the active palette. The shape and speckles follow the
 /// original cloth slot ([deckPosition]), never the rune underneath, so a
 /// face-down stone gives nothing away and keeps its look once chosen.
 /// With a [symbol] the glyph is carved on top; [reversed] turns it over.
+///
+/// [runeName] é o nome invariante da runa ('Fehu', 'Uruz'…) e é ele que
+/// escolhe o DESENHO em `rune_art.dart`. [symbol] continua sendo passado
+/// porque é a RESERVA: com [runeName] nulo, ou com um nome que ninguém
+/// desenhou, a pedra volta a escrever o caractere do catálogo em vez de
+/// chegar lisa. É uma reserva para um catálogo FUTURO — hoje todos os
+/// chamadores de `lib/` passam o nome, a galeria de `lib/dev/` inclusive, e
+/// quem mantém esse caminho vivo e conferido é `test/rune_art_test.dart`.
 class RuneStoneView extends StatelessWidget {
   const RuneStoneView({
     super.key,
     required this.size,
     required this.deckPosition,
     this.symbol,
+    this.runeName,
     this.reversed = false,
     this.highlighted = false,
   }) : assert(deckPosition >= 0);
@@ -22,6 +32,7 @@ class RuneStoneView extends StatelessWidget {
   final double size;
   final int deckPosition;
   final String? symbol;
+  final String? runeName;
   final bool reversed;
   final bool highlighted;
 
@@ -48,18 +59,22 @@ class RuneStoneView extends StatelessWidget {
               : Center(
                   child: RotatedBox(
                     quarterTurns: reversed ? 2 : 0,
-                    child: Text(
-                      glyph,
-                      style: TextStyle(
-                        fontSize: size * .5,
-                        height: 1,
-                        fontWeight: FontWeight.bold,
-                        color: context.gc.gold,
-                        shadows: [Shadow(
-                          color: context.gc.background.withValues(alpha: .6),
-                          blurRadius: 3,
-                        )],
-                      ),
+                    // O ENTALHE é a mesma receita de antes: ouro por cima de
+                    // um halo difuso da cor do fundo do tema, e é ele que faz
+                    // a runa parecer cavada na pedra em vez de pintada em
+                    // cima. Duas coisas mudaram. O ouro agora veste um
+                    // desenho, e não um caractere de um bloco do Unicode que
+                    // metade dos aparelhos não tem. E o borrão do halo virou
+                    // proporcional à pedra (ver `rune_art.dart`): era fixo em
+                    // 3, o que servia à pedra de 76 da lista e sumia na de
+                    // 180 do verbete, onde o entalhe voltava a parecer traço
+                    // colado por cima.
+                    child: RuneMark(
+                      name: runeName ?? '',
+                      symbol: glyph,
+                      fontSize: size * .5,
+                      color: context.gc.gold,
+                      halo: context.gc.background.withValues(alpha: .6),
                     ),
                   ),
                 ),
@@ -80,6 +95,7 @@ class RuneStoneStage extends StatelessWidget {
     required this.playToken,
     required this.deckPosition,
     required this.symbol,
+    this.runeName,
     this.size = 140,
     this.reversed = false,
   });
@@ -90,6 +106,7 @@ class RuneStoneStage extends StatelessWidget {
 
   final int deckPosition;
   final String symbol;
+  final String? runeName;
   final double size;
   final bool reversed;
 
@@ -112,6 +129,7 @@ class RuneStoneStage extends StatelessWidget {
         size: size,
         deckPosition: deckPosition,
         symbol: symbol,
+        runeName: runeName,
         reversed: reversed,
         highlighted: true,
       ),

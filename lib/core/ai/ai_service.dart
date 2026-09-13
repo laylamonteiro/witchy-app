@@ -695,7 +695,9 @@ class AIService {
         maxTokens: 1024,
         receiveTimeout: const Duration(seconds: 30),
       );
-      return content.trim();
+      // O Conselheiro destaca nomes de funcionalidades do app entre `**`;
+      // um par que ficou aberto num corte viraria asteriscos na tela.
+      return semRealcePendurado(content.trim());
     } on DioException catch (e) {
       if (e.response?.statusCode == 401) {
         throw Exception(_prompts.errorAuthentication);

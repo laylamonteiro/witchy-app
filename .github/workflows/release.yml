@@ -289,6 +289,16 @@ jobs:
       - name: 🧪 Suíte completa (bloqueante — sem || echo)
         run: flutter test
 
+      - name: 🧪 As páginas legais do site vêm dos documentos (Node)
+        # Mesmo gate do branch-validate, repetido aqui porque ESTE workflow é
+        # o que publica grimoriodebolso.app. A montagem já se recusa a
+        # escrever uma página que diga que a nuvem é do Premium
+        # (scripts/gerar_paginas_legais.mjs confere antes de gravar), mas essa
+        # recusa só cobre a frase; a prova de que a página inteira é o
+        # documento está no teste, e numa publicação de produção ela tem de
+        # correr. Sem dependência nova: o runner já traz Node.
+        run: node test/paginas_legais_site_test.mjs
+
       - name: 🧪 Redirecionamento do QR (Node)
         # O `/baixar` é uma Cloudflare Pages Function: roda no servidor, e
         # `flutter test` nunca chega nele. Um QR já impresso não se corrige,

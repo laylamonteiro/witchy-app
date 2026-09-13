@@ -16,6 +16,12 @@ void main() {
       expect(AppDeepLink.guidedRitualNewMoon.payload, 'ritual/new_moon');
       expect(AppDeepLink.guidedRitualSunWater.payload, 'ritual/sun_water');
       expect(AppDeepLink.dreamsDiary.payload, 'diary/dreams');
+      // Destinos sugeridos pelo Conselheiro Místico.
+      expect(AppDeepLink.crystalsEncyclopedia.payload, 'encyclopedia/crystals');
+      expect(AppDeepLink.herbsEncyclopedia.payload, 'encyclopedia/herbs');
+      expect(AppDeepLink.gratitudeDiary.payload, 'diary/gratitude');
+      expect(AppDeepLink.affirmationsDiary.payload, 'diary/affirmations');
+      expect(AppDeepLink.desiresDiary.payload, 'diary/desires');
       for (final link in AppDeepLink.values) {
         expect(AppDeepLink.fromPayload(link.payload), link);
       }
@@ -65,6 +71,13 @@ void main() {
       expect(AppDeepLink.cycleReading.homeTab, 2);
       expect(AppDeepLink.cycleReading.opensCycleReading, isTrue);
       expect(AppDeepLink.dreamsDiary.diaryTab, 3);
+      expect(AppDeepLink.gratitudeDiary.diaryTab, 0);
+      expect(AppDeepLink.affirmationsDiary.diaryTab, 1);
+      expect(AppDeepLink.desiresDiary.diaryTab, 4);
+      expect(AppDeepLink.crystalsEncyclopedia.encyclopediaSection,
+          EncyclopediaSection.crystals);
+      expect(AppDeepLink.herbsEncyclopedia.encyclopediaSection,
+          EncyclopediaSection.herbs);
       expect(AppDeepLink.dreamsDiary.encyclopediaSection, isNull);
       expect(AppDeepLink.moonEncyclopedia.diaryTab, isNull);
     });

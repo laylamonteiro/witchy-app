@@ -18,6 +18,7 @@ import '../../data/models/feature_access.dart';
 import '../../data/repositories/beta_code_repository.dart';
 import '../../data/repositories/supabase_auth_repository.dart';
 import '../../../cycles/data/repositories/life_eras_repository.dart';
+import '../../../menstrual_cycle/data/menstrual_consent_store.dart';
 
 AppLocalizations get _l10n =>
     lookupAppLocalizations(ContentLocale.instance.locale);
@@ -1013,6 +1014,17 @@ class AuthProvider extends ChangeNotifier {
         await LifeErasRepository().clear(_currentUser.id);
       } catch (e) {
         await debugLog('AUTH', 'Falha ao limpar o cache das Eras: $e');
+      }
+
+      // Os dois sins do ciclo moram no SharedPreferences, pelo mesmo motivo
+      // das Eras — e, se o dado que eles autorizam foi destruído acima, eles
+      // não podem sobreviver a ele. Quem entrasse depois no mesmo aparelho
+      // encontraria o registro vazio e o envio JÁ LIGADO, autorizando por
+      // antecipação o que ainda nem escreveu.
+      try {
+        await const MenstrualConsentStore().forget(_currentUser.id);
+      } catch (e) {
+        await debugLog('AUTH', 'Falha ao esquecer o consentimento do ciclo: $e');
       }
     } else {
       await debugLog('AUTH', 'Keeping database - user has cloud sync enabled');

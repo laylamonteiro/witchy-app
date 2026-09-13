@@ -201,11 +201,16 @@ class WelcomePage extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 16),
-                Text(
-                  feature.$1,
-                  style: GoogleFonts.nunito(
-                    fontSize: 15,
-                    color: context.gc.textPrimary,
+                // O nome do recurso ("Calendário Lunar") ao lado do ícone
+                // não cabe em 320 com a fonte ampliada. Expanded dá a ele o
+                // resto da linha e deixa quebrar em vez de cortar.
+                Expanded(
+                  child: Text(
+                    feature.$1,
+                    style: GoogleFonts.nunito(
+                      fontSize: 15,
+                      color: context.gc.textPrimary,
+                    ),
                   ),
                 ),
               ],

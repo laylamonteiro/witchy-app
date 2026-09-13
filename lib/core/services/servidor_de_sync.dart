@@ -30,6 +30,13 @@ abstract class ServidorDeSync {
   /// Apaga as linhas da pessoa que não são do dia informado.
   Future<void> apagarOutrosDias(String tabela, String userId, String date);
 
+  /// Apaga TODAS as linhas da pessoa numa tabela.
+  ///
+  /// Existe para o "apagar a cópia da nuvem" do registro menstrual: a tabela
+  /// não tem `id`, então não há linha a linha que se possa percorrer daqui — e
+  /// é um pedido de exclusão, não uma varredura.
+  Future<void> apagarTudoDoUsuario(String tabela, String userId);
+
   /// As lápides da pessoa no servidor: as exclusões que outros aparelhos
   /// registraram e esta instalação ainda precisa aplicar.
   Future<List<Map<String, dynamic>>> lapidesDoUsuario(String userId);
@@ -106,6 +113,11 @@ class ServidorSupabase implements ServidorDeSync {
         .delete()
         .eq('user_id', userId)
         .neq('date', date);
+  }
+
+  @override
+  Future<void> apagarTudoDoUsuario(String tabela, String userId) async {
+    await _client.from(tabela).delete().eq('user_id', userId);
   }
 
   /// A tabela remota das lápides (supabase/sync_tombstones_migration.sql).

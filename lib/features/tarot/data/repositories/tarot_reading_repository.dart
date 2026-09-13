@@ -4,6 +4,7 @@ import 'package:uuid/uuid.dart';
 import 'package:sqflite/sqflite.dart';
 
 import '../../../../core/database/database_helper.dart';
+import '../../../../core/services/data_sync_service.dart';
 import '../models/tarot_card_model.dart';
 
 /// Persistência local das tiragens de Tarô (`tarot_readings`).
@@ -19,6 +20,9 @@ class TarotReadingRepository {
       : _dbHelper = dbHelper ?? DatabaseHelper.instance;
 
   final DatabaseHelper _dbHelper;
+
+  /// Singleton; fora de uma sessão autenticada, `syncItem` não faz nada.
+  final DataSyncService _syncService = DataSyncService();
 
   /// Registra uma tiragem revelada. Idempotente por `signature` (a mesma
   /// mesa reaberta — ex.: a carta do dia — não cria linha nova) e devolve o
@@ -119,15 +123,25 @@ class TarotReadingRepository {
 
   /// Anexa a interpretação do Conselheiro à tiragem já registrada — é ela
   /// que a Leitura do Ciclo cita como "a resposta" da mesa.
+  ///
+  /// O `synced: 0` e o `syncItem` não são zelo: depois que a tiragem subiu uma
+  /// vez, `_markAsSynced` a carimbou, e a varredura só recolhe linhas com
+  /// `synced = 0` — sem os dois, a interpretação nunca saía deste aparelho.
+  /// Ela lia a resposta hoje, trocava de telefone e a mesa voltava sem
+  /// resposta; pior, uma cópia remota mais nova podia sobrescrever a linha
+  /// local e levar a interpretação embora. Runas e oráculo fazem as duas
+  /// coisas no mesmo verbo.
   Future<void> attachInterpretation({
     required String userId,
     required String signature,
     required String interpretation,
   }) async {
     final db = await _dbHelper.database;
+    // A linha INTEIRA, e não só `id` e `reading_data`: é ela que vai para o
+    // upsert do servidor, e mandar meia linha apagaria lá a pergunta, o tipo
+    // de mesa e a data.
     final rows = await db.query(
       'tarot_readings',
-      columns: ['id', 'reading_data'],
       where: 'user_id = ? AND signature = ?',
       whereArgs: [userId, signature],
       limit: 1,
@@ -143,14 +157,16 @@ class TarotReadingRepository {
     }
     data['interpretation'] = interpretation;
 
+    final row = Map<String, dynamic>.from(rows.first);
+    row['reading_data'] = jsonEncode(data);
+    row['updated_at'] = DateTime.now().millisecondsSinceEpoch;
+    row['synced'] = 0;
     await db.update(
       'tarot_readings',
-      {
-        'reading_data': jsonEncode(data),
-        'updated_at': DateTime.now().millisecondsSinceEpoch,
-      },
+      row,
       where: 'id = ?',
-      whereArgs: [rows.first['id']],
+      whereArgs: [row['id']],
     );
+    await _syncService.syncItem(SyncEntity.tarotReadings, row);
   }
 }

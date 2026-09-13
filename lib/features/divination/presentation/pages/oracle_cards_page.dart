@@ -416,7 +416,10 @@ class _OracleBodyState extends State<_OracleBody> {
       ),
       backgroundColor: context.gc.darkBackground,
       body: ToolSceneFrame(child: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        // Só o respiro de cima e de baixo: a margem lateral é do MagicalCard,
+        // e somando as duas o conteúdo ficava a 32dp da borda — quase 10% da
+        // largura de leitura numa tela de 320dp, e diferente das irmãs.
+        padding: const EdgeInsets.symmetric(vertical: 16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -424,10 +427,20 @@ class _OracleBodyState extends State<_OracleBody> {
               MagicalCard(
                 child: Column(
                   children: [
-                    const Text('🔮', style: TextStyle(fontSize: 48)),
+                    // 🔮 é o emblema do Conselheiro Místico: o herói do
+                    // Oráculo mostrava o símbolo de outra ferramenta enquanto
+                    // o card do hub e a AppBar mostravam 🃏. O emblema é o
+                    // que liga a entrada à cena — tem de ser o mesmo dos dois
+                    // lados, e vem do ToolIdentity para não divergir de novo.
+                    const ToolEmblem(
+                        tool: ToolId.oracle, size: 48, flies: false),
                     const SizedBox(height: 16),
                     Text(
                       AppLocalizations.of(context).oracleTitle,
+                      // Centralizado como o subtítulo logo abaixo: sem isto,
+                      // um título que quebra em duas linhas sai alinhado à
+                      // esquerda dentro de um bloco centralizado.
+                      textAlign: TextAlign.center,
                       style:
                           Theme.of(context).textTheme.headlineMedium?.copyWith(
                                 color: context.gc.lilac,
@@ -445,40 +458,41 @@ class _OracleBodyState extends State<_OracleBody> {
                 ),
               ),
 
-              const SizedBox(height: 16),
-
               _buildSpreadOption(OracleSpreadType.daily),
-              const SizedBox(height: 12),
               _buildSpreadOption(OracleSpreadType.threeCard),
-              const SizedBox(height: 12),
               _buildSpreadOption(OracleSpreadType.weeklyGuidance),
 
-              const SizedBox(height: 24),
+              const SizedBox(height: 16),
 
-              ElevatedButton.icon(
-                key: const ValueKey('oracle-draw'),
-                onPressed: _isDrawing ? null : _drawCards,
-                icon: _isDrawing
-                    ? SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                            context.gc.darkBackground,
+              // O botão não é cartão: sem a margem lateral do MagicalCard,
+              // ele encostaria na borda da tela.
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: ElevatedButton.icon(
+                  key: const ValueKey('oracle-draw'),
+                  onPressed: _isDrawing ? null : _drawCards,
+                  icon: _isDrawing
+                      ? SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              context.gc.darkBackground,
+                            ),
                           ),
-                        ),
-                      )
-                    : const Icon(Icons.auto_awesome),
-                label: Text(_isDrawing ? AppLocalizations.of(context).oracleDrawing : AppLocalizations.of(context).oracleDraw),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: context.gc.lilac,
-                  foregroundColor: context.gc.darkBackground,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 32,
-                    vertical: 16,
+                        )
+                      : const Icon(Icons.auto_awesome),
+                  label: Text(_isDrawing ? AppLocalizations.of(context).oracleDrawing : AppLocalizations.of(context).oracleDraw),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: context.gc.lilac,
+                    foregroundColor: context.gc.darkBackground,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 32,
+                      vertical: 16,
+                    ),
+                    disabledBackgroundColor: context.gc.lilac.withValues(alpha: 0.3),
                   ),
-                  disabledBackgroundColor: context.gc.lilac.withValues(alpha: 0.3),
                 ),
               ),
 
@@ -489,7 +503,7 @@ class _OracleBodyState extends State<_OracleBody> {
                   final remaining =
                       authProvider.currentUser.remainingOracleReadings;
                   return Padding(
-                    padding: const EdgeInsets.only(top: 12),
+                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
                     child: Text(
                       AppLocalizations.of(context).oracleRemainingToday('$remaining/${UserModel.freeOracleReadingsLimit}'),
                       style: TextStyle(
@@ -506,20 +520,22 @@ class _OracleBodyState extends State<_OracleBody> {
             ],
             if (_drawnCards != null) ...[
               _buildReadingResult(_drawnCards!),
-              const SizedBox(height: 16),
-              if (_lastReading != null) ...[
+              if (_lastReading != null)
                 _EntradaSuave(child: _buildCounselorCard()),
-                const SizedBox(height: 8),
-              ],
-              OutlinedButton.icon(
-                key: const ValueKey('oracle-new-reading'),
-                onPressed: _isReadingAI ? null : () => _clearTable(newReading: true),
-                icon: const Icon(Icons.refresh),
-                label: Text(AppLocalizations.of(context).oracleNewReading),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: context.gc.lilac,
-                  side: BorderSide(color: context.gc.lilac),
-                  padding: const EdgeInsets.symmetric(vertical: 12),
+              const SizedBox(height: 8),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: OutlinedButton.icon(
+                  key: const ValueKey('oracle-new-reading'),
+                  onPressed:
+                      _isReadingAI ? null : () => _clearTable(newReading: true),
+                  icon: const Icon(Icons.refresh),
+                  label: Text(AppLocalizations.of(context).oracleNewReading),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: context.gc.lilac,
+                    side: BorderSide(color: context.gc.lilac),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
                 ),
               ),
             ],
@@ -529,72 +545,61 @@ class _OracleBodyState extends State<_OracleBody> {
     );
   }
 
+  /// Escolher a tiragem: um cartão por opção, marcado quando é a da vez.
+  ///
+  /// Era um `Container` próprio, com moldura e ripple fora do cartão — outra
+  /// linguagem visual para a mesma decisão que o Tarô toma em `MagicalCard`.
+  /// Aqui o cartão é o mesmo do resto do app; o que muda entre as duas
+  /// ferramentas é só o que o toque faz (aqui marca, lá já parte), porque o
+  /// Oráculo ainda tem o botão de tirar embaixo.
   Widget _buildSpreadOption(OracleSpreadType spread) {
     final isSelected = _selectedSpread == spread;
-
-    return InkWell(
-      onTap: () {
-        setState(() {
-          _selectedSpread = spread;
-        });
-      },
-      borderRadius: BorderRadius.circular(12),
-      child: AnimatedContainer(
-        duration: GrimoireMotion.reduced(context)
-            ? Duration.zero
-            : GrimoireMotion.state,
-        curve: GrimoireMotion.enter,
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? context.gc.lilac.withValues(alpha: 0.2)
-              : context.gc.cardBackground,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: isSelected ? context.gc.lilac : context.gc.surfaceBorder,
-            width: 2,
+    final child = Row(
+      children: [
+        Icon(
+          Icons.style,
+          color: context.gc.lilac,
+          size: 32,
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                spread.displayName,
+                style: TextStyle(
+                  color: isSelected ? context.gc.lilac : context.gc.softWhite,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                spread.description,
+                style: TextStyle(
+                  color: context.gc.softWhite.withValues(alpha: 0.7),
+                  fontSize: 12,
+                ),
+              ),
+            ],
           ),
         ),
-        child: Row(
-          children: [
-            Icon(
-              Icons.style,
-              color: context.gc.lilac,
-              size: 32,
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    spread.displayName,
-                    style: TextStyle(
-                      color: isSelected ? context.gc.lilac : context.gc.softWhite,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    spread.description,
-                    style: TextStyle(
-                      color: context.gc.softWhite.withValues(alpha: 0.7),
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            if (isSelected)
-              Icon(
-                Icons.check_circle,
-                color: context.gc.lilac,
-              ),
-          ],
-        ),
-      ),
+        if (isSelected)
+          Icon(
+            Icons.check_circle,
+            color: context.gc.lilac,
+          ),
+      ],
     );
+    void escolher() => setState(() => _selectedSpread = spread);
+    return isSelected
+        ? MagicalCard.accent(
+            accent: context.gc.lilac,
+            onTap: escolher,
+            child: child,
+          )
+        : MagicalCard(onTap: escolher, child: child);
   }
 
   /// A carta da posição [index] na mesa: verso do leque até a revelação,
@@ -642,7 +647,6 @@ class _OracleBodyState extends State<_OracleBody> {
             ],
           ),
         ),
-        const SizedBox(height: 16),
 
         // A mesa: as cartas viram no lugar em que foram postas. Tocar uma
         // carta a traz para o palco (com sua cena) e destaca o texto.
@@ -670,7 +674,6 @@ class _OracleBodyState extends State<_OracleBody> {
             ]),
           ),
         ),
-        const SizedBox(height: 16),
 
         // O palco e o texto chegam depois das cartas assentarem.
         AnimatedSlide(
@@ -855,18 +858,26 @@ class _OracleBodyState extends State<_OracleBody> {
 
   Widget _positionCard(int index, OracleCardPosition position) {
     final highlighted = _focused == index && _drawnCards!.length > 1;
+    // A moldura de foco fica ENTRE a lista e o cartão, então é ela que precisa
+    // carregar a margem das doze — o cartão de dentro fica sem nenhuma. Quando
+    // o recuo lateral vinha do padding da lista, a moldura o herdava de graça;
+    // com o padding só vertical, ela seria pintada rente à borda da tela.
+    // O raio é 18, e não 12: a borda de 2 encosta no cartão, cujo raio é 16,
+    // e dois arcos concêntricos precisam diferir exatamente pela espessura,
+    // senão os cantos se cruzam.
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
       child: AnimatedContainer(
         duration: GrimoireMotion.reduced(context) ? Duration.zero : GrimoireMotion.state,
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(18),
           border: Border.all(
             color: highlighted ? context.gc.lilac : Colors.transparent,
             width: 2,
           ),
         ),
         child: MagicalCard(
+          margin: EdgeInsets.zero,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [

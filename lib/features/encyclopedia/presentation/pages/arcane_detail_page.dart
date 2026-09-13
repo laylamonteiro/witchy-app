@@ -432,9 +432,15 @@ class ArcaneDetailPage extends StatelessWidget {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
-                  item,
-                  style: TextStyle(color: context.gc.lilac, fontSize: 13),
+                // O Wrap escolhe em que linha a pílula fica, mas uma
+                // correspondência comprida (com a fonte ampliada) ainda pode
+                // ser mais larga que o cartão inteiro: aí quem estoura é
+                // esta linha, e o rótulo sai cortado no meio da letra.
+                Flexible(
+                  child: Text(
+                    item,
+                    style: TextStyle(color: context.gc.lilac, fontSize: 13),
+                  ),
                 ),
                 if (destination != null) ...[
                   const SizedBox(width: 4),

@@ -219,7 +219,10 @@ void main() {
     expect(await repo.count(other), 1);
 
     final erased = await repo.purge(user);
-    expect(erased, 1);
+    expect(erased.apagados, 1);
+    expect(erased.nuvemLimpa, isFalse,
+        reason: 'Sem servidor configurado não há o que apagar lá, e o gesto '
+            'precisa dizer isso em vez de afirmar que apagou');
     expect(await repo.count(other), 1, reason: 'Only the asking account is erased');
 
     // Erasing everything leaves no headstone either: there is nothing left.

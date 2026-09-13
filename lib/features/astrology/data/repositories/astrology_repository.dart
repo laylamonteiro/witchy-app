@@ -89,6 +89,13 @@ class AstrologyRepository {
         'chart_data': chart.toJsonString(),
         'calculated_at': chart.calculatedAt.millisecondsSinceEpoch,
         'updated_at': now,
+        // O carimbo de "a enviar" é gravado AQUI, e não deixado para o
+        // `syncItem` de baixo: ele engole o próprio erro, então corrigir a hora
+        // ou o lugar de nascimento sem rede deixava a linha com `synced = 1` —
+        // a varredura seguinte não a recolhia, a correção nunca chegava à
+        // nuvem, e um download futuro trazia de volta os dados errados. É o
+        // mapa que sustenta a Análise Personalizada.
+        'synced': 0,
       },
       where: 'id = ?',
       whereArgs: [chart.id],

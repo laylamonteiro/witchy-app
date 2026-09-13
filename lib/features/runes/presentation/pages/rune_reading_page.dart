@@ -12,6 +12,7 @@ import '../../../../core/navigation/grimoire_route.dart';
 import '../../../../core/services/ad_service.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/theme/grimoire_motion.dart';
+import '../../../../core/tools/tool_emblem_art.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/widgets/motion/tool_scene_frame.dart';
 import '../../../../core/widgets/premium_locked_preview.dart';
@@ -28,6 +29,7 @@ import '../../data/models/rune_spread_model.dart';
 import '../../data/repositories/rune_reading_repository.dart';
 import '../../data/repositories/rune_selection_repository.dart';
 import '../../domain/rune_selection_session.dart';
+import '../widgets/rune_art.dart';
 import '../widgets/rune_spread_board.dart';
 import '../../../../core/widgets/reading_focus_panel.dart';
 import '../widgets/rune_stone_view.dart';
@@ -390,7 +392,11 @@ class _RuneReadingBodyState extends State<_RuneReadingBody> {
       ),
       backgroundColor: context.gc.darkBackground,
       body: ToolSceneFrame(child: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        // A margem lateral vem do MagicalCard (margin horizontal 16), como
+        // nas outras onze ferramentas: com `all(16)` aqui o conteúdo somava
+        // os dois recuos e ficava 32dp para dentro. O que NÃO está em card
+        // (a escolha da tiragem, o botão) recebe o recuo por Padding.
+        padding: const EdgeInsets.symmetric(vertical: 16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -398,7 +404,14 @@ class _RuneReadingBodyState extends State<_RuneReadingBody> {
               MagicalCard(
                 child: Column(
                   children: [
-                    const Text('ᚱᚢᚾᚨ', style: TextStyle(fontSize: 48)),
+                    // O emblema DESENHADO (Raidho), o mesmo do card das
+                    // Ferramentas e da AppBar. Eram quatro caracteres do
+                    // bloco Runic ('ᚱᚢᚾᚨ'): no aparelho sem fonte para esse
+                    // bloco, o convite mais bonito da ferramenta abria como
+                    // quatro quadradinhos vazios. `flies: false` porque quem
+                    // ocupa a etiqueta do Hero nesta rota é a AppBar.
+                    const ToolEmblem(
+                        tool: ToolId.runes, size: 48, flies: false),
                     const SizedBox(height: 16),
                     Text(
                       AppLocalizations.of(context).runesReadingTitle,
@@ -406,6 +419,10 @@ class _RuneReadingBodyState extends State<_RuneReadingBody> {
                           Theme.of(context).textTheme.headlineMedium?.copyWith(
                                 color: context.gc.lilac,
                               ),
+                      // Em duas linhas o título sairia alinhado à esquerda com
+                      // o subtítulo centralizado embaixo — a abertura da
+                      // ferramenta visivelmente torta, e só em tela estreita.
+                      textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 12),
                     Text(
@@ -434,35 +451,45 @@ class _RuneReadingBodyState extends State<_RuneReadingBody> {
 
               const SizedBox(height: 16),
 
-              Text(
-                AppLocalizations.of(context).runesChooseLayout,
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      color: context.gc.lilac,
+              // Nada aqui está dentro de um MagicalCard, então a margem
+              // lateral das doze ferramentas entra por este Padding.
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      AppLocalizations.of(context).runesChooseLayout,
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            color: context.gc.lilac,
+                          ),
+                      textAlign: TextAlign.center,
                     ),
-                textAlign: TextAlign.center,
-              ),
 
-              const SizedBox(height: 12),
+                    const SizedBox(height: 12),
 
-              // Opções de spread
-              _buildSpreadOption(
-                RuneSpreadType.single,
-                Icons.crop_square,
-              ),
-              const SizedBox(height: 12),
-              _buildSpreadOption(
-                RuneSpreadType.threeCast,
-                Icons.view_column,
-              ),
-              const SizedBox(height: 12),
-              _buildSpreadOption(
-                RuneSpreadType.nordicCross,
-                Icons.add,
-              ),
-              const SizedBox(height: 12),
-              _buildSpreadOption(
-                RuneSpreadType.nineWorlds,
-                Icons.grid_3x3,
+                    // Opções de spread
+                    _buildSpreadOption(
+                      RuneSpreadType.single,
+                      Icons.crop_square,
+                    ),
+                    const SizedBox(height: 12),
+                    _buildSpreadOption(
+                      RuneSpreadType.threeCast,
+                      Icons.view_column,
+                    ),
+                    const SizedBox(height: 12),
+                    _buildSpreadOption(
+                      RuneSpreadType.nordicCross,
+                      Icons.add,
+                    ),
+                    const SizedBox(height: 12),
+                    _buildSpreadOption(
+                      RuneSpreadType.nineWorlds,
+                      Icons.grid_3x3,
+                    ),
+                  ],
+                ),
               ),
 
               const SizedBox(height: 16),
@@ -500,58 +527,74 @@ class _RuneReadingBodyState extends State<_RuneReadingBody> {
 
               const SizedBox(height: 24),
 
-              ElevatedButton.icon(
-                key: const ValueKey('runes-draw'),
-                onPressed: _isDrawing ? null : _drawRunes,
-                // Enquanto a mesa é preparada, os glifos do cartão de
-                // abertura se revezam no botão; sob "reduzir movimento" fica
-                // o indicador circular de sempre.
-                icon: !_isDrawing
-                    ? const Icon(Icons.auto_awesome)
-                    : GrimoireMotion.reduced(context)
-                        ? SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                context.gc.darkBackground,
-                              ),
-                            ),
-                          )
-                        : _GlifosDoSorteio(cor: context.gc.darkBackground),
-                label: Text(_isDrawing ? AppLocalizations.of(context).runesDrawing : AppLocalizations.of(context).runesDraw),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: context.gc.lilac,
-                  foregroundColor: context.gc.darkBackground,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 32,
-                    vertical: 16,
-                  ),
-                  disabledBackgroundColor: context.gc.lilac.withValues(alpha: 0.3),
-                ),
-              ),
-
-              // Exibir usos restantes para usuários free
-              Consumer<AuthProvider>(
-                builder: (context, authProvider, _) {
-                  if (authProvider.isPremium) return const SizedBox.shrink();
-                  final remaining =
-                      authProvider.currentUser.remainingRuneReadings;
-                  return Padding(
-                    padding: const EdgeInsets.only(top: 12),
-                    child: Text(
-                      AppLocalizations.of(context).oracleRemainingToday('$remaining/${UserModel.freeRuneReadingsLimit}'),
-                      style: TextStyle(
-                        color: remaining > 0
-                            ? context.gc.softWhite.withValues(alpha: 0.6)
-                            : context.gc.alert,
-                        fontSize: 12,
+              // Fora de card: a margem lateral entra por este Padding.
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    ElevatedButton.icon(
+                      key: const ValueKey('runes-draw'),
+                      onPressed: _isDrawing ? null : _drawRunes,
+                      // Enquanto a mesa é preparada, a runa do cartão de
+                      // abertura acende e apaga no botão; sob "reduzir
+                      // movimento" fica o indicador circular de sempre.
+                      icon: !_isDrawing
+                          ? const Icon(Icons.auto_awesome)
+                          : GrimoireMotion.reduced(context)
+                              ? SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                      context.gc.darkBackground,
+                                    ),
+                                  ),
+                                )
+                              : _RaidhoDoSorteio(
+                                  cor: context.gc.darkBackground),
+                      label: Text(_isDrawing
+                          ? AppLocalizations.of(context).runesDrawing
+                          : AppLocalizations.of(context).runesDraw),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: context.gc.lilac,
+                        foregroundColor: context.gc.darkBackground,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 32,
+                          vertical: 16,
+                        ),
+                        disabledBackgroundColor:
+                            context.gc.lilac.withValues(alpha: 0.3),
                       ),
-                      textAlign: TextAlign.center,
                     ),
-                  );
-                },
+
+                    // Exibir usos restantes para usuários free
+                    Consumer<AuthProvider>(
+                      builder: (context, authProvider, _) {
+                        if (authProvider.isPremium) {
+                          return const SizedBox.shrink();
+                        }
+                        final remaining =
+                            authProvider.currentUser.remainingRuneReadings;
+                        return Padding(
+                          padding: const EdgeInsets.only(top: 12),
+                          child: Text(
+                            AppLocalizations.of(context).oracleRemainingToday(
+                                '$remaining/${UserModel.freeRuneReadingsLimit}'),
+                            style: TextStyle(
+                              color: remaining > 0
+                                  ? context.gc.softWhite.withValues(alpha: 0.6)
+                                  : context.gc.alert,
+                              fontSize: 12,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        );
+                      },
+                    ),
+                  ],
+                ),
               ),
             ],
 
@@ -560,15 +603,20 @@ class _RuneReadingBodyState extends State<_RuneReadingBody> {
               _buildReadingResult(_drawnRunes!),
               if (_lastReading != null) _buildCounselorCard(),
               const SizedBox(height: 16),
-              OutlinedButton.icon(
-                key: const ValueKey('runes-new-reading'),
-                onPressed: _isReadingAI ? null : () => _clearTable(newReading: true),
-                icon: const Icon(Icons.refresh),
-                label: Text(AppLocalizations.of(context).oracleNewReading),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: context.gc.lilac,
-                  side: BorderSide(color: context.gc.lilac),
-                  padding: const EdgeInsets.symmetric(vertical: 12),
+              // Fora de card: a margem lateral entra por este Padding.
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: OutlinedButton.icon(
+                  key: const ValueKey('runes-new-reading'),
+                  onPressed:
+                      _isReadingAI ? null : () => _clearTable(newReading: true),
+                  icon: const Icon(Icons.refresh),
+                  label: Text(AppLocalizations.of(context).oracleNewReading),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: context.gc.lilac,
+                    side: BorderSide(color: context.gc.lilac),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
                 ),
               ),
             ],
@@ -654,6 +702,7 @@ class _RuneReadingBodyState extends State<_RuneReadingBody> {
       back: RuneStoneView(size: size, deckPosition: slot),
       front: RuneStoneView(
         size: size, deckPosition: slot, symbol: position.rune.symbol,
+        runeName: position.rune.name,
         reversed: position.isReversed,
         highlighted: _drawnRunes!.length > 1 && _focused == index,
       ),
@@ -735,8 +784,6 @@ class _RuneReadingBodyState extends State<_RuneReadingBody> {
           ),
         ),
 
-        const SizedBox(height: 16),
-
         // A mesa: as pedras viram no lugar em que foram postas. Tocar uma
         // pedra destaca a interpretação correspondente (e antecipa o texto).
         GestureDetector(
@@ -766,8 +813,6 @@ class _RuneReadingBodyState extends State<_RuneReadingBody> {
             ]),
           ),
         ),
-
-        const SizedBox(height: 16),
 
         // O texto chega depois das pedras assentarem — nunca junto com elas.
         AnimatedSlide(
@@ -847,6 +892,7 @@ class _RuneReadingBodyState extends State<_RuneReadingBody> {
           playToken: '${_activeSession?.id}-$_focused-$_sceneToken',
           deckPosition: slot,
           symbol: position.rune.symbol,
+          runeName: position.rune.name,
           reversed: position.isReversed,
           size: size,
         ),
@@ -883,11 +929,14 @@ class _RuneReadingBodyState extends State<_RuneReadingBody> {
                       ),
                     ),
                     const SizedBox(height: 4),
+                    // 20, como o nome da carta no Tarô e no Oráculo: era 18, e
+                    // a palavra mais importante da leitura mudava de tamanho
+                    // ao andar de uma adivinhação para a irmã ao lado.
                     Text(
                       position.rune.name,
                       style: TextStyle(
                         color: context.gc.lilac,
-                        fontSize: 18,
+                        fontSize: 20,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -985,13 +1034,14 @@ class _RuneReadingBodyState extends State<_RuneReadingBody> {
                       child: Center(
                         child: RotatedBox(
                           quarterTurns: position.isReversed ? 2 : 0,
-                          child: Text(
-                            position.rune.symbol,
-                            style: TextStyle(
-                              fontSize: 32,
-                              color: context.gc.lilac,
-                              fontWeight: FontWeight.bold,
-                            ),
+                          // Sem halo: aqui a runa está num quadrado de
+                          // acento, e não cavada numa pedra — o entalhe é da
+                          // mesa, não deste chip.
+                          child: RuneMark(
+                            name: position.rune.name,
+                            symbol: position.rune.symbol,
+                            fontSize: 32,
+                            color: context.gc.lilac,
                           ),
                         ),
                       ),
@@ -1115,10 +1165,13 @@ class _RuneReadingBodyState extends State<_RuneReadingBody> {
                   ),
             ),
             const SizedBox(height: 12),
+            // 1.5, a mesma entrelinha dos outros dois blocos de leitura desta
+            // página. Era 1.6: a interpretação do Conselheiro cai logo abaixo
+            // do texto da tiragem, e o segundo bloco parecia vir de outra tela.
             Text(
               _aiReading!,
               style:
-                  Theme.of(context).textTheme.bodyMedium?.copyWith(height: 1.6),
+                  Theme.of(context).textTheme.bodyMedium?.copyWith(height: 1.5),
             ),
           ],
         ],
@@ -1145,26 +1198,37 @@ Widget _previaDoConselheiro(BuildContext context) {
   );
 }
 
-/// Glifos que se revezam no botão enquanto a mesa é preparada — os mesmos
-/// caracteres do cartão de abertura ('ᚱᚢᚾᚨ'), acendendo e apagando um por
-/// vez. Puramente decorativo (o rótulo do botão já diz o estado), por isso
-/// fora da árvore de semântica.
+/// Raidho acendendo e apagando no botão enquanto a mesa é preparada — a
+/// mesma runa do cartão de abertura. Puramente decorativa (o rótulo do botão
+/// já diz o estado): quem a tira da árvore de semântica é o próprio
+/// [ToolDrawingArt] sem rótulo.
+///
+/// Eram QUATRO CARACTERES se revezando ('ᚱᚢᚾᚨ'), do bloco Runic do Unicode.
+/// O cartão de abertura virou desenho porque num aparelho sem fonte para esse
+/// bloco ele abria como quadradinhos vazios, e o botão tinha o mesmo defeito
+/// — quatro quadradinhos piscando é pior do que um. O que se PERDEU foi a
+/// troca de glifo: o app desenha uma runa só (Raidho, o emblema da
+/// ferramenta), e inventar mais três desenhos para um enfeite de 20dp custaria
+/// mais do que rende. No lugar dela ficou o mesmo compasso de quatro batidas
+/// por volta, agora em opacidade sobre o desenho: a cadência continua, a runa
+/// é sempre a mesma.
 ///
 /// Quem decide o fallback sob "reduzir movimento" é o chamador; ainda
 /// assim, o loop aqui segue a regra da casa: só começa depois de ler a
 /// preferência de acessibilidade, nunca no initState.
-class _GlifosDoSorteio extends StatefulWidget {
-  const _GlifosDoSorteio({required this.cor});
+class _RaidhoDoSorteio extends StatefulWidget {
+  const _RaidhoDoSorteio({required this.cor});
 
   final Color cor;
 
   @override
-  State<_GlifosDoSorteio> createState() => _GlifosDoSorteioState();
+  State<_RaidhoDoSorteio> createState() => _RaidhoDoSorteioState();
 }
 
-class _GlifosDoSorteioState extends State<_GlifosDoSorteio>
+class _RaidhoDoSorteioState extends State<_RaidhoDoSorteio>
     with SingleTickerProviderStateMixin {
-  static const List<String> _glifos = ['ᚱ', 'ᚢ', 'ᚾ', 'ᚨ'];
+  /// Batidas por volta do controlador — as quatro do revezamento antigo.
+  static const int _batidas = 4;
 
   late final AnimationController _c;
   bool? _reduzido;
@@ -1200,33 +1264,34 @@ class _GlifosDoSorteioState extends State<_GlifosDoSorteio>
 
   @override
   Widget build(BuildContext context) {
-    return ExcludeSemantics(
-      child: SizedBox(
-        width: 20,
-        height: 20,
-        child: AnimatedBuilder(
-          animation: _c,
-          builder: (context, _) {
-            final volta = _c.value * _glifos.length;
-            final indice = volta.floor() % _glifos.length;
-            // Meia-senoide por glifo: acende e apaga sem sumir de vez.
-            final brilho = 0.35 + 0.65 * sin(pi * (volta % 1.0));
-            return Center(
-              child: Opacity(
-                opacity: brilho.clamp(0.0, 1.0).toDouble(),
-                child: Text(
-                  _glifos[indice],
-                  style: TextStyle(
-                    fontSize: 15,
-                    height: 1.0,
-                    fontWeight: FontWeight.bold,
-                    color: widget.cor,
-                  ),
-                ),
-              ),
-            );
-          },
+    return SizedBox(
+      width: 20,
+      height: 20,
+      child: AnimatedBuilder(
+        animation: _c,
+        // O desenho é montado UMA vez e passa inteiro pelo builder: só a
+        // opacidade muda a cada quadro, e o CustomPaint não se reconstrói.
+        child: Center(
+          child: ColorFiltered(
+            // O desenho sai no lilás do tema — e o botão TAMBÉM é lilás, com
+            // o traje escuro por cima. Sem repintar, a runa sumiria dentro do
+            // próprio botão. `srcATop` troca a cor e preserva a borda suave
+            // do traço, que um recorte duro perderia.
+            colorFilter: ColorFilter.mode(widget.cor, BlendMode.srcATop),
+            child: const ToolDrawingArt(
+              drawing: ToolDrawing.raidho,
+              size: 18,
+            ),
+          ),
         ),
+        builder: (context, filho) {
+          // Meia-senoide por batida: acende e apaga sem sumir de vez.
+          final brilho = 0.35 + 0.65 * sin(pi * ((_c.value * _batidas) % 1.0));
+          return Opacity(
+            opacity: brilho.clamp(0.0, 1.0).toDouble(),
+            child: filho,
+          );
+        },
       ),
     );
   }

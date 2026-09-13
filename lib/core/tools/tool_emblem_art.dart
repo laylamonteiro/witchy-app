@@ -149,6 +149,24 @@ class _ToolDrawingPainter extends CustomPainter {
   }
 
   /// Raidho: haste, o ombro que volta à haste e a perna — a runa R.
+  ///
+  /// A MESMA forma existe no alfabeto desenhado das vinte e quatro runas,
+  /// em `lib/features/runes/presentation/widgets/rune_art.dart`.
+  /// A duplicação fica, e quem mexer aqui não deve sincronizar lá: são duas
+  /// caixas com dois propósitos. Este é um EMBLEMA — aparece sozinho num
+  /// cartão de ferramenta, ao lado do pentagrama e do pêndulo, e a espessura
+  /// de 0,10 foi escolhida contra esses dois. Lá é uma LETRA entre vinte e
+  /// três outras, e a espessura sai da compensação de tinta do alfabeto
+  /// (0,090). Puxar o traçado de lá amarraria o cartão da ferramenta ao
+  /// reequilíbrio do alfabeto, por quatro pontos de diferença.
+  ///
+  /// As duas CHEGAM a dividir a tela — este emblema fica no cabeçalho da
+  /// mesa de runas, e a letra aparece na pedra sempre que Raidho cai na
+  /// tiragem —, e ainda assim nada ali convida a comparar: aqui são 22 de
+  /// lado em lilás sobre a barra, lá é ouro entalhado numa pedra bem maior,
+  /// e os pontos que separam os dois traçados (0,01 no ombro e na volta,
+  /// 0,03 no pé da perna) valem no máximo um terço da espessura do traço —
+  /// razão que não muda com o tamanho em que cada uma é pintada.
   void _raidho(Canvas canvas, double s) {
     final runa = Path()
       ..moveTo(s * 0.30, s * 0.08)

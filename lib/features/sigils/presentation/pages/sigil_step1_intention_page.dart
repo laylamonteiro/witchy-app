@@ -66,7 +66,10 @@ class _SigilStep1IntentionPageState extends State<SigilStep1IntentionPage> {
         backgroundColor: context.gc.surface,
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        // A margem lateral vem do MagicalCard (margin horizontal 16), como
+        // nas outras onze ferramentas: com `all(16)` aqui o conteúdo somava
+        // os dois recuos e ficava 32dp para dentro.
+        padding: const EdgeInsets.symmetric(vertical: 16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -77,11 +80,17 @@ class _SigilStep1IntentionPageState extends State<SigilStep1IntentionPage> {
                 children: [
                   Row(
                     children: [
-                      const SigilIcon(size: 32),
+                      const SigilIcon(),
                       const SizedBox(width: 12),
-                      Text(
-                        AppLocalizations.of(context).sigilWhatIs,
-                        style: Theme.of(context).textTheme.headlineSmall,
+                      // Expanded: `sigilWhatIs` em Cinzel Decorative cabe por
+                      // pouco em 320dp e estoura com a fonte ampliada — e a
+                      // Row responde a isso com a barra listrada, cortando o
+                      // título, em vez de quebrar a linha.
+                      Expanded(
+                        child: Text(
+                          AppLocalizations.of(context).sigilWhatIs,
+                          style: Theme.of(context).textTheme.headlineSmall,
+                        ),
                       ),
                     ],
                   ),
@@ -106,10 +115,16 @@ class _SigilStep1IntentionPageState extends State<SigilStep1IntentionPage> {
             const SizedBox(height: 24),
 
             // Título da etapa - DEPOIS
-            Text(
-              AppLocalizations.of(context).sigilSetIntention,
-              style: Theme.of(context).textTheme.headlineMedium,
-              textAlign: TextAlign.center,
+            //
+            // Fora de card: quem dá a margem lateral aqui é este Padding, já
+            // que a rolagem só cuida do vertical.
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Text(
+                AppLocalizations.of(context).sigilSetIntention,
+                style: Theme.of(context).textTheme.headlineMedium,
+                textAlign: TextAlign.center,
+              ),
             ),
             const SizedBox(height: 24),
 
@@ -166,7 +181,6 @@ class _SigilStep1IntentionPageState extends State<SigilStep1IntentionPage> {
                 ],
               ),
             ),
-            const SizedBox(height: 16),
 
             // Exemplos
             MagicalCard(
@@ -194,24 +208,26 @@ class _SigilStep1IntentionPageState extends State<SigilStep1IntentionPage> {
             const SizedBox(height: 32),
 
             // Botão continuar
-            if (_canContinue)
-              MagicalButton(
-                text: AppLocalizations.of(context).commonContinue,
-                onPressed: _continue,
-              )
-            else
-              ElevatedButton(
-                onPressed: null,
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                ),
-                child: Text(
-                  AppLocalizations.of(context).commonContinue,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        color: context.gc.textSecondary,
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: _canContinue
+                  ? MagicalButton(
+                      text: AppLocalizations.of(context).commonContinue,
+                      onPressed: _continue,
+                    )
+                  : ElevatedButton(
+                      onPressed: null,
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
                       ),
-                ),
-              ),
+                      child: Text(
+                        AppLocalizations.of(context).commonContinue,
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              color: context.gc.textSecondary,
+                            ),
+                      ),
+                    ),
+            ),
             const SizedBox(height: 16),
           ],
         ),

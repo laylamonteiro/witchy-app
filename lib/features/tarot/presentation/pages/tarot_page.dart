@@ -1018,10 +1018,12 @@ class _SpreadTabState extends State<_SpreadTab>
                     ),
               ),
               const SizedBox(height: 12),
+              // A mesma entrelinha do texto da carta, logo acima: 1.6 aqui
+              // fazia o segundo bloco de leitura parecer de outra tela.
               Text(
                 _aiReading!,
                 style:
-                    Theme.of(context).textTheme.bodyMedium?.copyWith(height: 1.6),
+                    Theme.of(context).textTheme.bodyMedium?.copyWith(height: 1.5),
               ),
             ],
           ],
@@ -1039,7 +1041,9 @@ class _SpreadTabState extends State<_SpreadTab>
         _limparMesa(novaTiragem: false);
       },
       child: SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(vertical: 12),
+      // A margem lateral é do MagicalCard; aqui só o respiro de cima e de
+      // baixo, o mesmo das outras onze.
+      padding: const EdgeInsets.symmetric(vertical: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -1095,46 +1099,46 @@ class _SpreadTabState extends State<_SpreadTab>
                 ),
               ),
             ),
+            // O toque é do próprio MagicalCard, como no hub das Ferramentas:
+            // com um InkWell POR FORA, o Ink opaco do card cobria o brilho do
+            // toque e o alvo invadia a margem entre dois cartões.
             for (final spread in TarotSpread.values)
-              InkWell(
+              MagicalCard(
                 onTap: _starting ? null : () => _startSpread(spread),
-                borderRadius: BorderRadius.circular(12),
-                child: MagicalCard(
-                  child: Row(
-                    children: [
-                      Text(spread.emoji,
-                          style: const TextStyle(fontSize: 30)),
-                      const SizedBox(width: 14),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              spread.displayName(AppLocalizations.of(context)),
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .titleMedium
-                                  ?.copyWith(
-                                    color: context.gc.textPrimary,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              spread.description(AppLocalizations.of(context)),
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodySmall
-                                  ?.copyWith(
-                                      color: context.gc.textSecondary),
-                            ),
-                          ],
-                        ),
+                child: Row(
+                  children: [
+                    Text(spread.emoji, style: const TextStyle(fontSize: 30)),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            spread.displayName(AppLocalizations.of(context)),
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleMedium
+                                ?.copyWith(
+                                  color: context.gc.textPrimary,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            spread.description(AppLocalizations.of(context)),
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodySmall
+                                ?.copyWith(color: context.gc.textSecondary),
+                          ),
+                        ],
                       ),
-                      Icon(Icons.chevron_right,
-                          color: context.gc.textSecondary),
-                    ],
-                  ),
+                    ),
+                    // A mesma seta de 'isto abre' do hub — era chevron_right
+                    // de 24 em cinza aqui, seta de 16 em lilás lá.
+                    Icon(Icons.arrow_forward_ios,
+                        color: context.gc.lilac, size: 16),
+                  ],
                 ),
               ),
           ] else ...[

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../widgets/encyclopedia_image.dart';
+import '../widgets/entry_attribute.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 
 import '../../data/models/herb_model.dart';
@@ -110,23 +111,23 @@ class HerbDetailPage extends StatelessWidget {
                     ),
                   ],
                   const SizedBox(height: 16),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                  // Elemento e planeta lado a lado numa linha só estouravam
+                  // em tela estreita com fonte ampliada (eram quatro textos
+                  // rígidos num Row). Com Wrap, o par que não couber desce
+                  // para a linha de baixo em vez de ser cortado; quando cabe,
+                  // o desenho é exatamente o de antes.
+                  Wrap(
+                    alignment: WrapAlignment.center,
+                    spacing: 24,
+                    runSpacing: 8,
                     children: [
-                      Text(herb.element.emoji,
-                          style: const TextStyle(fontSize: 24)),
-                      const SizedBox(width: 8),
-                      Text(
-                        herb.element.displayName,
-                        style: Theme.of(context).textTheme.titleMedium,
+                      EntryAttribute(
+                        emoji: herb.element.emoji,
+                        label: herb.element.displayName,
                       ),
-                      const SizedBox(width: 24),
-                      Text(herb.planet.emoji,
-                          style: const TextStyle(fontSize: 24)),
-                      const SizedBox(width: 8),
-                      Text(
-                        herb.planet.displayName,
-                        style: Theme.of(context).textTheme.titleMedium,
+                      EntryAttribute(
+                        emoji: herb.planet.emoji,
+                        label: herb.planet.displayName,
                       ),
                     ],
                   ),
@@ -160,15 +161,20 @@ class HerbDetailPage extends StatelessWidget {
                             size: 28,
                           ),
                           const SizedBox(width: 8),
-                          Text(
-                            AppLocalizations.of(context).encySectionSafety,
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleLarge
-                                ?.copyWith(
-                                  color: context.gc.alert,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                          // "Avisos de Segurança" em titleLarge ao lado de um
+                          // ícone de 28 não cabe em 320 com a fonte grande —
+                          // e é justamente o aviso que não pode sumir.
+                          Flexible(
+                            child: Text(
+                              AppLocalizations.of(context).encySectionSafety,
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .titleLarge
+                                  ?.copyWith(
+                                    color: context.gc.alert,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                            ),
                           ),
                         ],
                       ),
@@ -259,40 +265,52 @@ class HerbDetailPage extends StatelessWidget {
             ),
             // Indicadores - visível para todos
             MagicalCard(
+              // Os dois indicadores dividem a linha meio a meio. Sem Expanded
+              // cada um pedia a largura inteira do próprio rótulo ("Não
+              // comestível") e os dois juntos estouravam o cartão numa tela
+              // de 320 com a fonte ampliada.
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Column(
-                    children: [
-                      Icon(
-                        herb.edible ? Icons.restaurant : Icons.no_meals,
-                        color: herb.edible ? context.gc.mint : context.gc.alert,
-                        size: 32,
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        herb.edible
-                            ? AppLocalizations.of(context).encyHerbEdible
-                            : AppLocalizations.of(context).encyHerbNotEdible,
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
-                    ],
+                  Expanded(
+                    child: Column(
+                      children: [
+                        Icon(
+                          herb.edible ? Icons.restaurant : Icons.no_meals,
+                          color:
+                              herb.edible ? context.gc.mint : context.gc.alert,
+                          size: 32,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          herb.edible
+                              ? AppLocalizations.of(context).encyHerbEdible
+                              : AppLocalizations.of(context).encyHerbNotEdible,
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                      ],
+                    ),
                   ),
-                  Column(
-                    children: [
-                      Icon(
-                        herb.toxic ? Icons.dangerous : Icons.verified_user,
-                        color: herb.toxic ? context.gc.alert : context.gc.mint,
-                        size: 32,
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        herb.toxic
-                            ? AppLocalizations.of(context).encyHerbToxicLabel
-                            : AppLocalizations.of(context).encyHerbNotToxic,
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
-                    ],
+                  Expanded(
+                    child: Column(
+                      children: [
+                        Icon(
+                          herb.toxic ? Icons.dangerous : Icons.verified_user,
+                          color:
+                              herb.toxic ? context.gc.alert : context.gc.mint,
+                          size: 32,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          herb.toxic
+                              ? AppLocalizations.of(context).encyHerbToxicLabel
+                              : AppLocalizations.of(context).encyHerbNotToxic,
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),

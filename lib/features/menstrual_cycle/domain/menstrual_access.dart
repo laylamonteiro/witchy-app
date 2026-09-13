@@ -7,10 +7,20 @@ import '../../../core/i18n/gender.dart';
 ///
 /// A regra que mais importa aqui é a última. Registrar, consultar, corrigir,
 /// exportar e apagar são do plano gratuito. Dia do ciclo, duração, média,
-/// intervalo, estimativa de próxima data e qualquer cruzamento com a Lua são
-/// resultados calculados a partir do histórico — e esses são do Premium.
-/// Não existe meio-termo: sem acesso, o resultado não é calculado para
-/// depois ser escondido atrás de um borrão.
+/// intervalo e estimativa de próxima data são resultados calculados a partir
+/// do histórico — e esses são do Premium. Quando o cálculo é do Premium não
+/// existe meio-termo: sem acesso, o resultado não é calculado para depois ser
+/// escondido atrás de um borrão.
+///
+/// O cruzamento com a Lua mudou de lado e voltou a ser gratuito: o card "A Lua
+/// e você" (a comparação dos começos com a Nova e a Cheia, e a contagem das
+/// emoções mais anotadas) é montado sem gate na página do Ciclo Menstrual,
+/// ACIMA do alternador Calendário/Roda — ou seja, à vista de quem nunca chega
+/// à roda —, por decisão da dona. Isto está escrito porque a regra antiga era
+/// categórica, e quem lesse o texto sem ler a tela concluiria que o card
+/// gratuito é um gate esquecido — e "consertá-lo" tiraria de graça o que foi
+/// aberto de propósito. [canSeeDerived] hoje cobre o alternador
+/// Calendário/Roda e a roda do mês.
 class MenstrualAccess {
   const MenstrualAccess({
     required this.gender,
