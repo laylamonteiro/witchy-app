@@ -9,23 +9,27 @@ import '../../../../core/services/ad_service.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/theme/grimoire_motion.dart';
 import '../../../../core/widgets/magical_card.dart';
-import '../../../../core/widgets/motion/staggered_paragraphs.dart';
+import '../../../../core/widgets/motion/mist_typewriter.dart';
 import '../../../../core/widgets/motion/tool_scene_frame.dart';
 import '../../../auth/data/models/user_model.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../auth/presentation/widgets/premium_blur_widget.dart';
 import '../../data/repositories/advisor_consultation_repository.dart';
 import '../../domain/advisor_consultation.dart';
+import '../widgets/advisor_feature_links.dart';
 import '../widgets/crystal_ball_view.dart';
 import '../../../../core/widgets/motion/retry_notice.dart';
 import '../../../../core/tools/tool_identity.dart';
 
-/// Conselheiro Místico: responde perguntas sobre bruxaria, magia e misticismo.
+/// Conselheiro Místico: responde perguntas sobre bruxaria, magia e misticismo
+/// — e sobre o próprio app, sugerindo a ferramenta certa com o nome tocável.
 ///
-/// Pergunta → resposta única. A espera é a da requisição real (a bola de
-/// cristal enevoa enquanto ela dura); a resposta entra em parágrafos, sem
-/// atraso artificial, e pode ser guardada em "Meus Registros" uma vez.
-/// Trocar de conta recria a tela: a consulta pertence a quem perguntou.
+/// Pergunta → resposta única. Ao consultar, o campo é limpo e a pergunta vira
+/// citação; a espera é a da requisição real. Uma resposta que acaba de chegar
+/// é escrita sob uma névoa que desce, com a tela rolando até ela; uma resposta
+/// restaurada ao reabrir aparece inteira. Pode ser guardada em "Meus
+/// Registros" uma vez. Trocar de conta recria a tela: a consulta pertence a
+/// quem perguntou.
 class MysticAdvisorPage extends StatelessWidget {
   const MysticAdvisorPage({super.key, this.ask});
 
@@ -59,6 +63,13 @@ class _AdvisorBodyState extends State<_AdvisorBody> {
   AdvisorConsultation? _consultation;
   bool _saving = false;
   bool _restoring = true;
+
+  /// A consulta cuja resposta chegou NESTA instância da tela: só ela é
+  /// revelada com névoa e escrita. Restaurar nunca define isto.
+  String? _revealId;
+
+  /// O card de resposta, para rolar até ele quando a resposta chega.
+  final _answerKey = GlobalKey();
 
   /// Uma resposta atrasada de outra consulta não substitui a atual.
   int _generation = 0;
@@ -148,6 +159,8 @@ class _AdvisorBodyState extends State<_AdvisorBody> {
     }
 
     final generation = ++_generation;
+    // A pergunta enviada vive na citação; o campo fica livre para a próxima.
+    if (repeat == null) _questionController.clear();
     AdvisorConsultation consultation;
     try {
       consultation = await _repository.start(userId: _userId, question: question);
@@ -183,7 +196,28 @@ class _AdvisorBodyState extends State<_AdvisorBody> {
       await AdService.instance.showBeforeResult();
       if (!mounted || generation != _generation) return;
     }
-    setState(() => _consultation = delivered ?? consultation);
+    setState(() {
+      _consultation = delivered ?? consultation;
+      _revealId = consultation.id;
+    });
+    _scrollToAnswer();
+  }
+
+  /// A resposta chegou: a tela rola até o cabeçalho "O Conselheiro responde",
+  /// depois do quadro em que o card passa a existir.
+  void _scrollToAnswer() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final target = _answerKey.currentContext;
+      if (target == null) return;
+      final reduced = GrimoireMotion.reduced(context);
+      Scrollable.ensureVisible(
+        target,
+        alignment: .05,
+        duration: reduced ? Duration.zero : const Duration(milliseconds: 350),
+        curve: GrimoireMotion.enter,
+      );
+    });
   }
 
   /// A requisição real e o que ela persiste: independe da tela continuar
@@ -248,8 +282,10 @@ class _AdvisorBodyState extends State<_AdvisorBody> {
       final saved = await _repository.save(
         consultation: consultation,
         title: l10n.advisorArchiveTitle,
+        // A página guardada é texto plano: os marcadores de destaque saem.
         content: '✦ ${l10n.readingQuestionLabel}\n${consultation.question}'
-            '\n\n✦ ${l10n.advisorAnswers}\n${consultation.answer}',
+            '\n\n✦ ${l10n.advisorAnswers}\n'
+            '${stripAdvisorMarkers(consultation.answer ?? '')}',
       );
       if (!mounted || _consultation?.id != consultation.id) return;
       setState(() => _consultation = saved);
@@ -283,12 +319,13 @@ class _AdvisorBodyState extends State<_AdvisorBody> {
             MagicalCard(
               child: Column(
                 children: [
-                  // A bola de cristal cede espaço ao teclado e enevoa só
-                  // enquanto a requisição real dura.
+                  // A bola de cristal cede espaço ao teclado, vive o tempo
+                  // todo e pulsa quando uma resposta chega.
                   CrystalBallView(
                     key: const ValueKey('advisor-ball'),
                     size: keyboardOpen ? 64 : 120,
                     active: _pending,
+                    pulseToken: _revealId,
                   ),
                   if (!keyboardOpen) ...[
                     const SizedBox(height: 12),
@@ -435,9 +472,11 @@ class _AdvisorBodyState extends State<_AdvisorBody> {
                     onRetry: () => _askAdvisor(repeat: consultation.question),
                   ),
                 AdvisorConsultationStatus.answered => _AnswerCard(
-                    key: ValueKey('advisor-answer-${consultation.id}'),
+                    key: _answerKey,
                     l10n: l10n,
+                    answerId: consultation.id,
                     answer: consultation.answer ?? '',
+                    reveal: _revealId == consultation.id,
                     saved: consultation.isSaved,
                     saving: _saving,
                     onSave: _save,
@@ -486,17 +525,55 @@ class _AnswerCard extends StatelessWidget {
   const _AnswerCard({
     super.key,
     required this.l10n,
+    required this.answerId,
     required this.answer,
+    required this.reveal,
     required this.saved,
     required this.saving,
     required this.onSave,
   });
 
   final AppLocalizations l10n;
+  final String answerId;
   final String answer;
+
+  /// Escrever sob a névoa (resposta que acabou de chegar) ou mostrar inteira
+  /// (resposta restaurada).
+  final bool reveal;
   final bool saved;
   final bool saving;
   final VoidCallback onSave;
+
+  /// A resposta em trechos: corpo comum e os nomes de funcionalidades que o
+  /// Conselheiro destacou entre `**`, em lilás e negrito — tocáveis quando o
+  /// catálogo conhece o destino; só realce quando não conhece.
+  List<RevealSpan> _spans(BuildContext context) {
+    final catalog = AdvisorFeatureCatalog.of(l10n);
+    final lilac = context.gc.lilac;
+    return [
+      for (final part in parseAdvisorAnswer(answer))
+        if (!part.realce)
+          RevealSpan(part.texto)
+        else
+          _highlight(context, catalog.match(part.texto), part.texto, lilac),
+    ];
+  }
+
+  RevealSpan _highlight(
+      BuildContext context, AdvisorFeature? feature, String text, Color lilac) {
+    return RevealSpan(
+      text,
+      style: TextStyle(
+        color: lilac,
+        fontWeight: FontWeight.w700,
+        decoration: feature == null ? null : TextDecoration.underline,
+        decorationStyle: TextDecorationStyle.dotted,
+        decorationColor: lilac,
+      ),
+      onTap: feature == null ? null : () => feature.open(context),
+      semanticsLabel: feature == null ? null : l10n.advisorOpenFeature(text),
+    );
+  }
 
   @override
   Widget build(BuildContext context) => MagicalCard(
@@ -527,13 +604,20 @@ class _AnswerCard extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 16),
-        StaggeredParagraphs(
-          text: answer,
+        // Uma consulta nova é um widget novo (a chave leva o id): a escrita
+        // recomeça para cada resposta que chega.
+        MistTypewriterText(
+          key: ValueKey('advisor-typewriter-$answerId'),
+          spans: _spans(context),
           style: TextStyle(
             color: context.gc.softWhite.withValues(alpha: 0.9),
             fontSize: 15,
             height: 1.5,
           ),
+          fogColor: context.gc.surface,
+          reveal: reveal,
+          skipLabel: l10n.advisorShowAll,
+          skipKey: const ValueKey('advisor-show-all'),
         ),
         const SizedBox(height: 16),
         Align(

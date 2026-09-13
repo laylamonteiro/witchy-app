@@ -147,7 +147,34 @@ Entregue em 10/09, com o seletor de cartas compartilhado do Tarot.
 
 ## Conselheiro Místico (P06)
 
-Entregue em 10/09.
+Entregue em 10/09. Revisto em 13/09 (jornada):
+
+- **A bola é uma ilustração viva.** A esfera e a base dourada são a imagem
+  escolhida pela dona (`assets/images/conselheiro/bola_de_cristal.webp`);
+  `CrystalBallView` pinta em volta e por dentro dela: aura lilás que
+  respira, nebulosa e névoa girando, estrelas cintilando dentro do cristal e
+  faíscas douradas em órbita (que saem no tamanho do teclado aberto). É uma
+  animação só, parada ou consultando; a aura pulsa uma vez quando a resposta
+  chega. `CrystalBallGeometry` guarda a esfera medida na imagem e a caixa
+  com halo, e `bola_de_cristal_test` trava a contenção. Movimento reduzido
+  mostra um quadro parado.
+- **A resposta é escrita sob a névoa.** `MistTypewriterText`
+  (`lib/core/widgets/motion/`) revela o texto por fração de um controller
+  (22 ms por caractere, teto de 9 s) com uma faixa de névoa na cor do card
+  que desce acompanhando a linha em escrita; a tela rola até "O Conselheiro
+  responde" quando a resposta chega. Tocar no texto ou em "Mostrar tudo"
+  completa; só uma resposta recém-chegada anima — a restaurada ao reabrir
+  aparece inteira, assim como sob movimento reduzido.
+- **O campo é limpo ao consultar.** A pergunta enviada segue na citação; a
+  falha mantém a citação e "Tentar novamente" reenvia o que está nela.
+- **O Conselheiro conhece o app.** O prompt (pt/en/es) lista as ferramentas
+  pelos nomes da interface e pede que ele as escreva entre `**` quando uma
+  ajuda; a tela mostra o nome em lilás e negrito e, quando
+  `AdvisorFeatureCatalog` conhece o destino, tocável — abre a ferramenta
+  pelo mesmo caminho dos atalhos do Seu Dia ou por deep link de aba (novos
+  destinos: Cristais, Ervas, Gratidão, Afirmações, Desejos). Nome que o
+  catálogo não conhece fica só realçado. Guardar o conselho remove os
+  marcadores; `ai_prompts_parity_test` amarra os nomes do prompt aos ARBs.
 
 - **Estado da requisição separado da animação:** cada pergunta vira uma
   linha em `advisor_consultations` (schema 26): pendente antes da chamada,

@@ -11,7 +11,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:grimorio_de_bolso/core/database/database_helper.dart';
 import 'package:grimorio_de_bolso/core/database/reading_session_schema.dart';
-import 'package:grimorio_de_bolso/core/widgets/motion/staggered_paragraphs.dart';
+import 'package:flutter/gestures.dart';
+import 'package:grimorio_de_bolso/core/widgets/motion/mist_typewriter.dart';
 import 'package:grimorio_de_bolso/features/auth/presentation/providers/auth_provider.dart';
 import 'package:grimorio_de_bolso/features/grimoire/presentation/pages/mystic_advisor_page.dart';
 import 'package:grimorio_de_bolso/features/grimoire/presentation/widgets/crystal_ball_view.dart';
@@ -85,7 +86,7 @@ void main() {
     ));
     await until(tester, () => tester.widget<ElevatedButton>(
         find.byKey(const ValueKey('advisor-consult'))).onPressed == null, 'restored');
-    // Never pumpAndSettle here: while a request is in flight the mist loops.
+    // Never pumpAndSettle here: the crystal ball animates all the time.
     await tester.pump(const Duration(milliseconds: 400));
   }
 
@@ -109,15 +110,27 @@ void main() {
     addTearDown(tester.view.resetDevicePixelRatio);
     await show(tester);
     await askQuestion(tester, 'Which moon for protection?');
-    await until(tester, () => find.byType(StaggeredParagraphs).evaluate().isNotEmpty, 'answer');
-    // Every paragraph is in the tree from the first frame; no typewriter.
-    expect(find.text('The waxing moon favors protection.'), findsOneWidget);
-    expect(find.text('Light a white candle and speak your intention aloud.'), findsOneWidget);
+    await until(tester, () => find.byType(MistTypewriterText).evaluate().isNotEmpty, 'answer');
+    // The whole answer is in one Text.rich from the first frame; the part
+    // not yet written is only transparent, so the text is findable at once.
+    expect(find.text(_answer), findsOneWidget);
     expect(calls, ['Which moon for protection?']);
-    await tester.pumpAndSettle();
+    // A fresh answer is written under the mist and can be skipped.
+    expect(tester.widget<MistTypewriterText>(find.byType(MistTypewriterText)).reveal, isTrue);
+    expect(find.byKey(const ValueKey('advisor-show-all')), findsOneWidget);
+    // The field is cleared on submit; the question lives on in the quote.
+    expect(tester.widget<TextField>(find.byKey(const ValueKey('advisor-question'))).controller!
+        .text, isEmpty);
+    // Never pumpAndSettle: the ball loops forever. Ten seconds cover the
+    // typewriter ceiling.
+    await tester.pump(const Duration(seconds: 10));
+    // ...plus the fade-out of the "show all" button.
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(find.byKey(const ValueKey('advisor-show-all')), findsNothing);
     expect(find.text('Which moon for protection?'), findsWidgets);
     final ball = tester.widget<CrystalBallView>(find.byKey(const ValueKey('advisor-ball')));
     expect(ball.active, isFalse);
+    expect(ball.pulseToken, isNotNull, reason: 'the aura pulses when the answer arrives');
 
     await tester.ensureVisible(find.byKey(const ValueKey('advisor-save')));
     await tester.tap(find.byKey(const ValueKey('advisor-save')));
@@ -129,10 +142,13 @@ void main() {
     expect(pages.single['content'], contains('Which moon for protection?'));
     expect(pages.single['content'], contains(_answer));
 
-    // Reopening restores the received answer without another call.
+    // Reopening restores the received answer without another call, whole
+    // and without the mist: only a fresh answer is written.
     await tester.pumpWidget(const SizedBox.shrink());
     await show(tester);
-    expect(find.text('The waxing moon favors protection.'), findsOneWidget);
+    expect(find.text(_answer), findsOneWidget);
+    expect(tester.widget<MistTypewriterText>(find.byType(MistTypewriterText)).reveal, isFalse);
+    expect(find.byKey(const ValueKey('advisor-show-all')), findsNothing);
     expect(find.byKey(const ValueKey('advisor-saved')), findsOneWidget);
     expect(calls, hasLength(1));
     pages = await rows(tester, 'free_writings');
@@ -156,14 +172,14 @@ void main() {
         isFalse);
     expect(tester.widget<ElevatedButton>(find.byKey(const ValueKey('advisor-consult'))).onPressed,
         isNull);
-    expect(find.byType(StaggeredParagraphs), findsNothing);
+    expect(find.byType(MistTypewriterText), findsNothing);
 
     await tester.pumpWidget(const SizedBox.shrink());
     await show(tester);
     expect(tester.widget<CrystalBallView>(find.byKey(const ValueKey('advisor-ball'))).active,
         isTrue, reason: 'The same request is still in flight');
     pending.complete(_answer);
-    await until(tester, () => find.byType(StaggeredParagraphs).evaluate().isNotEmpty,
+    await until(tester, () => find.byType(MistTypewriterText).evaluate().isNotEmpty,
         'answer after returning');
     expect(calls, ['Slow question?']);
     final consultations = await rows(tester, 'advisor_consultations');
@@ -188,10 +204,12 @@ void main() {
     await askQuestion(tester, 'Fragile question?');
     await until(tester, () => find.byKey(const ValueKey('advisor-retry')).evaluate().isNotEmpty,
         'failed state');
-    await tester.pumpAndSettle();
+    await tester.pump(const Duration(seconds: 1));
     expect(find.text('Fragile question?'), findsWidgets);
+    // The field was cleared on submit; the quote keeps the question and
+    // "try again" re-asks it.
     expect(tester.widget<TextField>(find.byKey(const ValueKey('advisor-question'))).controller!
-        .text, 'Fragile question?');
+        .text, isEmpty);
     expect(calls, hasLength(1));
 
     // Reopening does not resend.
@@ -203,7 +221,7 @@ void main() {
     fail = false;
     await tester.ensureVisible(find.byKey(const ValueKey('advisor-retry')));
     await tester.tap(find.byKey(const ValueKey('advisor-retry')));
-    await until(tester, () => find.byType(StaggeredParagraphs).evaluate().isNotEmpty, 'retry');
+    await until(tester, () => find.byType(MistTypewriterText).evaluate().isNotEmpty, 'retry');
     expect(calls, ['Fragile question?', 'Fragile question?']);
     final consultations = await rows(tester, 'advisor_consultations');
     expect(consultations.map((r) => r['status']).toSet(), {'failed', 'answered'});
@@ -235,6 +253,43 @@ void main() {
       expect(find.text('Old question?'), findsWidgets);
     }
     expect(calls, isEmpty);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  testWidgets('a feature name the advisor highlights is bold, tappable and saved as plain text',
+      (tester) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    ask = (q) async {
+      calls.add(q);
+      return 'Draw a card in the **Tarot** tonight and read **Xablau** too.';
+    };
+    await show(tester);
+    await askQuestion(tester, 'Which tool for tonight?');
+    await until(tester, () => find.byType(MistTypewriterText).evaluate().isNotEmpty, 'answer');
+    await tester.pump(const Duration(seconds: 10));
+
+    final text = tester.widget<Text>(find.byKey(const ValueKey('mist-typewriter-text')));
+    final spans = (text.textSpan! as TextSpan).children!.cast<TextSpan>();
+    final tarot = spans.singleWhere((s) => s.text == 'Tarot');
+    expect(tarot.style?.fontWeight, FontWeight.w700);
+    expect(tarot.recognizer, isA<TapGestureRecognizer>(),
+        reason: 'a known feature opens on tap');
+    final unknown = spans.singleWhere((s) => s.text == 'Xablau');
+    expect(unknown.style?.fontWeight, FontWeight.w700);
+    expect(unknown.recognizer, isNull, reason: 'an unknown name is only highlighted');
+    expect(find.textContaining('**'), findsNothing);
+
+    await tester.ensureVisible(find.byKey(const ValueKey('advisor-save')));
+    await tester.tap(find.byKey(const ValueKey('advisor-save')));
+    await until(tester, () => find.byKey(const ValueKey('advisor-saved')).evaluate().isNotEmpty,
+        'saved');
+    final pages = await rows(tester, 'free_writings');
+    expect(pages.single['content'], contains('Tarot'));
+    expect(pages.single['content'], isNot(contains('**')));
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox.shrink());
   });

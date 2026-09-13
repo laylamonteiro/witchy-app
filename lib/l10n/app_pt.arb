@@ -2945,6 +2945,15 @@
   "advisorRetry": "Tentar novamente",
   "advisorPendingNote": "A resposta para esta pergunta não chegou. Sua pergunta foi preservada; você pode tentar de novo quando quiser.",
   "advisorArchiveTitle": "Conselho do Conselheiro Místico",
+  "advisorShowAll": "Mostrar tudo",
+  "advisorOpenFeature": "Abrir {feature}",
+  "@advisorOpenFeature": {
+    "placeholders": {
+      "feature": {
+        "type": "String"
+      }
+    }
+  },
   "recordsSourceAdvisor": "Conselheiro",
   "menstrualArchiveTitle": "Registro do ciclo",
   "menstrualArchiveMark": "O que você marcou",

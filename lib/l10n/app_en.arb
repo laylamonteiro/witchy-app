@@ -2075,6 +2075,8 @@
   "advisorRetry": "Try again",
   "advisorPendingNote": "The answer to this question did not arrive. Your question was kept; you can try again whenever you like.",
   "advisorArchiveTitle": "Advice from the Mystic Advisor",
+  "advisorShowAll": "Show all",
+  "advisorOpenFeature": "Open {feature}",
   "recordsSourceAdvisor": "Advisor",
   "menstrualArchiveTitle": "Cycle record",
   "menstrualArchiveMark": "What you marked",
