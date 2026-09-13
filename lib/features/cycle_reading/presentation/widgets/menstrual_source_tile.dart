@@ -9,20 +9,27 @@ import '../../../menstrual_cycle/domain/menstrual_reading_scope.dart';
 
 /// A fonte íntima na tela de fontes da Leitura do Ciclo.
 ///
-/// Ela nasce desligada e continua desligada até três coisas serem verdade ao
-/// mesmo tempo: a pessoa tem Premium efetivo, consentiu em registrar, e
-/// escolheu — registro a registro — o que vai junto. Ligar a chave não
-/// autoriza nada sozinho: ela abre a prévia do que existe na janela, e
-/// autorizar é marcar.
+/// Ela nasce LIGADA, como as outras quatro fontes desta tela, e por dois
+/// motivos que se somam: a Leitura do Ciclo é comprada à parte — o que se
+/// paga é a leitura, não o acesso ao próprio registro —, e o registro do
+/// ciclo é gratuito. Barrar aqui cobrava duas vezes pela mesma coisa.
 ///
-/// As palavras escritas nesses dias (a anotação) são uma escolha à parte,
-/// desmarcada, porque são as palavras dela.
+/// Havia um gate de Premium nesta chave; ele saiu. O que continua de pé é o
+/// consentimento do registro: sem ele não há prévia, porque não há registro.
+///
+/// Ligada, a fonte abre a prévia do período e traz os dias marcados — de
+/// novo como as outras fontes, que também entram inteiras. Daí em diante ela
+/// DESmarca o que não quiser mandar, dia a dia, e o relato escrito tem uma
+/// chave própria ao lado.
+///
+/// Trocar o período fecha o que estava autorizado e reabre na janela nova:
+/// os dias marcados eram os da janela anterior e o escopo carrega as próprias
+/// datas — mantê-los mandaria para a leitura os dias do período errado.
 class MenstrualSourceTile extends StatefulWidget {
   const MenstrualSourceTile({
     super.key,
     required this.userId,
     required this.period,
-    required this.premium,
     required this.onChanged,
     this.repository,
     this.consent = const MenstrualConsentStore(),
@@ -32,10 +39,6 @@ class MenstrualSourceTile extends StatefulWidget {
 
   /// A janela da leitura, `[start, end)`.
   final ({DateTime start, DateTime end}) period;
-
-  /// `AuthProvider.isPremiumEffective` no momento da tela. Sem ele a fonte
-  /// aparece, explica que é Premium e não abre prévia nenhuma.
-  final bool premium;
 
   /// O escopo autorizado a cada mudança — vazio quando nada está marcado.
   final ValueChanged<MenstrualReadingScope> onChanged;
@@ -51,8 +54,11 @@ class _MenstrualSourceTileState extends State<MenstrualSourceTile> {
   late final MenstrualCycleRepository _repository =
       widget.repository ?? MenstrualCycleRepository();
 
-  bool _on = false;
-  bool _loading = false;
+  /// Nasce ligada e já carregando: a prévia é pedida logo depois do primeiro
+  /// quadro, e um estado inicial desligado faria a chave piscar de "não" para
+  /// "sim" na frente de quem está olhando.
+  bool _on = true;
+  bool _loading = true;
   bool _consented = false;
   int _consentRevision = 0;
   List<MenstrualDay> _days = const [];
@@ -67,6 +73,17 @@ class _MenstrualSourceTileState extends State<MenstrualSourceTile> {
   /// autorização que ela não vê em lugar nenhum — o contrário do que esta
   /// caixinha promete.
   int _aberturaPedida = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    // Depois do primeiro quadro, e não aqui: `_open` termina avisando o pai,
+    // e o pai guarda o escopo com setState — chamá-lo durante a montagem
+    // derrubaria a árvore.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _open();
+    });
+  }
 
   Future<void> _open() async {
     final pedido = ++_aberturaPedida;
@@ -117,12 +134,18 @@ class _MenstrualSourceTileState extends State<MenstrualSourceTile> {
   }
 
   void _limpar() {
-    // Invalida a prévia em voo junto: fechar a fonte tem de desfazer também
-    // o que ainda está a caminho, senão o `_open` atrasado religa a lista
-    // com a chave desligada e o pai recebe dias autorizados sem aviso.
-    _aberturaPedida++;
+    _descartarPrevia();
     _on = false;
     _loading = false;
+  }
+
+  /// Larga o que foi lido da janela anterior e invalida a prévia em voo.
+  ///
+  /// O incremento é o que desfaz também o que ainda está a caminho: sem ele,
+  /// o `_open` atrasado repovoa a lista com dias que já não valem e o pai
+  /// recebe autorização sem aviso.
+  void _descartarPrevia() {
+    _aberturaPedida++;
     _chosen.clear();
     _words = false;
     _days = const [];
@@ -134,23 +157,31 @@ class _MenstrualSourceTileState extends State<MenstrualSourceTile> {
     final outraJanela =
         !oldWidget.period.start.isAtSameMomentAs(widget.period.start) ||
             !oldWidget.period.end.isAtSameMomentAs(widget.period.end);
-    if (!outraJanela || (!_on && _chosen.isEmpty)) return;
+    if (!outraJanela) return;
 
     // Trocar o período no calendário invalida o que estava marcado: os dias
     // eram os da janela ANTERIOR, e o escopo emitido carrega o próprio
     // `start`/`end` — mantê-lo faria a leitura ler do banco os dias do
     // período errado, sem que nada avisasse.
     //
-    // Fecha em vez de reabrir sozinha na janela nova: `_open` marca o
-    // período inteiro por padrão, então reabrir seria o app autorizando no
-    // lugar dela. Autorizar é dela; o app só desfaz.
-    setState(_limpar);
+    // O que estava marcado cai SEMPRE; a chave, não. Quem a desligou
+    // continua com ela desligada — trocar de mês não é pedir a fonte de
+    // volta. Quem a deixou ligada vê a prévia do período novo, porque
+    // ligada é como ela nasce.
+    setState(() {
+      _descartarPrevia();
+      if (_on) _loading = true;
+    });
 
-    // O aviso ao pai sai DEPOIS do frame: `didUpdateWidget` roda durante o
-    // build de quem nos contém, e o pai guarda o escopo com setState —
-    // chamá-lo agora derrubaria a árvore.
+    // Depois do frame: `didUpdateWidget` roda durante o build de quem nos
+    // contém, e o pai guarda o escopo com setState — mexer nele agora
+    // derrubaria a árvore. O aviso vai primeiro, e sozinho vale por si: a
+    // autorização da janela velha morre no mesmo instante em que ela deixa
+    // de valer, mesmo que a leitura da janela nova demore.
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) _emit();
+      if (!mounted) return;
+      _emit();
+      if (_on) _open();
     });
   }
 
@@ -206,20 +237,15 @@ class _MenstrualSourceTileState extends State<MenstrualSourceTile> {
           key: const ValueKey('cycle-reading-menstrual'),
           contentPadding: EdgeInsets.zero,
           title: Text(l10n.cycleReadingIncludeMenstrual),
-          subtitle: Text(widget.premium
-              ? l10n.cycleReadingIncludeMenstrualHint
-              : l10n.cycleReadingMenstrualPremium),
+          subtitle: Text(l10n.cycleReadingIncludeMenstrualHint),
           value: _on,
-          // Sem Premium a chave não abre: nada é lido, nada é mostrado.
-          onChanged: widget.premium
-              ? (wanted) {
-                  if (wanted) {
-                    _open();
-                  } else {
-                    _close();
-                  }
-                }
-              : null,
+          onChanged: (wanted) {
+            if (wanted) {
+              _open();
+            } else {
+              _close();
+            }
+          },
         ),
         if (_on && _loading)
           const Padding(

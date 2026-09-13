@@ -2229,7 +2229,6 @@
   "menstrualHasRecordDay": "has a record",
   "cycleReadingIncludeMenstrual": "Menstrual Cycle",
   "cycleReadingIncludeMenstrualHint": "What you recorded of your cycle in this period — and only the days you tick here.",
-  "cycleReadingMenstrualPremium": "Part of Premium. Without it, none of your record is read or sent.",
   "cycleReadingMenstrualEmpty": "No cycle records of yours in this period.",
   "cycleReadingMenstrualSelected": "{count, plural, =0{No records included} =1{1 record included} other{{count} records included}}",
   "cycleReadingMenstrualAll": "Include all from this period",

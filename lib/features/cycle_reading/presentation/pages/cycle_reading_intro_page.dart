@@ -1176,7 +1176,6 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
                 key: ValueKey('menstrual-$_revisaoDaFonteIntima'),
                 userId: context.read<AuthProvider>().currentUser.id,
                 period: _period,
-                premium: context.watch<AuthProvider>().isPremiumEffective,
                 onChanged: (scope) => setState(() => _menstrual = scope),
               ),
           ],
