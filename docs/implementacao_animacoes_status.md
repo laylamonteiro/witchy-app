@@ -164,10 +164,14 @@ Entregue em 10/09. Revisto em 13/09 (jornada):
   a rolagem) acende um brilho DENTRO do cristal — `CrystalBallGeometry.
   sphereAnchor` diz onde a esfera cai na caixa do widget, e o meio da caixa
   cairia no anel dourado — e de lá manda névoa, faíscas e letras soltas até
-  o COMEÇO DO PRIMEIRO PARÁGRAFO da resposta, em 1,9 s, depois de a tela
-  rolar até "O Conselheiro responde". São 32 sopros, metade névoa, e a
-  descida não acelera no meio: o rastro tem de ser legível, não um risco. Só
-  quando a névoa pousa é que `MistTypewriterText`
+  o COMEÇO DO PRIMEIRO PARÁGRAFO da resposta, em 1,9 s. A tela DESCE JUNTO:
+  rolar primeiro e só então soltar a névoa escondia o voo inteiro, então a
+  rolagem (1,5 s) e o voo partem no mesmo quadro, e o voo mira o parágrafo
+  por chave — os dois retângulos são lidos dentro do `paint`, já com o
+  layout do quadro, senão a névoa pousaria onde o texto estava quando ela
+  saiu. São 32 sopros, metade névoa, e a descida não acelera no meio: o
+  rastro tem de ser legível, não um risco. Só quando a névoa pousa é que
+  `MistTypewriterText`
   (`lib/core/widgets/motion/`) começa a escrever, por fração de um
   controller (22 ms por caractere, teto de 9 s), com o texto inteiro na
   árvore desde o primeiro quadro — o que falta escrever é transparente, e o

@@ -216,12 +216,19 @@ class _AdvisorBodyState extends State<_AdvisorBody> {
     await _mistToAnswer(generation);
   }
 
-  /// A chegada da resposta, em três tempos: a tela rola até o card, a névoa
-  /// sobe da bola de cristal e pousa nele, e só então o texto é escrito.
+  /// A chegada da resposta: a tela DESCE JUNTO com a névoa.
+  ///
+  /// Rolar primeiro e só então soltar a névoa escondia o voo — quando ele
+  /// começava, a viagem já tinha acabado. Agora os dois partem no mesmo
+  /// quadro: a página desce um pouco mais rápido, para assentar antes de a
+  /// névoa pousar na primeira letra, e o voo mira o parágrafo por chave, que
+  /// se move com a rolagem.
   Future<void> _mistToAnswer(int generation) async {
-    await _scrollToAnswer();
-    if (mounted && generation == _generation) {
-      await AdvisorMistFlight.play(
+    await _nextFrame();
+    if (!mounted || generation != _generation) return;
+    await Future.wait([
+      _scrollToAnswer(),
+      AdvisorMistFlight.play(
         context: context,
         from: _ballKey,
         to: _textKey,
@@ -229,33 +236,34 @@ class _AdvisorBodyState extends State<_AdvisorBody> {
         fromAnchor: const CrystalBallGeometry(120).sphereAnchor,
         toAnchor: Alignment.topLeft,
         toNudge: const Offset(10, 12),
-      );
-    }
+      ),
+    ]);
     if (!mounted || generation != _generation) return;
     setState(() => _flying = false);
   }
 
-  /// A tela rola até o cabeçalho "O Conselheiro responde", depois do quadro
-  /// em que o card passa a existir.
-  Future<void> _scrollToAnswer() {
-    final chegou = Completer<void>();
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      final target = _answerKey.currentContext;
-      if (!mounted || target == null) {
-        chegou.complete();
-        return;
-      }
-      final reduced = GrimoireMotion.reduced(context);
-      await Scrollable.ensureVisible(
-        target,
-        alignment: .05,
-        duration: reduced ? Duration.zero : const Duration(milliseconds: 350),
-        curve: GrimoireMotion.enter,
-      );
-      chegou.complete();
-    });
-    return chegou.future;
+  /// O quadro em que o card de resposta já existe e foi medido.
+  Future<void> _nextFrame() {
+    final pronto = Completer<void>();
+    WidgetsBinding.instance.addPostFrameCallback((_) => pronto.complete());
+    return pronto.future;
   }
+
+  /// A tela rola até o cabeçalho "O Conselheiro responde", no tempo do voo.
+  Future<void> _scrollToAnswer() async {
+    final target = _answerKey.currentContext;
+    if (!mounted || target == null) return;
+    final reduced = GrimoireMotion.reduced(context);
+    await Scrollable.ensureVisible(
+      target,
+      alignment: .05,
+      duration: reduced ? Duration.zero : _scrollDuration,
+      curve: Curves.easeInOutCubic,
+    );
+  }
+
+  /// Um pouco menos que o voo: a página assenta e a névoa pousa em seguida.
+  static const Duration _scrollDuration = Duration(milliseconds: 1500);
 
   /// A requisição real e o que ela persiste: independe da tela continuar
   /// montada. Sucesso grava a resposta e consome a cota; falha grava a

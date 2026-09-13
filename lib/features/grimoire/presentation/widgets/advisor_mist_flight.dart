@@ -19,17 +19,26 @@ class AdvisorMistFlight extends StatefulWidget {
     super.key,
     required this.from,
     required this.to,
-    required this.scale,
     required this.colors,
+    this.fromAnchor = Alignment.center,
+    this.toAnchor = Alignment.center,
+    this.toNudge = Offset.zero,
   });
 
-  /// Pontos em coordenadas globais: de dentro do cristal até o começo do
-  /// primeiro parágrafo da resposta.
-  final Offset from;
-  final Offset to;
+  /// De onde a névoa sai e onde ela pousa — por CHAVE, não por posição.
+  ///
+  /// A tela rola enquanto a névoa desce, então o começo do parágrafo muda de
+  /// lugar a cada quadro. Guardar o ponto de saída congelaria o destino no
+  /// lugar onde o texto estava quando o voo começou, e a névoa pousaria no
+  /// vazio. Os dois retângulos são lidos na hora de pintar, depois do
+  /// layout: o alvo se move, e a névoa acompanha.
+  final GlobalKey from;
+  final GlobalKey to;
 
-  /// Tamanho de referência da névoa (o raio da esfera de onde ela sai).
-  final double scale;
+  /// Onde, dentro de cada retângulo, ficam a saída e o pouso.
+  final Alignment fromAnchor;
+  final Alignment toAnchor;
+  final Offset toNudge;
 
   final GrimoireColors colors;
 
@@ -50,11 +59,9 @@ class AdvisorMistFlight extends StatefulWidget {
     Offset toNudge = Offset.zero,
   }) async {
     final overlay = Overlay.maybeOf(context);
-    final origem = rectOf(from);
-    final destino = rectOf(to);
     if (overlay == null ||
-        origem == null ||
-        destino == null ||
+        rectOf(from) == null ||
+        rectOf(to) == null ||
         GrimoireMotion.reduced(context)) {
       return;
     }
@@ -62,9 +69,11 @@ class AdvisorMistFlight extends StatefulWidget {
     final entrada = OverlayEntry(
       builder: (_) => IgnorePointer(
         child: AdvisorMistFlight(
-          from: fromAnchor.withinRect(origem),
-          to: toAnchor.withinRect(destino) + toNudge,
-          scale: (origem.shortestSide * .17).clamp(10.0, 26.0).toDouble(),
+          from: from,
+          to: to,
+          fromAnchor: fromAnchor,
+          toAnchor: toAnchor,
+          toNudge: toNudge,
           colors: colors,
         ),
       ),
@@ -131,7 +140,9 @@ class _AdvisorMistFlightState extends State<AdvisorMistFlight>
               progress: _voo.value,
               from: widget.from,
               to: widget.to,
-              scale: widget.scale,
+              fromAnchor: widget.fromAnchor,
+              toAnchor: widget.toAnchor,
+              toNudge: widget.toNudge,
               colors: widget.colors,
               letras: _letras,
             ),
@@ -228,15 +239,19 @@ class _MistFlightPainter extends CustomPainter {
     required this.progress,
     required this.from,
     required this.to,
-    required this.scale,
+    required this.fromAnchor,
+    required this.toAnchor,
+    required this.toNudge,
     required this.colors,
     required this.letras,
   });
 
   final double progress;
-  final Offset from;
-  final Offset to;
-  final double scale;
+  final GlobalKey from;
+  final GlobalKey to;
+  final Alignment fromAnchor;
+  final Alignment toAnchor;
+  final Offset toNudge;
   final GrimoireColors colors;
   final Map<int, TextPainter> letras;
 
@@ -250,11 +265,17 @@ class _MistFlightPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final origem = from;
-    final destino = to;
+    // Lidos AGORA, já com o layout deste quadro: a página está rolando por
+    // baixo, e tanto a bola quanto o parágrafo mudaram de lugar desde o
+    // quadro anterior.
+    final origemRect = AdvisorMistFlight.rectOf(from);
+    final destinoRect = AdvisorMistFlight.rectOf(to);
+    if (origemRect == null || destinoRect == null) return;
+    final origem = fromAnchor.withinRect(origemRect);
+    final destino = toAnchor.withinRect(destinoRect) + toNudge;
     final distancia = (destino - origem).distance;
     if (distancia < 1) return;
-    final base = scale;
+    final base = (origemRect.shortestSide * .17).clamp(10.0, 26.0).toDouble();
 
     // O brilho nascendo DENTRO do cristal: acende no começo e se apaga
     // quando a névoa já está a caminho.
@@ -357,10 +378,7 @@ class _MistFlightPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_MistFlightPainter old) =>
-      old.progress != progress ||
-      old.from != from ||
-      old.to != to ||
-      old.scale != scale ||
-      old.colors != colors;
+  // O voo repinta a cada quadro: além do avanço, os dois retângulos se
+  // movem com a rolagem, e eles só são lidos dentro do [paint].
+  bool shouldRepaint(_MistFlightPainter old) => true;
 }
