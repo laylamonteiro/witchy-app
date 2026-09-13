@@ -84,6 +84,10 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+// `RenderFlex` mora aqui e o `material.dart` NÃO o reexporta — ao
+// contrário de `RenderBox`, que chega sozinho. Foi a suposição de que os
+// dois vêm juntos que derrubou o CI.
+import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
