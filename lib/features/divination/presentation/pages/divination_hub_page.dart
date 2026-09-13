@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
+import '../../../../core/tools/tool_identity.dart';
 import '../../../runes/presentation/pages/rune_reading_page.dart';
 import '../../../auth/auth.dart';
 import 'pendulum_page.dart';
@@ -51,7 +52,15 @@ class DivinationHubPage extends StatelessWidget {
             const SizedBox(height: 16),
             _buildDivinationOption(
               context,
-              icon: 'ᚱᚢᚾᚨ',
+              // O emblema DESENHADO (Raidho), o mesmo do card das Ferramentas
+              // e do cabeçalho da Leitura de Runas. Eram quatro caracteres do
+              // bloco Runic ('ᚱᚢᚾᚨ'): no aparelho sem fonte para esse bloco,
+              // a entrada da ferramenta abria como quatro quadradinhos vazios.
+              emblem: const ToolEmblem(
+                tool: ToolId.runes,
+                size: 40,
+                flies: false,
+              ),
               title: AppLocalizations.of(context).runesListTitle,
               description: AppLocalizations.of(context).divRunesDesc,
               feature: AppFeature.runesReadings,
@@ -66,7 +75,12 @@ class DivinationHubPage extends StatelessWidget {
             const SizedBox(height: 12),
             _buildDivinationOption(
               context,
-              icon: '⟟',
+              // Idem: era o glifo ⟟ (U+27DF), de um bloco raro do Unicode.
+              emblem: const ToolEmblem(
+                tool: ToolId.pendulum,
+                size: 40,
+                flies: false,
+              ),
               title: AppLocalizations.of(context).pendulumTitle,
               description: AppLocalizations.of(context).divPendulumDesc,
               feature: AppFeature.divinationPendulum,
@@ -81,7 +95,9 @@ class DivinationHubPage extends StatelessWidget {
             const SizedBox(height: 12),
             _buildDivinationOption(
               context,
-              icon: '🔮',
+              // Emoji, porque vem do próprio sistema e nenhum aparelho fica
+              // sem ele.
+              emblem: const Text('🔮', style: TextStyle(fontSize: 40)),
               title: AppLocalizations.of(context).divOracleTitle,
               description: AppLocalizations.of(context).divOracleDesc,
               feature: AppFeature.divinationOracle,
@@ -99,9 +115,17 @@ class DivinationHubPage extends StatelessWidget {
     );
   }
 
+  /// Uma opção do hub: o emblema da ferramenta, o nome e a descrição.
+  ///
+  /// [emblem] é um Widget, e não mais um texto de 40: duas das três
+  /// ferramentas daqui têm emblema DESENHADO, e desenho não cabe num `Text`.
+  /// Nenhum deles voa (`flies: false`): a etiqueta de Hero de cada ferramenta
+  /// pertence ao card do Grimório, que vive numa aba do IndexedStack do
+  /// shell — se este hub um dia for hospedado numa aba, dois donos da mesma
+  /// etiqueta na mesma rota derrubariam a tela.
   Widget _buildDivinationOption(
     BuildContext context, {
-    required String icon,
+    required Widget emblem,
     required String title,
     required String description,
     required VoidCallback onTap,
@@ -119,10 +143,7 @@ class DivinationHubPage extends StatelessWidget {
           child: MagicalCard(
             child: Row(
               children: [
-                Text(
-                  icon,
-                  style: const TextStyle(fontSize: 40),
-                ),
+                emblem,
                 const SizedBox(width: 16),
                 Expanded(
                   child: Column(
