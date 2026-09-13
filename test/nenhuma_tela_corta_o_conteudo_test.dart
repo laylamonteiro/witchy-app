@@ -206,6 +206,30 @@ bool _ehEstouroDeLayout(FlutterErrorDetails detalhes) {
       texto.contains('ParentDataWidget');
 }
 
+/// O caminho até a primeira `Row`/`Column` escondida sob [veu], ou null se
+/// não há nenhuma — só esse caso é defeito, e a descrição é o que faz a
+/// falha ser acionável em vez de um enigma.
+String? _flexEscondido(Element veu) {
+  String? achado;
+  void desce(Element elemento, List<String> caminho) {
+    if (achado != null) return;
+    final tipo = elemento.widget.runtimeType.toString();
+    if (elemento is RenderObjectElement && elemento.renderObject is RenderFlex) {
+      achado = [...caminho, tipo].join(' > ');
+      return;
+    }
+    // O caminho guarda só os widgets com nome próprio: os de infraestrutura
+    // do framework encheriam a mensagem sem dizer onde a tela está.
+    final proximo = tipo.startsWith('_') || tipo.contains('<')
+        ? caminho
+        : [...caminho, tipo];
+    elemento.visitChildren((filho) => desce(filho, proximo));
+  }
+
+  veu.visitChildren((filho) => desce(filho, const []));
+  return achado;
+}
+
 void main() {
   useShortTestTimeout();
   sqfliteFfiInit();
@@ -300,22 +324,37 @@ void main() {
     // voltar SEM pintar o filho — e quem denuncia estouro é justamente o
     // `paint` do `RenderFlex`. A tela mede como se o conteúdo não estivesse
     // lá, e aprova. Foi o que aconteceu com os seis primeiros blocos de
-    // Elementos, Altar e Sol: o `StaggeredEntrance` anima sem perguntar por
-    // `disableAnimations`, ao contrário do `CascadeIn` ao lado dele. O
-    // segundo pump conserta isso hoje; esta linha é para a próxima animação,
-    // que ninguém vai lembrar de conferir. As outras duas guardas não pegam:
-    // `find` anda na árvore de ELEMENTOS, onde o filho do véu existe direito.
-    final fechados = find.byType(FadeTransition).evaluate().where((elemento) {
+    // Elementos, Altar e Sol. O segundo avanço do relógio conserta aquilo
+    // hoje; esta guarda é para a próxima animação, que ninguém vai lembrar
+    // de conferir. As outras duas não pegam: `find` anda na árvore de
+    // ELEMENTOS, onde o filho do véu existe direito.
+    //
+    // SÓ CONTA O VÉU QUE ESCONDE UM `RenderFlex`, e a restrição é a própria
+    // definição da guarda: o que ela existe para impedir é uma Row ou Column
+    // deixar de ser medida. Véu fechado sobre uma faísca decorativa, um
+    // ícone ou um aviso que ainda não tem texto não silenciou denúncia
+    // nenhuma — não havia o que denunciar. Sem esse corte a guarda reprovava
+    // a tela de esqueci-a-senha sem ter achado defeito algum, que é
+    // exatamente o vício que ela foi escrita para combater: dizer alguma
+    // coisa sem ter medido nada.
+    //
+    // E ela DIZ O QUE ACHOU. Uma guarda que reprova sem nomear o culpado
+    // manda quem vier depois adivinhar entre a árvore inteira — foi o que
+    // aconteceu na primeira vez que ela falhou.
+    final fechados = <String>[];
+    for (final elemento in find.byType(FadeTransition).evaluate()) {
       // O corte é exato: alfa é (opacidade * 255).round(), e é só em alfa
       // zero que o pintor desiste do filho. Um véu meio aberto pinta.
       final veu = elemento.widget as FadeTransition;
-      return veu.opacity.value < 0.5 / 255;
-    }).length;
-    if (fechados > 0) {
+      if (veu.opacity.value >= 0.5 / 255) continue;
+      final flex = _flexEscondido(elemento);
+      if (flex != null) fechados.add(flex);
+    }
+    if (fechados.isNotEmpty) {
       problemas.add(
-        '$fechados véu(s) ainda fechados na hora de medir: o que está '
-        'embaixo deles não foi pintado, e o que não é pintado não denuncia '
-        'estouro',
+        'véu(s) fechados escondendo uma linha ou coluna na hora de medir '
+        '(${fechados.join('; ')}): o que está embaixo não foi pintado, e o '
+        'que não é pintado não denuncia estouro',
       );
     }
     return problemas;
