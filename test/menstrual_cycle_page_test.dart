@@ -160,157 +160,61 @@ void main() {
         reason: 'Sending to the account is a separate yes');
   });
 
-  testWidgets('sending to the account is off until a second, separate yes',
-      (tester) async {
-    // The first yes opens the wheel; it must not open the cloud. The second
-    // one lives here, in its own card with its own words — never a switch
-    // buried in a list of settings — and it asks again before it turns on.
-    await show(tester, comConta: true);
-    await tester.tap(find.byKey(const ValueKey('menstrual-consent-accept')));
-    await until(
-        tester,
-        () => find.byKey(const ValueKey('menstrual-cloud')).evaluate().isNotEmpty,
-        'the cloud card');
-
-    expect(find.byKey(const ValueKey('menstrual-cloud-on')), findsOneWidget);
-    expect(find.byKey(const ValueKey('menstrual-cloud-off')), findsNothing);
-    expect(await const MenstrualConsentStore().syncAllowed('local_user'), isFalse);
-
-    // Backing out of the confirmation really does change nothing: the yes is
-    // the accept button, not the button that opens the question.
-    await pressIn(tester, 'menstrual-cloud-on');
-    await until(
-        tester,
-        () => find
-            .byKey(const ValueKey('menstrual-cloud-confirm'))
-            .evaluate()
-            .isNotEmpty,
-        'the confirmation');
-    await tester.tap(find.byKey(const ValueKey('menstrual-cloud-confirm-cancel')));
-    await until(
-        tester,
-        () =>
-            find.byKey(const ValueKey('menstrual-cloud-confirm')).evaluate().isEmpty,
-        'the confirmation closing');
-    expect(await const MenstrualConsentStore().syncAllowed('local_user'), isFalse);
-    expect(find.byKey(const ValueKey('menstrual-cloud-on')), findsOneWidget,
-        reason: 'Backing out leaves the card exactly as it was');
-
-    await pressIn(tester, 'menstrual-cloud-on');
-    await until(
-        tester,
-        () => find
-            .byKey(const ValueKey('menstrual-cloud-confirm'))
-            .evaluate()
-            .isNotEmpty,
-        'the confirmation again');
-    await tester.tap(find.byKey(const ValueKey('menstrual-cloud-confirm-accept')));
-    await until(
-        tester,
-        () =>
-            find.byKey(const ValueKey('menstrual-cloud-off')).evaluate().isNotEmpty,
-        'the off button');
-
-    expect(await const MenstrualConsentStore().syncAllowed('local_user'), isTrue);
-    // A confirmação abre um aviso no rodapé, e o botão de desligar pode parar
-    // debaixo dele: fechar o aviso antes do segundo toque tira a dúvida.
-    final scaffold = tester.element(find.byType(Scaffold).first);
-    ScaffoldMessenger.of(scaffold).clearSnackBars();
-    await tester.pump();
-    // Turning it off is one tap, with no second question: the way out is
-    // never the part that gets made harder.
-    await pressIn(tester, 'menstrual-cloud-off');
-    await until(
-        tester,
-        () =>
-            find.byKey(const ValueKey('menstrual-cloud-on')).evaluate().isNotEmpty,
-        'the on button');
-    expect(await const MenstrualConsentStore().syncAllowed('local_user'), isFalse);
-  });
-
-  testWidgets('with no account the card explains, and offers no yes at all',
-      (tester) async {
-    // Sem conta não existe para onde enviar: `DataSyncService.isReady` é
-    // falso e nada sairia daqui. Oferecer o sim mesmo assim gravaria a
-    // preferência sob o `local_user`, mostraria "Ligado. Seu registro
-    // acompanha a sua conta" sobre uma conta que não existe, e o sim nem
-    // acompanharia ela ao entrar de verdade — a chave é por conta. E
-    // "apagar a cópia da nuvem" responderia que não deu para falar com a
-    // conta, quando o motivo é não haver conta nenhuma.
+  testWidgets('the second yes is no longer on this sheet', (tester) async {
+    // O envio para a conta mudou de lugar: é decisão sobre DADO, e agora
+    // mora em Configurações → Privacidade, junto do apagar do registro. Esta
+    // folha é sobre registrar e olhar — nenhum interruptor de nuvem aqui.
+    // Quem guarda o comportamento do segundo sim é
+    // test/menstrual_consent_na_privacidade_test.dart.
     await show(tester);
     await tester.tap(find.byKey(const ValueKey('menstrual-consent-accept')));
     await until(
         tester,
-        () => find.byKey(const ValueKey('menstrual-cloud')).evaluate().isNotEmpty,
-        'the cloud card');
-
-    final l10n = lookupAppLocalizations(const Locale('en'));
-    final estado = tester.widget<Text>(
-        find.byKey(const ValueKey('menstrual-cloud-state')));
-    expect(estado.data, l10n.menstrualCloudStateNoAccount);
+        () => find.byKey(const ValueKey('menstrual-calendar')).evaluate().isNotEmpty,
+        'the calendar');
+    expect(find.byKey(const ValueKey('menstrual-cloud')), findsNothing);
     expect(find.byKey(const ValueKey('menstrual-cloud-on')), findsNothing);
-    expect(find.byKey(const ValueKey('menstrual-cloud-off')), findsNothing);
     expect(find.byKey(const ValueKey('menstrual-cloud-erase')), findsNothing);
-    expect(await const MenstrualConsentStore().syncAllowed('local_user'), isFalse);
+    expect(await const MenstrualConsentStore().syncAllowed('local_user'), isFalse,
+        reason: 'Opening the sheet never turns the second yes on');
+    expect(tester.takeException(), isNull);
   });
 
-  testWidgets('turning sending on does not release the days she erased first',
+  testWidgets('the moment section offers doors, and never a second system',
       (tester) async {
-    // A lápide de um dia menstrual É a data em que ela sangrou e depois
-    // apagou. Liberada no momento do sim, ela sairia deste aparelho na
-    // primeira varredura — e o que ela autorizou foi mandar o registro, não
-    // as datas que apagou antes de existir para onde mandar.
-    SharedPreferences.setMockInitialValues({
-      'menstrual_consent_record_local_user': true,
-    });
-    final repo = MenstrualCycleRepository();
-    await tester.runAsync(() async {
-      await repo.save(MenstrualDay(
-        userId: 'local_user',
-        day: DateTime(2026, 3, 4),
-        mark: MenstrualMark.flow,
-        note: 'o que ela apagou depois',
-      ));
-      await repo.remove(userId: 'local_user', day: DateTime(2026, 3, 4));
-      await repo.save(MenstrualDay(
-        userId: 'local_user',
-        day: DateTime(2026, 3, 6),
-        mark: MenstrualMark.flow,
-        note: 'o que ficou',
-      ));
-    });
-
-    await show(tester, comConta: true);
+    SharedPreferences.setMockInitialValues(
+        {'menstrual_consent_record_local_user': true});
+    await show(tester);
     await until(
         tester,
-        () => find.byKey(const ValueKey('menstrual-cloud')).evaluate().isNotEmpty,
-        'the cloud card');
-    await pressIn(tester, 'menstrual-cloud-on');
+        () => find.byKey(const ValueKey('menstrual-momento')).evaluate().isNotEmpty,
+        'the moment card');
+    // Sem sangue marcado hoje, o convite é de começo.
+    expect(find.byKey(const ValueKey('menstrual-momento-cultivate')),
+        findsOneWidget);
+    expect(find.byKey(const ValueKey('menstrual-momento-release')), findsNothing);
+    expect(find.byKey(const ValueKey('menstrual-momento-practices')),
+        findsOneWidget);
+    // E a porta da área de conhecimento sai da abertura.
+    expect(find.byKey(const ValueKey('menstrual-lore-cta')), findsOneWidget);
+
+    // Marcando fluxo em hoje, o convite passa a ser de encerramento.
+    await tester.runAsync(() => MenstrualCycleRepository().save(MenstrualDay(
+          userId: 'local_user',
+          day: today,
+          mark: MenstrualMark.flow,
+        )));
+    await show(tester, premium: true);
     await until(
         tester,
         () => find
-            .byKey(const ValueKey('menstrual-cloud-confirm'))
+            .byKey(const ValueKey('menstrual-momento-release'))
             .evaluate()
             .isNotEmpty,
-        'the confirmation');
-    await tester.tap(find.byKey(const ValueKey('menstrual-cloud-confirm-accept')));
-    await until(
-        tester,
-        () =>
-            find.byKey(const ValueKey('menstrual-cloud-off')).evaluate().isNotEmpty,
-        'the off button');
-
-    final lidas = await tester.runAsync(() async {
-      final db = await DatabaseHelper.instance.database;
-      return db.query(MenstrualCycleSchema.table,
-          where: 'user_id = ?', whereArgs: ['local_user']);
-    });
-    final linhas = lidas ?? const <Map<String, Object?>>[];
-    expect(linhas.map((l) => l['day_key']), ['2026-03-06'],
-        reason: 'a data do dia apagado não fica esperando para sair daqui');
-    expect(linhas.single['synced'], 0,
-        reason: 'o dia vivo, esse sim, é liberado — o sim vale para o '
-            'registro inteiro, não só para o que vier depois');
+        'the release shortcut');
+    expect(find.byKey(const ValueKey('menstrual-momento-cultivate')), findsNothing);
+    expect(find.byKey(const ValueKey('menstrual-momento-oracle')), findsOneWidget);
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('a day is written, read back and erased, and the free plan gets no results',
@@ -420,7 +324,7 @@ void main() {
           reason: 'A tap opens it on both plans');
       // O título está sempre à vista: procurá-lo não provaria abertura
       // nenhuma. Quem prova é um subtítulo do corpo.
-      expect(find.text('What the blood marks'), findsOneWidget,
+      expect(find.text('The blood that returns'), findsOneWidget,
           reason: 'The body is only there once it is open');
       expect(find.text('Read less'), findsOneWidget);
     }

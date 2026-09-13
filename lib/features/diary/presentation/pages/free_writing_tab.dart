@@ -18,7 +18,17 @@ class FreeWritingTab extends StatefulWidget {
   /// recém-salva). Null = canvas em branco, comportamento da aba do Diário.
   final FreeWritingModel? initial;
 
-  const FreeWritingTab({super.key, this.initial});
+  /// Um convite mostrado ACIMA do campo, quando alguém abre a escrita livre
+  /// a partir de outro lugar do app (hoje, a seção "Práticas para este
+  /// momento" do Ciclo Menstrual).
+  ///
+  /// É convite, e não conteúdo: ele não entra no texto, não é salvo e some
+  /// assim que ela começa a escrever. O que ela escrever continua sendo uma
+  /// reflexão NORMAL do Diário — mesma tabela, mesma origem, mesmo
+  /// histórico. Null = a aba de sempre, sem nada acima do campo.
+  final String? prompt;
+
+  const FreeWritingTab({super.key, this.initial, this.prompt});
 
   @override
   State<FreeWritingTab> createState() => _FreeWritingTabState();
@@ -179,6 +189,19 @@ class _FreeWritingTabState extends State<FreeWritingTab> {
                   ],
                 ),
                 const SizedBox(height: 4),
+                // O convite vive enquanto a folha está em branco: assim que
+                // ela escreve, sai de cena e devolve a altura ao texto.
+                if ((widget.prompt?.trim().isNotEmpty ?? false) && !hasText) ...[
+                  Text(
+                    widget.prompt!,
+                    key: const ValueKey('free_writing_prompt'),
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: context.gc.textSecondary,
+                          height: 1.45,
+                        ),
+                  ),
+                  const SizedBox(height: 12),
+                ],
                 Expanded(
                   child: TextField(
                     controller: _controller,
