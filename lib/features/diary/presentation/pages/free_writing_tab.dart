@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
@@ -10,9 +12,26 @@ import 'free_writings_list_page.dart';
 /// Aba 💡 de Diários: canvas de escrita livre.
 ///
 /// Superfície fluida e sem pressão — a pessoa simplesmente escreve. O texto é
-/// salvo AUTOMATICAMENTE ao sair da tela, ao abrir o histórico e ao começar
-/// uma reflexão nova, guardado no histórico e sincronizado: ninguém perde o
-/// que escreveu por ter esquecido de apertar um botão.
+/// salvo AUTOMATICAMENTE, guardado no histórico e sincronizado: ninguém perde
+/// o que escreveu por ter esquecido de apertar um botão.
+///
+/// Essa promessa já esteve quebrada, e por um detalhe de onde a aba mora. O
+/// salvamento dependia de gestos de ROTA — abrir o histórico, começar uma
+/// reflexão nova e o `PopScope`. Mas aqui não há rota: a aba é filha do
+/// `TabBarView` dos Diários, e o `TabBarView` DESMONTA o filho que sai de
+/// cena. Trocar para Sonhos ou Gratidão não era "o salvamento não dispara" —
+/// era o State sendo destruído com o texto dentro, e o `dispose` só
+/// descartava o controller. O app encerrado em segundo plano, que é o normal
+/// no Android, levava tudo junto pelo mesmo caminho.
+///
+/// São três as travas agora, e cada uma cobre o buraco da outra:
+///
+/// 1. [AutomaticKeepAliveClientMixin] — trocar de aba não desmonta mais o
+///    canvas. O texto continua NA TELA quando ela volta, com cursor e tudo;
+/// 2. [WidgetsBindingObserver] — o app indo para segundo plano grava o que
+///    está escrito, antes de o sistema poder encerrá-lo;
+/// 3. o `dispose` ainda grava, sem esperar, para o caso de a página inteira
+///    dos Diários sair de cena.
 class FreeWritingTab extends StatefulWidget {
   /// Reflexão a abrir já carregada no canvas (ex.: leitura de quiromancia
   /// recém-salva). Null = canvas em branco, comportamento da aba do Diário.
@@ -24,13 +43,30 @@ class FreeWritingTab extends StatefulWidget {
   State<FreeWritingTab> createState() => _FreeWritingTabState();
 }
 
-class _FreeWritingTabState extends State<FreeWritingTab> {
+class _FreeWritingTabState extends State<FreeWritingTab>
+    with AutomaticKeepAliveClientMixin, WidgetsBindingObserver {
   final _controller = TextEditingController();
   late FreeWritingProvider _provider;
 
   /// Reflexão sendo editada no momento (null = canvas em branco/nova).
   FreeWritingModel? _current;
   String _originalContent = '';
+
+  /// Uma gravação em voo.
+  ///
+  /// Sem isto, o app indo para segundo plano NO MEIO de um `_save()` montaria
+  /// um segundo modelo — e, no canvas em branco, modelo novo é id novo: a
+  /// mesma reflexão viraria duas páginas no acervo.
+  bool _gravando = false;
+
+  /// O canvas não sai de cena quando ela troca de aba.
+  ///
+  /// Sem isto o `TabBarView` desmonta este State, e o texto ainda não gravado
+  /// morre com ele. Gravar no `dispose` salvaria o conteúdo, mas ela voltaria
+  /// para um canvas EM BRANCO e teria de procurar a própria reflexão no
+  /// histórico — o que não é a mesma coisa que não ter perdido nada.
+  @override
+  bool get wantKeepAlive => true;
 
   @override
   void initState() {
@@ -44,6 +80,7 @@ class _FreeWritingTabState extends State<FreeWritingTab> {
       _controller.text = initial.content;
     }
     _controller.addListener(_onChanged);
+    WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<FreeWritingProvider>().loadFreeWritings();
     });
@@ -57,9 +94,27 @@ class _FreeWritingTabState extends State<FreeWritingTab> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    // ANTES de descartar o controller: é dele que sai o texto. Sem espera,
+    // porque aqui não há mais para quem esperar — o provider sobrevive à aba
+    // e termina a gravação sozinho.
+    _gravarSemEsperar();
     _controller.removeListener(_onChanged);
     _controller.dispose();
     super.dispose();
+  }
+
+  /// O app saindo de cena é a última chance de gravar.
+  ///
+  /// No Android o sistema encerra o processo em segundo plano sem avisar de
+  /// novo; era por aqui que o desabafo longo se perdia inteiro.
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.inactive ||
+        state == AppLifecycleState.hidden ||
+        state == AppLifecycleState.paused) {
+      _gravarSemEsperar();
+    }
   }
 
   void _onChanged() {
@@ -67,24 +122,51 @@ class _FreeWritingTabState extends State<FreeWritingTab> {
     setState(() {});
   }
 
+  /// O que precisa ser gravado agora, ou null se não há o que gravar.
+  FreeWritingModel? _pendente() {
+    final text = _controller.text;
+    if (text.trim().isEmpty) return null;
+    // Nada mudou em uma reflexão já carregada: evita gravações repetidas.
+    if (_current != null && text == _originalContent) return null;
+
+    return _current == null
+        ? FreeWritingModel(content: text)
+        : _current!.copyWith(content: text);
+  }
+
   /// Salva a reflexão atual. Chamado automaticamente ao sair da tela ou iniciar
   /// uma nova reflexão — assim a pessoa nunca perde o que escreveu.
   Future<void> _save() async {
-    final text = _controller.text;
-    if (text.trim().isEmpty) return;
-    // Nada mudou em uma reflexão já carregada: evita gravações repetidas.
-    if (_current != null && text == _originalContent) return;
+    final model = _pendente();
+    if (model == null) return;
 
-    final model = _current == null
-        ? FreeWritingModel(content: text)
-        : _current!.copyWith(content: text);
-
-    await _provider.save(model);
+    _gravando = true;
+    try {
+      await _provider.save(model);
+    } finally {
+      _gravando = false;
+    }
     if (!mounted) return;
     setState(() {
       _current = model;
-      _originalContent = text;
+      _originalContent = model.content;
     });
+  }
+
+  /// Gravação sem espera e sem `setState`, para os dois momentos em que não
+  /// existe mais para quem esperar: o app indo para segundo plano e o State
+  /// sendo desmontado.
+  ///
+  /// A marca de "já é esta a reflexão" é posta ANTES de disparar a gravação,
+  /// e não depois: é ela que faz a chamada seguinte reaproveitar o mesmo id
+  /// em vez de criar uma página nova.
+  void _gravarSemEsperar() {
+    if (_gravando) return;
+    final model = _pendente();
+    if (model == null) return;
+    _current = model;
+    _originalContent = model.content;
+    unawaited(_provider.save(model));
   }
 
   Future<bool> _handleBack() async {
@@ -134,6 +216,8 @@ class _FreeWritingTabState extends State<FreeWritingTab> {
 
   @override
   Widget build(BuildContext context) {
+    // Exigido pelo AutomaticKeepAliveClientMixin.
+    super.build(context);
     final hasText = _controller.text.trim().isNotEmpty;
 
     return PopScope(
