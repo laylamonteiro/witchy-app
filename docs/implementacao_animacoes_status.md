@@ -158,13 +158,24 @@ Entregue em 10/09. Revisto em 13/09 (jornada):
   chega. `CrystalBallGeometry` guarda a esfera medida na imagem e a caixa
   com halo, e `bola_de_cristal_test` trava a contenção. Movimento reduzido
   mostra um quadro parado.
-- **A resposta é escrita sob a névoa.** `MistTypewriterText`
-  (`lib/core/widgets/motion/`) revela o texto por fração de um controller
-  (22 ms por caractere, teto de 9 s) com uma faixa de névoa na cor do card
-  que desce acompanhando a linha em escrita; a tela rola até "O Conselheiro
-  responde" quando a resposta chega. Tocar no texto ou em "Mostrar tudo"
-  completa; só uma resposta recém-chegada anima — a restaurada ao reabrir
-  aparece inteira, assim como sob movimento reduzido.
+- **A névoa leva a resposta da bola ao card, e lá o texto é escrito.** O
+  emblema de cada ferramenta já voava do hub para o cabeçalho; a resposta
+  ganhou o mesmo gesto: `AdvisorMistFlight` (Overlay, porque o voo atravessa
+  a rolagem) manda névoa, faíscas e letras soltas da bola de cristal até o
+  card, em 1,1 s, depois de a tela rolar até "O Conselheiro responde". Só
+  quando a névoa pousa é que `MistTypewriterText`
+  (`lib/core/widgets/motion/`) começa a escrever, por fração de um
+  controller (22 ms por caractere, teto de 9 s), com o texto inteiro na
+  árvore desde o primeiro quadro — o que falta escrever é transparente, e o
+  leitor de tela recebe a resposta completa de saída. Tocar no texto ou em
+  "Mostrar tudo" completa; só uma resposta recém-chegada anima — a
+  restaurada ao reabrir aparece inteira, assim como sob movimento reduzido.
+  A escrita anda por ticker, e o desta cena pode ficar mudo (aba em segundo
+  plano, tela que saiu da frente): um relógio de segurança mostra a resposta
+  inteira dois segundos depois do fim previsto, porque o que ainda não foi
+  escrito é transparente e ficaria invisível para sempre. Foi o que a
+  primeira versão, com uma faixa de névoa descendo sobre o próprio texto,
+  não deu conta de mostrar.
 - **O campo é limpo ao consultar.** A pergunta enviada segue na citação; a
   falha mantém a citação e "Tentar novamente" reenvia o que está nela.
 - **O Conselheiro conhece o app.** O prompt (pt/en/es) lista as ferramentas

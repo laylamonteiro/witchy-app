@@ -17,6 +17,7 @@ import '../../../auth/presentation/widgets/premium_blur_widget.dart';
 import '../../data/repositories/advisor_consultation_repository.dart';
 import '../../domain/advisor_consultation.dart';
 import '../widgets/advisor_feature_links.dart';
+import '../widgets/advisor_mist_flight.dart';
 import '../widgets/crystal_ball_view.dart';
 import '../../../../core/widgets/motion/retry_notice.dart';
 import '../../../../core/tools/tool_identity.dart';
@@ -68,8 +69,14 @@ class _AdvisorBodyState extends State<_AdvisorBody> {
   /// revelada com névoa e escrita. Restaurar nunca define isto.
   String? _revealId;
 
-  /// O card de resposta, para rolar até ele quando a resposta chega.
+  /// O card de resposta, para rolar até ele quando a resposta chega, e a
+  /// bola, de onde a névoa parte: o voo precisa dos dois retângulos.
   final _answerKey = GlobalKey();
+  final _ballKey = GlobalKey();
+
+  /// A névoa está a caminho do card: o texto já está lá, todo transparente,
+  /// e a escrita começa quando ela pousa.
+  bool _flying = false;
 
   /// Uma resposta atrasada de outra consulta não substitui a atual.
   int _generation = 0;
@@ -199,25 +206,43 @@ class _AdvisorBodyState extends State<_AdvisorBody> {
     setState(() {
       _consultation = delivered ?? consultation;
       _revealId = consultation.id;
+      _flying = true;
     });
-    _scrollToAnswer();
+    await _mistToAnswer(generation);
   }
 
-  /// A resposta chegou: a tela rola até o cabeçalho "O Conselheiro responde",
-  /// depois do quadro em que o card passa a existir.
-  void _scrollToAnswer() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
+  /// A chegada da resposta, em três tempos: a tela rola até o card, a névoa
+  /// sobe da bola de cristal e pousa nele, e só então o texto é escrito.
+  Future<void> _mistToAnswer(int generation) async {
+    await _scrollToAnswer();
+    if (mounted && generation == _generation) {
+      await AdvisorMistFlight.play(
+          context: context, from: _ballKey, to: _answerKey);
+    }
+    if (!mounted || generation != _generation) return;
+    setState(() => _flying = false);
+  }
+
+  /// A tela rola até o cabeçalho "O Conselheiro responde", depois do quadro
+  /// em que o card passa a existir.
+  Future<void> _scrollToAnswer() {
+    final chegou = Completer<void>();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       final target = _answerKey.currentContext;
-      if (target == null) return;
+      if (!mounted || target == null) {
+        chegou.complete();
+        return;
+      }
       final reduced = GrimoireMotion.reduced(context);
-      Scrollable.ensureVisible(
+      await Scrollable.ensureVisible(
         target,
         alignment: .05,
         duration: reduced ? Duration.zero : const Duration(milliseconds: 350),
         curve: GrimoireMotion.enter,
       );
+      chegou.complete();
     });
+    return chegou.future;
   }
 
   /// A requisição real e o que ela persiste: independe da tela continuar
@@ -321,11 +346,14 @@ class _AdvisorBodyState extends State<_AdvisorBody> {
                 children: [
                   // A bola de cristal cede espaço ao teclado, vive o tempo
                   // todo e pulsa quando uma resposta chega.
-                  CrystalBallView(
-                    key: const ValueKey('advisor-ball'),
-                    size: keyboardOpen ? 64 : 120,
-                    active: _pending,
-                    pulseToken: _revealId,
+                  KeyedSubtree(
+                    key: _ballKey,
+                    child: CrystalBallView(
+                      key: const ValueKey('advisor-ball'),
+                      size: keyboardOpen ? 64 : 120,
+                      active: _pending,
+                      pulseToken: _revealId,
+                    ),
                   ),
                   if (!keyboardOpen) ...[
                     const SizedBox(height: 12),
@@ -477,6 +505,7 @@ class _AdvisorBodyState extends State<_AdvisorBody> {
                     answerId: consultation.id,
                     answer: consultation.answer ?? '',
                     reveal: _revealId == consultation.id,
+                    started: !_flying,
                     saved: consultation.isSaved,
                     saving: _saving,
                     onSave: _save,
@@ -528,6 +557,7 @@ class _AnswerCard extends StatelessWidget {
     required this.answerId,
     required this.answer,
     required this.reveal,
+    required this.started,
     required this.saved,
     required this.saving,
     required this.onSave,
@@ -537,9 +567,12 @@ class _AnswerCard extends StatelessWidget {
   final String answerId;
   final String answer;
 
-  /// Escrever sob a névoa (resposta que acabou de chegar) ou mostrar inteira
-  /// (resposta restaurada).
+  /// Escrever letra a letra (resposta que acabou de chegar) ou mostrar
+  /// inteira (resposta restaurada).
   final bool reveal;
+
+  /// A névoa já pousou? Até pousar, o texto espera transparente.
+  final bool started;
   final bool saved;
   final bool saving;
   final VoidCallback onSave;
@@ -614,8 +647,8 @@ class _AnswerCard extends StatelessWidget {
             fontSize: 15,
             height: 1.5,
           ),
-          fogColor: context.gc.surface,
           reveal: reveal,
+          started: started,
           skipLabel: l10n.advisorShowAll,
           skipKey: const ValueKey('advisor-show-all'),
         ),

@@ -115,14 +115,15 @@ void main() {
     // not yet written is only transparent, so the text is findable at once.
     expect(find.text(_answer), findsOneWidget);
     expect(calls, ['Which moon for protection?']);
-    // A fresh answer is written under the mist and can be skipped.
+    // A fresh answer waits for the mist to land, then is written out.
     expect(tester.widget<MistTypewriterText>(find.byType(MistTypewriterText)).reveal, isTrue);
-    expect(find.byKey(const ValueKey('advisor-show-all')), findsOneWidget);
+    await until(tester, () => find.byKey(const ValueKey('advisor-show-all'))
+        .evaluate().isNotEmpty, 'the mist landed and the writing began');
     // The field is cleared on submit; the question lives on in the quote.
     expect(tester.widget<TextField>(find.byKey(const ValueKey('advisor-question'))).controller!
         .text, isEmpty);
     // Never pumpAndSettle: the ball loops forever. Ten seconds cover the
-    // typewriter ceiling.
+    // writing ceiling.
     await tester.pump(const Duration(seconds: 10));
     // ...plus the fade-out of the "show all" button.
     await tester.pump(const Duration(milliseconds: 400));
@@ -270,6 +271,8 @@ void main() {
     await show(tester);
     await askQuestion(tester, 'Which tool for tonight?');
     await until(tester, () => find.byType(MistTypewriterText).evaluate().isNotEmpty, 'answer');
+    await until(tester, () => find.byKey(const ValueKey('advisor-show-all'))
+        .evaluate().isNotEmpty, 'the writing began');
     await tester.pump(const Duration(seconds: 10));
 
     final text = tester.widget<Text>(find.byKey(const ValueKey('mist-typewriter-text')));

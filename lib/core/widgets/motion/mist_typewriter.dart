@@ -1,9 +1,8 @@
-import 'dart:math' as math;
+import 'dart:async';
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
-import '../../theme/grimoire_colors.dart';
 import '../../theme/grimoire_motion.dart';
 
 /// Um trecho do texto a revelar: corpo comum ou destaque, tocável ou não.
@@ -23,25 +22,25 @@ class RevealSpan {
   final String? semanticsLabel;
 }
 
-/// Um texto que chega sendo escrito sob uma névoa que desce.
+/// Um texto que chega sendo escrito, letra a letra.
 ///
 /// O texto inteiro está na árvore desde o primeiro quadro — a parte ainda
-/// não escrita fica no mesmo `Text.rich`, só que transparente, então as
-/// quebras de linha e a altura nunca mudam durante a revelação (o padrão do
-/// balão do Salem). Por cima, uma faixa de névoa na cor do card acompanha a
-/// linha que está sendo escrita e vai descendo com ela; abaixo da faixa o
-/// texto continua coberto até a névoa chegar lá.
+/// não escrita fica no mesmo `Text.rich`, só que transparente. Assim as
+/// quebras de linha e a altura nunca mudam durante a escrita, e o leitor de
+/// tela recebe a resposta completa de saída.
 ///
-/// Tocar no texto ou em "Mostrar tudo" completa a revelação na hora. Com
-/// [reveal] falso (uma resposta restaurada) ou movimento reduzido, o texto
-/// aparece inteiro, sem névoa.
+/// [started] existe porque a escrita espera a névoa pousar no card: até lá o
+/// texto fica todo transparente, no lugar certo. Tocar no texto ou em
+/// "Mostrar tudo" completa na hora. Com [reveal] falso (uma resposta
+/// restaurada ao reabrir a tela) ou com movimento reduzido, o texto aparece
+/// inteiro, sem espera.
 class MistTypewriterText extends StatefulWidget {
   const MistTypewriterText({
     super.key,
     required this.spans,
     required this.style,
-    required this.fogColor,
     this.reveal = true,
+    this.started = true,
     this.skipLabel,
     this.skipKey,
     this.onCompleted,
@@ -52,15 +51,14 @@ class MistTypewriterText extends StatefulWidget {
   /// Estilo do corpo (os trechos herdam dele).
   final TextStyle style;
 
-  /// A cor da névoa: a superfície em que o texto está, para a faixa
-  /// esconder o que ainda não foi escrito.
-  final Color fogColor;
-
-  /// Falso mostra tudo de imediato: a revelação é só para o que acabou de
+  /// Falso mostra tudo de imediato: a escrita é só para o que acabou de
   /// chegar.
   final bool reveal;
 
-  /// Rótulo do botão que pula a revelação. Sem rótulo, sem botão (tocar no
+  /// Falso segura o texto todo transparente — a névoa ainda está a caminho.
+  final bool started;
+
+  /// Rótulo do botão que pula a escrita. Sem rótulo, sem botão (tocar no
   /// texto continua pulando).
   final String? skipLabel;
   final Key? skipKey;
@@ -70,6 +68,9 @@ class MistTypewriterText extends StatefulWidget {
   /// pessoa por meio minuto.
   static const int msPerChar = 22;
   static const Duration ceiling = Duration(seconds: 9);
+
+  /// Folga do relógio de segurança depois do fim previsto da escrita.
+  static const Duration guard = Duration(seconds: 2);
 
   static Duration durationFor(int chars) => Duration(
       milliseconds:
@@ -103,16 +104,13 @@ class _MistTypewriterTextState extends State<MistTypewriterText>
         MistTypewriterText.lengthOf(widget.spans)),
   );
   late List<TapGestureRecognizer?> _recognizers = _buildRecognizers();
-  bool _started = false;
+  bool _running = false;
 
-  /// Layout do texto completo para localizar a linha do cursor. Cacheado:
-  /// só refaz o layout quando largura, estilo ou trechos mudam; a posição do
-  /// cursor é lida a cada quadro.
-  TextPainter? _painter;
-  double? _painterWidth;
-  TextStyle? _painterStyle;
-  TextScaler? _painterScaler;
-  TextDirection? _painterDirection;
+  /// Relógio de segurança. A escrita anda por ticker, e o ticker desta cena
+  /// pode ficar mudo (aba em segundo plano, tela que saiu da frente): sem
+  /// isto, a resposta ficaria invisível para sempre, porque o que ainda não
+  /// foi escrito é transparente. O relógio não depende de ticker nenhum.
+  Timer? _guard;
 
   String get _fullText => widget.spans.map((s) => s.text).join();
 
@@ -120,20 +118,17 @@ class _MistTypewriterTextState extends State<MistTypewriterText>
   void initState() {
     super.initState();
     _type.addStatusListener((status) {
-      if (status == AnimationStatus.completed) widget.onCompleted?.call();
+      if (status == AnimationStatus.completed) {
+        _guard?.cancel();
+        widget.onCompleted?.call();
+      }
     });
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (!widget.reveal || GrimoireMotion.reduced(context)) {
-      _started = true;
-      if (_type.value != 1) _type.value = 1;
-    } else if (!_started) {
-      _started = true;
-      _type.forward();
-    }
+    _sync();
   }
 
   @override
@@ -149,10 +144,23 @@ class _MistTypewriterTextState extends State<MistTypewriterText>
     } else {
       _disposeRecognizers();
       _recognizers = _buildRecognizers();
-      _painter?.dispose();
-      _painter = null;
     }
-    if (!widget.reveal && _type.value != 1) _type.value = 1;
+    _sync();
+  }
+
+  /// Mostra tudo, ou começa a escrever quando a névoa pousa.
+  void _sync() {
+    if (!widget.reveal || GrimoireMotion.reduced(context)) {
+      _running = true;
+      if (_type.value != 1) _type.value = 1;
+      return;
+    }
+    if (!widget.started || _running) return;
+    _running = true;
+    _type.forward();
+    _guard = Timer(_type.duration! + MistTypewriterText.guard, () {
+      if (mounted && _type.value < 1) _type.value = 1;
+    });
   }
 
   static bool _sameShape(List<RevealSpan> a, List<RevealSpan> b) {
@@ -182,18 +190,18 @@ class _MistTypewriterTextState extends State<MistTypewriterText>
 
   @override
   void dispose() {
+    _guard?.cancel();
     _disposeRecognizers();
-    _painter?.dispose();
     _type.dispose();
     super.dispose();
   }
 
-  /// Completa a revelação na hora.
+  /// Completa a escrita na hora.
   void skip() {
     if (_type.value != 1) _type.value = 1;
   }
 
-  /// Os trechos com a cauda ainda não escrita transparente e sem link.
+  /// Os trechos com a parte ainda não escrita transparente e sem link.
   List<InlineSpan> _revealed(int count) {
     final children = <InlineSpan>[];
     var offset = 0;
@@ -207,15 +215,14 @@ class _MistTypewriterTextState extends State<MistTypewriterText>
           style: style,
           recognizer: _recognizers[i],
           semanticsLabel: span.semanticsLabel,
-          mouseCursor:
-              span.onTap == null ? null : SystemMouseCursors.click,
+          mouseCursor: span.onTap == null ? null : SystemMouseCursors.click,
         ));
       }
       if (visibleEnd < span.text.length) {
         children.add(TextSpan(
           text: span.text.substring(visibleEnd),
-          style: (style ?? const TextStyle())
-              .copyWith(color: Colors.transparent),
+          style:
+              (style ?? const TextStyle()).copyWith(color: Colors.transparent),
         ));
       }
       offset += span.text.length;
@@ -223,40 +230,8 @@ class _MistTypewriterTextState extends State<MistTypewriterText>
     return children;
   }
 
-  TextPainter _layout(double width, TextStyle style, TextScaler scaler,
-      TextDirection direction) {
-    var painter = _painter;
-    if (painter == null ||
-        _painterWidth != width ||
-        _painterStyle != style ||
-        _painterScaler != scaler ||
-        _painterDirection != direction) {
-      painter?.dispose();
-      painter = TextPainter(
-        text: TextSpan(
-          style: style,
-          children: [
-            for (final span in widget.spans)
-              TextSpan(text: span.text, style: span.style),
-          ],
-        ),
-        textDirection: direction,
-        textScaler: scaler,
-      )..layout(maxWidth: width);
-      _painter = painter;
-      _painterWidth = width;
-      _painterStyle = style;
-      _painterScaler = scaler;
-      _painterDirection = direction;
-    }
-    return painter;
-  }
-
   @override
   Widget build(BuildContext context) {
-    final style = DefaultTextStyle.of(context).style.merge(widget.style);
-    final scaler = MediaQuery.textScalerOf(context);
-    final direction = Directionality.of(context);
     final total = _fullText.length;
     final reduced = GrimoireMotion.reduced(context);
 
@@ -266,52 +241,31 @@ class _MistTypewriterTextState extends State<MistTypewriterText>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          LayoutBuilder(builder: (context, constraints) {
-            final width = constraints.maxWidth.isFinite
-                ? constraints.maxWidth
-                : MediaQuery.sizeOf(context).width;
-            return AnimatedBuilder(
-              animation: _type,
-              builder: (context, _) {
-                final count = MistTypewriterText.snapToCodePoint(
-                    _fullText, (_type.value * total).round());
-                final done = _type.value >= 1;
-                final text = SizedBox(
-                  width: width,
-                  child: Text.rich(
-                    TextSpan(children: _revealed(count)),
-                    key: const ValueKey('mist-typewriter-text'),
-                    style: style,
-                    textScaler: scaler,
-                  ),
-                );
-                if (done || reduced) return text;
-                final painter = _layout(width, style, scaler, direction);
-                final caret = painter.getOffsetForCaret(
-                    TextPosition(offset: count), Rect.zero);
-                return GestureDetector(
-                  behavior: HitTestBehavior.translucent,
-                  onTap: skip,
-                  child: CustomPaint(
-                    foregroundPainter: MistFogPainter(
-                      front: caret.dy,
-                      lineHeight: painter.preferredLineHeight,
-                      fog: widget.fogColor,
-                      tint: context.gc.lilac,
-                      drift: _type.value,
-                    ),
-                    child: text,
-                  ),
-                );
-              },
-            );
-          }),
+          AnimatedBuilder(
+            animation: _type,
+            builder: (context, _) {
+              final count = MistTypewriterText.snapToCodePoint(
+                  _fullText, (_type.value * total).round());
+              final text = Text.rich(
+                TextSpan(children: _revealed(count)),
+                key: const ValueKey('mist-typewriter-text'),
+                style: widget.style,
+              );
+              if (_type.value >= 1) return text;
+              return GestureDetector(
+                behavior: HitTestBehavior.translucent,
+                onTap: skip,
+                child: text,
+              );
+            },
+          ),
           if (widget.skipLabel != null)
             AnimatedBuilder(
               animation: _type,
               builder: (context, _) => AnimatedSwitcher(
                 duration: reduced ? Duration.zero : GrimoireMotion.state,
-                child: _type.value >= 1
+                // Enquanto a névoa vem, não há o que pular.
+                child: !_running || _type.value >= 1
                     ? const SizedBox.shrink()
                     : Align(
                         alignment: Alignment.centerRight,
@@ -327,101 +281,4 @@ class _MistTypewriterTextState extends State<MistTypewriterText>
       ),
     );
   }
-}
-
-/// A névoa que desce com a escrita.
-///
-/// [front] é a altura da linha que está sendo escrita. Acima dela o texto
-/// já apareceu; a faixa cobre a linha atual até um pouco abaixo e some
-/// gradualmente para cima, com um fio lilás na frente. Uma segunda faixa,
-/// mais larga e mais tênue, oscila de lado com [drift] para a névoa parecer
-/// andar enquanto desce.
-@visibleForTesting
-class MistFogPainter extends CustomPainter {
-  const MistFogPainter({
-    required this.front,
-    required this.lineHeight,
-    required this.fog,
-    required this.tint,
-    required this.drift,
-  });
-
-  final double front;
-  final double lineHeight;
-  final Color fog;
-  final Color tint;
-
-  /// 0 → 1 ao longo da revelação.
-  final double drift;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    if (size.isEmpty) return;
-    final top = front - 1.2 * lineHeight;
-    final bottom = front + 2.2 * lineHeight;
-
-    // Faixa larga, tênue e deslocada: a névoa andando.
-    final sway = size.width * .05 * math.sin(drift * 6 * math.pi);
-    final wide = Rect.fromLTRB(
-      -size.width * .2 + sway,
-      top - 1.8 * lineHeight,
-      size.width * 1.2 + sway,
-      bottom + .8 * lineHeight,
-    );
-    canvas.drawRect(
-      wide,
-      Paint()
-        ..shader = LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            fog.withValues(alpha: 0),
-            fog.withValues(alpha: .35),
-            fog.withValues(alpha: .35),
-            fog.withValues(alpha: 0),
-          ],
-          stops: const [0, .4, .75, 1],
-        ).createShader(wide),
-    );
-
-    // A faixa principal: esconde a linha atual e o que vem depois.
-    final band = Rect.fromLTRB(0, top, size.width, bottom);
-    canvas.drawRect(
-      band,
-      Paint()
-        ..shader = LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            fog.withValues(alpha: 0),
-            fog.withValues(alpha: .85),
-            fog.withValues(alpha: .85),
-            fog.withValues(alpha: 0),
-          ],
-          stops: const [0, .35, .7, 1],
-        ).createShader(band),
-    );
-
-    // Abaixo da faixa tudo continua coberto até a névoa descer.
-    if (bottom < size.height) {
-      canvas.drawRect(
-        Rect.fromLTRB(0, bottom - 1, size.width, size.height),
-        Paint()..color = fog.withValues(alpha: .96),
-      );
-    }
-
-    // O fio de luz na frente da névoa.
-    canvas.drawRect(
-      Rect.fromLTRB(0, front - .1 * lineHeight, size.width, front + .5 * lineHeight),
-      Paint()..color = tint.withValues(alpha: .10),
-    );
-  }
-
-  @override
-  bool shouldRepaint(MistFogPainter old) =>
-      old.front != front ||
-      old.lineHeight != lineHeight ||
-      old.fog != fog ||
-      old.tint != tint ||
-      old.drift != drift;
 }
