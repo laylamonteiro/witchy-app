@@ -110,18 +110,27 @@ class LunarCalendarPage extends StatelessWidget {
             ),
             child: Row(
               children: [
-                // O potinho da Água de Lua era emoji (U+1FAD9, Unicode 14 de
-                // 2021) e o minSdk do app é 24: em Android antigo a fonte do
-                // sistema não tem esse desenho e o card abria com um
-                // quadradinho. O ícone do Material vem dentro do app, então é
-                // o MESMO desenho em qualquer aparelho. Sem semanticLabel de
-                // propósito: quem carrega a informação é o nome do ritual ao
-                // lado, e um rótulo aqui só faria o leitor de tela repetir.
-                // A gota (e não um frasco genérico) porque a MESMA Água de
-                // Lua aparece mais abaixo NESTA PÁGINA, na lista de esbats,
-                // já desenhada como gota: dois desenhos para o mesmo ritual
-                // na mesma tela leem como duas coisas diferentes.
-                Icon(Icons.water_drop, size: 32, color: context.gc.lilac),
+                // A lua cheia, como o card irmão da página do Sol traz o
+                // sol: os dois cards fazem a mesma coisa (abrem o ritual
+                // guiado da água) e agora se reconhecem como par. Antes aqui
+                // havia uma gota, escolhida quando o potinho (U+1FAD9, emoji
+                // de 2021) virava quadradinho no Android antigo — o problema
+                // era o potinho, não a lua: U+1F315 é de 2010 e existe em
+                // todo aparelho que o app alcança (minSdk 24).
+                //
+                // Pelo MoonGlyph, e não por um emoji escrito à mão, porque a
+                // lua desta página vem toda de um lugar só — o hero, as oito
+                // fases logo abaixo — e `halo: false` porque o card irmão do
+                // Sol também é um glifo limpo, sem brilho atrás.
+                //
+                // Sem semanticLabel de propósito: quem carrega a informação é
+                // o nome do ritual ao lado, e um rótulo aqui só faria o
+                // leitor de tela repetir.
+                const MoonGlyph(
+                  phase: MoonPhase.fullMoon,
+                  size: 32,
+                  halo: false,
+                ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
