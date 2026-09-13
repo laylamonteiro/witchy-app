@@ -48,7 +48,7 @@ import 'package:flutter/material.dart';
 /// igualados por MASSA DE TINTA (comprimento × espessura), porque nada
 /// obriga a coruja e o escudo a terem o mesmo peso de caneta. Runa é
 /// ALFABETO: foram cortadas com a mesma faca, e igualar massa aqui daria a
-/// Isa — um risco vertical só, 0,84 de tinta — uma espessura 2,26 vezes a de
+/// Isa — um risco vertical só, 0,84 de tinta — uma espessura 4,4 vezes a de
 /// Dagaz (3,70 de tinta, quatro traços), ou seja, uma barra gorda ao lado de
 /// um rendilhado. Seriam duas ferramentas diferentes escrevendo a mesma
 /// linha.
@@ -163,20 +163,22 @@ final Map<String, RuneArt> _art = {
 
   // URUZ ᚢ — o auroque. Haste esquerda inteira, o ombro descendo para a
   // direita e a perna direita até a base. Tinta 1,93.
-  'Uruz': RuneArt(weight: 0.99, strokes: const [
+  'Uruz': RuneArt(weight: 1.00, strokes: const [
     [Offset(.28, .92), Offset(.28, .08), Offset(.70, .30), Offset(.70, .92)],
   ]),
 
-  // THURISAZ ᚦ — o espinho. Haste e o espinho triangular no MEIO dela (não
-  // no topo: no topo seria Wunjo). Tinta 1,73.
+  // THURISAZ ᚦ — o espinho. Haste e o espinho triangular na metade DE CIMA:
+  // ele nasce logo abaixo do topo e fecha acima do meio da haste. É isso que
+  // o separa de Wunjo, cuja bandeirola sai da ponta da haste e é menor.
+  // Tinta 1,75.
   'Thurisaz': RuneArt(weight: 1.03, strokes: const [
     [Offset(.30, .08), Offset(.30, .92)],
-    [Offset(.30, .24), Offset(.70, .44), Offset(.30, .64)],
+    [Offset(.30, .14), Offset(.70, .36), Offset(.30, .58)],
   ]),
 
   // ANSUZ ᚨ — a boca do deus. Haste e dois braços DESCENDO para a direita —
   // é só isso que a separa de Fehu, cujos braços sobem. Tinta 1,70.
-  'Ansuz': RuneArt(weight: 1.03, strokes: const [
+  'Ansuz': RuneArt(weight: 1.04, strokes: const [
     [Offset(.30, .08), Offset(.30, .92)],
     [Offset(.30, .10), Offset(.68, .30)],
     [Offset(.30, .38), Offset(.68, .58)],
@@ -190,8 +192,8 @@ final Map<String, RuneArt> _art = {
     [Offset(.30, .08), Offset(.68, .28), Offset(.30, .48), Offset(.70, .92)],
   ]),
 
-  // KENAZ ᚲ — a tocha. Um ângulo só, aberto para a direita. Tinta 1,19: é a
-  // segunda de menos tinta, daí o traço mais grosso depois de Isa.
+  // KENAZ ᚲ — a tocha. Um ângulo só, aberto para a direita. Tinta 1,19: das
+  // de pouca tinta, daí o traço grosso.
   'Kenaz': RuneArt(weight: 1.15, strokes: const [
     [Offset(.70, .08), Offset(.28, .50), Offset(.70, .92)],
   ]),
@@ -220,7 +222,7 @@ final Map<String, RuneArt> _art = {
 
   // NAUTHIZ ᚾ — a necessidade. Uma haste e uma barra que a ATRAVESSA na
   // diagonal, sobrando dos dois lados. Tinta 1,45.
-  'Nauthiz': RuneArt(weight: 1.08, strokes: const [
+  'Nauthiz': RuneArt(weight: 1.09, strokes: const [
     [Offset(.50, .08), Offset(.50, .92)],
     [Offset(.24, .66), Offset(.76, .34)],
   ]),
@@ -234,11 +236,11 @@ final Map<String, RuneArt> _art = {
 
   // JERA ᛃ — a colheita, o ano que fecha. DOIS ganchos que NÃO se tocam,
   // encaixados na diagonal: o de cima aponta para a direita, o de baixo
-  // para a esquerda. Se encostassem viraria um losango, que é Ingwaz.
-  // Tinta 1,62.
-  'Jera': RuneArt(weight: 1.05, strokes: const [
-    [Offset(.22, .08), Offset(.56, .30), Offset(.22, .52)],
-    [Offset(.78, .48), Offset(.44, .70), Offset(.78, .92)],
+  // para a esquerda, e as pontas passam uma da outra na altura do meio. Se
+  // encostassem viraria um losango, que é Ingwaz. Tinta 1,69.
+  'Jera': RuneArt(weight: 1.04, strokes: const [
+    [Offset(.26, .08), Offset(.62, .30), Offset(.26, .52)],
+    [Offset(.74, .48), Offset(.38, .70), Offset(.74, .92)],
   ]),
 
   // EIHWAZ ᛇ — o teixo. Haste com um gancho CURTO para cima à direita e
@@ -252,23 +254,26 @@ final Map<String, RuneArt> _art = {
   ]),
 
   // PERTHRO ᛈ — o copo de sortes. Um caminho só, aberto para a DIREITA:
-  // braço de cima, lombada vertical, braço de baixo. Não confundir com
-  // Eihwaz. Tinta 1,26.
-  'Perthro': RuneArt(weight: 1.13, strokes: const [
-    [Offset(.68, .08), Offset(.32, .28), Offset(.32, .72), Offset(.68, .92)],
+  // braço de cima, lombada vertical, braço de baixo. A lombada é longa e os
+  // braços curtos — um copo alto, não uma taça aberta. Não confundir com
+  // Eihwaz. Tinta 1,31.
+  'Perthro': RuneArt(weight: 1.12, strokes: const [
+    [Offset(.68, .08), Offset(.32, .24), Offset(.32, .76), Offset(.68, .92)],
   ]),
 
   // ALGIZ ᛉ — o alce, a proteção. Haste inteira e dois braços que sobem e
-  // abrem a partir do meio dela. Tinta 1,90 — exatamente a média das vinte
-  // e quatro, por isso o peso dela é 1,00.
+  // abrem a partir do meio dela. Tinta 1,90 — a média das vinte e quatro,
+  // por isso o peso dela é 1,00.
   'Algiz': RuneArt(weight: 1.00, strokes: const [
     [Offset(.50, .08), Offset(.50, .92)],
     [Offset(.18, .10), Offset(.50, .52), Offset(.82, .10)],
   ]),
 
-  // SOWILO ᛊ — o sol. Um raio de três segmentos, em zigue-zague. Tinta 1,40.
+  // SOWILO ᛊ — o sol. Um raio de três segmentos iguais, cada um descendo um
+  // terço da caixa: é o zigue-zague regular, sem um lance mais longo que os
+  // outros. Tinta 1,40.
   'Sowilo': RuneArt(weight: 1.10, strokes: const [
-    [Offset(.72, .08), Offset(.34, .30), Offset(.68, .58), Offset(.28, .92)],
+    [Offset(.70, .08), Offset(.32, .36), Offset(.68, .64), Offset(.30, .92)],
   ]),
 
   // TIWAZ ᛏ — o deus Týr, a flecha. Haste inteira e a ponta em Λ no topo.
