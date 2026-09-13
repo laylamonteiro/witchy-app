@@ -93,7 +93,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 400));
     expect(find.byKey(const ValueKey('skip')), findsNothing);
 
-    await show(tester, spans: const [RevealSpan('$body $body')], skipLabel: 'Show all');
+    await show(tester, spans: const [RevealSpan(body)], skipLabel: 'Show all');
     await tester.pump();
     await tester.tap(find.byKey(const ValueKey('skip')));
     await tester.pump();
