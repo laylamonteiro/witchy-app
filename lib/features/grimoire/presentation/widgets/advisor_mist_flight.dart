@@ -255,11 +255,22 @@ class _MistFlightPainter extends CustomPainter {
   final GrimoireColors colors;
   final Map<int, TextPainter> letras;
 
-  static Offset _curva(Offset a, Offset c, Offset b, double t) {
+  /// Bézier CÚBICA, e não quadrática, porque o que importa aqui é a saída:
+  /// com um ponto de controle só, no meio do caminho, a névoa partia na
+  /// direção dele — para cima — e parecia escapar pela tampa da bola. Com
+  /// dois, o primeiro fica ABAIXO do centro da esfera (ela sai descendo) e o
+  /// segundo acima do parágrafo (ela chega pousando).
+  static Offset _curva(Offset a, Offset c1, Offset c2, Offset b, double t) {
     final u = 1 - t;
     return Offset(
-      u * u * a.dx + 2 * u * t * c.dx + t * t * b.dx,
-      u * u * a.dy + 2 * u * t * c.dy + t * t * b.dy,
+      u * u * u * a.dx +
+          3 * u * u * t * c1.dx +
+          3 * u * t * t * c2.dx +
+          t * t * t * b.dx,
+      u * u * u * a.dy +
+          3 * u * u * t * c1.dy +
+          3 * u * t * t * c2.dy +
+          t * t * t * b.dy,
     );
   }
 
@@ -284,7 +295,9 @@ class _MistFlightPainter extends CustomPainter {
         1 - Curves.easeIn.transform(((progress - .32) / .34).clamp(0.0, 1.0));
     final nascendo = (acende * apaga).clamp(0.0, 1.0).toDouble();
     if (nascendo > 0) {
-      final raio = base * (1.8 + 1.4 * acende);
+      // Do tamanho da esfera, não maior: um clarão que passe dela lê como
+      // nuvem POR CIMA da bola, e não como luz acesa dentro do cristal.
+      final raio = base * (1.1 + .9 * acende);
       canvas.drawCircle(
         origem,
         raio,
@@ -307,11 +320,17 @@ class _MistFlightPainter extends CustomPainter {
       // Sai do cristal e desce sem pressa: sem aceleração no meio, o rastro
       // fica legível em vez de virar um risco.
       final andar = Curves.easeInOutSine.transform(t);
-      final controle = Offset(
-        (origem.dx + destino.dx) / 2 + p.lateral * distancia * .22,
-        (origem.dy + destino.dy) / 2 - distancia * .12,
+      // Sai do meio da esfera para BAIXO, abre de lado no meio do caminho e
+      // chega por cima da primeira letra.
+      final saida = Offset(
+        origem.dx + p.lateral * distancia * .10,
+        origem.dy + distancia * .30,
       );
-      final onde = _curva(origem, controle, destino, andar);
+      final chegada = Offset(
+        destino.dx + p.lateral * distancia * .18,
+        destino.dy - distancia * .22,
+      );
+      final onde = _curva(origem, saida, chegada, destino, andar);
       // Entra e sai: nasce da bola e se desfaz ao pousar.
       final brilho = math.sin(math.pi * t).clamp(0.0, 1.0).toDouble();
 

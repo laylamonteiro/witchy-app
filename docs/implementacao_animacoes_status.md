@@ -170,7 +170,10 @@ Entregue em 10/09. Revisto em 13/09 (jornada):
   por chave — os dois retângulos são lidos dentro do `paint`, já com o
   layout do quadro, senão a névoa pousaria onde o texto estava quando ela
   saiu. São 32 sopros, metade névoa, e a descida não acelera no meio: o
-  rastro tem de ser legível, não um risco. Só quando a névoa pousa é que
+  rastro tem de ser legível, não um risco. A curva é cúbica, com o primeiro
+  controle ABAIXO do centro da esfera: com um controle só, no meio do
+  caminho, a névoa partia na direção dele — para cima — e parecia escapar
+  pela tampa da bola em vez de sair de dentro dela. Só quando a névoa pousa é que
   `MistTypewriterText`
   (`lib/core/widgets/motion/`) começa a escrever, por fração de um
   controller (22 ms por caractere, teto de 9 s), com o texto inteiro na
