@@ -34,6 +34,7 @@ import {
   conferirFrasesProibidas,
   converterMarkdown,
   gerarPaginas,
+  montarPagina,
 } from '../scripts/gerar_paginas_legais.mjs';
 
 const RAIZ = path.dirname(path.dirname(url.fileURLToPath(import.meta.url)));
@@ -322,6 +323,25 @@ t('o conversor para diante do que não sabe, em vez de publicar errado', () => {
     ['  indentado', 'linha indentada'],
     ['#### fundo demais', 'quarto nível'],
     ['um * solto', 'asterisco solto'],
+    // As sete abaixo PASSAVAM caladas até esta revisão, publicando a marcação
+    // crua no meio da política. Nenhuma delas cai no `](` que a primeira
+    // versão procurava — e "o conversor para diante do que não conhece" só é
+    // verdade se ele parar diante destas também.
+    ['texto com _itálico_ aqui', 'ênfase com _'],
+    ['texto com __negrito__ aqui', 'negrito com __'],
+    ['veja os [termos][t] aqui', 'link de referência'],
+    ['uma afirmação[^1]', 'nota de rodapé'],
+    ['+ um item de lista', 'lista com marcador +'],
+    ['~~riscado~~', 'tachado'],
+    ['Título grande\n===', 'título sublinhado com ='],
+    // As quatro abaixo também passavam caladas, e a primeira é a única do
+    // grupo com consequência no que a pessoa LÊ: a linha quebrada partia a
+    // data de vigência ao meio (o caso dedicado a ela é o penúltimo deste
+    // arquivo).
+    ['um parágrafo que o autor\nquebrou em duas linhas', 'parágrafo colado na linha de cima'],
+    ['## Fecha com hashes ##', 'fecho ATX no título'],
+    ['- - -', 'régua escrita com espaços'],
+    ['um espaço&nbsp;que não quebra', 'entidade HTML'],
   ];
   for (const [corpo, oQue] of recusas) {
     let parou = false;
@@ -334,6 +354,77 @@ t('o conversor para diante do que não sabe, em vez de publicar errado', () => {
       }
     }
     if (!parou) throw new Error(`o conversor aceitou "${oQue}" em silêncio.`);
+  }
+});
+
+t('o título de primeiro nível recusa negrito, e a prévia de link sai sem asterisco', () => {
+  // Dois lugares onde a marcação não tem como ser honrada e escapava.
+  //
+  // O título vira <h1>, <title> e og:title: nos dois últimos só cabe texto
+  // puro, então `# **Política** — App` publicava os asteriscos na aba do
+  // navegador. Agora para.
+  let parou = false;
+  try {
+    converterMarkdown('# **T** — A\n\nvigência\n\nabertura\n\n## 1. x\n\ny\n', 'sintético.md');
+  } catch {
+    parou = true;
+  }
+  if (!parou) throw new Error('o conversor aceitou negrito no título de primeiro nível.');
+
+  // A descrição da prévia nasce do parágrafo de abertura, onde o negrito É
+  // legítimo — ali a saída certa não é parar, é publicar o texto sem a
+  // marcação, porque um atributo não aceita <strong>.
+  const convertido = converterMarkdown(
+    '# T — A\n\nvigência\n\nabertura com **negrito** dentro\n\n## 1. x\n\ny **forte** z\n',
+    'sintético.md',
+  );
+  const documento = DOCUMENTOS.find((d) => d.id === 'privacidade-pt');
+  const html = montarPagina(documento, convertido, new Map(DOCUMENTOS.map((d) => [d.id, convertido])));
+  for (const meta of ['name="description"', 'property="og:description"']) {
+    const achado = html.match(new RegExp(`${meta} content="([^"]*)"`));
+    if (!achado) throw new Error(`a página perdeu ${meta}.`);
+    if (achado[1].includes('*')) {
+      throw new Error(`a prévia de link saiu com marcação crua: ${achado[1]}`);
+    }
+  }
+  // E o corpo, que aceita, continua marcando.
+  if (!html.includes('<strong>forte</strong>')) {
+    throw new Error('o negrito sumiu do corpo da página.');
+  }
+});
+
+t('a data de vigência não se parte, e o parágrafo abaixo do ### continua valendo', () => {
+  // O caso concreto do ponto cego: vigência e abertura são pegas por POSIÇÃO
+  // (1º e 2º parágrafos). Com a linha da data quebrada, a página publicava
+  // "Última atualização: 13 de setembro de" — sem o ano — e o ano sozinho
+  // virava a descrição da prévia do link. Nenhum erro, publicação calada.
+  let parou = false;
+  try {
+    converterMarkdown(
+      '# T — A\n\nÚltima atualização: 13 de setembro de\n2026\n\nabertura\n',
+      'sintético.md',
+    );
+  } catch (e) {
+    parou = true;
+    if (!/sintético\.md:4/.test(e.message)) {
+      throw new Error('o erro não aponta a linha quebrada: ' + e.message);
+    }
+  }
+  if (!parou) throw new Error('a data de vigência foi partida em duas em silêncio.');
+
+  // E o outro lado da recusa: parágrafo logo abaixo de um "###", sem linha em
+  // branco no meio, é construção legítima que os três documentos de
+  // privacidade usam quinze vezes. Se esta recusa a pegasse junto, a
+  // publicação de produção pararia HOJE.
+  const convertido = converterMarkdown(
+    '# T — A\n\nvigência\n\nabertura\n\n### Dados de conta\nNome e e-mail.\n',
+    'sintético.md',
+  );
+  if (!convertido.corpoHtml.includes('<h3>Dados de conta</h3>')) {
+    throw new Error('o ### sumiu: ' + convertido.corpoHtml);
+  }
+  if (!convertido.corpoHtml.includes('<p>Nome e e-mail.</p>')) {
+    throw new Error('o parágrafo colado no ### foi recusado por engano: ' + convertido.corpoHtml);
   }
 });
 

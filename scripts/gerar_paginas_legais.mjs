@@ -193,17 +193,48 @@ function escaparAtributo(texto) {
 
 const EMAIL = /[\w.+-]+@[\w-]+\.[\w.-]*\w/g;
 
-/// Converte o trecho em linha: só **negrito** e o e-mail que vira mailto.
+/// Recusa toda marcação que o conversor não sabe traduzir.
 ///
-/// A ordem importa: escapar primeiro, marcar depois. O contrário deixaria
-/// `<strong>` virar `&lt;strong&gt;`.
-function emLinha(texto, onde) {
+/// Separada de `emLinha` porque o título de primeiro nível também precisa
+/// dela: ele não passa pela conversão (vira `<h1>`, `<title>` e og:title como
+/// texto puro), e sem esta passagem um `# **Política** — App` publicaria os
+/// asteriscos à vista no título da aba e na prévia do link.
+///
+/// A lista cresceu depois de uma varredura: a versão anterior prometia parar
+/// diante do desconhecido e parava só diante de cinco construções. Passavam
+/// caladas, publicando a marcação crua na página legal, o link de referência
+/// (`[termos][t]`), a nota de rodapé (`[^1]`), a ênfase com sublinhado
+/// (`_assim_`, `__assim__`) e o tachado (`~~assim~~`) — nenhuma delas
+/// aparecia no `]\(` que a versão anterior procurava. Agora o colchete, o
+/// sublinhado e o til são recusados inteiros, sem tentar adivinhar a intenção.
+///
+/// O custo assumido, dito inteiro — porque ele é maior do que um e-mail com
+/// sublinhado no nome (`a_b@exemplo.com`), que era o único exemplo que este
+/// comentário dava. O colchete e o sublinhado são PONTUAÇÃO legítima de prosa
+/// jurídica: `[sic]`, `[tutor]`, uma elisão `[...]`, e qualquer campo de dado
+/// citado pelo nome (`user_id`, `sb_access_token`) — coisa provável numa
+/// política que lista o que guarda. Hoje nenhum dos seis documentos usa nada
+/// disso (conferido), mas no dia em que usar, a publicação de PRODUÇÃO para
+/// diante de um texto correto, e alguém terá de ensinar o caso ao conversor
+/// antes de publicar. É o lado caro da troca, e é o lado certo dela: parar
+/// alto custa uma publicação atrasada, publicar torto manda `_itálico_` cru
+/// — ou pior, marcação que muda o sentido — para dentro de um documento
+/// legal que a pessoa lê para decidir sobre os próprios dados.
+function recusarOQueNaoSabe(texto, onde) {
   const proibido = [
     [/\]\(/, 'link'],
     [/!\[/, 'imagem'],
+    [/[[\]]/, 'colchete (link de referência, nota de rodapé)'],
     [/`/, 'código'],
     [/<[a-zA-Z/!]/, 'HTML embutido'],
     [/\*\*\*/, 'negrito e itálico juntos'],
+    [/_/, 'sublinhado (a ênfase _assim_ ou __assim__)'],
+    [/~~/, 'tachado'],
+    // `&nbsp;` virava `&amp;nbsp;` e a pessoa lia o código cru no meio da
+    // política — o escape de `&`, que existe para a empresa "A & B", não tem
+    // como distinguir os dois. Quem quer um espaço que não quebra escreve o
+    // caractere, não a entidade.
+    [/&[a-zA-Z][a-zA-Z0-9]*;|&#\d+;|&#x[0-9a-fA-F]+;/, 'entidade HTML (&nbsp;, &copy;)'],
   ];
   for (const [padrao, oQue] of proibido) {
     if (padrao.test(texto)) {
@@ -216,6 +247,22 @@ function emLinha(texto, onde) {
   if (/(^|[^*])\*([^*]|$)/.test(texto)) {
     erro(`${onde}: asterisco solto — o conversor só entende **negrito**.`);
   }
+}
+
+/// Tira a marcação de negrito de um trecho que vai virar TEXTO PURO — o
+/// resumo da prévia de link, que mora num atributo e não aceita `<strong>`.
+/// Sem isto a descrição do link saía com os asteriscos à vista no dia em que
+/// a abertura do documento ganhasse um negrito.
+function semNegrito(texto) {
+  return texto.replace(/\*\*(.+?)\*\*/g, '$1');
+}
+
+/// Converte o trecho em linha: só **negrito** e o e-mail que vira mailto.
+///
+/// A ordem importa: escapar primeiro, marcar depois. O contrário deixaria
+/// `<strong>` virar `&lt;strong&gt;`.
+function emLinha(texto, onde) {
+  recusarOQueNaoSabe(texto, onde);
 
   let html = escapar(texto);
   html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
@@ -247,10 +294,38 @@ export function converterMarkdown(fonte, nomeDoArquivo) {
     if (/^(>|\||```|---|___|\d+\.\s)/.test(linha)) {
       erro(`${onde}: citação, tabela, regra ou lista numerada — o conversor não trata nenhuma delas.`);
     }
+    // `* item` já caía no "asterisco solto", com uma mensagem que falava de
+    // negrito e não de lista; `+ item` não caía em nada e virava parágrafo,
+    // publicando o marcador à vista. A lista deste documento se escreve com
+    // "-" e só.
+    if (/^[*+]\s/.test(linha)) {
+      erro(`${onde}: marcador de lista "${linha[0]}" — neste documento a lista se escreve com "- ".`);
+    }
+    // Título sublinhado (setext) publicava DOIS erros calados: a linha de "="
+    // virava um parágrafo de sinais e o título acima dela virava prosa comum.
+    if (/^=+\s*$/.test(linha)) {
+      erro(`${onde}: título sublinhado com "=" — os títulos aqui se escrevem com "#", "##" e "###".`);
+    }
+    // O fecho ATX (`## Título ##`) é Markdown válido e o `slice` não o
+    // enxerga: ele corta só a abertura, e os cerquilhas da direita iam para
+    // dentro do `<h2>` — para dentro do `<title>` e da prévia do link, no caso
+    // do primeiro nível. Mesma classe das outras recusas: parar, não adivinhar
+    // se aquilo é fecho ou texto.
+    if (/^#/.test(linha) && /\s#+\s*$/.test(linha)) {
+      erro(`${onde}: título fechado com "#" à direita — aqui o "#" só abre o título.`);
+    }
 
     if (linha.startsWith('# ')) {
       if (titulo !== null) erro(`${onde}: segundo título de primeiro nível; o documento tem de ter um só.`);
       const inteiro = linha.slice(2).trim();
+      recusarOQueNaoSabe(inteiro, onde);
+      // O negrito é marcação VÁLIDA que este lugar não sabe honrar: o título
+      // vira `<h1>`, `<title>` e og:title, e nos dois últimos só cabe texto
+      // puro. Não dá para converter, e converter só no `<h1>` deixaria a aba
+      // dizendo "**Política**". Recusar é o mesmo trato do resto do arquivo.
+      if (inteiro.includes('**')) {
+        erro(`${onde}: negrito no título de primeiro nível — ele vira também <title> e prévia de link, onde não há como marcá-lo.`);
+      }
       const partes = inteiro.split(' — ');
       if (partes.length !== 2) {
         erro(`${onde}: o título de primeiro nível precisa ser "Documento — Aplicativo" separado por travessão.`);
@@ -271,6 +346,12 @@ export function converterMarkdown(fonte, nomeDoArquivo) {
       erro(`${onde}: título de quarto nível ou mais fundo — a página só tem estilo até o terceiro.`);
     }
     if (linha.startsWith('- ')) {
+      // `---`, `___`, `***` e `* * *` já param acima. `- - -` é a única
+      // grafia de régua que chegava aqui, e chegava disfarçada de item: virava
+      // `<li>- -</li>`, um marcador solto no meio da política.
+      if (/^[-*\s]+$/.test(linha.slice(2))) {
+        erro(`${onde}: régua horizontal ("- - -") — o conversor não trata régua, e isto viraria um item de lista com dois traços dentro.`);
+      }
       const anterior = blocos[blocos.length - 1];
       if (anterior && anterior.tipo === 'lista' && anterior.fim === i - 1) {
         anterior.itens.push({ texto: linha.slice(2).trim(), onde });
@@ -282,6 +363,24 @@ export function converterMarkdown(fonte, nomeDoArquivo) {
     }
     if (titulo === null) {
       erro(`${onde}: o documento começa antes do título de primeiro nível.`);
+    }
+    // Em Markdown, duas linhas seguidas são UM parágrafo; aqui cada linha era
+    // um bloco, e a diferença não era cosmética: a data de vigência e a
+    // abertura são pegas por POSIÇÃO (o 1º e o 2º parágrafos), então quebrar
+    // a linha da data ao editar o .md partia a data em duas — a página
+    // publicava "Última atualização: 13 de setembro de", sem o ano, e o ano
+    // sozinho virava a descrição da prévia do link. Sem erro nenhum.
+    //
+    // A recusa pega também a continuação preguiçosa de item de lista
+    // (`- item` numa linha, o resto na seguinte), que virava um parágrafo
+    // solto depois do `</ul>`.
+    //
+    // Parágrafo logo abaixo de um `###`, sem linha em branco no meio, é outra
+    // coisa e continua valendo: os três documentos de privacidade fazem isso
+    // quinze vezes, e ali o título de fato terminou.
+    const anteriorCru = i > 0 ? linhas[i - 1] : '';
+    if (anteriorCru.trim() !== '' && !anteriorCru.startsWith('#')) {
+      erro(`${onde}: linha de parágrafo colada na linha de cima — em Markdown as duas são um parágrafo só, e o conversor faria dois. Junte-as numa linha ou separe-as com uma linha em branco.`);
     }
     blocos.push({ tipo: 'p', texto: linha.trim(), onde });
   }
@@ -447,7 +546,7 @@ const ESTILO = `    * { margin: 0; padding: 0; box-sizing: border-box; }
 /// outros idiomas).
 export function montarPagina(documento, convertido, porId) {
   const canonica = `${DOMINIO}/${documento.rota}`;
-  const descricao = resumir(convertido.abertura);
+  const descricao = resumir(semNegrito(convertido.abertura));
 
   // O mesmo documento nos outros idiomas: é o que o rastreador usa para
   // entender que as três páginas são a mesma coisa em línguas diferentes, e
@@ -604,7 +703,20 @@ if (process.argv[1] && path.resolve(process.argv[1]) === url.fileURLToPath(impor
     console.error('Uso: node scripts/gerar_paginas_legais.mjs <diretorio_de_saida>');
     process.exit(2);
   }
-  const paginas = gerarPaginas();
+  // A recusa do conversor é uma decisão, não um acidente: ela merece a mesma
+  // mensagem limpa que a frase proibida ganha logo abaixo, e não um rastro de
+  // pilha do Node com o caminho do módulo — que esconde a única linha que
+  // interessa (o arquivo e a linha do .md a corrigir).
+  let paginas;
+  try {
+    paginas = gerarPaginas();
+  } catch (e) {
+    console.error('ERRO: o conversor não soube traduzir o documento para a web:');
+    console.error(`  ${e.message}`);
+    console.error('Ou o documento volta ao conjunto que o conversor conhece, ou');
+    console.error('scripts/gerar_paginas_legais.mjs aprende a construção nova.');
+    process.exit(1);
+  }
   const achados = conferirFrasesProibidas(paginas);
   if (achados.length > 0) {
     console.error('ERRO: página legal gerada com frase que já foi desmentida pelo código:');
@@ -613,6 +725,17 @@ if (process.argv[1] && path.resolve(process.argv[1]) === url.fileURLToPath(impor
     console.error('Corrija assets/legal/*.md — a página é derivada dele.');
     process.exit(1);
   }
-  escrever(saida, paginas);
+  // A escrita tem o mesmo direito à mensagem limpa que a conversão: disco
+  // cheio ou permissão negada saíam daqui como rastro de pilha do Node, e
+  // podiam deixar três das seis páginas gravadas. Quem monta o site vê o
+  // motivo em uma linha; o laço de conferência de assemble_site.sh cuida das
+  // que faltaram.
+  try {
+    escrever(saida, paginas);
+  } catch (e) {
+    console.error(`ERRO: não foi possível gravar as páginas legais em ${saida}:`);
+    console.error(`  ${e.message}`);
+    process.exit(1);
+  }
   for (const rota of paginas.keys()) console.log(`  /${rota.replace(/index\.html$/, '')}`);
 }

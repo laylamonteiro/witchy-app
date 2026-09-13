@@ -39,6 +39,27 @@ if ! grep -qE '<base href="/"' "$RAIZ/build/web/index.html"; then
   exit 1
 fi
 
+# Daqui para a frente, falhou = não sobra diretório.
+#
+# O PORQUÊ: as páginas legais são geradas por ÚLTIMO, depois de o app e de
+# site/ já estarem copiados. Se o gerador parar — e ele para de propósito,
+# diante de uma construção que não sabe converter ou de uma frase que o código
+# já desmentiu —, o que fica em $SAIDA é um site inteiro MENOS /privacidade/ e
+# /termos/, com o sitemap ainda anunciando as seis páginas. No CI isso não
+# publica: o passo falha e o job morre antes do deploy. Mas a publicação à mão
+# (`wrangler pages deploy public`) não tem como saber que a montagem parou no
+# meio — ela vê um diretório pronto e sobe um site cuja política de
+# privacidade dá 404. Apagar o diretório é a diferença entre "a montagem
+# falhou" e "a montagem falhou e deixou uma armadilha do lado".
+montagem_concluida=0
+apagar_montagem_pela_metade() {
+  if [ "$montagem_concluida" -eq 0 ] && [ -d "$SAIDA" ]; then
+    rm -rf "$SAIDA"
+    echo "ERRO: montagem interrompida — $SAIDA foi apagado, para ninguém publicar um site sem as páginas legais." >&2
+  fi
+}
+trap apagar_montagem_pela_metade EXIT
+
 rm -rf "$SAIDA"
 mkdir -p "$SAIDA"
 
@@ -59,6 +80,20 @@ fi
 echo "Páginas legais geradas de assets/legal/*.md:"
 node "$RAIZ/scripts/gerar_paginas_legais.mjs" "$SAIDA"
 
+# O gerador confere o conteúdo antes de gravar; isto confere que gravou. São
+# coisas diferentes: um erro de escrita (disco cheio, permissão) sairia daqui
+# com o código certo e o arquivo ausente, e o sitemap continuaria prometendo
+# seis endereços.
+for rota in privacidade termos; do
+  for idioma in "" en/ es/; do
+    if [ ! -s "$SAIDA/$rota/${idioma}index.html" ]; then
+      echo "ERRO: /$rota/$idioma não foi gravada. O sitemap anuncia as seis." >&2
+      exit 1
+    fi
+  done
+done
+
+montagem_concluida=1
 echo "Publicação montada em $SAIDA"
 echo "  /       → aplicativo ($(du -sh "$SAIDA" | cut -f1) no total)"
 echo "  /sobre/ → apresentação, privacidade, termos (pt, en, es)"
