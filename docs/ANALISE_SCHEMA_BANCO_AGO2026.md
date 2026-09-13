@@ -105,12 +105,15 @@ Da pergunta "que erros o banco pode estar causando", em ordem de relevância:
    todo cadastro entra com `signup_platform` NULL (56 e contando). Relatórios de
    "de onde vêm as contas" ficam cegos para o período. Ver §1.1.
 
-2. **Exclusão por auth.users trava (latente).** `profiles.profiles_id_fkey`
-   está **`NO ACTION`** enquanto as 22 outras tabelas são `ON DELETE CASCADE`.
-   Apagar uma pessoa pelo painel do Supabase (ou por uma futura Edge Function
-   `delete-user` — hoje comentada em `deleteAccount`) **falha** enquanto a linha
-   de `profiles` existir. Corrigível sem tocar em dado — arquivo
-   `indices_e_chaves_migration.sql` §3.
+2. ~~**Exclusão por auth.users trava (latente).**~~ **RESOLVIDO.** A
+   `profiles_id_fkey` estava `NO ACTION` enquanto as 22 outras tabelas eram
+   `ON DELETE CASCADE`, e isso travava apagar uma pessoa pelo lado do Auth
+   enquanto a linha de `profiles` existisse. O §3 do
+   `indices_e_chaves_migration.sql` foi aplicado: conferido em 2026-09-13, as
+   **23** chaves para `auth.users` cascateiam. A Edge Function `delete-user`
+   existe e é chamada (§ `supabase/functions/delete-user/index.ts`); o app
+   continua apagando `profiles` explicitamente antes dela, e o cascade é a
+   rede de segurança para a exclusão feita pelo painel.
 
 3. **Cascatas e JOINs lentos conforme cresce (latente).** Duas FKs sem índice:
    `magical_profiles.birth_chart_id` e `ritual_logs.ritual_id`. Corrigir a data
