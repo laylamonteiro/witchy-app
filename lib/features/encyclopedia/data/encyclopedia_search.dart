@@ -32,10 +32,17 @@ import '../presentation/pages/metal_detail_page.dart';
 /// isso, a linha da busca mostraria o emoji enquanto a lista e o verbete
 /// mostram o desenho; e adivinhar pelo emoji poria a coruja da Sábia no
 /// demônio Stolas, que usa o mesmo símbolo.
+///
+/// [runeName] existe pelo mesmo motivo, e é campo à parte porque o desenho é
+/// de outro sistema: as runas têm o próprio traço, em `rune_art.dart`, com a
+/// chave no NOME — nunca no caractere, que é justamente o que pode faltar no
+/// aparelho. Sem isto, a busca era o último lugar do app onde uma runa ainda
+/// chegava como o quadradinho de glifo ausente.
 typedef EncyclopediaHit = ({
   String name,
   String emoji,
   String? glyphId,
+  String? runeName,
   String section,
   String? subtitle,
   WidgetBuilder open,
@@ -67,6 +74,7 @@ List<EncyclopediaHit> searchEncyclopedia(
     required String section,
     String? subtitle,
     String? glyphId,
+    String? runeName,
     required WidgetBuilder open,
     required String haystack,
   }) {
@@ -76,6 +84,7 @@ List<EncyclopediaHit> searchEncyclopedia(
         name: name,
         emoji: emoji,
         glyphId: glyphId,
+        runeName: runeName,
         section: section,
         subtitle: subtitle,
         open: open,
@@ -85,6 +94,7 @@ List<EncyclopediaHit> searchEncyclopedia(
         name: name,
         emoji: emoji,
         glyphId: glyphId,
+        runeName: runeName,
         section: section,
         subtitle: subtitle,
         open: open,
@@ -197,6 +207,8 @@ List<EncyclopediaHit> searchEncyclopedia(
     add(
       name: rune.name,
       emoji: rune.symbol,
+      // O nome é a chave do desenho; o caractere fica como reserva.
+      runeName: rune.name,
       section: l10n.encyTabRunes,
       subtitle: rune.keywords.take(3).join(' · '),
       open: (_) => RuneDetailPage(rune: rune),
