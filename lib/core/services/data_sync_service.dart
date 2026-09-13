@@ -30,6 +30,12 @@ AppLocalizations get _l10n =>
 /// Ou seja: alfabetizar este enum, a mudança mais inocente do mundo,
 /// quebraria o upload de quem acabou de montar o mapa. Quem trava a regra é
 /// test/sync_coverage_test.dart.
+///
+/// O QUE NÃO ESTÁ AQUI também é decisão, e está escrito: as tabelas de
+/// conteúdo que ficam no aparelho são nomeadas uma a uma, com o que se perde
+/// na reinstalação de cada uma, em `TabelasLocais.soNesteAparelho`. Ficar de
+/// fora dos dois lugares não é opção — test/nenhuma_tabela_esquecida_test.dart
+/// parte das tabelas que o banco cria e exige que cada uma esteja num deles.
 enum SyncEntity {
   spells,
   dreams,
@@ -1888,6 +1894,25 @@ class DataSyncService {
       final db = await _db.database;
       await db.transaction((txn) async {
         for (final entry in downloadedByTable.entries) {
+          // O que nunca pôde subir é poupado, e sem isto o "baixar tudo da
+          // nuvem" apagava em silêncio exatamente o que foi prometido que
+          // jamais sairia do aparelho: as páginas do ciclo em `free_writings`
+          // e as linhas pré-carregadas adotadas. Este caminho troca a tabela
+          // inteira pelo que veio do servidor — e não há cópia remota do que
+          // o funil recusou, então "trocar" era perder.
+          //
+          // O filtro é o PRÓPRIO `_isSyncableItem`, não uma condição de SQL
+          // ao lado dele: escrever a mesma regra duas vezes é como esta casa
+          // já perdeu dado antes, e aqui a segunda cópia erraria em silêncio.
+          final locais = await txn.query(
+            entry.key,
+            where: 'user_id = ?',
+            whereArgs: [currentUserId],
+          );
+          final poupadas = locais
+              .where((linha) => !_isSyncableItem(entry.key, linha))
+              .toList();
+
           await txn.delete(
             entry.key,
             where: 'user_id = ?',
@@ -1895,6 +1920,20 @@ class DataSyncService {
           );
           for (final item in entry.value) {
             await txn.insert(entry.key, item);
+          }
+          // Depois das remotas, e VENCENDO delas: uma página do ciclo que
+          // subiu na janela em que a brecha existiu tem cópia no servidor, e
+          // ela acabou de aterrissar com o mesmo id. Uma linha que o funil
+          // recusa nunca teve o direito de sair daqui, então a versão deste
+          // aparelho é a verdadeira e a do servidor é resto de uma brecha
+          // fechada. O `replace` também é o que impede a colisão de derrubar
+          // a transação inteira da restauração.
+          for (final linha in poupadas) {
+            await txn.insert(
+              entry.key,
+              linha,
+              conflictAlgorithm: ConflictAlgorithm.replace,
+            );
           }
         }
       });

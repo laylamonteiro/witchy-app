@@ -273,7 +273,10 @@ class _AdvisorBodyState extends State<_AdvisorBody> {
       ),
       backgroundColor: context.gc.darkBackground,
       body: ToolSceneFrame(child: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        // Só o respiro de cima e de baixo: a margem lateral é do MagicalCard,
+        // e somando as duas o conteúdo ficava a 32dp da borda — mais estreito
+        // que o das ferramentas vizinhas, justo numa tela de texto longo.
+        padding: const EdgeInsets.symmetric(vertical: 16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -309,8 +312,6 @@ class _AdvisorBodyState extends State<_AdvisorBody> {
               ),
             ),
 
-            const SizedBox(height: 16),
-
             MagicalCard(
               child: TextField(
                 key: const ValueKey('advisor-question'),
@@ -343,34 +344,39 @@ class _AdvisorBodyState extends State<_AdvisorBody> {
               ),
             ),
 
-            const SizedBox(height: 16),
+            const SizedBox(height: 8),
 
-            ElevatedButton.icon(
-              key: const ValueKey('advisor-consult'),
-              onPressed: _pending || _restoring || _questionController.text.trim().isEmpty
-                  ? null
-                  : _askAdvisor,
-              icon: _pending
-                  ? SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          context.gc.darkBackground,
+            // O botão não é cartão: sem a margem lateral do MagicalCard, ele
+            // encostaria na borda da tela.
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: ElevatedButton.icon(
+                key: const ValueKey('advisor-consult'),
+                onPressed: _pending || _restoring || _questionController.text.trim().isEmpty
+                    ? null
+                    : _askAdvisor,
+                icon: _pending
+                    ? SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            context.gc.darkBackground,
+                          ),
                         ),
-                      ),
-                    )
-                  : const Icon(Icons.auto_stories),
-              label: Text(_pending ? l10n.advisorConsultingStars : l10n.advisorConsult),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: context.gc.lilac,
-                foregroundColor: context.gc.darkBackground,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 32,
-                  vertical: 16,
+                      )
+                    : const Icon(Icons.auto_stories),
+                label: Text(_pending ? l10n.advisorConsultingStars : l10n.advisorConsult),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: context.gc.lilac,
+                  foregroundColor: context.gc.darkBackground,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 32,
+                    vertical: 16,
+                  ),
+                  disabledBackgroundColor: context.gc.lilac.withValues(alpha: 0.3),
                 ),
-                disabledBackgroundColor: context.gc.lilac.withValues(alpha: 0.3),
               ),
             ),
 
@@ -381,7 +387,7 @@ class _AdvisorBodyState extends State<_AdvisorBody> {
                 final remaining =
                     authProvider.currentUser.remainingAdvisorConsultations;
                 return Padding(
-                  padding: const EdgeInsets.only(top: 12),
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
                   child: Text(
                     l10n.advisorRemainingToday('$remaining/${UserModel.freeAdvisorConsultationsLimit}'),
                     style: TextStyle(
@@ -397,7 +403,7 @@ class _AdvisorBodyState extends State<_AdvisorBody> {
             ),
 
             if (consultation != null) ...[
-              const SizedBox(height: 24),
+              const SizedBox(height: 8),
               // A pergunta enviada vira citação: é exatamente o texto que a
               // operação usou, mesmo que o campo mude depois.
               AnimatedSwitcher(
@@ -421,7 +427,6 @@ class _AdvisorBodyState extends State<_AdvisorBody> {
                   ),
                 ),
               ),
-              const SizedBox(height: 12),
               switch (consultation.status) {
                 AdvisorConsultationStatus.pending => _PendingCard(l10n: l10n),
                 AdvisorConsultationStatus.failed => _FailedCard(
@@ -500,7 +505,12 @@ class _AnswerCard extends StatelessWidget {
       children: [
         Row(
           children: [
-            const Text('🌙', style: TextStyle(fontSize: 28)),
+            // 🌙 é o emblema dos Sonhos: o cabeçalho da resposta mostrava o
+            // símbolo de outra ferramenta bem em cima da palavra
+            // 'Conselheiro'. O emblema vem do ToolIdentity, que é o mesmo
+            // lugar de onde saem o card do hub e a AppBar desta tela.
+            const ToolEmblem(
+                tool: ToolId.mysticAdvisor, size: 28, flies: false),
             const SizedBox(width: 12),
             // O título é traduzido: em telas estreitas ele quebra a linha
             // em vez de estourar o cartão.

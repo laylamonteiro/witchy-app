@@ -24,7 +24,10 @@ class RuneDetailPage extends StatelessWidget {
         backgroundColor: context.gc.surface,
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        // A margem lateral vem do MagicalCard (margin horizontal 16), como
+        // nas outras onze ferramentas: com `all(16)` aqui o conteúdo somava
+        // os dois recuos e ficava 32dp para dentro.
+        padding: const EdgeInsets.symmetric(vertical: 16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -52,7 +55,6 @@ class RuneDetailPage extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(height: 24),
 
             // Palavras-chave
             MagicalCard(
@@ -63,9 +65,14 @@ class RuneDetailPage extends StatelessWidget {
                     children: [
                       const Text('✨', style: TextStyle(fontSize: 24)),
                       const SizedBox(width: 12),
-                      Text(
-                        AppLocalizations.of(context).runesKeywords,
-                        style: Theme.of(context).textTheme.titleMedium,
+                      // Expanded: com a fonte ampliada (ou numa tradução mais
+                      // longa) a Row respondia com a barra listrada e o
+                      // rótulo cortado, em vez de quebrar a linha.
+                      Expanded(
+                        child: Text(
+                          AppLocalizations.of(context).runesKeywords,
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
                       ),
                     ],
                   ),
@@ -100,7 +107,6 @@ class RuneDetailPage extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(height: 16),
 
             // Descrição
             MagicalCard(
@@ -111,9 +117,11 @@ class RuneDetailPage extends StatelessWidget {
                     children: [
                       const Text('📖', style: TextStyle(fontSize: 24)),
                       const SizedBox(width: 12),
-                      Text(
-                        AppLocalizations.of(context).runesMeaning,
-                        style: Theme.of(context).textTheme.titleMedium,
+                      Expanded(
+                        child: Text(
+                          AppLocalizations.of(context).runesMeaning,
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
                       ),
                     ],
                   ),
@@ -128,7 +136,6 @@ class RuneDetailPage extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(height: 16),
 
             // Nota informativa
             MagicalCard(

@@ -28,7 +28,7 @@ The **photos you attach** also belong here. The photos of the entries you create
 
 ### Menstrual Cycle record — sensitive health data (optional)
 
-Bleeding dates, intensity, symptoms, mood and your notes — what you record in the Menstrual Cycle wheel, and nothing beyond that. The application does not calculate averages, cycle day, a forecast of the next date, or any estimate from this record.
+Bleeding dates, intensity, symptoms, mood and your notes — what you record in the Menstrual Cycle wheel, and nothing beyond that. The application does not calculate averages, cycle day or a forecast of the next date. What it does calculate, on the device itself and only from the days you marked, is what the card "The Moon and you" shows: the Moon phase in which each of your bleedings began, and a tally of the moods you noted most on bleeding days. Those counts do not leave here and do not become any forecast.
 
 This record is health information. The LGPD (Brazil's General Data Protection Law) classifies health data as **sensitive personal data** (art. 5, II) and handles it through separate, specific consent — specific to this purpose, apart from the other authorizations. That is how it works here, and the rule is narrower than the one for the rest of the content you create:
 

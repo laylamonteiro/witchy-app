@@ -27,7 +27,11 @@ class DreamToolsPage extends StatelessWidget {
             MagicalCard(
               child: Column(
                 children: [
-                  const Text('🌙', style: TextStyle(fontSize: 48)),
+                  // O mesmo emblema que a pessoa tocou no hub, no porte de
+                  // abertura das outras ferramentas. Como Text, o emoji
+                  // crescia com a fonte do sistema e desalinhava a abertura.
+                  const ToolEmblem(
+                      tool: ToolId.dreams, size: 48, flies: false),
                   const SizedBox(height: 12),
                   Text(
                     l10n.dreamToolsIntro,
@@ -75,42 +79,43 @@ class DreamToolsPage extends StatelessWidget {
     required String description,
     required VoidCallback onTap,
   }) {
-    return InkWell(
+    // O toque é do próprio MagicalCard, como no hub das Ferramentas: com um
+    // InkWell POR FORA, o Ink opaco do card cobria o brilho do toque, o
+    // encolhimento de resposta nunca disparava e o alvo invadia a margem
+    // entre dois cartões.
+    return MagicalCard(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: MagicalCard(
-        child: Row(
-          children: [
-            Text(emoji, style: const TextStyle(fontSize: 40)),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          color: context.gc.softWhite,
-                          fontWeight: FontWeight.bold,
-                        ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    description,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: context.gc.softWhite.withValues(alpha: 0.7),
-                        ),
-                  ),
-                ],
-              ),
+      child: Row(
+        children: [
+          Text(emoji, style: const TextStyle(fontSize: 40)),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: context.gc.softWhite,
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  description,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: context.gc.softWhite.withValues(alpha: 0.7),
+                      ),
+                ),
+              ],
             ),
-            Icon(
-              Icons.arrow_forward_ios,
-              color: context.gc.lilac,
-              size: 16,
-            ),
-          ],
-        ),
+          ),
+          Icon(
+            Icons.arrow_forward_ios,
+            color: context.gc.lilac,
+            size: 16,
+          ),
+        ],
       ),
     );
   }

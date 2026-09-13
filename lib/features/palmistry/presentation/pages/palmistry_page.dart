@@ -241,7 +241,9 @@ class _PalmistryPageState extends State<PalmistryPage> {
 
   Widget _buildFlow(int? remainingReadings) {
     return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(vertical: 12),
+      // A margem lateral é do MagicalCard; aqui só o respiro de cima e de
+      // baixo, o mesmo das outras onze.
+      padding: const EdgeInsets.symmetric(vertical: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [

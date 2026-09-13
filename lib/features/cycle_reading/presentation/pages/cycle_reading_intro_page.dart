@@ -107,9 +107,8 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
   /// Quantas leituras a lista mostra antes de mandar para o acervo.
   static const int _recentesNaTela = 4;
 
-  /// Esta janela sai de graça pelo Vitalício? Exige compra REAL do lifetime
-  /// (entitlement sem expiração) — `SubscriptionPlan.lifetime` não serve,
-  /// porque também vem de Código Premium e do admin.
+  /// Esta janela sai de graça pelo Vitalício?
+  ///
   /// Este Vitalício é qualquer um: compra real, Código Premium ou admin —
   /// todos recebem `SubscriptionPlan.lifetime`. Decisão de produto: o
   /// Vitalício cobre as leituras sem cobrança, venha de onde vier.

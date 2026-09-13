@@ -807,41 +807,14 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
     if (confirmed == true && mounted) {
       try {
-        final db = await DatabaseHelper.instance.database;
-
-        // Tabelas para limpar (exceto dados pré-carregados)
-        final tables = [
-          'spells',
-          'dreams',
-          'desires',
-          'gratitudes',
-          'daily_rituals',
-          'ritual_logs',
-          'sigils',
-          'birth_charts',
-          'magical_profiles',
-          'rune_readings',
-          'pendulum_consultations',
-          'oracle_readings',
-          'daily_magical_weather',
-          'learning_progress',
-          'guided_ritual_logs',
-          'user_encyclopedia_entries',
-          'daily_checkins'
-        ];
-
-        for (final table in tables) {
-          try {
-            if (table == 'spells' || table == 'affirmations') {
-              // Manter itens pré-carregados
-              await db.delete(table, where: 'is_preloaded = ?', whereArgs: [0]);
-            } else {
-              await db.delete(table);
-            }
-          } catch (e) {
-            // Ignorar erros de tabelas que não existem
-          }
-        }
+        // A lista de 17 tabelas que morava aqui esquecia o acervo inteiro, as
+        // tiragens de tarô, as compras de Leitura do Ciclo, as afirmações e o
+        // registro menstrual: a pessoa tocava em "limpar todos os dados deste
+        // aparelho", recebia a mensagem de sucesso, e tudo isso continuava ali.
+        // A tela de Privacidade tem o mesmo rótulo e o mesmo texto de
+        // confirmação, e a lista dela esquecia OUTRAS coisas — agora as duas
+        // chamam o mesmo método, que lê a lista canônica.
+        await DatabaseHelper.instance.limparConteudoDesteAparelho();
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(

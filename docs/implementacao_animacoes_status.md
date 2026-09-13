@@ -1169,3 +1169,59 @@ ela exibe afirmava isso. Sincronizar é reescrever essa promessa.
   páginas do ciclo), `lapides_descartadas_ao_desligar_test.dart`,
   `o_ciclo_nao_sobe_test.dart` ampliado, `sync_coverage_test.dart`,
   `politica_legal_test.dart` (catraca nova e paridade das três traduções).
+
+### P14 e P15 — a auditoria, e o que ela achou (13/09)
+
+Três leituras adversariais varreram o código atrás do que só se vê lendo: a
+coerência das doze ferramentas (P14) e os furos de integração (P15). Foram 42
+achados; os oito graves e a maioria dos médios estão corrigidos.
+
+- **Os símbolos raros, de novo.** ⛤, ᚱ e ⟟ viraram desenho em agosto, mas a
+  troca tinha chegado só aos cards e às barras: dentro das telas do Pêndulo,
+  das Runas e dos Sigilos o caractere cru continuava sendo a FIGURA
+  PRINCIPAL, a 48 pontos. Num aparelho sem fonte de símbolos, o maior
+  elemento da tela era um quadradinho vazio. Agora os três são `ToolEmblem`. A
+  animação de glifos da abertura das Runas trocava quatro caracteres; virou
+  opacidade sobre o desenho de Raidho, mesma cadência — perdeu-se a troca de
+  runa, e isso está escrito no código. Sobraram glifos crus no hub de
+  Adivinhação e nos atalhos de Seu Dia: anotados, não corrigidos.
+- **A margem das doze.** Metade das páginas usava `all(16)` e a outra metade
+  `symmetric(vertical: 16)`. Como o cartão já traz margem lateral própria, o
+  conteúdo ficava com 32dp de recuo num grupo e 16dp no outro, e o vão entre
+  cartões dobrava junto. Numa tela de 320dp isso é 10% da largura de leitura,
+  perdida justamente nas ferramentas que mais escrevem. Agora é um padrão só,
+  e o conteúdo que não mora em cartão ganhou o recuo explícito.
+- **Alvo de toque e fonte grande.** As Horas Espelho tinham 24 alvos de 40dp
+  colados; a data do sonho, 36dp. `Row` com texto sem folga estourava o
+  cabeçalho dos Sigilos e o verbete das Runas com fonte ampliada — era o
+  defeito mais repetido da auditoria.
+- **Uma lista de tabelas só.** "Limpar dados locais" tinha duas cópias
+  escritas à mão, uma no Editar Perfil e outra em Privacidade, e elas
+  divergiram entre si e da exportação: cada tela apagava um conjunto
+  diferente, e nenhuma apagava tudo. Agora existe `TabelasLocais`, derivada
+  num lugar só, que a exportação, a limpeza, a exclusão de conta e a adoção do
+  primeiro login consomem. As ressalvas são nomeadas: o pré-carregado é do
+  app, o crédito de leitura pago e não usado fica, e a lápide do dia menstrual
+  fica (sem ela, limpar o aparelho ressuscitaria no download um dia apagado).
+- **A catraca que faltava** (`nenhuma_tabela_esquecida_test.dart`): ela parte
+  das TABELAS do banco, não do enum, e exige de cada uma ou entrada no sync ou
+  uma declaração explícita de "fica neste aparelho por decisão". O teste de
+  cobertura antigo só olhava o enum, e por isso nunca viu o que estava de
+  fora.
+- **Seis tabelas ficam desprotegidas, e agora está escrito.** Os ritos
+  guiados (sabbats, luas e águas celebrados, e o XP que veio deles), o álbum
+  do Oráculo, a memória das consultas ao Conselheiro, os marcos das jornadas,
+  uma leitura interrompida antes de revelar e a pergunta da carta do dia. Tudo
+  isso some numa reinstalação, inclusive para quem tem a nuvem ligada. Não foi
+  corrigido de propósito: exige tabelas novas no servidor de produção, e a
+  decisão é da dona, com o custo à vista.
+- **O texto que vendia o que já é de graça.** A pergunta frequente ainda dizia
+  que a nuvem é do Premium, o que deixou de ser verdade. A catraca da política
+  já proibia essa frase no documento legal; agora ela alcança também os quatro
+  ARBs, e em qualquer chave — a frase migrou uma vez, e o próximo lugar
+  ninguém adivinha.
+- **Fica pendente:** o site em `site/privacidade/index.html` repete a mentira
+  da nuvem Premium e não é gerado a partir dos documentos legais; o guia
+  `docs/SUPABASE_RESTORE.md` descreve um "script único" que já não é único; e
+  as 24 runas continuam sendo caracteres nas pedras, o que o sistema de
+  emblemas não resolve (ele desenha só Raidho).

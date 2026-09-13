@@ -83,30 +83,24 @@ class FreeWritingRepository {
 
   /// Repõe o carimbo de "não sobe" em espelhos que o perderam.
   ///
-  /// Quem o tira é a adoção dos dados anônimos: ao entrar na conta pela
-  /// primeira vez, `claimLegacyData` grava `{user_id: <conta>, synced: 0}` em
-  /// TODA linha de `free_writings` que era de `local_user`
-  /// (core/database/database_helper.dart) — e `synced = 0` é exatamente o que
-  /// a varredura recolhe para subir. Sem esta linha, entrar na conta seria o
-  /// gesto que manda o registro do ciclo para a nuvem.
+  /// A porta do primeiro login ESTÁ FECHADA, e é importante dizer isto aqui:
+  /// este comentário já anunciou a brecha como aberta, e quem o lesse gastaria
+  /// o dia consertando o que está consertado — ou, pior, afrouxaria o texto
+  /// legal para caber numa brecha que não existe mais. São duas guardas, e as
+  /// duas vivem fora deste arquivo:
   ///
-  /// É REMENDO, e o remendo NÃO alcança o primeiro login — é preciso dizer
-  /// isto sem meias palavras, porque é dado de saúde. Em
-  /// `AuthProvider.syncAuthenticatedUser` a ordem é fixa: `claimLegacyData`
-  /// (que carimba `synced = 0`), depois `_autoSyncAfterLogin()` (que sobe as
-  /// linhas com `synced = 0`), e só DEPOIS o `notifyListeners()` que faz o
-  /// `ChangeNotifierProxyProvider` de main.dart chamar
-  /// `FreeWritingProvider.setUserId` — ou seja, esta releitura acontece
-  /// sempre depois da subida, nunca antes. Quem estava registrando o ciclo
-  /// como anônima e entra numa conta com a sincronização ligada tem as
-  /// páginas do ciclo enviadas nesse primeiro sync.
+  /// 1. `DataSyncService._isSyncableItem` devolve `false` para `free_writings`
+  ///    cuja `source` está em [FreeWritingSource.neverLeavesDevice]. É o funil
+  ///    por onde TODA varredura passa, inclusive a do primeiro login, que roda
+  ///    antes de qualquer tela recarregar;
+  /// 2. `claimLegacyData` exclui essas origens da adoção (`source NOT IN`),
+  ///    então a linha anônima do ciclo não chega nem a ser carimbada
+  ///    `synced = 0` sob a conta nova.
   ///
-  /// O conserto de verdade é UMA linha em `DataSyncService._isSyncableItem`
-  /// (lib/core/services), o funil por onde toda a varredura passa: devolver
-  /// `false` para `free_writings` cuja `source` está em
-  /// [FreeWritingSource.neverLeavesDevice]. Enquanto ela não existir, este
-  /// método só limpa o que sobrou — ele conserta a linha para as varreduras
-  /// seguintes, não impede a primeira.
+  /// Este método é a TERCEIRA camada, e continua valendo: ele alcança as
+  /// linhas antigas — as que atravessaram a adoção antes de o `NOT IN` existir
+  /// — e qualquer caminho futuro que grave `synced = 0` aqui sem passar por
+  /// nenhuma das duas guardas. Rede de segurança, não remendo insuficiente.
   ///
   /// O `synced IS NULL` entra no filtro porque a varredura recolhe
   /// `(synced = 0 OR synced IS NULL)`: um predicado mais estreito que o dela

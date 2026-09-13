@@ -1,8 +1,14 @@
 -- ============================================================================
--- GRIMÓRIO DE BOLSO — SCRIPT ÚNICO DE RESTAURAÇÃO DO BANCO SUPABASE
+-- GRIMÓRIO DE BOLSO — SCRIPT BASE DE RESTAURAÇÃO DO BANCO SUPABASE
 -- ============================================================================
 -- Uso: crie um projeto novo no Supabase e execute este arquivo INTEIRO no
 -- SQL Editor (Database → SQL Editor → New query → colar → Run).
+--
+-- BASE, e não único: ele deixou de ser o arquivo completo quando o app passou
+-- a sincronizar mais do que ele cria. A lista do que rodar depois está no fim
+-- deste cabeçalho, e é ela que vale — não a memória de quem já restaurou uma
+-- vez. (docs/SUPABASE_RESTORE.md ainda chama este arquivo de "script único" e
+-- termina o passo do banco aqui: quem cuidar do guia precisa acertá-lo.)
 --
 -- O script é IDEMPOTENTE: pode ser executado mais de uma vez sem erro e sem
 -- perder dados (CREATE IF NOT EXISTS / ADD COLUMN IF NOT EXISTS /
@@ -10,8 +16,10 @@
 --
 -- Conteúdo:
 --   1. Extensões
---   2. Tabelas de dados sincronizados (16 tabelas — ver SupabaseTables em
---      lib/core/config/supabase_config.dart)
+--   2. `profiles` + 17 das 21 tabelas sincronizadas (ver SupabaseTables em
+--      lib/core/config/supabase_config.dart). As QUATRO que faltam — e as
+--      lápides, que não são entidade — vivem em arquivos próprios, listados
+--      abaixo: este script sozinho NÃO deixa o app sincronizando inteiro
 --   3. Coluna updated_at em TODAS as tabelas de sync (exigida pelo
 --      DataSyncService para resolução de conflitos — o schema antigo em
 --      docs/supabase_schema.sql só tinha em profiles/spells/desires, o que
@@ -22,10 +30,34 @@
 --   7. Tabela beta_codes + RLS anônimo + RPC atômica redeem_beta_code
 --   8. Funções de reset de contadores (agendar via cron do Supabase)
 --
--- DEPOIS DESTE ARQUIVO, rode supabase/profiles_lockdown_migration.sql. Ele
--- fecha `profiles` por coluna (role/plan/contadores fora do alcance do
--- cliente) e endurece as funções SECURITY DEFINER. Sem ele o projeto nasce
--- com escalada de privilégio: qualquer conta logada se promove a admin.
+-- DEPOIS DESTE ARQUIVO, rode nesta ordem, cada um INTEIRO no SQL Editor:
+--
+--   1. profiles_lockdown_migration.sql — fecha `profiles` por coluna
+--      (role/plan/contadores fora do alcance do cliente) e endurece as funções
+--      SECURITY DEFINER. Sem ele o projeto nasce com escalada de privilégio:
+--      qualquer conta logada se promove a admin. É o primeiro por ser o único
+--      cuja ausência é falha de segurança, não de dados.
+--   2. tarot_readings_migration.sql
+--   3. user_encyclopedia_entries_migration.sql
+--   4. cycle_readings_migration.sql
+--   5. sync_tombstones_migration.sql — sem ele as exclusões ressuscitam no
+--      download seguinte, que é o defeito que a migração v23 do app fecha.
+--   6. menstrual_days_migration.sql — só é tocada por quem der o segundo sim,
+--      mas a tabela precisa existir antes de a versão que envia o ciclo sair.
+--   7. storage_user_images_migration.sql — o bucket privado `user-images` e as
+--      políticas por pasta da conta. Sem ele as fotos dos verbetes pessoais da
+--      Enciclopédia e da Quiromancia falham no envio.
+--   8. perfil_magico_upsert.sql — a guarda que impede uma escrita velha da
+--      Análise Personalizada de sobrescrever uma mais nova.
+--
+-- O 2, o 3 e o 4 não são opcionais: sem eles `syncAll` devolve erro nessas
+-- entidades a CADA varredura, e a pessoa perde as tiragens de tarô, as
+-- anotações da enciclopédia e as compras de Leitura do Ciclo na reinstalação.
+-- Um projeto restaurado só com este arquivo nasce com esses três furos.
+-- Quem confere que toda entidade de sync tem tabela em algum .sql daqui é
+-- test/nenhuma_tabela_esquecida_test.dart. Os demais .sql desta pasta são
+-- manutenção de um projeto que já existe (índices, otimização de RLS, contas
+-- de teste), e não fazem parte de subir um projeto novo.
 -- ============================================================================
 
 -- ----------------------------------------------------------------------------

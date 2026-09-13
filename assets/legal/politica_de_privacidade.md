@@ -28,7 +28,7 @@ Também entram aqui as **fotos que você anexa**. As fotos dos verbetes que voc�
 
 ### Registro do Ciclo Menstrual — dado sensível de saúde (opcional)
 
-Datas de sangramento, intensidade, sintomas, humor e suas anotações — o que você registra na roda do Ciclo Menstrual, e nada além disso. O aplicativo não calcula média, dia do ciclo, previsão de próxima data nem qualquer estimativa a partir desse registro.
+Datas de sangramento, intensidade, sintomas, humor e suas anotações — o que você registra na roda do Ciclo Menstrual, e nada além disso. O aplicativo não calcula média, dia do ciclo nem previsão de próxima data. O que ele calcula, no próprio aparelho e só a partir dos dias que você marcou, é o que o cartão "A Lua e você" mostra: a fase da Lua em que cada sangue seu começou e a contagem das emoções que você mais anotou nos dias de sangue. Essas contas não saem daqui e não viram previsão nenhuma.
 
 Este registro é informação sobre saúde. A LGPD classifica dado de saúde como **dado pessoal sensível** (art. 5º, II) e o trata por consentimento destacado — específico para esta finalidade, separado das demais autorizações. É assim que ele funciona aqui, e a regra é mais estreita do que a do resto do conteúdo que você cria:
 

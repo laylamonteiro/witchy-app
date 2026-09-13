@@ -29,7 +29,11 @@ class NumerologyPage extends StatelessWidget {
             MagicalCard(
               child: Column(
                 children: [
-                  const Text('🔢', style: TextStyle(fontSize: 44)),
+                  // O emblema da entrada continua na cena, no mesmo porte de
+                  // abertura das irmãs (48). Como Text, o emoji ainda crescia
+                  // com a fonte do sistema; o ToolEmblem o normaliza.
+                  const ToolEmblem(
+                      tool: ToolId.numerology, size: 48, flies: false),
                   const SizedBox(height: 12),
                   Text(
                     AppLocalizations.of(context).numMagicOfNumbers,
@@ -108,38 +112,40 @@ class NumerologyPage extends StatelessWidget {
     required String description,
     required VoidCallback onTap,
   }) {
-    return InkWell(
+    // O toque é do próprio MagicalCard, como no hub das Ferramentas: com um
+    // InkWell POR FORA, o Ink opaco do card cobria o brilho do toque e o
+    // encolhimento de resposta nunca disparava.
+    return MagicalCard(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: MagicalCard(
-        child: Row(
-          children: [
-            Text(emoji, style: const TextStyle(fontSize: 32)),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          color: context.gc.softWhite,
-                          fontWeight: FontWeight.bold,
-                        ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    description,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: context.gc.softWhite.withValues(alpha: 0.7),
-                        ),
-                  ),
-                ],
-              ),
+      child: Row(
+        children: [
+          Text(emoji, style: const TextStyle(fontSize: 32)),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: context.gc.softWhite,
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  description,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: context.gc.softWhite.withValues(alpha: 0.7),
+                      ),
+                ),
+              ],
             ),
-            Icon(Icons.chevron_right, color: context.gc.lilac),
-          ],
-        ),
+          ),
+          // A mesma seta de 'isto abre' do hub: era chevron_right de 24 em
+          // lilás aqui e arrow_forward_ios de 16 lá, para o mesmo gesto.
+          Icon(Icons.arrow_forward_ios, color: context.gc.lilac, size: 16),
+        ],
       ),
     );
   }
@@ -291,7 +297,7 @@ class _NumberLookupPageState extends State<NumberLookupPage> {
         title: ResponsiveAppBarTitle(AppLocalizations.of(context).numLookupTitle),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(vertical: 12),
+        padding: const EdgeInsets.symmetric(vertical: 16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -367,7 +373,7 @@ class MirrorHoursPage extends StatelessWidget {
         title: ResponsiveAppBarTitle(AppLocalizations.of(context).numMirrorHours),
       ),
       body: ListView(
-        padding: const EdgeInsets.symmetric(vertical: 12),
+        padding: const EdgeInsets.symmetric(vertical: 16),
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
@@ -386,7 +392,11 @@ class MirrorHoursPage extends StatelessWidget {
               crossAxisCount: 4,
               mainAxisSpacing: 10,
               crossAxisSpacing: 10,
-              childAspectRatio: 1.6,
+              // 1.6 dava ~40dp de altura numa tela de 320dp — abaixo dos 44
+              // do alvo de toque, e são 24 alvos colados um no outro, cada um
+              // abrindo um significado diferente. Com 1.3 a célula passa dos
+              // 49dp lá e continua cabendo quatro por linha.
+              childAspectRatio: 1.3,
             ),
             itemCount: hours.length,
             itemBuilder: (context, index) {
@@ -490,7 +500,7 @@ class RepeatedSequencesPage extends StatelessWidget {
         title: ResponsiveAppBarTitle(AppLocalizations.of(context).numSequences),
       ),
       body: ListView.builder(
-        padding: const EdgeInsets.symmetric(vertical: 8),
+        padding: const EdgeInsets.symmetric(vertical: 16),
         itemCount: entries.length + 1,
         itemBuilder: (context, index) {
           if (index == 0) {
@@ -515,15 +525,20 @@ class RepeatedSequencesPage extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    Text(
-                      entry.key,
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            color: context.gc.lilac,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 2,
-                          ),
+                    // O Expanded faz as vezes do antigo Spacer: empurra a
+                    // etiqueta para a direita do mesmo jeito, e com fonte
+                    // ampliada a sequência quebra em vez de estourar.
+                    Expanded(
+                      child: Text(
+                        entry.key,
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                              color: context.gc.lilac,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 2,
+                            ),
+                      ),
                     ),
-                    const Spacer(),
+                    const SizedBox(width: 8),
                     Container(
                       padding: const EdgeInsets.symmetric(
                           horizontal: 10, vertical: 4),

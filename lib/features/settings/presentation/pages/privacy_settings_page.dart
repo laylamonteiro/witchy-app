@@ -10,12 +10,10 @@ import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/loading_widget.dart';
 import '../../../../core/database/database_helper.dart';
-import '../../../../core/database/menstrual_cycle_schema.dart';
 import '../../../diary/data/repositories/free_writing_repository.dart';
 import '../../../menstrual_cycle/data/menstrual_consent_store.dart';
 import '../../../menstrual_cycle/data/menstrual_report_marks.dart';
 import '../../../menstrual_cycle/data/repositories/menstrual_cycle_repository.dart';
-import '../../../../core/database/reading_session_schema.dart';
 import '../../../../core/config/supabase_config.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../auth/data/repositories/supabase_auth_repository.dart';
@@ -531,59 +529,23 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
 
     if (confirmed == true && mounted) {
       try {
-        // Antes de apagar daqui: o registro do ciclo é a única coisa desta
-        // lista que pode ter cópia na conta e é dado de saúde. Apagar só o
-        // local deixaria a cópia no servidor sem nada no aparelho que se
-        // lembre dela — e a varredura seguinte a traria de volta.
-        final userId = context.read<AuthProvider>().currentUser.id;
-        await MenstrualCycleRepository().purge(userId);
-        await const MenstrualConsentStore().forget(userId);
-        if (!mounted) return;
-        final db = await DatabaseHelper.instance.database;
-
-        // Tabelas para limpar (exceto dados pré-carregados)
-        final tables = [
-          ...ReadingSessionSchema.tables,
-          'tarot_readings',
-          'spells',
-          'dreams',
-          'desires',
-          'gratitudes',
-          'daily_rituals',
-          'ritual_logs',
-          'sigils',
-          'birth_charts',
-          'magical_profiles',
-          'rune_readings',
-          'pendulum_consultations',
-          'oracle_readings',
-          'daily_magical_weather',
-          'learning_progress',
-          'guided_ritual_logs',
-          'user_encyclopedia_entries',
-          'daily_checkins',
-          // O registro menstrual entra aqui como qualquer outro dado dela:
-          // limpar o aparelho limpa também o que ela escreveu do ciclo. A
-          // cópia na conta é pedida logo abaixo — desde que o registro pode
-          // subir, apagar só o daqui deixaria dado de saúde no servidor sem
-          // nada no aparelho que se lembre dele.
-          MenstrualCycleSchema.table,
-        ];
-
-        for (final table in tables) {
-          try {
-            if (table == 'spells' || table == 'affirmations') {
-              // Manter itens pré-carregados
-              await db.delete(table, where: 'is_preloaded = ?', whereArgs: [0]);
-            } else {
-              await db.delete(table);
-            }
-          } catch (e) {
-            // Ignorar erros de tabelas que não existem
-          }
-        }
+        // A lista de tabelas não mora mais aqui, e é essa a correção: esta
+        // tela e o Editar Perfil mantinham cada uma a sua, com o mesmo rótulo
+        // e o mesmo texto de confirmação, e as duas divergiram — aqui o
+        // registro menstrual sumia e as páginas-espelho dele no Grimório
+        // ficavam legíveis depois de a pessoa mandar limpar tudo.
+        //
+        // A cópia na nuvem fica, como o texto da confirmação promete. Quem
+        // quer o registro do ciclo apagado da CONTA tem o gesto logo acima
+        // ("apagar meus registros do ciclo"), que fala com o servidor e sabe
+        // dizer se conseguiu — este aqui não saberia.
+        await DatabaseHelper.instance.limparConteudoDesteAparelho();
 
         if (mounted) {
+          // O contador do bloco do ciclo acompanha: a limpeza levou o registro
+          // deste aparelho, e deixar o número de ontem na tela seria dizer que
+          // ele continua aqui.
+          setState(() => _menstrualDays = 0);
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(l10n.editClearSuccess),

@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 import 'dart:ui' show Locale;
 
@@ -26,6 +27,14 @@ import 'package:grimorio_de_bolso/core/legal/legal_document_page.dart';
 /// frases procuradas vivem em mapas por idioma, e não em três cópias do mesmo
 /// teste: acrescentar um idioma é acrescentar uma coluna, e a coluna que
 /// faltar aparece como chave ausente, não como catraca que deixou de rodar.
+///
+/// A catraca desceu para os ARBs porque travar só o .md consertou o documento
+/// e deixou a mentira na tela: a pergunta frequente faqA2 continuou dizendo
+/// "com o Premium e a sincronização ativada" muito depois de a política ter
+/// sido reescrita, e faqA3 continuou vendendo a sincronização como benefício
+/// pago. A frase é lida muito mais vezes no acordeão de dúvidas do que no
+/// documento legal — mandá-la embora de um lugar só é trocar o leitor que
+/// recebe a informação falsa, não parar de dá-la.
 void main() {
   const idiomas = ['pt', 'en', 'es'];
 
@@ -78,6 +87,43 @@ void main() {
             'a frase e acrescente-a ao mapa.');
     return valor!;
   }
+
+  // Mesma ideia do `no`, para as listas de palavra: um idioma sem coluna
+  // aparece pelo nome em vez de passar sem catraca nenhuma.
+  List<String> nos(
+      Map<String, List<String>> porIdioma, String idioma, String oQue) {
+    final valor = porIdioma[idioma];
+    expect(valor, isNotNull,
+        reason: 'Falta a versão em $idioma de "$oQue" nesta catraca. Traduza '
+            'as palavras e acrescente-as ao mapa.');
+    return valor!;
+  }
+
+  // Os quatro ARBs, e o idioma de cada um. pt_BR entra junto porque é cópia
+  // do pt: uma correção que esquece a cópia arruma o template e não arruma o
+  // app de quem usa português do Brasil, que é quase todo mundo aqui.
+  const idiomaDoArb = {
+    'app_pt': 'pt',
+    'app_pt_BR': 'pt',
+    'app_en': 'en',
+    'app_es': 'es',
+  };
+
+  // Só o que chega à tela: chave com '@' é metadado do ARB, e valor que não é
+  // String é bloco de plural ou de placeholder, não frase.
+  Map<String, String> soOsTextos(String arquivo) {
+    final cru = jsonDecode(File('lib/l10n/$arquivo.arb').readAsStringSync())
+        as Map<String, dynamic>;
+    final textos = <String, String>{};
+    cru.forEach((chave, valor) {
+      if (!chave.startsWith('@') && valor is String) textos[chave] = valor;
+    });
+    return textos;
+  }
+
+  final textosDoArb = {
+    for (final arquivo in idiomaDoArb.keys) arquivo: soOsTextos(arquivo),
+  };
 
   const tituloDoConteudo = {
     'pt': '### Conteúdo que você cria',
@@ -423,6 +469,94 @@ void main() {
             reason: 'Os termos em $idioma pararam de dizer que o uso do '
                 'aplicativo exige uma conta.');
       }
+    });
+  });
+
+  group('o ARB x código: a nuvem não é do Premium', () {
+    // As palavras que nomeiam o envio à nuvem em cada idioma. A lista é curta
+    // de propósito: "aparelho" e "dispositivo" aparecem em dezenas de frases
+    // que não falam de sincronização, e catraca que grita à toa é catraca que
+    // alguém desliga.
+    const palavrasDeNuvem = {
+      'pt': ['sincroniz', 'nuvem', 'backup'],
+      'en': ['sync', 'cloud', 'backup'],
+      'es': ['sincroniz', 'nube', 'backup'],
+    };
+
+    // As mesmas frases cobradas da política, para a resposta que a tela dá à
+    // mesma pergunta. Divergir aqui seria o app responder duas coisas.
+    const qualquerPlano = {
+      'pt': 'em qualquer plano',
+      'en': 'on any plan',
+      'es': 'en cualquier plan',
+    };
+
+    test('nenhuma chave põe Premium ao lado da sincronização', () {
+      // A varredura é em TODAS as chaves, e não só em faqA2, porque a frase
+      // não morreu: ela migra. Ela nasceu na política, foi consertada lá,
+      // reapareceu na pergunta frequente — e o próximo lugar onde ela caberia
+      // (um convite de venda, um texto de onboarding, a tela de assinatura)
+      // ninguém adivinha de antemão. Hoje nenhuma chave dos quatro ARBs fala
+      // de Premium e de nuvem na mesma frase, e é esse zero que se trava: a
+      // chave que passar a falar dos dois precisa ser lida por gente antes de
+      // chegar à tela.
+      idiomaDoArb.forEach((arquivo, idioma) {
+        final palavras = nos(palavrasDeNuvem, idioma, 'palavras de nuvem');
+        textosDoArb[arquivo]!.forEach((chave, texto) {
+          final minusculo = texto.toLowerCase();
+          if (!minusculo.contains('premium')) return;
+          for (final palavra in palavras) {
+            expect(minusculo.contains(palavra), isFalse,
+                reason: '$arquivo.arb: a chave "$chave" fala de Premium e de '
+                    '"$palavra" na mesma frase. Quem governa o envio é '
+                    'DataSyncService.cloudSyncPreferenceKey, sem consultar '
+                    'plano nenhum: a nuvem vale em qualquer plano e já vem '
+                    'ligada. Se o paywall voltou, reescreva a política ANTES '
+                    'de religar o cadeado — e então mude esta catraca.');
+          }
+        });
+      });
+    });
+
+    test('faqA2 diz que a nuvem vale em qualquer plano', () {
+      // Âncora POSITIVA, como na política: proibir a frase antiga não impede
+      // que a próxima reescrita simplesmente cale sobre o plano, e o silêncio
+      // é o estado em que a mentira nasceu. faqA2 é a resposta oficial do app
+      // a "onde meus dados ficam salvos?" — calar ali faz quem é do plano
+      // gratuito acreditar que nada sai do aparelho enquanto já está subindo.
+      idiomaDoArb.forEach((arquivo, idioma) {
+        final resposta = textosDoArb[arquivo]!['faqA2'];
+        expect(resposta, isNotNull,
+            reason: '$arquivo.arb ficou sem a chave faqA2, que responde onde '
+                'os dados dela ficam salvos.');
+        expect(resposta!.contains(no(qualquerPlano, idioma, 'qualquer plano')),
+            isTrue,
+            reason: '$arquivo.arb: faqA2 parou de dizer que a sincronização '
+                'vale em qualquer plano. Dizer isso é o conserto; omitir '
+                'devolve a resposta ao silêncio de antes.');
+      });
+    });
+
+    test('faqA3 não vende a sincronização como benefício pago', () {
+      // A lista inteira do que o Premium dá se confere com a tela de
+      // assinatura a olho; o que se trava aqui é a peça que JÁ divergiu — a
+      // sincronização, que é de todos os planos e ficou nesta lista muito
+      // depois de o paywall sair. Vendida aqui, ela desmente ao mesmo tempo a
+      // política e a própria tela de venda.
+      idiomaDoArb.forEach((arquivo, idioma) {
+        final resposta = textosDoArb[arquivo]!['faqA3'];
+        expect(resposta, isNotNull,
+            reason: '$arquivo.arb ficou sem a chave faqA3, que lista o que o '
+                'Premium dá.');
+        final minusculo = resposta!.toLowerCase();
+        for (final palavra
+            in nos(palavrasDeNuvem, idioma, 'palavras de nuvem')) {
+          expect(minusculo.contains(palavra), isFalse,
+              reason: '$arquivo.arb: faqA3 voltou a listar "$palavra" entre o '
+                  'que o Premium dá. A sincronização é de todos os planos — a '
+                  'tela de assinatura vende cinco outras peças.');
+        }
+      });
     });
   });
 
