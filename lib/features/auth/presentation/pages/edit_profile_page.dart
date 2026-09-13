@@ -651,6 +651,15 @@ class _EditProfilePageState extends State<EditProfilePage> {
               // Atualizar senha via Supabase ou local
               if (SupabaseConfig.isConfigured) {
                 try {
+                  // ATENÇÃO, se um dia esta tela voltar a ser alcançável: a
+                  // senha atual agora é CONFERIDA contra o servidor, e
+                  // conferir é entrar — o que neste projeto exige o token do
+                  // anti-robô. Esta chamada não o passa, então a troca
+                  // falharia. O portão não foi acrescentado aqui porque o
+                  // `context` deste botão é o do DIÁLOGO, e o diálogo já foi
+                  // fechado na linha acima: abrir a folha do captcha com ele
+                  // quebraria. A tela de trocar senha (change_password_page)
+                  // é a que está viva e faz isso certo.
                   final authRepo = SupabaseAuthRepository();
                   final result = await authRepo.updatePassword(
                     currentPasswordController.text,
@@ -746,6 +755,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
     final l10n = AppLocalizations.of(context);
     final messenger = ScaffoldMessenger.of(context);
     final gc = context.gc;
+    // A conta ativa decide o que entra no arquivo: o banco deste aparelho
+    // pode guardar linhas de uma conta anterior, e elas não são dela.
+    final userId = context.read<AuthProvider>().currentUser.id;
     try {
       messenger.showSnackBar(
         SnackBar(
@@ -756,8 +768,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
       // Mesma exportação da tela de Privacidade — antes eram duas cópias, e a
       // desta tela tinha ficado sem a tabela free_writings.
-      await DataExportService.instance
-          .exportAndDeliver(subject: l10n.privacyBackupSubject);
+      await DataExportService.instance.exportAndDeliver(
+        userId: userId,
+        subject: l10n.privacyBackupSubject,
+      );
 
       messenger.showSnackBar(
         SnackBar(

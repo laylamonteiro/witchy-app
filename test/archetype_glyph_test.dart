@@ -288,20 +288,35 @@ void main() {
   });
 
   group('a costura com o emoji das outras categorias', () {
-    test('só os arquétipos têm desenho', () {
+    test('anjos e demônios continuam no emoji; arquétipos, no desenho', () {
+      // Os Símbolos Sagrados saíram desta lista em 13/09/2026: três deles
+      // (Pentagrama, Ankh e Olho de Hórus) ganharam desenho porque o
+      // "emoji" deles não era emoji — era caractere de bloco raro do
+      // Unicode, que o aparelho mostrava como quadradinho de glifo ausente.
+      // Quem os confere agora é test/simbolos_sagrados_desenhados_test.dart;
+      // aqui fica a parte que continua valendo: anjos e demônios não têm
+      // desenho, e nenhum deles pode passar a ser desenhado como arquétipo.
       for (final entry in ArcaneCategory.archetypes.entries) {
         expect(ArcaneCategory.archetypes.glyphIdFor(entry), isNotNull);
       }
-      for (final category in [
-        ArcaneCategory.angels,
-        ArcaneCategory.demons,
-        ArcaneCategory.sacredSymbols,
-      ]) {
+      for (final category in [ArcaneCategory.angels, ArcaneCategory.demons]) {
         for (final entry in category.entries) {
           expect(category.glyphIdFor(entry), isNull,
               reason: '${entry.name} (${category.name}) passou a ser '
                   'desenhado como arquétipo');
         }
+      }
+    });
+
+    test('nenhum símbolo sagrado pega o desenho de um arquétipo', () {
+      // A colisão que a costura por categoria existe para evitar, agora com
+      // dois conjuntos desenhados: um símbolo sagrado nunca pode resolver
+      // para um id de arquétipo, nem o contrário.
+      for (final entry in ArcaneCategory.sacredSymbols.entries) {
+        final id = ArcaneCategory.sacredSymbols.glyphIdFor(entry);
+        if (id == null) continue;
+        expect(archetypeGlyphArt(id), isNull,
+            reason: '${entry.name} resolveu para o desenho do arquétipo $id');
       }
     });
 

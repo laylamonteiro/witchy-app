@@ -225,8 +225,9 @@ void main() {
 
   test('o backup leva o dia uma vez só: a linha, não o espelho', () async {
     await repo.save(dia(9, note: 'meu relato'));
-    final backup = jsonDecode(await DataExportService.instance.buildJson())
-        as Map<String, dynamic>;
+    final backup =
+        jsonDecode(await DataExportService.instance.buildJson(userId: user))
+            as Map<String, dynamic>;
 
     final acervo = (backup['free_writings'] as List).cast<Map>();
     expect(

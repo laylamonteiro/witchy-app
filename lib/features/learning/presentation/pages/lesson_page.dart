@@ -220,8 +220,13 @@ class _LessonPageState extends State<LessonPage> {
         null => null,
       };
 
-  /// Salva a página no destino certo e devolve o builder da tela do registro.
-  Future<WidgetBuilder> _saveRecord() async {
+  /// Salva a página no destino certo e devolve o builder da tela do registro
+  /// — ou `null` quando a gravação NÃO aconteceu.
+  ///
+  /// O retorno dos providers era descartado aqui, e os seis engolem a
+  /// exceção: gravam `_error` e devolvem `false`. Quem chamava seguia em
+  /// frente como se tivesse dado certo, e o preço era alto — ver [_writePage].
+  Future<WidgetBuilder?> _saveRecord() async {
     final lesson = widget.lesson;
     final content = _assemblePage();
 
@@ -233,8 +238,8 @@ class _LessonPageState extends State<LessonPage> {
           tags: const ['grimório-vivo'],
           date: DateTime.now(),
         );
-        await context.read<DreamProvider>().addDream(dream);
-        return (_) => DreamFormPage(dream: dream);
+        final gravou = await context.read<DreamProvider>().addDream(dream);
+        return gravou ? (_) => DreamFormPage(dream: dream) : null;
 
       case LessonRecordKind.gratitude:
         final gratitude = GratitudeModel(
@@ -243,24 +248,31 @@ class _LessonPageState extends State<LessonPage> {
           tags: const ['grimório-vivo'],
           date: DateTime.now(),
         );
-        await context.read<GratitudeProvider>().addGratitude(gratitude);
-        return (_) => GratitudeFormPage(gratitude: gratitude);
+        final gravou =
+            await context.read<GratitudeProvider>().addGratitude(gratitude);
+        return gravou
+            ? (_) => GratitudeFormPage(gratitude: gratitude)
+            : null;
 
       case LessonRecordKind.affirmation:
         final affirmation = AffirmationModel(
           text: _answersOnly(),
           category: AffirmationCategory.healing,
         );
-        await context.read<AffirmationProvider>().addAffirmation(affirmation);
-        return (_) => AffirmationFormPage(affirmation: affirmation);
+        final gravou = await context
+            .read<AffirmationProvider>()
+            .addAffirmation(affirmation);
+        return gravou
+            ? (_) => AffirmationFormPage(affirmation: affirmation)
+            : null;
 
       case LessonRecordKind.desire:
         final desire = DesireModel(
           title: _pageTitle,
           description: content,
         );
-        await context.read<DesireProvider>().addDesire(desire);
-        return (_) => DesireFormPage(desire: desire);
+        final gravou = await context.read<DesireProvider>().addDesire(desire);
+        return gravou ? (_) => DesireFormPage(desire: desire) : null;
 
       case LessonRecordKind.spell:
         final spell = SpellModel(
@@ -273,8 +285,8 @@ class _LessonPageState extends State<LessonPage> {
           observations: AppLocalizations.of(context)
               .learnPageNote(widget.trail.title, lesson.title),
         );
-        await context.read<SpellProvider>().addSpell(spell);
-        return (_) => SpellDetailPage(spell: spell);
+        final gravou = await context.read<SpellProvider>().addSpell(spell);
+        return gravou ? (_) => SpellDetailPage(spell: spell) : null;
 
       default:
         // Página de estudo/reflexão: entra no acervo "Meus Registros"
@@ -287,8 +299,8 @@ class _LessonPageState extends State<LessonPage> {
           content: '$note\n\n$content',
           source: FreeWritingSource.grimorioVivo,
         );
-        await context.read<FreeWritingProvider>().save(entry);
-        return (_) => RecordDetailPage(entry: entry);
+        final gravou = await context.read<FreeWritingProvider>().save(entry);
+        return gravou ? (_) => RecordDetailPage(entry: entry) : null;
     }
   }
 
@@ -308,6 +320,22 @@ class _LessonPageState extends State<LessonPage> {
     try {
       final recordBuilder = await _saveRecord();
       if (!mounted) return;
+
+      // A gravação falhou. Sem esta saída, a lição era MARCADA como escrita —
+      // e `markCompleted` é idempotente, então ela ficava marcada para
+      // sempre: reabrir devolve `xpGained: 0` e não há como refazer a página
+      // perdida. A pessoa escrevia a página inteira, via "Que assim seja" e o
+      // +25 XP, e caía num formulário de um registro que não existe.
+      if (recordBuilder == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(AppLocalizations.of(context).errorsGeneric),
+            backgroundColor: context.gc.alert,
+          ),
+        );
+        return;
+      }
+
       final learning = context.read<LearningProvider>();
       final reward = await learning.markCompleted(widget.trail, widget.lesson.id);
 

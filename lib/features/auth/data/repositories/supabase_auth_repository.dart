@@ -726,8 +726,54 @@ class SupabaseAuthRepository implements AuthRepository {
 
   @override
   Future<AuthResult> updatePassword(
-      String currentPassword, String newPassword) async {
+    String currentPassword,
+    String newPassword, {
+    String? captchaToken,
+    bool recuperacao = false,
+  }) async {
     try {
+      // A senha atual era pedida na tela e não conferida contra NADA: o
+      // parâmetro chegava aqui e morria, e `updateUser` troca a senha só com
+      // a sessão. Quem pegasse o aparelho desbloqueado trocava a senha da
+      // conta digitando seis caracteres quaisquer, e a dona perdia o acesso
+      // ao próprio grimório na nuvem. O erro `changePasswordWrongCurrent` da
+      // tela nunca podia disparar, o que escondia a ausência da checagem.
+      //
+      // Conferir é entrar: não existe no Supabase um "essa senha está
+      // certa?". A entrada devolve uma sessão da MESMA pessoa, então nada
+      // muda para o app — o `_adoptServerSession` sai cedo quando o id é o
+      // mesmo. Errando a senha, o cliente levanta exceção e a sessão atual
+      // fica intacta.
+      if (!recuperacao) {
+        final email = _supabase.auth.currentUser?.email;
+        if (email == null || email.isEmpty) {
+          return AuthResult.error(_l10n.authErrNoUser);
+        }
+        try {
+          await _supabase.auth.signInWithPassword(
+            email: email,
+            password: currentPassword,
+            captchaToken: captchaToken,
+          );
+        } on AuthException catch (e) {
+          final recusa = _handleAuthException(e);
+          // Credencial inválida AQUI é a senha atual errada, e só ela: o
+          // e-mail veio da sessão, não de um campo. A frase da tela de
+          // entrada ("e-mail ou senha incorretos") mandaria conferir um
+          // e-mail que ela nem digitou.
+          if (recusa.errorCode == AuthErrorCode.invalidPassword) {
+            return AuthResult.error(
+              _l10n.changePasswordWrongCurrent,
+              AuthErrorCode.invalidPassword,
+            );
+          }
+          // Captcha, limite de tentativas, rede: cada um com a sua frase.
+          // Dizer "senha atual incorreta" para uma falha de rede mandaria a
+          // pessoa duvidar da memória dela.
+          return recusa;
+        }
+      }
+
       await _supabase.auth.updateUser(
         UserAttributes(password: newPassword),
       );
@@ -744,10 +790,15 @@ class SupabaseAuthRepository implements AuthRepository {
     }
   }
 
+  /// Apaga a conta em duas metades, e as duas precisam terminar.
+  ///
+  /// Os DADOS saem daqui, com a sessão dela (é o que o RLS exige) e com
+  /// conferência tabela por tabela. O CADASTRO sai pela função Edge
+  /// `delete-user`, porque só a chave de serviço o alcança e ela não pode
+  /// viver dentro do app. Qualquer uma das metades falhando, a resposta é
+  /// erro e a sessão continua viva — é ela que permite tentar de novo.
   @override
   Future<AuthResult> deleteAccount() async {
-    // Deletar conta requer uma função Edge no Supabase
-    // por motivos de segurança (RLS)
     try {
       final user = _supabase.auth.currentUser;
       if (user == null) {
@@ -769,8 +820,30 @@ class SupabaseAuthRepository implements AuthRepository {
         return AuthResult.error(_l10n.authErrDeleteAccountIncomplete);
       }
 
-      // Chamar função Edge para deletar o usuário Auth
-      // await _supabase.functions.invoke('delete-user');
+      // A conta no Auth é o que sobra depois dos dados, e só a chave de
+      // serviço a alcança — por isso a função Edge (supabase/functions/
+      // delete-user). Enquanto esta chamada esteve comentada, o app apagava
+      // os dados, dizia "conta excluída com sucesso" e o cadastro ficava: o
+      // e-mail continuava ocupado depois de um pedido explícito de exclusão,
+      // cadastrar de novo era recusado com "já está em uso", e entrar com a
+      // senha antiga recriava o perfil e devolvia o acesso.
+      //
+      // Falhou aqui, não houve exclusão — e a sessão fica de pé para ela
+      // tentar de novo, pelo mesmo motivo do `naoApagadas` acima. Repetir é
+      // seguro: apagar o que já foi apagado é no-op dos dois lados, e a
+      // função trata 404 como sucesso.
+      //
+      // A conferência é o `ok` do CORPO, e não o código HTTP: o cliente
+      // levanta exceção sozinho em erro (e o catch abaixo a recolhe), mas
+      // "sucesso" aqui tem de ser a função dizendo que apagou — não a
+      // ausência de reclamação. Era exatamente esse silêncio que fazia a
+      // tela anunciar uma exclusão que não tinha acontecido.
+      final resposta = await _supabase.functions.invoke('delete-user');
+      final corpo = resposta.data;
+      if (corpo is! Map || corpo['ok'] != true) {
+        await debugLog('AUTH', 'delete-user não confirmou: $corpo');
+        return AuthResult.error(_l10n.authErrDeleteAccount);
+      }
 
       await signOut();
       return AuthResult.success(UserModel.defaultUser());

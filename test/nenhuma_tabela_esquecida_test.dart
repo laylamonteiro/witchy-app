@@ -174,8 +174,9 @@ void main() {
     // canônica, então compará-lo com ela seria comparar um objeto consigo
     // mesmo — um teste que não pode falhar, nem quando alguém reintroduzir
     // uma lista à mão ao lado dele. O que não pode divergir é o resultado.
-    final backup = jsonDecode(await DataExportService.instance.buildJson())
-        as Map<String, dynamic>;
+    final backup =
+        jsonDecode(await DataExportService.instance.buildJson(userId: conta))
+            as Map<String, dynamic>;
     final noArquivo = backup.keys.toSet()
       ..remove('export_date')
       ..remove('app_version');
@@ -250,6 +251,35 @@ void main() {
       reason: 'as lápides ficam: apagá-las traria de volta, no download '
           'seguinte, exatamente o que ela mandou sumir',
     );
+  });
+
+  test('o backup leva só o que é da conta que exportou', () async {
+    // O banco local SOBREVIVE à troca de conta: o `signOut` de quem tem
+    // e-mail preserva a base, e a adoção do primeiro login só alcança linhas
+    // de `local_user`. Num aparelho que já teve duas contas, as linhas da
+    // primeira continuam ali — e a exportação lia as tabelas sem `where`.
+    // Quem tocasse em "exportar meus dados" baixava, junto com os seus, os
+    // diários, os sonhos, as tiragens e o registro menstrual inteiro da
+    // OUTRA pessoa.
+    const outraConta = 'aaaaaaaa-bbbb-cccc-dddd-111111111111';
+    for (final tabela in TabelasLocais.conteudo) {
+      await semear(tabela, texto: 'meu', dono: conta);
+      await semear(tabela, texto: 'da-outra', dono: outraConta);
+    }
+
+    final backup =
+        jsonDecode(await DataExportService.instance.buildJson(userId: conta))
+            as Map<String, dynamic>;
+
+    for (final tabela in TabelasLocais.conteudo) {
+      final linhas = (backup[tabela] as List).cast<Map<String, dynamic>>();
+      expect(
+        linhas.where((linha) => linha['user_id'] != conta),
+        isEmpty,
+        reason: 'o arquivo de "levar meus dados embora" trouxe linha de '
+            'outra conta em $tabela',
+      );
+    }
   });
 
   test('a exclusão de conta não tem ressalva nenhuma', () async {

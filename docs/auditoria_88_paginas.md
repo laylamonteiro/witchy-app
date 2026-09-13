@@ -2,23 +2,38 @@
 
 Três leituras adversariais varreram, em paralelo, as páginas que as
 auditorias anteriores não alcançaram — elas tinham parado em 19 das 107.
-São **48 achados distintos**: 10 graves, 26 médios, 12 leves.
+São **46 achados distintos**: 8 graves, 26 médios, 12 leves — e hoje
+sobram **36 abertos**, todos médios ou leves. (Eram 48;
+dois graves foram à conferência e caíram — ver "O que a conferência
+derrubou", no fim.)
 
 **Isto é uma LISTA DE SUSPEITAS, não um laudo.** Os achados saíram de
-leitura de código, sem aparelho e sem SDK para rodar nada. Cinco dos dez
-graves foram conferidos à mão, um a um, e estão marcados `✔ conferido`;
-os outros não foram. Antes de consertar qualquer um, **leia o código e
-confirme** — findar que o achado está errado é um resultado legítimo, e
-nesse caso a linha sai daqui com o motivo escrito.
+leitura de código, sem aparelho e sem SDK para rodar nada. Antes de
+consertar qualquer um, **leia o código e confirme** — descobrir que o
+achado está errado é um resultado legítimo, e nesse caso a linha sai daqui
+com o motivo escrito. Foi o que aconteceu com dois deles.
 
-Nenhum deles foi corrigido: são 48, mudam comportamento e não aparência,
-e a decisão de ordem é da dona. A recomendação é começar pelos três de
-conta e dados (exclusão de conta, senha, exportação), que são os que têm
-consequência fora da tela.
+Os dez graves originais já passaram por essa conferência, um a um: oito se
+sustentaram e dois caíram. Os médios e os leves ainda não — continuam
+sendo suspeita.
 
-## Graves (10)
+**OS OITO GRAVES ESTÃO CORRIGIDOS**, e cada um está marcado abaixo: a
+exportação que entregava os dados da outra conta; a exclusão que dizia
+sucesso e deixava o cadastro de pé; a senha atual que não era conferida
+contra nada; a afirmação que nunca gravava na edição; a escrita livre que
+sumia ao trocar de aba; os três símbolos sagrados que eram quadradinho de
+glifo ausente; a lição que selava a página sem conferir se ela foi
+gravada; e o nome com dois espaços que derrubava a aba de Configurações.
 
-### `lib/core/services/data_export_service.dart:50` — ✔ conferido
+**Os médios e os leves continuam abertos, e continuam sendo SUSPEITA** —
+nenhum deles passou pela conferência. Dois dos dez graves caíram quando
+foram conferidos, então a taxa de erro desta lista não é zero: leia o
+código antes de consertar qualquer um. A decisão de ordem continua sendo
+da dona.
+
+## Graves (8)
+
+### `lib/core/services/data_export_service.dart:50` — ✅ CORRIGIDO
 
 `buildJson` faz `db.query(table)` sem filtro de `user_id`, ao contrário de todo o resto do app (free_writing_repository.dart:17, menstrual_cycle_repository.dart:138, 152, 239 etc. filtram por conta). O `signOut` preserva o banco local de quem tem e-mail (auth_provider.dart:994) e o `claimLegacyData` só adota linhas de `local_user` (database_helper.dart:1405), então linhas de uma conta anterior permanecem no aparelho.
 
@@ -26,7 +41,7 @@ consequência fora da tela.
 
 **Correção proposta:** Passar o `userId` da conta ativa para `buildJson` e usar `where: 'user_id = ?'` em toda tabela que tem a coluna (todas as de `TabelasLocais.conteudo`).
 
-### `lib/features/auth/data/repositories/supabase_auth_repository.dart:772` — ✔ conferido
+### `lib/features/auth/data/repositories/supabase_auth_repository.dart:772` — ✅ CORRIGIDO
 
 A chamada que apagaria o usuário do Auth está comentada (`// await _supabase.functions.invoke('delete-user');`). `deleteAccount` apaga as linhas de dados e o `profiles`, faz `signOut` e devolve sucesso — e a tela mostra `editDeleteSuccess` ("Conta excluída com sucesso", privacy_settings_page.dart:654). A conta em si, com o e-mail, continua existindo no servidor.
 
@@ -34,7 +49,7 @@ A chamada que apagaria o usuário do Auth está comentada (`// await _supabase.f
 
 **Correção proposta:** Implantar e chamar a função Edge `delete-user` e só então dizer sucesso; enquanto ela não existir, trocar `editDeleteSuccess` por um texto que diga apenas que os dados foram apagados e que o cadastro será removido (ou abrir a exclusão como pedido a ser confirmado).
 
-### `lib/features/auth/presentation/pages/change_password_page.dart:290` — ✔ conferido
+### `lib/features/auth/presentation/pages/change_password_page.dart:290` — ✅ CORRIGIDO
 
 A senha atual digitada nunca é conferida contra nada: a tela a lê na linha 290, passa para `SupabaseAuthRepository.updatePassword` (supabase_auth_repository.dart:728-733), e lá o parâmetro `currentPassword` é ignorado — só se chama `auth.updateUser(password: nova)`. O único uso do campo é o validador da linha 212, que apenas exige que a nova senha seja diferente do que foi digitado ali. O doc da classe (linhas 12-16) afirma o contrário: "o backend não exige a senha atual; a checagem é só desta tela".
 
@@ -42,7 +57,7 @@ A senha atual digitada nunca é conferida contra nada: a tela a lê na linha 290
 
 **Correção proposta:** Antes de `updateUser`, reautenticar de fato (`signInWithPassword` com o e-mail da sessão e a senha atual) e abortar com `changePasswordWrongCurrent` se falhar — ou, se a decisão for não conferir, remover o campo e corrigir o doc.
 
-### `lib/features/diary/presentation/pages/affirmation_form_page.dart:343` — ✔ conferido
+### `lib/features/diary/presentation/pages/affirmation_form_page.dart:343` — ✅ CORRIGIDO
 
 Editar uma afirmação própria NUNCA grava. `_saveAffirmation` monta o `AffirmationModel` com o id existente e, logo abaixo, todo o caminho de persistência está dentro de `if (widget.affirmation == null) { ... }`; quando há afirmação, a função cai direto no `Navigator.pop(context)` da linha 361. O `AffirmationProvider` sequer tem um `updateAffirmation` (grep em lib/ inteiro: zero ocorrências) — só `addAffirmation`, `toggleFavorite` e `deleteAffirmation`.
 
@@ -50,7 +65,19 @@ Editar uma afirmação própria NUNCA grava. `_saveAffirmation` monta o `Affirma
 
 **Correção proposta:** Criar `AffirmationProvider.updateAffirmation` (espelhando `updateGratitude`, devolvendo bool) e, no ramo `widget.affirmation != null`, aguardar essa gravação e só sair da tela quando ela devolver sucesso.
 
-### `lib/features/diary/presentation/pages/free_writing_tab.dart:139`
+**A conferência acrescentou duas coisas.** (1) Seguir esta receita ao pé da
+letra troca um bug por dois: o `AffirmationModel` montado na linha 335 usa o
+construtor cheio, então `isFavorite` volta ao padrão `false` e `createdAt`
+vira `DateTime.now()` — gravar esse objeto DESFAVORITARIA a afirmação e a
+jogaria para o topo da lista (`orderBy 'created_at DESC'`). O caminho certo
+é `widget.affirmation!.copyWith(...)`, que preserva id, createdAt,
+isFavorite e isPreloaded. (2) A lista de Afirmações não é a única porta: a
+lição do Grimório Vivo (lesson_page.dart:255) abre o formulário JÁ em modo
+edição, logo depois de gravar — qualquer ajuste ali também se perde. E o
+molde de retorno `bool` é o `addAffirmation` do próprio provider, não o
+`updateGratitude`, que devolve `Future<void>`.
+
+### `lib/features/diary/presentation/pages/free_writing_tab.dart:139` — ✅ CORRIGIDO
 
 O canvas de escrita livre só salva em três gestos: abrir o histórico (linha 98), começar uma reflexão nova (linha 117) e o `PopScope` da linha 142. Mas nos Diários a aba 💭 NÃO é uma rota empilhada — é filha do `TabBarView` de diary_page.dart:114, e `DiaryPage` é `AutomaticKeepAliveClientMixin`. Trocar para a aba Sonhos/Gratidão, abrir Configurações, mudar de aba na bottom bar ou ter o app encerrado em background não dispara pop nenhum; o `dispose` (linha 59) só descarta o controller sem gravar, e não há `WidgetsBindingObserver` para o ciclo de vida.
 
@@ -58,7 +85,15 @@ O canvas de escrita livre só salva em três gestos: abrir o histórico (linha 9
 
 **Correção proposta:** Tornar `_FreeWritingTabState` um `WidgetsBindingObserver` que chame `_save()` em `AppLifecycleState.inactive/paused`, e salvar também quando a aba perde o foco (listener no `TabController`).
 
-### `lib/features/encyclopedia/data/data_sources/sacred_symbols_data_pt.dart:127`
+**A conferência acrescentou:** é pior do que está escrito acima. O
+`FreeWritingTab` NÃO pede keep-alive, e o próprio repositório já registra
+que "o TabBarView desmonta o State fora de cena"
+(encyclopedia_index_page.dart:87). Ou seja: trocar para a aba Sonhos ou
+Gratidão não é um caso em que o salvamento "não dispara" — é um caso em que
+o State é DESMONTADO e o texto digitado some na hora, sem precisar de app
+encerrado nem de background.
+
+### `lib/features/encyclopedia/data/data_sources/sacred_symbols_data_pt.dart:127` — ✅ CORRIGIDO
 
 Três verbetes de Símbolos Sagrados têm como `emoji` um caractere de bloco raro do Unicode, e não um emoji: 𓂀 (U+13080, Egyptian Hieroglyphs) no Olho de Hórus (linha 127), ⛤ (U+26E4) no Pentagrama (linha 11) e ☥ (U+2625) no Ankh (linha 69) — idênticos nos três idiomas (_pt/_en/_es). Nenhum celular traz fonte de hieróglifo egípcio, e o ⛤ o próprio repo JÁ declara quebrado: lib/core/tools/tool_identity.dart:45 diz que ⛤, ᚱ e ⟟ mostravam o quadradinho de glifo ausente e por isso viraram desenho. Para sacredSymbols o ArcaneGlyph não tem desenho (arcane_categories.dart:60 devolve null), então o caractere aparece cru em quatro lugares: o título da AppBar (arcane_detail_page.dart:53, '𓂀 Olho de Hórus'), a pílula de origem (arcane_detail_page.dart:152), a linha de referência do card de lista (arcane_list_page.dart:248) e a linha da busca global (encyclopedia_search_page.dart:139).
 
@@ -66,15 +101,7 @@ Três verbetes de Símbolos Sagrados têm como `emoji` um caractere de bloco rar
 
 **Correção proposta:** Dar a sacredSymbols uma entrada em ArcaneCategory.glyphIdFor e desenhar os três símbolos no mesmo sistema de ArchetypeGlyphArt (ou, como paliativo, trocar por emojis que existam no piso do app), mantendo o caractere só como reserva.
 
-### `lib/features/encyclopedia/presentation/pages/arcane_detail_page.dart:435`
-
-O chip de "Veja também" é um Row(mainAxisSize.min) dentro de um Wrap, e o Text do rótulo não tem Flexible nem Expanded. O Row entrega largura infinita ao filho não-flexível: o texto sai numa linha só, no tamanho intrínseco, e o Wrap corta o que passar da largura do card — sem reticências. Com o dado que já está no repo isso estoura HOJE, na fonte padrão: sacred_symbols_data_en.dart:65 traz 'The Maiden, The Mother and The Wise Woman (Archetypes)' (54 caracteres, ~376dp com padding e seta contra ~296dp de card em tela de 360) e o espanhol traz a mesma coisa com 45. É o verbete Tríplice Lua / Triple Moon.
-
-**Por que importa:** A pessoa vê o rótulo do link decepado no meio da palavra e não sabe para onde o chip leva — e é justamente o chip que navega.
-
-**Correção proposta:** Envolver o Text do rótulo (arcane_detail_page.dart:435) em Flexible, para o rótulo quebrar em duas linhas dentro do chip em vez de estourar a linha do Wrap.
-
-### `lib/features/learning/presentation/pages/lesson_page.dart:236`
+### `lib/features/learning/presentation/pages/lesson_page.dart:236` — ✅ CORRIGIDO
 
 `_saveRecord` descarta o retorno de todas as gravações: `addDream` (236), `addGratitude` (246), `addAffirmation` (254), `addDesire` (262) e `addSpell` (276) devolvem `Future<bool>` = 'foi persistido?', e nenhum é lido. Os providers engolem a exceção, gravam `_error` e devolvem `false`. Em seguida `_writePage` marca a lição como concluída, mostra o selo com o XP e empilha o formulário do registro. A docstring de `DreamProvider.addDream` (dream_provider.dart:39) diz textualmente 'the caller only records progress for a save that actually happened' — e todas as outras telas honram isso (dream_form_page:239, gratitude_form_page:185, desire_form_page:234, affirmation_form_page:345, spell_form_page:294); só a lição não.
 
@@ -82,21 +109,21 @@ O chip de "Veja também" é um Row(mainAxisSize.min) dentro de um Wrap, e o Text
 
 **Correção proposta:** Fazer `_saveRecord` devolver também o bool de persistência e, em `_writePage`, abortar com SnackBar de erro (sem `markCompleted`, sem celebração, sem push) quando a gravação falhar.
 
-### `lib/features/settings/presentation/pages/settings_page.dart:1020` — ✔ conferido
+**A conferência corrigiu um detalhe da alegação:** "todas as outras telas
+honram isso" não é verdade — `daily_rites_card.dart:453` e
+`cycle_reading_report_page.dart:711` também descartam o bool, e duas das
+citadas conferem pelo `provider.error`, não pelo retorno. E `_saveRecord`
+tem um SEXTO ramo que a alegação não menciona: `FreeWritingProvider.save`,
+que é `Future<void>` e não devolve bool nenhum — para ele o conserto precisa
+de outro sinal, ou de mudar a assinatura do provider.
+
+### `lib/features/settings/presentation/pages/settings_page.dart:1020` — ✅ CORRIGIDO
 
 `_getInitials` estoura RangeError em dois nomes possíveis: nome vazio (`''.split(' ')` devolve `['']`, cai no `substring(0, 1)` sobre string de comprimento 0) e nome com dois espaços seguidos (`'Ana  Maria'.split(' ')` devolve `['Ana', '', 'Maria']`, e `parts[1][0]` estoura). O valor vem de `user.displayName` (linha 172), e o próprio diálogo "Editar Perfil" desta tela (linha 1126) salva o texto sem validar nem normalizar espaços.
 
 **Por que importa:** A exceção acontece no `build` do cabeçalho, então a aba Configurações inteira quebra — e é por ela que se chega a Privacidade, Sincronização, Sair da conta e Excluir conta. A pessoa que apagar o próprio nome (ou cujo nome do Google tenha espaço duplo) fica sem nenhum desses caminhos, sem entender por quê.
 
 **Correção proposta:** Fazer `_getInitials` trabalhar sobre `name.trim().split(RegExp(r'\s+')).where((p) => p.isNotEmpty)` e devolver um fallback ('?') quando não sobrar nenhuma parte, e recusar nome vazio no diálogo da linha 1126 como o `_showEditNameDialog` já faz.
-
-### `lib/features/your_day/presentation/widgets/daily_rites_card.dart:181`
-
-O card lê `gratidoes.gratitudes` e `sonhos.dreams` (linhas 181-184) mas nunca dispara a carga desses providers — e ninguém mais dispara no boot: os únicos chamadores de `loadGratitudes()`/`loadDreams()` são os `initState` de gratitudes_list_page.dart:26 e dreams_list_page.dart:27, abas do `TabBarView` que começa no índice 2 (💭). O comentário das linhas 84-87 reconhece que os providers 'podem responder lista vazia sem NUNCA ter lido o banco', mas a correção aplicada foi só silenciar a celebração, não carregar. Compare com daily_affirmation_card.dart:26-31, que faz exatamente a carga que falta aqui.
-
-**Por que importa:** A pessoa escreve a gratidão de manhã, o app é encerrado, ela reabre à noite no Seu Dia: gratidão e sonho aparecem DESMARCADOS, o contador diz 1/3 e o selo do dia nunca fecha — o bônus de 15 XP do dia não é gravado e não volta. Não há rede de segurança: `DayCompletionService` (que consulta o banco direto) só roda via `ActionRecorder`, e NENHUMA ferramenta do revezamento o chama (tarot_page:516, rune_reading_page:251, oracle_cards_page:251, pendulum_page:489, palmistry_page:150, add_entry_page:462 chamam só `completeRite`). Se o último gesto do dia for o rito exploratório, o dia não sela.
-
-**Correção proposta:** Dar ao card um `initState` com postFrame que chame `loadGratitudes()`/`loadDreams()` quando as listas estiverem vazias e não estiverem carregando, no mesmo molde do `DailyAffirmationCard`.
 
 ## Médios (26)
 
@@ -276,7 +303,7 @@ O item "Limpar Dados Locais" é construído com `isDestructive: false`, enquanto
 
 **Correção proposta:** Trocar para `isDestructive: true`, ou remover a marca dos três e usar outro sinal — o que não pode é ela existir em dois dos três.
 
-### `lib/features/settings/presentation/pages/settings_page.dart:1126` — ✔ conferido
+### `lib/features/settings/presentation/pages/settings_page.dart:1126` — ✅ CORRIGIDO (junto com o estouro das iniciais)
 
 No diálogo "Editar Perfil", o Salvar chama `authProvider.updateProfile(displayName: nameController.text)` e `setGender` sem `await` e sem validação: o nome vai sem `trim()` e vazio é aceito (`updateProfile` guarda `''`, porque `'' ?? x` é `''`). O diálogo fecha sempre, como se tivesse salvado.
 
@@ -310,7 +337,7 @@ O 'X' que dispensa o convite da Leitura do Ciclo é um `InkWell` com `Padding(al
 
 ## Leves (12)
 
-### `lib/features/auth/presentation/pages/change_password_page.dart:305` — ✔ conferido
+### `lib/features/auth/presentation/pages/change_password_page.dart:305` — ✅ CORRIGIDO (junto com a conferência da senha atual)
 
 Quando `SupabaseConfig.isConfigured` é falso, a tela faz `await Future.delayed(2s)` e mostra `changePasswordSuccess` ("senha alterada") sem ter alterado nada; o mesmo padrão existe em forgot_password_page.dart:390 e 420, que declaram o link de recuperação enviado sem enviar.
 
@@ -405,6 +432,50 @@ O título da gratidão escrita no card é cortado com `text.substring(0, 40)`, q
 **Por que importa:** O título aparece na lista do Diário de Gratidão com um caractere quebrado no fim, e o campo também é o que sobe para a nuvem.
 
 **Correção proposta:** Cortar por `runes` (`String.fromCharCodes(text.runes.take(40))`) em vez de `substring`.
+
+## O que a conferência derrubou
+
+Dois achados foram lidos no código, um a um, por um conferente e por dois
+céticos encarregados de derrubá-lo. Os dois não sobreviveram, e saem da
+lista — o motivo fica aqui para ninguém reabri-los.
+
+### `arcane_detail_page.dart:435` — o chip de "Veja também" (era grave)
+
+**Alegava:** que o `Text` do rótulo não tinha `Flexible` nem `Expanded`, e
+que por isso o rótulo comprido do verbete Tríplice Lua saía cortado.
+
+**Por que caiu:** o `Flexible` já está lá. Entrou no commit 332bda7, que é
+ANTERIOR ao commit deste documento (c4309d2) — a leitura que gerou o achado
+foi feita sobre uma árvore mais velha. Hoje arcane_detail_page.dart:439
+envolve o `Text` exatamente como a correção proposta pedia, com um
+comentário descrevendo o mesmo defeito, e o chip gêmeo de related_link.dart
+(linha 216) recebeu o mesmo conserto no mesmo commit. O dado citado é
+verdadeiro — sacred_symbols_data_en.dart:65 traz mesmo o rótulo de 54
+caracteres —, mas com o `Flexible` no lugar ele quebra em duas linhas
+dentro do chip em vez de estourar a linha do `Wrap`.
+
+### `daily_rites_card.dart:181` — gratidão e sonho desmarcados (era grave)
+
+**Alegava:** que o card lê `gratidoes.gratitudes` e `sonhos.dreams` sem
+nunca disparar a carga, e que ninguém mais dispara no boot — então ao
+reabrir o app os dois ritos apareceriam desmarcados e o selo do dia nunca
+fecharia.
+
+**Por que caiu:** quem dispara a carga é o `ChangeNotifierProxyProvider` de
+main.dart (linhas 657-663 e 671-677). O `update` de cada um chama
+`setUserId(auth.currentUser.id)`, e o `setUserId` dos dois providers
+(gratitude_provider.dart:17, dream_provider.dart:17) chama
+`loadGratitudes()`/`loadDreams()` sempre que o id muda. O grep da auditoria
+procurou os chamadores EXTERNOS de `loadGratitudes()` e não viu o caminho
+interno.
+
+A guarda `if (_currentUserId == userId) return;` também não cala a carga:
+ela só curto-circuitaria se a conta tivesse o id `'local_user'`, e quem
+chega ao Seu Dia tem sessão — `decidirRedirect` (app_router.dart:257)
+manda qualquer rota de conteúdo sem sessão para `/welcome`, e
+`isAuthenticated` exige e-mail, que só existe com conta real e uuid
+próprio. E o card lê os dois com `context.watch`, então ele se reconstrói
+quando a carga termina: não fica com a lista vazia do primeiro quadro.
 
 ## O que só o aparelho responde
 

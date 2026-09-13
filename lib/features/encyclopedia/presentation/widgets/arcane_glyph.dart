@@ -11,8 +11,9 @@ import 'archetype_glyph.dart';
 /// genéricas e servem às quatro categorias, então a escolha entre desenho e
 /// emoji não pode ficar espalhada por elas — cada call site esquecido
 /// devolveria a lista e o detalhe mostrando coisas diferentes. Ela mora em um
-/// widget só, que pergunta a resposta a [ArcaneCategory.glyphIdFor]. Uma
-/// segunda categoria desenhada, depois, é uma linha lá e nenhuma aqui.
+/// widget só, que pergunta a resposta a [ArcaneCategory.glyphIdFor]. Foi
+/// assim que os Símbolos Sagrados ganharam desenho: uma linha lá, e nenhuma
+/// aqui nem nas páginas.
 ///
 /// [size] é o lado da caixa do DESENHO, não o corpo do emoji. Para trocar um
 /// emoji por um desenho sem mudar o tamanho aparente, use
@@ -46,7 +47,7 @@ class ArcaneGlyph extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final id = category.glyphIdFor(entry);
-    if (id != null && archetypeGlyphArt(id) != null) {
+    if (id != null && glifoDesenhado(id) != null) {
       return ArchetypeGlyph(id: id, size: size);
     }
     return ExcludeSemantics(child: Text(entry.emoji, style: emojiStyle));
