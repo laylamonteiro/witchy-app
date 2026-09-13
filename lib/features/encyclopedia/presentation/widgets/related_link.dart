@@ -210,7 +210,12 @@ class LinkableChip extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(label, style: Theme.of(context).textTheme.bodyMedium),
+          // O Wrap que hospeda as pílulas escolhe a linha, mas um rótulo
+          // comprido com a fonte ampliada ainda pode passar da largura do
+          // cartão — e aí quem estoura é esta linha.
+          Flexible(
+            child: Text(label, style: Theme.of(context).textTheme.bodyMedium),
+          ),
           if (destination != null) ...[
             const SizedBox(width: 4),
             Icon(Icons.arrow_outward, size: 13, color: context.gc.lilac),

@@ -49,23 +49,25 @@ class MetalDetailPage extends StatelessWidget {
                     style: Theme.of(context).textTheme.headlineMedium,
                   ),
                   const SizedBox(height: 8),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                  // Planeta e elemento lado a lado numa linha só estouravam
+                  // em tela estreita com fonte ampliada (eram quatro textos
+                  // rígidos num Row). Com Wrap, o par que não couber desce
+                  // para a linha de baixo em vez de ser cortado; quando cabe,
+                  // o desenho é exatamente o de antes.
+                  Wrap(
+                    alignment: WrapAlignment.center,
+                    spacing: 16,
+                    runSpacing: 8,
                     children: [
-                      Text(metal.planet.emoji,
-                          style: const TextStyle(fontSize: 24)),
-                      const SizedBox(width: 8),
-                      Text(
+                      _buildAttribute(
+                        context,
+                        metal.planet.emoji,
                         metal.planet.displayName,
-                        style: Theme.of(context).textTheme.titleMedium,
                       ),
-                      const SizedBox(width: 16),
-                      Text(metal.element.emoji,
-                          style: const TextStyle(fontSize: 24)),
-                      const SizedBox(width: 8),
-                      Text(
+                      _buildAttribute(
+                        context,
+                        metal.element.emoji,
                         metal.element.displayName,
-                        style: Theme.of(context).textTheme.titleMedium,
                       ),
                     ],
                   ),
@@ -126,15 +128,20 @@ class MetalDetailPage extends StatelessWidget {
                             size: 28,
                           ),
                           const SizedBox(width: 8),
-                          Text(
-                            AppLocalizations.of(context).encySectionSafety,
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleLarge
-                                ?.copyWith(
-                                  color: context.gc.alert,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                          // "Avisos de Segurança" em titleLarge ao lado de um
+                          // ícone de 28 não cabe em 320 com a fonte grande —
+                          // e é justamente o aviso que não pode sumir.
+                          Flexible(
+                            child: Text(
+                              AppLocalizations.of(context).encySectionSafety,
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .titleLarge
+                                  ?.copyWith(
+                                    color: context.gc.alert,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                            ),
                           ),
                         ],
                       ),
@@ -278,9 +285,13 @@ class MetalDetailPage extends StatelessWidget {
                           size: 24,
                         ),
                         const SizedBox(width: 8),
-                        Text(
-                          AppLocalizations.of(context).encySectionHistory,
-                          style: Theme.of(context).textTheme.titleLarge,
+                        // Mesmo caso do aviso: título grande ao lado de ícone
+                        // não cabe numa tela estreita com fonte ampliada.
+                        Flexible(
+                          child: Text(
+                            AppLocalizations.of(context).encySectionHistory,
+                            style: Theme.of(context).textTheme.titleLarge,
+                          ),
                         ),
                       ],
                     ),
@@ -297,6 +308,27 @@ class MetalDetailPage extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+
+  /// Um par emoji + nome (planeta, elemento) como bloco indivisível.
+  ///
+  /// `mainAxisSize.min` para o Wrap medir o par inteiro, e `Flexible` no
+  /// nome porque um par sozinho ainda pode ser mais largo que o cartão
+  /// quando a fonte do sistema está no máximo.
+  Widget _buildAttribute(BuildContext context, String emoji, String label) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(emoji, style: const TextStyle(fontSize: 24)),
+        const SizedBox(width: 8),
+        Flexible(
+          child: Text(
+            label,
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
+        ),
+      ],
     );
   }
 

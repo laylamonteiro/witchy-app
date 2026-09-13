@@ -195,12 +195,17 @@ class _AboutCard extends StatelessWidget {
             children: [
               const Text('✨', style: TextStyle(fontSize: 24)),
               const SizedBox(width: 8),
-              Text(
-                'Grimório de Bolso',
-                style: TextStyle(
-                  color: context.gc.textPrimary,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
+              // O nome do app é fixo, mas o corpo dele não: com a fonte do
+              // sistema ampliada numa tela de 320 ele passa da largura do
+              // cartão. Flexible deixa quebrar em vez de cortar.
+              Flexible(
+                child: Text(
+                  'Grimório de Bolso',
+                  style: TextStyle(
+                    color: context.gc.textPrimary,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ],
