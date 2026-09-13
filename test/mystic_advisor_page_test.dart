@@ -338,6 +338,46 @@ void main() {
     await tester.pumpWidget(const SizedBox.shrink());
   });
 
+  testWidgets('asking with the keyboard open climbs only after it is gone',
+      (tester) async {
+    // O botão fecha o teclado sozinho. Subir enquanto ele encolhe é subir
+    // para uma altura que ainda vai mudar: a tela tem de esperar.
+    tester.view.physicalSize = const Size(390, 480);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final pendente = Completer<String>();
+    ask = (q) {
+      calls.add(q);
+      return pendente.future;
+    };
+
+    await show(tester, viewInsets: const EdgeInsets.only(bottom: 240));
+    final rolagem = tester
+        .widget<SingleChildScrollView>(find.byType(SingleChildScrollView))
+        .controller!;
+    await tester.drag(find.byType(SingleChildScrollView), const Offset(0, -120));
+    await tester.pump();
+    expect(rolagem.offset, greaterThan(0));
+
+    await askQuestion(tester, 'Which moon?');
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(rolagem.offset, greaterThan(0),
+        reason: 'o teclado ainda ocupa a tela');
+    expect(calls, ['Which moon?'], reason: 'a consulta partiu mesmo assim');
+
+    // O teclado terminou de sumir.
+    await show(tester);
+    await until(tester, () => rolagem.offset <= .5,
+        'the page climbed once the keyboard was gone');
+
+    pendente.complete(_answer);
+    await until(tester, () => find.byType(MistTypewriterText).evaluate().isNotEmpty,
+        'answer');
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
   testWidgets('with the keyboard open the ball shrinks and the action stays reachable',
       (tester) async {
     tester.view.physicalSize = const Size(390, 700);

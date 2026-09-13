@@ -261,7 +261,13 @@ class _AdvisorBodyState extends State<_AdvisorBody> {
   }
 
   /// Sobe até a bola de cristal, que é onde a cena começa.
+  ///
+  /// Espera o teclado terminar de sumir antes de subir. Tocar em "Consultar"
+  /// com o teclado aberto o fecha sozinho, e enquanto ele encolhe a viewport
+  /// muda de tamanho a cada quadro: subir no meio disso é subir para uma
+  /// altura que ainda vai mudar, e a rolagem termina onde ninguém pediu.
   Future<void> _scrollToBall() async {
+    await _keyboardSettled();
     if (!mounted || !_scroll.hasClients || _scroll.offset <= 0) return;
     await _scroll.animateTo(
       0,
@@ -270,6 +276,16 @@ class _AdvisorBodyState extends State<_AdvisorBody> {
           : const Duration(milliseconds: 420),
       curve: Curves.easeInOutCubic,
     );
+  }
+
+  /// Volta quando o teclado não ocupa mais nada da tela, ou depois de uns
+  /// poucos quadros — nem toda plataforma avisa que ele se foi.
+  Future<void> _keyboardSettled() async {
+    for (var i = 0; i < 24; i++) {
+      if (!mounted) return;
+      if (MediaQuery.viewInsetsOf(context).bottom <= 0) return;
+      await WidgetsBinding.instance.endOfFrame;
+    }
   }
 
   /// O quadro em que o card de resposta já existe e foi medido.

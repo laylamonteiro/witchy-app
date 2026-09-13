@@ -161,7 +161,9 @@ Entregue em 10/09. Revisto em 13/09 (jornada):
 - **A cena começa na bola.** Esconder o teclado ou tocar em "Consultar o
   Conselheiro" sobe a tela até a bola de cristal (420 ms): a espera acontece
   onde a pessoa está olhando, e a névoa nasce à vista. Só depois a tela
-  desce, junto com ela.
+  desce, junto com ela. A subida espera o teclado terminar de sumir — o
+  botão o fecha sozinho, e enquanto ele encolhe a viewport muda de tamanho a
+  cada quadro; subir no meio disso termina numa altura que ninguém pediu.
 - **A névoa leva a resposta da bola ao card, e lá o texto é escrito.** O
   emblema de cada ferramenta já voava do hub para o cabeçalho; a resposta
   ganhou o mesmo gesto: `AdvisorMistFlight` (Overlay, porque o voo atravessa
