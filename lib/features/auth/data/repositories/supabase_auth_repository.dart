@@ -726,8 +726,54 @@ class SupabaseAuthRepository implements AuthRepository {
 
   @override
   Future<AuthResult> updatePassword(
-      String currentPassword, String newPassword) async {
+    String currentPassword,
+    String newPassword, {
+    String? captchaToken,
+    bool recuperacao = false,
+  }) async {
     try {
+      // A senha atual era pedida na tela e não conferida contra NADA: o
+      // parâmetro chegava aqui e morria, e `updateUser` troca a senha só com
+      // a sessão. Quem pegasse o aparelho desbloqueado trocava a senha da
+      // conta digitando seis caracteres quaisquer, e a dona perdia o acesso
+      // ao próprio grimório na nuvem. O erro `changePasswordWrongCurrent` da
+      // tela nunca podia disparar, o que escondia a ausência da checagem.
+      //
+      // Conferir é entrar: não existe no Supabase um "essa senha está
+      // certa?". A entrada devolve uma sessão da MESMA pessoa, então nada
+      // muda para o app — o `_adoptServerSession` sai cedo quando o id é o
+      // mesmo. Errando a senha, o cliente levanta exceção e a sessão atual
+      // fica intacta.
+      if (!recuperacao) {
+        final email = _supabase.auth.currentUser?.email;
+        if (email == null || email.isEmpty) {
+          return AuthResult.error(_l10n.authErrNoUser);
+        }
+        try {
+          await _supabase.auth.signInWithPassword(
+            email: email,
+            password: currentPassword,
+            captchaToken: captchaToken,
+          );
+        } on AuthException catch (e) {
+          final recusa = _handleAuthException(e);
+          // Credencial inválida AQUI é a senha atual errada, e só ela: o
+          // e-mail veio da sessão, não de um campo. A frase da tela de
+          // entrada ("e-mail ou senha incorretos") mandaria conferir um
+          // e-mail que ela nem digitou.
+          if (recusa.errorCode == AuthErrorCode.invalidPassword) {
+            return AuthResult.error(
+              _l10n.changePasswordWrongCurrent,
+              AuthErrorCode.invalidPassword,
+            );
+          }
+          // Captcha, limite de tentativas, rede: cada um com a sua frase.
+          // Dizer "senha atual incorreta" para uma falha de rede mandaria a
+          // pessoa duvidar da memória dela.
+          return recusa;
+        }
+      }
+
       await _supabase.auth.updateUser(
         UserAttributes(password: newPassword),
       );

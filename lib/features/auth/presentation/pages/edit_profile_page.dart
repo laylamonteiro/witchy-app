@@ -651,6 +651,15 @@ class _EditProfilePageState extends State<EditProfilePage> {
               // Atualizar senha via Supabase ou local
               if (SupabaseConfig.isConfigured) {
                 try {
+                  // ATENÇÃO, se um dia esta tela voltar a ser alcançável: a
+                  // senha atual agora é CONFERIDA contra o servidor, e
+                  // conferir é entrar — o que neste projeto exige o token do
+                  // anti-robô. Esta chamada não o passa, então a troca
+                  // falharia. O portão não foi acrescentado aqui porque o
+                  // `context` deste botão é o do DIÁLOGO, e o diálogo já foi
+                  // fechado na linha acima: abrir a folha do captcha com ele
+                  // quebraria. A tela de trocar senha (change_password_page)
+                  // é a que está viva e faz isso certo.
                   final authRepo = SupabaseAuthRepository();
                   final result = await authRepo.updatePassword(
                     currentPasswordController.text,

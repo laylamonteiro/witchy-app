@@ -4,16 +4,23 @@ import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
+import '../../../../core/config/captcha_config.dart';
 import '../../../../core/config/supabase_config.dart';
 import '../../data/repositories/supabase_auth_repository.dart';
+import '../widgets/captcha_gate.dart';
 
 /// Tela de alteração de senha
 class ChangePasswordPage extends StatefulWidget {
   /// Fluxo "esqueci minha senha": a pessoa chegou pelo link do e-mail com
   /// uma sessão de recuperação e NÃO SABE a senha atual — o campo dela é
-  /// escondido. Fora da recuperação o campo fica, como fricção honesta
-  /// contra troca de senha num aparelho desbloqueado alheio (o backend não
-  /// exige a senha atual; a checagem é só desta tela).
+  /// escondido, e quem responde por ela é o token do link que abriu a
+  /// sessão.
+  ///
+  /// Fora da recuperação o campo fica, e agora ele VALE: a senha atual é
+  /// conferida contra o servidor antes da troca. Antes não era conferida
+  /// contra nada — o campo era fricção de mentira, e quem pegasse o
+  /// aparelho desbloqueado trocava a senha da conta com seis caracteres
+  /// quaisquer.
   final bool recovery;
 
   const ChangePasswordPage({super.key, this.recovery = false});
@@ -286,55 +293,67 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
 
     setState(() => _isLoading = true);
 
+    // Capturados ANTES dos awaits: usar o context depois deles é apostar que
+    // o widget continua vivo (use_build_context_synchronously).
+    final l10n = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    final gc = context.gc;
+
     try {
-      final currentPassword = _currentPasswordController.text;
-      final newPassword = _newPasswordController.text;
+      // Sem Supabase não há senha a trocar. Esta tela FINGIA: esperava dois
+      // segundos e anunciava "senha alterada" sem ter alterado nada — a tela
+      // mentindo para a pessoa exatamente sobre a senha dela.
+      if (!SupabaseConfig.isConfigured) {
+        throw Exception(l10n.authSystemNotConfigured);
+      }
 
-      // Usar Supabase se configurado
-      if (SupabaseConfig.isConfigured) {
-        final authRepo = SupabaseAuthRepository();
-        final result = await authRepo.updatePassword(
-          currentPassword,
-          newPassword,
-        );
-
-        if (!result.success) {
-          throw Exception(result.errorMessage ?? AppLocalizations.of(context).changePasswordError);
+      // Fora da recuperação, conferir a senha atual é ENTRAR com ela — e a
+      // entrada por senha deste projeto exige o anti-robô (Attack Protection
+      // ligado no painel, ver CaptchaConfig). Sem passar por este portão a
+      // conferência seria recusada pelo servidor SEMPRE, e ninguém mais
+      // conseguiria trocar a senha. Mesmo portão de Entrar e Cadastrar.
+      String? captchaToken;
+      if (!widget.recovery) {
+        captchaToken = await CaptchaGate.resolve(context);
+        if (!mounted) return;
+        if (CaptchaConfig.isConfigured && captchaToken == null) {
+          throw Exception(l10n.authCaptchaFailed);
         }
-      } else {
-        // Simular alteração se Supabase não configurado
-        await Future.delayed(const Duration(seconds: 2));
       }
 
-      if (mounted) {
-        // Mostrar sucesso
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(AppLocalizations.of(context).changePasswordSuccess),
-            backgroundColor: context.gc.success,
-          ),
-        );
+      final authRepo = SupabaseAuthRepository();
+      final result = await authRepo.updatePassword(
+        _currentPasswordController.text,
+        _newPasswordController.text,
+        captchaToken: captchaToken,
+        recuperacao: widget.recovery,
+      );
 
-        // Sai da tela (ver [_sair] — recuperação usa go_router).
-        _sair();
+      // A mensagem já vem pronta e certa do repositório — senha atual
+      // errada, captcha, limite de tentativas, rede. A tela adivinhava o
+      // motivo procurando pedaços de texto em inglês dentro da exceção, e
+      // por isso chamava de "senha atual incorreta" tudo que trouxesse a
+      // palavra `password`.
+      if (!result.success) {
+        throw Exception(result.errorMessage ?? l10n.changePasswordError);
       }
+
+      if (!mounted) return;
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(l10n.changePasswordSuccess),
+          backgroundColor: gc.success,
+        ),
+      );
+
+      // Sai da tela (ver [_sair] — recuperação usa go_router).
+      _sair();
     } catch (e) {
       if (mounted) {
-        setState(() => _isLoading = false);
-
-        String errorMessage = AppLocalizations.of(context).changePasswordError;
-        if (e.toString().contains('Invalid login') ||
-            e.toString().contains('credentials') ||
-            e.toString().contains('password')) {
-          errorMessage = AppLocalizations.of(context).changePasswordWrongCurrent;
-        } else {
-          errorMessage = e.toString().replaceAll('Exception: ', '');
-        }
-
-        ScaffoldMessenger.of(context).showSnackBar(
+        messenger.showSnackBar(
           SnackBar(
-            content: Text(errorMessage),
-            backgroundColor: context.gc.alert,
+            content: Text('$e'.replaceAll('Exception: ', '')),
+            backgroundColor: gc.alert,
           ),
         );
       }

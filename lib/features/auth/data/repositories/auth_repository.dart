@@ -126,8 +126,23 @@ abstract class AuthRepository {
     String? birthPlace,
   });
 
-  /// Atualiza a senha do usuário
-  Future<AuthResult> updatePassword(String currentPassword, String newPassword);
+  /// Atualiza a senha do usuário, conferindo [currentPassword] antes.
+  ///
+  /// Conferir a senha atual é ENTRAR com ela: o Supabase não tem um "essa
+  /// senha está certa?", quem responde é o próprio login. Daí o
+  /// [captchaToken] — a entrada por senha deste projeto exige o anti-robô, e
+  /// sem token o servidor recusaria toda conferência, trancando a troca de
+  /// senha para todo mundo.
+  ///
+  /// [recuperacao] é o fluxo do link do e-mail, o único em que não há o que
+  /// conferir: a pessoa chegou aqui justamente por não saber a senha atual, e
+  /// quem responde por ela é o token do link que abriu a sessão.
+  Future<AuthResult> updatePassword(
+    String currentPassword,
+    String newPassword, {
+    String? captchaToken,
+    bool recuperacao = false,
+  });
 
   /// Deleta a conta do usuário
   Future<AuthResult> deleteAccount();
