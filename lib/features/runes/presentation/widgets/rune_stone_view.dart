@@ -12,10 +12,12 @@ import 'rune_art.dart';
 /// With a [symbol] the glyph is carved on top; [reversed] turns it over.
 ///
 /// [runeName] é o nome invariante da runa ('Fehu', 'Uruz'…) e é ele que
-/// escolhe o DESENHO em `rune_art.dart`. [symbol] continua sendo passado e
-/// continua sendo o que aparece quando não há desenho para aquele nome —
-/// inclusive quando [runeName] é nulo, que é o caso de quem ainda chama a
-/// pedra só com o caractere (a galeria de movimento de `lib/dev/`).
+/// escolhe o DESENHO em `rune_art.dart`. [symbol] continua sendo passado
+/// porque é a RESERVA: com [runeName] nulo, ou com um nome que ninguém
+/// desenhou, a pedra volta a escrever o caractere do catálogo em vez de
+/// chegar lisa. É uma reserva para um catálogo FUTURO — hoje todos os
+/// chamadores de `lib/` passam o nome, a galeria de `lib/dev/` inclusive, e
+/// quem mantém esse caminho vivo e conferido é `test/rune_art_test.dart`.
 class RuneStoneView extends StatelessWidget {
   const RuneStoneView({
     super.key,
@@ -57,10 +59,16 @@ class RuneStoneView extends StatelessWidget {
               : Center(
                   child: RotatedBox(
                     quarterTurns: reversed ? 2 : 0,
-                    // O ENTALHE segue sendo o mesmo: ouro por cima de um
-                    // halo difuso da cor do fundo do tema. O que mudou é que
-                    // agora ele veste um desenho, e não um caractere de um
-                    // bloco do Unicode que metade dos aparelhos não tem.
+                    // O ENTALHE é a mesma receita de antes: ouro por cima de
+                    // um halo difuso da cor do fundo do tema, e é ele que faz
+                    // a runa parecer cavada na pedra em vez de pintada em
+                    // cima. Duas coisas mudaram. O ouro agora veste um
+                    // desenho, e não um caractere de um bloco do Unicode que
+                    // metade dos aparelhos não tem. E o borrão do halo virou
+                    // proporcional à pedra (ver `rune_art.dart`): era fixo em
+                    // 3, o que servia à pedra de 76 da lista e sumia na de
+                    // 180 do verbete, onde o entalhe voltava a parecer traço
+                    // colado por cima.
                     child: RuneMark(
                       name: runeName ?? '',
                       symbol: glyph,

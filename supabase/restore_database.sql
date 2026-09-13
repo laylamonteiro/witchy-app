@@ -7,8 +7,7 @@
 -- BASE, e não único: ele deixou de ser o arquivo completo quando o app passou
 -- a sincronizar mais do que ele cria. A lista do que rodar depois está no fim
 -- deste cabeçalho, e é ela que vale — não a memória de quem já restaurou uma
--- vez. (docs/SUPABASE_RESTORE.md ainda chama este arquivo de "script único" e
--- termina o passo do banco aqui: quem cuidar do guia precisa acertá-lo.)
+-- vez.
 --
 -- O script é IDEMPOTENTE: pode ser executado mais de uma vez sem erro e sem
 -- perder dados (CREATE IF NOT EXISTS / ADD COLUMN IF NOT EXISTS /

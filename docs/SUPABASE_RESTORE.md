@@ -11,8 +11,10 @@ app usa SQLite local como fonte primária; o Supabase é a camada de conta
   `SUPABASE_URL` e `SUPABASE_ANON_KEY` (ver `lib/core/config/supabase_config.dart`).
 - Sem credenciais, o app roda 100% local (`SupabaseConfig.isConfigured == false`) —
   login de conta, sync e códigos beta cross-device ficam desativados.
-- O CI (`.github/workflows/release-parallel.yml`) lê os mesmos valores dos
-  **GitHub Secrets**.
+- O CI lê os mesmos valores do repositório (**Variables** ou, como reserva,
+  **Secrets**), nos dois workflows que compilam o app:
+  `.github/workflows/branch-validate.yml` (validação e site) e
+  `.github/workflows/release.yml` (publicação).
 
 ## Passo 1 — Criar o projeto
 
@@ -138,7 +140,10 @@ No repositório GitHub: **Settings → Secrets and variables → Actions**:
 - `SUPABASE_URL` = Project URL
 - `SUPABASE_ANON_KEY` = anon key
 
-O workflow `release-parallel.yml` já injeta esses secrets no build.
+Os dois workflows que compilam o app já injetam esses valores:
+`branch-validate.yml` e `release.yml`. Ambos leem
+`vars.SUPABASE_URL || secrets.SUPABASE_URL` (idem para a anon key), então
+serve preencher em **Variables** ou em **Secrets** — não nos dois.
 
 ## Passo 6 — (Opcional) Agendar reset de contadores
 

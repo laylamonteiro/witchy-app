@@ -89,12 +89,22 @@ class _ShortcutsGridState extends State<ShortcutsGrid> {
                     // ferramentas é desenhado, e desenho não entra numa
                     // interpolação de string. 18 aproxima o desenho do corpo
                     // do emoji no rótulo do chip.
+                    //
+                    // O nome vai em `Flexible` porque o rótulo antes era um
+                    // `Text` solto: o chip mede o rótulo com largura máxima
+                    // FINITA, então aquele texto quebrava em duas linhas e o
+                    // chip crescia em altura. Num `Row`, filho sem flex
+                    // recebe largura infinita e o nome vira uma linha rígida
+                    // que estoura o `Row` — o maior deles, "Interpretación de
+                    // Sueños" do espanhol, já estoura numa tela de 320 com a
+                    // fonte do sistema aumentada. `Flexible` devolve a quebra
+                    // de linha que o `Text` solto tinha.
                     label: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         _EmblemaDoAtalho(tool: tool, size: 18),
                         const SizedBox(width: 6),
-                        Text(tool.label(l10n)),
+                        Flexible(child: Text(tool.label(l10n))),
                       ],
                     ),
                     selectedColor: sheetContext.gc.lilac.withValues(alpha: 0.3),
@@ -255,7 +265,15 @@ class _EmblemaDoAtalho extends StatelessWidget {
   Widget build(BuildContext context) {
     final drawing = tool.drawing;
     if (drawing != null) return ToolDrawingArt(drawing: drawing, size: size);
-    // O construtor garante que, sem desenho, há emoji.
-    return Text(tool.emoji!, style: TextStyle(fontSize: size));
+    final emoji = tool.emoji;
+    // Sem emoji E sem desenho não deveria existir — o construtor do
+    // ShortcutTool garante que há exatamente um dos dois. Mas `assert` só
+    // roda em debug: no app publicado um atalho mal construído passaria, e
+    // `tool.emoji!` derrubaria a aba inteira do Seu Dia por causa de um
+    // quadradinho. O slot vazio guarda o lugar e a grade continua de pé.
+    // Quem impede o atalho sem emblema de nascer é
+    // test/atalhos_com_emblema_test.dart, que roda no CI.
+    if (emoji == null) return SizedBox.square(dimension: size);
+    return Text(emoji, style: TextStyle(fontSize: size));
   }
 }

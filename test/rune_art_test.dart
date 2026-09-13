@@ -83,6 +83,49 @@ void main() {
       }
     });
 
+    test('não há duas runas com o mesmo desenho', () {
+      // A catraca contra o erro que ninguém revisa: copiar a vizinha de cima
+      // para começar uma runa e esquecer de mexer nos pontos. O app passaria
+      // a ENSINAR a forma errada, e nenhum dos outros testes veria — a cópia
+      // tem altura certa, centro certo e peso certo, porque é uma runa
+      // legítima, só que a errada. Pega também os pares que se parecem e não
+      // são iguais: Eihwaz e Perthro, Ehwaz e Mannaz.
+      final vistos = <String, String>{};
+      for (final nome in runeArtNames) {
+        final assinatura = runeArtFor(nome)!.strokes.toString();
+        expect(vistos[assinatura], isNull,
+            reason: '$nome tem o mesmo traçado de ${vistos[assinatura]}');
+        vistos[assinatura] = nome;
+      }
+      expect(vistos, hasLength(24));
+    });
+
+    test('nenhum traço é horizontal', () {
+      // A regra do entalhe, que o arquivo afirma e nada conferia: traço
+      // paralelo ao veio da madeira some, e por isso nenhuma das vinte e
+      // quatro tem uma horizontal — nem a travessa de Hagalaz, que é
+      // inclinada de propósito.
+      //
+      // Mede-se o ÂNGULO, e não o desnível. A primeira versão desta catraca
+      // cobrava `dy > 0,05` e não dizia nada sobre horizontalidade: um
+      // segmento de dy 0,06 com dx 0,60 é uma barra chapada de 5,7° e
+      // passava, enquanto um remate de dy 0,04 com dx 0,01 é praticamente
+      // vertical e reprovava. O segmento mais deitado das vinte e quatro tem
+      // 22,6° (os ganchos de Eihwaz), seguido de Perthro com 24,0° e Wunjo
+      // com 24,2°: o piso de 15° deixa folga larga para autorar sem afrouxar
+      // a regra a ponto de deixar passar a barra que ela existe para barrar.
+      for (final nome in runeArtNames) {
+        for (final stroke in runeArtFor(nome)!.strokes) {
+          for (var i = 1; i < stroke.length; i++) {
+            final dy = (stroke[i].dy - stroke[i - 1].dy).abs();
+            final dx = (stroke[i].dx - stroke[i - 1].dx).abs();
+            expect(math.atan2(dy, dx) * 180 / math.pi, greaterThan(15.0),
+                reason: '$nome tem um segmento quase horizontal');
+          }
+        }
+      }
+    });
+
     test('a compensação de espessura fica na faixa documentada', () {
       final tintas = {
         for (final nome in runeArtNames) nome: _tinta(runeArtFor(nome)!)

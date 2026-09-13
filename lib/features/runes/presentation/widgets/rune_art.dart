@@ -39,9 +39,17 @@ import 'package:flutter/material.dart';
 ///   (losango) quer ser um selo no meio da caixa. Na lista, onde as vinte e
 ///   quatro aparecem lado a lado, uma delas mais baixa lê como erro de
 ///   render, não como letra diferente.
-/// * **Centro horizontal**: o meio da tinta de cada uma cai em 0,50 ± 0,01.
-/// * **Margem**: nenhuma invade os 0,08 de folga de cima e de baixo — nem
-///   com a meia-espessura do traço mais grosso (0,057 no pior caso, Isa).
+/// * **Centro horizontal**: o meio da CAIXA de tinta — a menor moldura que
+///   contém os pontos — cai em 0,50 ± 0,01. É a moldura, e não o centro de
+///   massa do traço: nove das vinte e quatro são haste à esquerda com tudo o
+///   mais pendurado à direita, e o centro de massa de Fehu, por exemplo,
+///   está em 0,40. Centrar por ele empurraria a haste de Fehu para a
+///   direita e quebraria a coluna de hastes que a lista alinha sozinha.
+/// * **Margem**: os 0,08 de folga existem PARA o traço, não contra ele. O
+///   remate redondo avança meia espessura além do ponto final — 0,057 no
+///   pior caso, Isa, a mais grossa — e come 0,057 dos 0,08. O que fica
+///   travado é que ainda sobram 0,023 e nenhuma runa VAZA da caixa: tinta
+///   fora da caixa apareceria cortada dentro da pedra da mesa.
 ///
 /// A ESPESSURA é o ponto delicado, e aqui a conta diverge de propósito da do
 /// `archetype_glyph.dart`. Lá, onze desenhos figurativos independentes são
@@ -185,8 +193,27 @@ final Map<String, RuneArt> _art = {
   ]),
 
   // RAIDHO ᚱ — a cavalgada. Haste, o ombro que volta à haste e a perna.
-  // Mesma forma que o emblema da ferramenta em `tool_emblem_art.dart`,
-  // reautorada nesta caixa. Tinta 2,29.
+  // Tinta 2,29.
+  //
+  // DESENHADA DUAS VEZES no app, e de propósito: o emblema da ferramenta
+  // Runas, em `lib/core/tools/tool_emblem_art.dart`, tem esta mesma forma.
+  // Quem corrigir uma NÃO precisa sincronizar a outra. Lá ela é uma
+  // marca sozinha, ao lado do pentagrama e do pêndulo, e a espessura dela
+  // (0,10 da caixa) foi acertada contra esses dois; aqui ela é uma LETRA
+  // entre vinte e três outras, e a espessura sai da compensação de tinta do
+  // alfabeto (0,095 × 0,95 = 0,090). Unificar economizaria quatro pontos e
+  // passaria a mexer no cartão da ferramenta toda vez que o alfabeto fosse
+  // reequilibrado — caro pelo que se ganha.
+  //
+  // E elas APARECEM juntas, ao contrário do que esta nota dizia antes: o
+  // cabeçalho da mesa de runas carrega o emblema da ferramenta o tempo
+  // todo, e basta Raidho cair na tiragem para a letra ficar na pedra logo
+  // abaixo dele. Nem por isso a diferença se lê. Nada ali convida a
+  // comparar — o emblema tem 22 de lado e é lilás sobre a barra; a letra
+  // chega bem maior, em ouro, entalhada numa pedra —, e os pontos que
+  // separam os dois traçados (0,01 no ombro e na volta, 0,03 no pé da
+  // perna) valem no máximo um TERÇO da espessura do próprio traço. Essa
+  // razão não muda com o tamanho: não há tela em que a diferença cresça.
   'Raidho': RuneArt(weight: 0.95, strokes: const [
     [Offset(.30, .08), Offset(.30, .92)],
     [Offset(.30, .08), Offset(.68, .28), Offset(.30, .48), Offset(.70, .92)],
@@ -234,10 +261,15 @@ final Map<String, RuneArt> _art = {
     [Offset(.50, .08), Offset(.50, .92)],
   ]),
 
-  // JERA ᛃ — a colheita, o ano que fecha. DOIS ganchos que NÃO se tocam,
-  // encaixados na diagonal: o de cima aponta para a direita, o de baixo
-  // para a esquerda, e as pontas passam uma da outra na altura do meio. Se
-  // encostassem viraria um losango, que é Ingwaz. Tinta 1,69.
+  // JERA ᛃ — a colheita, o ano que fecha. DOIS ganchos separados, encaixados
+  // na diagonal: o de cima ocupa a metade esquerda com o bico virado para a
+  // direita, o de baixo a metade direita com o bico virado para a esquerda.
+  // Eles se encaram sem se tocar — o vão mais estreito entre os dois é de
+  // 0,216 da caixa, que com as duas meias-espessuras ainda deixa 0,117 de
+  // ar. É esse vão que faz a runa, e fechá-lo não daria outra runa: daria
+  // um nó de quatro braços saindo de um ponto só, uma ampulheta deitada.
+  // Nem Gebo, que é o X de duas diagonais inteiras, nem Ingwaz, que é o
+  // losango fechado — e no tamanho da lista leria como borrão. Tinta 1,69.
   'Jera': RuneArt(weight: 1.04, strokes: const [
     [Offset(.26, .08), Offset(.62, .30), Offset(.26, .52)],
     [Offset(.74, .48), Offset(.38, .70), Offset(.74, .92)],
@@ -284,11 +316,15 @@ final Map<String, RuneArt> _art = {
   ]),
 
   // BERKANO ᛒ — a bétula. Haste e DOIS triângulos empilhados à direita, que
-  // se encostam no meio da haste. Tinta 2,61.
+  // se encostam no MEIO da haste. O meio de 0,08 a 0,92 é 0,50, e o encaixe
+  // estava em 0,46, com os ápices em 0,68 e 0,70: o bojo de baixo saía 21%
+  // mais alto e 0,02 mais largo que o de cima, e a runa chegava à lista como
+  // um B torto — não é tradição nenhuma, era o desenho discordando do
+  // próprio comentário. Os dois bojos agora são congruentes. Tinta 2,65.
   'Berkano': RuneArt(weight: 0.91, strokes: const [
     [Offset(.30, .08), Offset(.30, .92)],
-    [Offset(.30, .08), Offset(.68, .26), Offset(.30, .46)],
-    [Offset(.30, .46), Offset(.70, .70), Offset(.30, .92)],
+    [Offset(.30, .08), Offset(.70, .29), Offset(.30, .50)],
+    [Offset(.30, .50), Offset(.70, .71), Offset(.30, .92)],
   ]),
 
   // EHWAZ ᛖ — o cavalo. Duas hastes e um V entre elas, descendo do topo de
@@ -339,10 +375,12 @@ final Map<String, RuneArt> _art = {
   ]),
 
   // OTHALA ᛟ — a herança, a terra do clã. Losango com duas pernas abertas.
-  // As pernas não são pauzinhos colados embaixo: cada lado de baixo do
-  // losango é a CONTINUAÇÃO reta do lado de cima oposto, e as duas retas se
-  // cruzam no vértice inferior — é isso que dá à runa o pé aberto em vez de
-  // um losango com dois riscos. Tinta 2,38.
+  // As pernas não são pauzinhos colados embaixo: são DUAS RETAS INTEIRAS,
+  // cada uma saindo de um vértice lateral do losango e indo até o pé oposto,
+  // e é o cruzamento delas em (0,50; 0,63) que FAZ o vértice de baixo. Dito
+  // de outro jeito: cada perna é a continuação reta do lado de baixo OPOSTO
+  // do losango. É isso que dá o pé aberto, em vez de um losango com dois
+  // riscos pendurados. Tinta 2,38.
   'Othala': RuneArt(weight: 0.94, strokes: const [
     [Offset(.22, .34), Offset(.50, .08), Offset(.78, .34)],
     [Offset(.22, .34), Offset(.78, .92)],

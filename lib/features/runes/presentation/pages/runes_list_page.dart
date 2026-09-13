@@ -6,6 +6,7 @@ import '../../../../core/widgets/living_emblem.dart';
 import '../../../../core/widgets/staggered_entrance.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../data/models/rune_model.dart';
+import '../widgets/rune_art.dart';
 import '../widgets/rune_stone_view.dart';
 import 'rune_detail_page.dart';
 
@@ -37,7 +38,25 @@ class RunesListPage extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      const Text('ᚠ', style: TextStyle(fontSize: 32)),
+                      // Fehu escrita a caractere era o último glifo cru da
+                      // tela de Runas: no aparelho sem fonte para o bloco
+                      // Runic, o cabeçalho da própria lista de runas abria
+                      // com um quadradinho vazio. Mesmo corpo de 32 e mesma
+                      // cor de texto de antes — só que desenhada.
+                      //
+                      // Nome e caractere saem do catálogo já carregado
+                      // acima, e não de uma cópia escrita aqui: copiados, o
+                      // caractere voltava a ser o ÚNICO do bloco Runic em
+                      // código executável de todo o `lib/` — a frente que
+                      // existiu para matar glifo cru reintroduzindo um na
+                      // própria linha que escreveu. De quebra, a primeira
+                      // runa do Futhark passa a ser a que o catálogo diz.
+                      RuneMark(
+                        name: runes.first.name,
+                        symbol: runes.first.symbol,
+                        fontSize: 32,
+                        color: context.gc.textPrimary,
+                      ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
