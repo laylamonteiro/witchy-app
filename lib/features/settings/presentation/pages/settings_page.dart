@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show kIsWeb, visibleForTesting;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
@@ -169,7 +169,7 @@ class SettingsPage extends StatelessWidget {
           ),
           child: Center(
             child: Text(
-              _getInitials(user.displayName ?? user.email ?? 'User'),
+              iniciaisDoNome(user.displayName ?? user.email ?? 'User'),
               style: TextStyle(
                 color: context.gc.textPrimary,
                 fontSize: 36,
@@ -1017,12 +1017,38 @@ class SettingsPage extends StatelessWidget {
     openSubscriptionPage(context);
   }
 
-  String _getInitials(String name) {
-    final parts = name.trim().split(' ');
-    if (parts.length >= 2) {
-      return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
+  /// As iniciais do cabeçalho — que rodam no `build`, e por isso não podem
+  /// estourar por causa de um nome.
+  ///
+  /// Estouravam em dois nomes possíveis, e os dois derrubavam a aba de
+  /// Configurações INTEIRA, que é por onde se chega a Privacidade,
+  /// Sincronização, Sair da conta e Excluir conta:
+  ///
+  /// - nome vazio: `''.split(' ')` devolve `['']` (uma parte, não zero),
+  ///   então o código não entrava no ramo de duas partes e caía num
+  ///   `substring(0, 1)` sobre uma string de comprimento 0;
+  /// - nome com dois espaços seguidos: `'Ana  Maria'.split(' ')` devolve
+  ///   `['Ana', '', 'Maria']`, e o `[0]` da parte do meio, que é vazia,
+  ///   estourava.
+  ///
+  /// A divisão agora é por QUALQUER corrida de espaços, e as partes vazias
+  /// saem antes de alguém pedir a primeira letra delas. Sem nenhuma parte
+  /// sobrando, o cabeçalho mostra '?' — um cabeçalho feio é muito melhor
+  /// que uma tela que não abre.
+  @visibleForTesting
+  static String iniciaisDoNome(String name) {
+    final partes = name
+        .trim()
+        .split(RegExp(r'\s+'))
+        .where((parte) => parte.isNotEmpty)
+        .toList();
+
+    if (partes.isEmpty) return '?';
+    if (partes.length >= 2) {
+      return '${partes[0][0]}${partes[1][0]}'.toUpperCase();
     }
-    return name.substring(0, name.length >= 2 ? 2 : 1).toUpperCase();
+    final unica = partes.first;
+    return unica.substring(0, unica.length >= 2 ? 2 : 1).toUpperCase();
   }
 
   String _genderLabel(BuildContext context, Gender pref) {
@@ -1122,10 +1148,26 @@ class SettingsPage extends StatelessWidget {
                   style: TextStyle(color: context.gc.textSecondary)),
             ),
             ElevatedButton(
-              onPressed: () {
-                authProvider.updateProfile(displayName: nameController.text);
-                authProvider.setGender(selectedGender);
-                Navigator.pop(context);
+              onPressed: () async {
+                // Capturado antes dos awaits (use_build_context_synchronously).
+                final navigator = Navigator.of(context);
+
+                // O nome ia cru: sem `trim()` e sem recusar vazio. E vazio
+                // não é "não mudei nada" — `updateProfile` guarda `''`,
+                // porque `'' ?? x` é `''`. Era esta a porta de entrada do
+                // nome vazio que derrubava o cabeçalho desta mesma tela.
+                // Nome em branco aqui significa deixar o que já existe,
+                // como o diálogo irmão de trocar o nome já faz.
+                final nome = nameController.text.trim();
+                await authProvider.updateProfile(
+                  displayName: nome.isEmpty ? null : nome,
+                );
+
+                // As duas gravações são aguardadas: o diálogo fechava
+                // anunciando um salvamento que ainda não tinha acontecido.
+                await authProvider.setGender(selectedGender);
+
+                navigator.pop();
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: context.gc.lilac,
