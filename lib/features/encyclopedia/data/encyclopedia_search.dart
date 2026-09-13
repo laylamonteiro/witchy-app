@@ -24,8 +24,9 @@ import '../presentation/pages/metal_detail_page.dart';
 
 /// Um resultado da busca global: verbete + seção de origem + destino.
 ///
-/// [glyphId] é o id do DESENHO do verbete quando ele tem um (hoje, os onze
-/// arquétipos), e null quando o símbolo dele é o [emoji]. A busca é a única
+/// [glyphId] é o id do DESENHO do verbete quando ele tem um (os onze
+/// arquétipos e três dos Símbolos Sagrados), e null quando o símbolo dele é
+/// o [emoji]. A busca é a única
 /// superfície que perde a categoria pelo caminho — ela mistura ervas, runas,
 /// sabbats e verbetes arcanos numa lista só — então a resposta viaja junto
 /// com o resultado, decidida no único lugar que ainda sabe a categoria. Sem

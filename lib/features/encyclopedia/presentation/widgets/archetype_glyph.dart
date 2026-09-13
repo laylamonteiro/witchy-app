@@ -472,6 +472,160 @@ final Map<String, ArchetypeGlyphArt> _art = {
   ),
 };
 
+/// Os TRÊS SÍMBOLOS SAGRADOS desenhados, em registro à parte dos onze.
+///
+/// Por que existem: o Pentagrama (⛤ U+26E4), o Ankh (☥ U+2625) e o Olho de
+/// Hórus (𓂀 U+13080) não são emoji — são caracteres de blocos raros do
+/// Unicode. Nenhum sistema móvel traz fonte de hieróglifo egípcio, e o ⛤ o
+/// próprio app já declarava quebrado: `tool_emblem_art.dart` registra que
+/// ele mostrava o quadradinho de glifo ausente NESTE app, e por isso o
+/// emblema dos Sigilos virou desenho. Para os Símbolos Sagrados o caractere
+/// saía cru em quatro lugares — o título da tela do verbete, a pílula de
+/// origem, a linha de referência do card da lista e a linha da busca global.
+///
+/// Por que REGISTRO À PARTE, e não mais três linhas em [_art]: a catraca dos
+/// onze compara cada arquétipo com a MÉDIA dos onze (área de tinta e massa),
+/// e `test/archetype_glyph_test.dart` ainda exige que o registro seja
+/// exatamente o catálogo de arquétipos, sem sobra. Três desenhos a mais ali
+/// dentro mudariam a média de todos e derrubariam o teste. Cada conjunto se
+/// equilibra consigo mesmo; o que os dois compartilham é a LINGUAGEM —
+/// mesma caixa de 24, mesma margem, mesmo traço aberto e fino no acento do
+/// tema.
+///
+/// Os três foram diagramados com a mesma conta dos onze, e chegaram na massa
+/// deles (77 de tinta, contra 77,0 do escudo e 77,3 do olho da Vidente): é o
+/// que faz um símbolo sagrado não pesar diferente de um arquétipo na busca
+/// global, onde os dois aparecem lado a lado. `test/simbolos_sagrados_
+/// desenhados_test.dart` confere área, massa, margem e centro.
+///
+/// O emoji NÃO sai do catálogo, como nos arquétipos: ele continua sendo a
+/// chave que liga o verbete ao desenho (ver `ArcaneCategory.glyphIdFor`), e
+/// é invariante entre os três idiomas.
+final Map<String, ArchetypeGlyphArt> _simbolosSagrados = {
+  // PENTAGRAMA — a estrela de cinco pontas, ponta para cima, em traço
+  // contínuo: as pontas ligadas de duas em duas, que é como ela fecha sem
+  // tirar o lápis do papel.
+  //
+  // SEM o anel. O emblema dos Sigilos (tool_emblem_art.dart) desenha a
+  // estrela dentro de um anel, e ali o anel tem função: a 22 de lado, no
+  // cabeçalho, a estrela sozinha sumia no meio do título. Aqui ela é o
+  // verbete inteiro e aparece grande, e o glifo ⛤ que o verbete usava é a
+  // estrela sem anel — o anel seria uma liberdade sem motivo.
+  //
+  // O raio de 7,8 não é escolha de gosto: a 8,6 a tinta media 17,2 de lado
+  // equivalente contra 15,6 dos outros dois, e o pentagrama lia maior que o
+  // ankh na mesma lista.
+  'pentagrama': ArchetypeGlyphArt(strokes: [
+    ArchetypeStroke(
+      Path()
+        ..moveTo(12.00, 4.20)
+        ..lineTo(16.58, 18.31)
+        ..lineTo(4.58, 9.59)
+        ..lineTo(19.42, 9.59)
+        ..lineTo(7.42, 18.31)
+        ..close(),
+      weight: .874,
+      alpha: .95,
+    ),
+  ]),
+
+  // ANKH — laço, haste e travessa. Três traços, o menor número dos três, e
+  // por isso o traço mais grosso (1,57): com a espessura dos outros ele
+  // pesaria pouco mais da metade do pentagrama, que tem quase o dobro de
+  // tinta. É a mesma compensação que faz o escudo da Guardiã ir a 1,45.
+  //
+  // O desenho inteiro desceu 1,0 da posição simétrica. A massa de um ankh
+  // está no laço, que é em cima: sem o deslocamento o centro de massa caía
+  // em 10,78 e o símbolo lia empurrado para o alto da caixa.
+  'ankh': ArchetypeGlyphArt(strokes: [
+    ArchetypeStroke(
+      Path()
+        ..addOval(
+            Rect.fromCircle(center: const Offset(12.00, 8.60), radius: 3.20)),
+      weight: 1.57,
+      alpha: .95,
+    ),
+    ArchetypeStroke(
+      Path()
+        ..moveTo(12.00, 11.80)
+        ..lineTo(12.00, 20.60),
+      weight: 1.57,
+      alpha: .95,
+    ),
+    ArchetypeStroke(
+      Path()
+        ..moveTo(5.80, 13.80)
+        ..lineTo(18.20, 13.80),
+      weight: 1.57,
+      alpha: .95,
+    ),
+  ]),
+
+  // OLHO DE HÓRUS — as quatro partes que fazem o wedjat ser reconhecível:
+  // a sobrancelha, a amêndoa do olho com a pupila, a lágrima que desce do
+  // canto de dentro e a cauda que encaracola no canto de fora. Sem elas o
+  // desenho vira o olho da Vidente, que já existe entre os onze — e dois
+  // verbetes diferentes não podem ter o mesmo desenho.
+  //
+  // A amêndoa é assimétrica de propósito (o canto de fora sobe), que é o que
+  // separa o wedjat de um olho qualquer.
+  'olho_de_horus': ArchetypeGlyphArt(
+    strokes: [
+      ArchetypeStroke(
+        Path()
+          ..moveTo(5.20, 12.36)
+          ..quadraticBezierTo(11.13, 6.66, 17.52, 10.99)
+          ..quadraticBezierTo(11.13, 15.09, 5.20, 12.36)
+          ..close(),
+        weight: .995,
+        alpha: .95,
+      ),
+      ArchetypeStroke(
+        Path()
+          ..moveTo(5.89, 8.25)
+          ..quadraticBezierTo(11.82, 3.24, 18.66, 7.57),
+        weight: .995,
+        alpha: .95,
+      ),
+      ArchetypeStroke(
+        Path()
+          ..moveTo(9.76, 14.07)
+          ..lineTo(8.62, 18.97)
+          ..quadraticBezierTo(8.17, 21.02, 6.34, 20.79),
+        weight: .995,
+        alpha: .95,
+      ),
+      ArchetypeStroke(
+        Path()
+          ..moveTo(15.46, 13.50)
+          ..lineTo(17.29, 17.14)
+          ..quadraticBezierTo(18.66, 20.11, 15.69, 20.34),
+        weight: .995,
+        alpha: .95,
+      ),
+    ],
+    dots: const [ArchetypeDot(Offset(11.25, 11.44), 1.71)],
+  ),
+};
+
+/// O desenho do símbolo sagrado [id], ou null se o id não é de nenhum dos
+/// três.
+ArchetypeGlyphArt? sacredSymbolGlyphArt(String id) => _simbolosSagrados[id];
+
+/// Os ids de símbolo sagrado que têm desenho — para o teste conferir que a
+/// lista é exatamente a esperada, sem sobra nem falta.
+Iterable<String> get sacredSymbolGlyphIds => _simbolosSagrados.keys;
+
+/// O desenho de [id], venha ele dos onze arquétipos ou dos três símbolos
+/// sagrados.
+///
+/// Dois registros e um resolvedor: quem PINTA não precisa saber de qual
+/// conjunto veio o desenho, e quem AUTORA precisa, porque o equilíbrio de
+/// tinta é interno a cada conjunto.
+ArchetypeGlyphArt? glifoDesenhado(String id) =>
+    _art[id] ?? _simbolosSagrados[id];
+
+
 /// Cinco pétalas em volta do centro. Simétrica de cinco lados, então o centro
 /// de massa já cai no meio da caixa sem deslocamento.
 Path _flor() {
@@ -544,7 +698,9 @@ class ArchetypeGlyph extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final art = archetypeGlyphArt(id);
+    // Os dois registros: arquétipo ou símbolo sagrado. Quem pinta não precisa
+    // saber de qual conjunto o desenho veio.
+    final art = glifoDesenhado(id);
     // Sem desenho não se inventa um: o espaço fica reservado e quem chama
     // decide o que colocar nele. Na prática nenhum id do catálogo cai aqui.
     if (art == null) return SizedBox.square(dimension: size);
