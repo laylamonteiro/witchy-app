@@ -2,7 +2,8 @@
 
 Três leituras adversariais varreram, em paralelo, as páginas que as
 auditorias anteriores não alcançaram — elas tinham parado em 19 das 107.
-São **46 achados distintos**: 8 graves, 26 médios, 12 leves. (Eram 48;
+São **46 achados distintos**: 8 graves, 26 médios, 12 leves — e hoje
+sobram **36 abertos**, todos médios ou leves. (Eram 48;
 dois graves foram à conferência e caíram — ver "O que a conferência
 derrubou", no fim.)
 
@@ -302,7 +303,7 @@ O item "Limpar Dados Locais" é construído com `isDestructive: false`, enquanto
 
 **Correção proposta:** Trocar para `isDestructive: true`, ou remover a marca dos três e usar outro sinal — o que não pode é ela existir em dois dos três.
 
-### `lib/features/settings/presentation/pages/settings_page.dart:1126` — ✔ conferido
+### `lib/features/settings/presentation/pages/settings_page.dart:1126` — ✅ CORRIGIDO (junto com o estouro das iniciais)
 
 No diálogo "Editar Perfil", o Salvar chama `authProvider.updateProfile(displayName: nameController.text)` e `setGender` sem `await` e sem validação: o nome vai sem `trim()` e vazio é aceito (`updateProfile` guarda `''`, porque `'' ?? x` é `''`). O diálogo fecha sempre, como se tivesse salvado.
 
@@ -336,7 +337,7 @@ O 'X' que dispensa o convite da Leitura do Ciclo é um `InkWell` com `Padding(al
 
 ## Leves (12)
 
-### `lib/features/auth/presentation/pages/change_password_page.dart:305` — ✔ conferido
+### `lib/features/auth/presentation/pages/change_password_page.dart:305` — ✅ CORRIGIDO (junto com a conferência da senha atual)
 
 Quando `SupabaseConfig.isConfigured` é falso, a tela faz `await Future.delayed(2s)` e mostra `changePasswordSuccess` ("senha alterada") sem ter alterado nada; o mesmo padrão existe em forgot_password_page.dart:390 e 420, que declaram o link de recuperação enviado sem enviar.
 
