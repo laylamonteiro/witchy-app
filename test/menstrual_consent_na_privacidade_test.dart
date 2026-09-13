@@ -17,14 +17,18 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'support/short_test_timeout.dart';
 
-/// O SEGUNDO sim mudou de lugar: guardar o registro do ciclo na conta saiu da
-/// folha do Ciclo e passou a viver em Configurações → Privacidade, ao lado
-/// das outras decisões sobre dado, com o texto resumido.
+/// O interruptor da cópia do ciclo na conta, em Configurações → Privacidade.
 ///
-/// O que este arquivo guarda é que MUDOU SÓ O LUGAR. As regras continuam as
-/// mesmas: nasce desligado, sem conta não há sim, ligar pergunta de novo,
-/// desligar é um toque só, e as datas que ela apagou antes não são liberadas
-/// para sair daqui por causa deste interruptor.
+/// A cerimônia foi encurtada, e é isto que este arquivo guarda:
+///
+/// * o consentimento continua EXPLÍCITO — isto é dado de saúde —, mas é UM
+///   sim, dado na porta do Ciclo. Aqui não se pede de novo: ligar é um toque;
+/// * DESLIGAR pergunta, porque faz duas coisas: para de enviar e apaga a
+///   cópia que está na conta. Era um botão solto e virou a outra metade deste
+///   gesto;
+/// * sem conta não há para onde enviar, e o interruptor não se oferece;
+/// * as datas que ela apagou antes não são liberadas para sair daqui por
+///   causa deste interruptor.
 class _Fixture extends AuthProvider {
   _Fixture({this.gender = Gender.feminine, this.comConta = false});
 
@@ -118,7 +122,7 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('with no account the block explains and offers no yes',
+  testWidgets('with no account the block explains and offers no switch',
       (tester) async {
     // Sem conta não há para onde enviar: ligar gravaria a preferência sob o
     // `local_user`, que não sobe nada e não acompanha ela ao entrar de
@@ -156,8 +160,11 @@ void main() {
     await tester.pump();
   }
 
-  testWidgets('turning it on asks again; turning it off is a single tap',
+  testWidgets('turning it on is one tap; turning it off asks, and erases',
       (tester) async {
+    // Chega aqui como quem veio da porta do Ciclo: o sim já foi dado lá, e
+    // ligou as duas coisas. Quem desligou a cópia e quer de volta não precisa
+    // responder à mesma pergunta outra vez.
     SharedPreferences.setMockInitialValues(
         {'menstrual_consent_record_local_user': true});
     await show(tester, comConta: true);
@@ -165,11 +172,22 @@ void main() {
         tester,
         () => find.byKey(const ValueKey('menstrual-cloud')).evaluate().isNotEmpty,
         'the cycle block');
-    expect(await const MenstrualConsentStore().syncAllowed('local_user'), isFalse,
-        reason: 'It is born off');
 
-    // Recuar na confirmação não muda nada: o sim é o botão de aceitar, não o
-    // gesto que abre a pergunta.
+    await tocarNaChave(tester);
+    await until(
+        tester,
+        () => tester.any(chaveDoCiclo()) &&
+            tester.widget<Switch>(chaveDoCiclo()).value,
+        'the switch turned on');
+    expect(find.byKey(const ValueKey('menstrual-cloud-confirm')), findsNothing,
+        reason: 'Turning it on repeats a yes she already gave');
+    expect(await const MenstrualConsentStore().syncAllowed('local_user'), isTrue);
+
+    final scaffold = tester.element(find.byType(Scaffold).first);
+    ScaffoldMessenger.of(scaffold).clearSnackBars();
+    await tester.pump();
+
+    // Desligar pergunta, porque desligar também apaga. Recuar não muda nada.
     await tocarNaChave(tester);
     await until(
         tester,
@@ -184,8 +202,8 @@ void main() {
         () =>
             find.byKey(const ValueKey('menstrual-cloud-confirm')).evaluate().isEmpty,
         'the confirmation closing');
-    expect(await const MenstrualConsentStore().syncAllowed('local_user'), isFalse);
-    expect(tester.widget<Switch>(chaveDoCiclo()).value, isFalse,
+    expect(await const MenstrualConsentStore().syncAllowed('local_user'), isTrue);
+    expect(tester.widget<Switch>(chaveDoCiclo()).value, isTrue,
         reason: 'Backing out leaves the block exactly as it was');
 
     await tocarNaChave(tester);
@@ -200,23 +218,47 @@ void main() {
     await until(
         tester,
         () => tester.any(chaveDoCiclo()) &&
-            tester.widget<Switch>(chaveDoCiclo()).value,
-        'the switch turned on');
-    expect(await const MenstrualConsentStore().syncAllowed('local_user'), isTrue);
-
-    // A confirmação abre um aviso no rodapé, e ele pode cobrir o alvo.
-    final scaffold = tester.element(find.byType(Scaffold).first);
-    ScaffoldMessenger.of(scaffold).clearSnackBars();
-    await tester.pump();
-    // Desligar é um toque só, sem segunda pergunta: a saída nunca é a parte
-    // que se dificulta.
-    await tocarNaChave(tester);
-    await until(
-        tester,
-        () => tester.any(chaveDoCiclo()) &&
             !tester.widget<Switch>(chaveDoCiclo()).value,
         'the switch turned off');
     expect(await const MenstrualConsentStore().syncAllowed('local_user'), isFalse);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('there is no loose button to erase the cloud copy',
+      (tester) async {
+    // Ele existia mesmo com o envio desligado — uma opção para apagar algo
+    // que talvez nem estivesse lá. Virou a outra metade de desligar.
+    SharedPreferences.setMockInitialValues({
+      'menstrual_consent_record_local_user': true,
+      'menstrual_consent_sync_local_user': true,
+    });
+    await show(tester, comConta: true);
+    await until(
+        tester,
+        () => find.byKey(const ValueKey('menstrual-cloud')).evaluate().isNotEmpty,
+        'the cycle block');
+    expect(find.byKey(const ValueKey('menstrual-cloud-erase')), findsNothing);
+    expect(tester.widget<Switch>(chaveDoCiclo()).value, isTrue);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('the cycle has no erase tile of its own any more', (tester) async {
+    // Apagar o ciclo deste aparelho é o mesmo gesto que apaga o resto:
+    // "Limpar Dados Locais" já leva o registro e as páginas dele no Grimório.
+    SharedPreferences.setMockInitialValues(
+        {'menstrual_consent_record_local_user': true});
+    final repo = MenstrualCycleRepository();
+    await tester.runAsync(() => repo.save(MenstrualDay(
+          userId: 'local_user',
+          day: DateTime(2026, 3, 6),
+          mark: MenstrualMark.flow,
+        )));
+    await show(tester, comConta: true);
+    final l10n = lookupAppLocalizations(const Locale('en'));
+    expect(find.text(l10n.editClearLocal), findsOneWidget);
+    // O emblema era exclusivo daquele bloco: se ele sumiu, o bloco sumiu.
+    expect(find.byIcon(Icons.nights_stay_outlined), findsNothing,
+        reason: 'No dedicated tile for erasing only the cycle');
     expect(tester.takeException(), isNull);
   });
 

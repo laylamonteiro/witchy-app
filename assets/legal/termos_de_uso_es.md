@@ -34,7 +34,7 @@ Todo el contenido de la aplicación — lecturas, interpretaciones, previsiones,
 - Hechizos, diarios, reflexiones, sueños y demás registros creados por ti te pertenecen.
 - Al usar recursos del Consejero Místico, el texto que proporcionas se procesa para generar la respuesta (ver Política de Privacidad).
 - Todo lo que registras en la aplicación se guarda en tu Grimorio — incluidos los días que registras en la rueda del Ciclo Menstrual, que se vuelven páginas en "Mis Registros". Guardar en el Grimorio no es enviar: el envío a un proveedor de inteligencia artificial ocurre cuando accionas un recurso que lo usa, con el material de aquel recurso.
-- El registro del Ciclo Menstrual tiene regla propia, más estrecha, por ser información sobre salud: solo va a la nube si enciendes el envío del Ciclo Menstrual, un sí aparte, en Configuración → Privacidad — la sincronización general de la aplicación no lo lleva —, y solo llega a la inteligencia artificial dentro de una Lectura del Ciclo que autorizas, con los días que marcas. La Política de Privacidad, sección 2, describe el camino entero.
+- El registro del Ciclo Menstrual tiene regla propia, más estrecha, por ser información sobre salud: solo va a la nube con el sí que das al empezar a registrar, un sí aparte de la aceptación de estos términos — la sincronización general de la aplicación no lo lleva —, y solo llega a la inteligencia artificial dentro de una Lectura del Ciclo que autorizas, con los días que marcas. La Política de Privacidad, sección 2, describe el camino entero.
 - Eres responsable del contenido que creas y del uso que haces de él.
 
 ## 6. Conducta y límites

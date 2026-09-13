@@ -10,9 +10,8 @@ import 'package:grimorio_de_bolso/features/menstrual_cycle/domain/menstrual_shor
 /// começos.
 ///
 /// As duas coisas saem SÓ do que ela marcou. Nada aqui projeta, estima ou
-/// prevê — e é por isso que a seção não passa pelo gate do Premium, que cobre
-/// resultado calculado a partir do histórico (dia do ciclo, duração, média,
-/// próxima data).
+/// prevê: dia do ciclo, duração, média e próxima data não existem nesta
+/// área — e não é por falta de plano, é por decisão.
 void main() {
   MenstrualDay dia(DateTime day, MenstrualMark mark) =>
       MenstrualDay(userId: 'ela', day: day, mark: mark);

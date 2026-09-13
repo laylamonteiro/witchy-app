@@ -12,10 +12,10 @@ import 'menstrual_shortcut.dart';
 /// As duas são dado INSERIDO ou público, nunca derivado:
 ///
 /// * o sangramento vem da marca que ela escolheu para o dia de hoje — não de
-///   uma projeção do histórico, de uma média nem de uma estimativa. Por isso
-///   esta seção não é resultado calculado e não passa pelo gate do Premium
-///   ([MenstrualAccess.canSeeDerived]), que cobre dia do ciclo, duração,
-///   média e próxima data;
+///   uma projeção do histórico, de uma média nem de uma estimativa. Nada
+///   nesta área é calculado a partir do histórico: dia do ciclo, duração,
+///   média e próxima data não existem, e não é por falta de plano — é por
+///   decisão;
 /// * a Lua é a mesma do calendário lunar do app, que já aparece para todo
 ///   mundo nesta página.
 ///

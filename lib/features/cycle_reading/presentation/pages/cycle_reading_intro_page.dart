@@ -1171,7 +1171,6 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
             if (MenstrualAccess(
               gender: context.watch<AuthProvider>().currentUser.gender,
               consented: true,
-              premium: context.watch<AuthProvider>().isPremiumEffective,
             ).isOffered)
               MenstrualSourceTile(
                 key: ValueKey('menstrual-$_revisaoDaFonteIntima'),

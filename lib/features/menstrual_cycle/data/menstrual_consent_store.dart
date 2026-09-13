@@ -2,10 +2,19 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 /// O consentimento do registro menstrual, por conta e neste aparelho.
 ///
-/// São dois, separados de propósito: manter o registro no aparelho é um; e
-/// sincronizá-lo com a conta na nuvem é outro, que continua desligado até a
-/// pessoa dizer que sim. Recusar não apaga nada — só fecha a porta da
-/// entrada; apagar é uma ação à parte, e continua disponível.
+/// Isto é dado de saúde, e por isso o sim é explícito e destacado — a LGPD
+/// trata dado de saúde como dado pessoal sensível (art. 5º, II), por
+/// consentimento específico para a finalidade. O aceite dos termos, no
+/// cadastro, não substitui este.
+///
+/// O que mudou foi a CERIMÔNIA. Eram dois sins — um para registrar, outro
+/// para a cópia na conta —, e a pessoa tinha de dar os dois, em telas
+/// diferentes, para o registro funcionar inteiro. Agora é [accept]: um gesto
+/// só, na porta, que liga os dois. Continuam sendo duas chaves aqui dentro
+/// porque ela pode tirar só a cópia da nuvem depois ([setSyncAllowed], em
+/// Configurações → Privacidade) sem perder o que já escreveu.
+///
+/// Recusar não apaga nada — só fecha a porta da entrada.
 class MenstrualConsentStore {
   const MenstrualConsentStore();
 
@@ -22,6 +31,21 @@ class MenstrualConsentStore {
   Future<bool> recordingAllowed(String userId) async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getBool('$_recordPrefix$userId') ?? false;
+  }
+
+  /// O SIM, num gesto só: registrar e deixar o registro acompanhar a conta.
+  ///
+  /// É o que o botão da porta chama. Antes ele ligava só o registro e a
+  /// pessoa precisava caçar um segundo interruptor para a cópia na conta —
+  /// que era a parte que ninguém achava, e o motivo de o registro ficar preso
+  /// num aparelho só sem ela ter escolhido isso.
+  ///
+  /// O texto que ela lê antes de tocar diz as duas coisas, e diz onde
+  /// desligar. Um sim que a pessoa não entendeu não é consentimento; um sim
+  /// espalhado em duas telas também não.
+  Future<void> accept(String userId) async {
+    await setRecordingAllowed(userId, true);
+    await setSyncAllowed(userId, true);
   }
 
   Future<void> setRecordingAllowed(String userId, bool allowed) async {

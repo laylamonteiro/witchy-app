@@ -2,66 +2,54 @@ import '../../../core/i18n/gender.dart';
 
 /// O que a pessoa pode ver e fazer no registro menstrual.
 ///
-/// Três perguntas, nesta ordem: a funcionalidade aparece para ela? ela
-/// consentiu em registrar? e o que ela vê é dado inserido ou derivado?
+/// Duas perguntas, nesta ordem: a funcionalidade aparece para ela? e ela
+/// consentiu?
 ///
-/// A regra que mais importa aqui é a última. Registrar, consultar, corrigir,
-/// exportar e apagar são do plano gratuito. Dia do ciclo, duração, média,
-/// intervalo e estimativa de próxima data são resultados calculados a partir
-/// do histórico — e esses são do Premium. Quando o cálculo é do Premium não
-/// existe meio-termo: sem acesso, o resultado não é calculado para depois ser
-/// escondido atrás de um borrão.
+/// **O consentimento continua explícito e destacado**, porque isto é dado de
+/// saúde e a LGPD trata dado de saúde como dado pessoal sensível (art. 5º,
+/// II), por consentimento específico para a finalidade. O que mudou foi a
+/// cerimônia: eram DOIS sins — um para registrar, outro para acompanhar a
+/// conta —, e virou UM só, dado na porta, que cobre os dois. Quem quiser
+/// tirar o registro da conta depois desliga em Configurações → Privacidade,
+/// e desligar lá já apaga a cópia que subiu.
 ///
-/// O cruzamento com a Lua mudou de lado e voltou a ser gratuito: o card "A Lua
-/// e você" (a comparação dos começos com a Nova e a Cheia, e a contagem das
-/// emoções mais anotadas) é montado sem gate na página do Ciclo Menstrual,
-/// ACIMA do alternador Calendário/Roda — ou seja, à vista de quem nunca chega
-/// à roda —, por decisão da dona. Isto está escrito porque a regra antiga era
-/// categórica, e quem lesse o texto sem ler a tela concluiria que o card
-/// gratuito é um gate esquecido — e "consertá-lo" tiraria de graça o que foi
-/// aberto de propósito. [canSeeDerived] hoje cobre o alternador
-/// Calendário/Roda e a roda do mês.
+/// **O Premium saiu desta área.** A roda do mês era paga e o calendário era a
+/// alternativa gratuita; hoje as duas visões são de todo mundo, por decisão
+/// da dona. Isto está escrito porque a regra antiga era categórica, e quem
+/// lesse o texto sem ler a tela concluiria que falta um gate — e
+/// "consertá-lo" voltaria a cobrar pelo que foi aberto de propósito. O card
+/// "A Lua e você" já era gratuito pelo mesmo motivo: o que ela registrou é
+/// dela, e olhar para isso não é um produto à parte.
 class MenstrualAccess {
   const MenstrualAccess({
     required this.gender,
     required this.consented,
-    required this.premium,
   });
 
   /// Como a pessoa pediu para ser tratada no app.
   final Gender gender;
 
-  /// Consentimento específico para manter o registro neste aparelho.
+  /// O sim explícito desta área — o único que existe.
   final bool consented;
-
-  /// `AuthProvider.isPremiumEffective`: assinatura, código ou vitalício.
-  final bool premium;
 
   /// O cartão, o convite e qualquer oferta desta área existem apenas para
   /// quem se identifica no feminino ou no neutro.
   bool get isOffered =>
       gender == Gender.feminine || gender == Gender.neutral;
 
-  /// Registrar e consultar os próprios dados: do plano gratuito, depois do
-  /// consentimento.
+  /// Registrar e consultar os próprios dados, depois do consentimento.
   bool get canRecord => isOffered && consented;
 
-  /// Levar embora ou apagar os próprios dados nunca depende de assinatura —
-  /// nem de o consentimento continuar de pé, porque quem já registrou
-  /// precisa poder apagar depois de mudar de ideia.
+  /// Levar embora ou apagar os próprios dados nunca depende do consentimento
+  /// continuar de pé: quem já registrou precisa poder apagar depois de mudar
+  /// de ideia. Isso acontece pelos gestos gerais de Privacidade — exportar,
+  /// limpar este aparelho, excluir a conta —, que incluem o ciclo como
+  /// incluem o resto.
   bool get canManageOwnData => isOffered;
 
-  /// Resultados calculados a partir do histórico.
-  bool get canSeeDerived => canRecord && premium;
-
-  /// Um convite genérico para conhecer o Premium é aceitável; usar sintomas,
-  /// datas ou a ausência de registro para oferecer nunca é.
-  bool get showsGenericPremiumInvite => canRecord && !premium;
-
-  MenstrualAccess copyWith({Gender? gender, bool? consented, bool? premium}) =>
+  MenstrualAccess copyWith({Gender? gender, bool? consented}) =>
       MenstrualAccess(
         gender: gender ?? this.gender,
         consented: consented ?? this.consented,
-        premium: premium ?? this.premium,
       );
 }

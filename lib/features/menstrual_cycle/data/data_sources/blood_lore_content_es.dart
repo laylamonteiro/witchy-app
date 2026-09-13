@@ -12,7 +12,7 @@ const bloodLoreContentEs = BloodLoreContent(
   intro:
       'Cuatro caminos hacia el mismo tema: lo que muestran los registros, lo '
       'que la magia lunar hace con el ciclo, lo que se puede practicar hoy y '
-      'de dónde salió todo esto.',
+      'de dónde salió todo esto',
   introNote:
       'Cada texto lleva una etiqueta que dice de dónde viene. Una práctica de '
       'ahora nunca se presenta aquí como tradición antigua.',
@@ -24,13 +24,13 @@ const bloodLoreContentEs = BloodLoreContent(
   },
   categorySubtitles: {
     BloodLoreCategory.bloodInMagic:
-        'Vínculo, ambivalencia, amor, protección y poder personal.',
+        'Vínculo, ambivalencia, amor, protección y poder personal',
     BloodLoreCategory.cycleAndMoon:
-        'Dos ruedas que se encuentran — y lo que eso no significa.',
+        'Dos ruedas que se encuentran — y lo que eso no significa',
     BloodLoreCategory.practices:
-        'Gestos para hacer, con el origen de cada uno a la vista.',
+        'Gestos para hacer, con el origen de cada uno a la vista',
     BloodLoreCategory.traditions:
-        'Qué se registró, quién lo registró y qué no se puede saber.',
+        'Qué se registró, quién lo registró y qué no se puede saber',
   },
   tagLabels: {
     BloodLoreTag.documented: 'Históricamente documentado',
@@ -57,7 +57,7 @@ const bloodLoreContentEs = BloodLoreContent(
   shortcuts: {
     MenstrualShortcut.release: BloodLoreShortcut(
       title: '¿Qué quieres dejar?',
-      body: 'Escribe sobre algo que llegó a su fin.',
+      body: 'Escribe sobre algo que llegó a su fin',
       prompt:
           '¿Qué está pidiendo terminar en este ciclo?\n\nEscribe sin intentar '
           'resolverlo. Solo observa lo que no quieres llevar a la próxima '
@@ -65,7 +65,7 @@ const bloodLoreContentEs = BloodLoreContent(
     ),
     MenstrualShortcut.cultivate: BloodLoreShortcut(
       title: '¿Qué quieres cultivar?',
-      body: 'Escribe sobre algo que está empezando.',
+      body: 'Escribe sobre algo que está empezando',
       prompt:
           '¿Qué está empezando en ti en esta vuelta?\n\nEscribe sin exigir un '
           'resultado. Solo nombra lo que quieres cuidar hasta la próxima '
@@ -73,23 +73,23 @@ const bloodLoreContentEs = BloodLoreContent(
     ),
     MenstrualShortcut.oracle: BloodLoreShortcut(
       title: 'Escuchar al oráculo',
-      body: 'Haz una tirada sobre este ciclo.',
+      body: 'Haz una tirada sobre este ciclo',
     ),
     MenstrualShortcut.dream: BloodLoreShortcut(
       title: 'Registrar un sueño',
-      body: 'El sueño va a tu Diario de Sueños, como cualquier otro.',
+      body: 'El sueño va a tu Diario de Sueños, como cualquier otro',
     ),
     MenstrualShortcut.intention: BloodLoreShortcut(
       title: 'Definir una intención',
       body:
           'Una palabra se vuelve sigilo en el creador que el Grimorio ya '
-          'tiene.',
+          'tiene',
     ),
     MenstrualShortcut.practices: BloodLoreShortcut(
       title: 'Practicar',
       body:
           'Explora prácticas ligadas a la sangre, la protección, el vínculo y '
-          'el cierre.',
+          'el cierre',
     ),
   },
   moonCorrespondences: {
@@ -104,10 +104,10 @@ const bloodLoreContentEs = BloodLoreContent(
     MoonPhase.waningCrescent: 'recogimiento, descanso y el fin del círculo',
   },
   correspondenceTemplate:
-      'En la magia lunar, {phase} suele asociarse con {meaning}.',
-  startUnderTemplate: 'Tu último ciclo empezó bajo {phase}.',
+      'En la magia lunar, {phase} suele asociarse con {meaning}',
+  startUnderTemplate: 'Tu último ciclo empezó bajo {phase}',
   phaseTallyTemplate:
-      '{count} de tus últimos {total} comienzos ocurrieron bajo {phase}.',
+      '{count} de tus últimos {total} comienzos ocurrieron bajo {phase}',
   moonNotSynced:
       'El ciclo lunar y el menstrual no necesitan estar sincronizados. '
       'Observa cómo se encuentran los dos a lo largo del tiempo.',
@@ -123,7 +123,7 @@ const bloodLoreContentEs = BloodLoreContent(
       tag: BloodLoreTag.documented,
       emoji: '🔗',
       title: 'La sangre como vínculo',
-      summary: 'Por qué la materia del cuerpo aparece tanto en la magia popular.',
+      summary: 'Por qué la materia del cuerpo aparece tanto en la magia popular',
       sections: [
         BloodLoreSection(
           title: 'Materia que pertenece a alguien',
@@ -161,7 +161,7 @@ const bloodLoreContentEs = BloodLoreContent(
       title: 'La ambivalencia de la sangre menstrual',
       summary:
           'Peligrosa, tabú, protectora, poderosa: los registros no coinciden '
-          'entre sí.',
+          'entre sí',
       sections: [
         BloodLoreSection(
           title: 'No existe una visión única',
@@ -198,7 +198,7 @@ const bloodLoreContentEs = BloodLoreContent(
       title: 'Amor y ligadura',
       summary:
           'El uso más recurrente de la sangre menstrual en la magia amorosa '
-          'registrada.',
+          'registrada',
       sections: [
         BloodLoreSection(
           title: 'Lo que muestran los registros',
@@ -240,7 +240,7 @@ const bloodLoreContentEs = BloodLoreContent(
       title: 'Protección',
       summary:
           'Contramagia, casa y umbrales: la otra cara de los mismos '
-          'registros.',
+          'registros',
       sections: [
         BloodLoreSection(
           title: 'Fuerza que repele',
@@ -273,7 +273,7 @@ const bloodLoreContentEs = BloodLoreContent(
       tag: BloodLoreTag.contemporary,
       emoji: '🔮',
       title: 'Vínculo y poder personal',
-      summary: 'Materia del propio cuerpo como firma mágica.',
+      summary: 'Materia del propio cuerpo como firma mágica',
       sections: [
         BloodLoreSection(
           title: 'La firma',
@@ -306,7 +306,7 @@ const bloodLoreContentEs = BloodLoreContent(
       tag: BloodLoreTag.tradition,
       emoji: '🌱',
       title: 'Vida, fertilidad y naturaleza',
-      summary: 'Tradiciones específicas ligan esta sangre a lo que crece.',
+      summary: 'Tradiciones específicas ligan esta sangre a lo que crece',
       sections: [
         BloodLoreSection(
           title: 'Un recorte, no una regla',
@@ -341,7 +341,7 @@ const bloodLoreContentEs = BloodLoreContent(
       tag: BloodLoreTag.contemporary,
       emoji: '🌙',
       title: 'Dos ruedas que se encuentran',
-      summary: 'La Luna como correspondencia y herramienta de observación.',
+      summary: 'La Luna como correspondencia y herramienta de observación',
       sections: [
         BloodLoreSection(
           title: 'Dos calendarios redondos',
@@ -375,7 +375,7 @@ const bloodLoreContentEs = BloodLoreContent(
       tag: BloodLoreTag.contemporary,
       emoji: '✨',
       title: 'Interpretaciones contemporáneas',
-      summary: 'Luna Blanca, Luna Roja y otras categorías recientes.',
+      summary: 'Luna Blanca, Luna Roja y otras categorías recientes',
       sections: [
         BloodLoreSection(
           title: 'De dónde vienen',
@@ -410,7 +410,7 @@ const bloodLoreContentEs = BloodLoreContent(
       tag: BloodLoreTag.modernAdaptation,
       emoji: '🛡️',
       title: 'Sello del Umbral',
-      summary: 'Un símbolo de protección guardado cerca de la puerta.',
+      summary: 'Un símbolo de protección guardado cerca de la puerta',
       intention: 'Protección de la casa.',
       materials: [
         'Un papel pequeño',
@@ -456,7 +456,7 @@ const bloodLoreContentEs = BloodLoreContent(
       tag: BloodLoreTag.modernAdaptation,
       emoji: '🔗',
       title: 'Lazo de compromiso',
-      summary: 'Una frase que quieres sostener, doblada y atada.',
+      summary: 'Una frase que quieres sostener, doblada y atada',
       intention: 'Firmar un compromiso contigo misma.',
       materials: [
         'Papel y bolígrafo',
@@ -498,7 +498,7 @@ const bloodLoreContentEs = BloodLoreContent(
       tag: BloodLoreTag.modernAdaptation,
       emoji: '❤️',
       title: 'Encanto de atracción',
-      summary: 'Atracción y apertura, sin dirigirse a nadie.',
+      summary: 'Atracción y apertura, sin dirigirse a nadie',
       intention:
           'Atracción, magnetismo, autoestima y apertura a las relaciones que '
           'deseas.',
@@ -550,7 +550,7 @@ const bloodLoreContentEs = BloodLoreContent(
       tag: BloodLoreTag.contemporary,
       emoji: '🕯️',
       title: 'Consagración de sigilo',
-      summary: 'Dar carga personal a un sigilo que creaste.',
+      summary: 'Dar carga personal a un sigilo que creaste',
       intention: 'Consagrar un sigilo con algo que es tuyo.',
       materials: [
         'Un sigilo creado por ti',
@@ -593,7 +593,7 @@ const bloodLoreContentEs = BloodLoreContent(
       tag: BloodLoreTag.contemporary,
       emoji: '🍂',
       title: 'Ritual de cierre',
-      summary: 'Nombrar y soltar lo que llegó a su fin.',
+      summary: 'Nombrar y soltar lo que llegó a su fin',
       intention: 'Nombrar y soltar algo que llegó a su fin.',
       materials: [
         'Papel y bolígrafo',
@@ -638,7 +638,7 @@ const bloodLoreContentEs = BloodLoreContent(
       title: 'Filtro de sangre menstrual',
       summary:
           'La práctica amorosa más registrada — y por qué no se convierte en '
-          'tutorial.',
+          'tutorial',
       sections: [
         BloodLoreSection(
           title: 'Lo que describen los registros',
@@ -678,7 +678,7 @@ const bloodLoreContentEs = BloodLoreContent(
       tag: BloodLoreTag.documented,
       emoji: '🗂️',
       title: 'Dónde están los registros',
-      summary: 'Cómo sabemos lo que sabemos — y qué no se puede saber.',
+      summary: 'Cómo sabemos lo que sabemos — y qué no se puede saber',
       sections: [
         BloodLoreSection(
           title: 'Las fuentes',

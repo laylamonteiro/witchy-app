@@ -155,16 +155,19 @@ void main() {
         tester,
         () => find.byKey(const ValueKey('menstrual-calendar')).evaluate().isNotEmpty,
         'the calendar');
+    // UM sim, não dois: o botão da porta liga o registro e a cópia na conta
+    // de uma vez. O consentimento continua explícito — o texto acima dele diz
+    // as duas coisas e diz onde desligar —, mas a pessoa não precisa mais
+    // caçar um segundo interruptor em outra tela para o registro funcionar
+    // inteiro.
     expect(await const MenstrualConsentStore().recordingAllowed('local_user'), isTrue);
-    expect(await const MenstrualConsentStore().syncAllowed('local_user'), isFalse,
-        reason: 'Sending to the account is a separate yes');
+    expect(await const MenstrualConsentStore().syncAllowed('local_user'), isTrue);
   });
 
-  testWidgets('the second yes is no longer on this sheet', (tester) async {
-    // O envio para a conta mudou de lugar: é decisão sobre DADO, e agora
-    // mora em Configurações → Privacidade, junto do apagar do registro. Esta
-    // folha é sobre registrar e olhar — nenhum interruptor de nuvem aqui.
-    // Quem guarda o comportamento do segundo sim é
+  testWidgets('the switch to turn it off is not on this sheet', (tester) async {
+    // Desligar é decisão sobre DADO e mora em Configurações → Privacidade,
+    // junto das outras. Esta folha é sobre registrar e olhar. Quem guarda o
+    // comportamento do interruptor é
     // test/menstrual_consent_na_privacidade_test.dart.
     await show(tester);
     await tester.tap(find.byKey(const ValueKey('menstrual-consent-accept')));
@@ -173,10 +176,7 @@ void main() {
         () => find.byKey(const ValueKey('menstrual-calendar')).evaluate().isNotEmpty,
         'the calendar');
     expect(find.byKey(const ValueKey('menstrual-cloud')), findsNothing);
-    expect(find.byKey(const ValueKey('menstrual-cloud-on')), findsNothing);
-    expect(find.byKey(const ValueKey('menstrual-cloud-erase')), findsNothing);
-    expect(await const MenstrualConsentStore().syncAllowed('local_user'), isFalse,
-        reason: 'Opening the sheet never turns the second yes on');
+    expect(find.byType(Switch), findsNothing);
     expect(tester.takeException(), isNull);
   });
 
@@ -204,6 +204,10 @@ void main() {
           day: today,
           mark: MenstrualMark.flow,
         )));
+    // `premium` não muda mais nada na tela; ele entra aqui só porque a chave
+    // do provedor é feita dele, e trocá-la é o jeito barato de pedir uma
+    // árvore NOVA — com a mesma chave, o State sobreviveria e o histórico
+    // não seria relido.
     await show(tester, premium: true);
     await until(
         tester,
@@ -225,7 +229,6 @@ void main() {
     expect(find.byKey(const ValueKey('menstrual-today')), findsOneWidget);
     expect(find.text('No record today'), findsOneWidget,
         reason: 'An empty day is absence of a record');
-    expect(find.byKey(const ValueKey('menstrual-premium-invite')), findsOneWidget);
 
     await tester.tap(find.byKey(const ValueKey('menstrual-record-today')));
     await openForm(tester);
@@ -255,7 +258,7 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('the history is no longer turned into numbers, on either plan',
+  testWidgets('the history is no longer turned into numbers, and the wheel is free',
       (tester) async {
     SharedPreferences.setMockInitialValues(
         {'menstrual_consent_record_local_user': true});
@@ -274,30 +277,26 @@ void main() {
       }
     });
 
-    await show(tester);
-    expect(find.byKey(const ValueKey('menstrual-opening')), findsOneWidget);
-    expect(find.byKey(const ValueKey('lua-e-voce')), findsOneWidget,
-        reason: 'The Moon beside her beginnings is for everyone');
-    expect(find.byKey(const ValueKey('menstrual-premium-invite')), findsOneWidget,
-        reason: 'One line inside the calendar card, on the free plan only');
-    expect(find.byKey(const ValueKey('menstrual-view-toggle')), findsNothing,
-        reason: 'The wheel is still Premium');
-
-    await show(tester, premium: true);
-    await until(
-        tester,
-        () =>
-            find.byKey(const ValueKey('menstrual-view-toggle')).evaluate().isNotEmpty,
-        'the premium page');
-    // O que o Premium continua tendo: a roda e a mesma folha. O que
-    // ninguém tem mais: qualquer número tirado do histórico.
-    expect(find.byKey(const ValueKey('menstrual-opening')), findsOneWidget);
-    expect(find.byKey(const ValueKey('lua-e-voce')), findsOneWidget);
-    expect(find.byKey(const ValueKey('menstrual-premium-invite')), findsNothing);
-    expect(find.textContaining('28 days'), findsNothing,
-        reason: 'No average survives anywhere');
-    expect(find.textContaining('23/03/2026'), findsNothing,
-        reason: 'No reference for a next date is estimated any more');
+    // O plano deixou de decidir qualquer coisa nesta folha: a roda do mês é
+    // de todo mundo, como o calendário e como "A Lua e você".
+    for (final premium in [false, true]) {
+      await show(tester, premium: premium);
+      await until(
+          tester,
+          () => find
+              .byKey(const ValueKey('menstrual-view-toggle'))
+              .evaluate()
+              .isNotEmpty,
+          'the calendar/wheel toggle');
+      expect(find.byKey(const ValueKey('menstrual-opening')), findsOneWidget);
+      expect(find.byKey(const ValueKey('lua-e-voce')), findsOneWidget,
+          reason: 'The Moon beside her beginnings is for everyone');
+      // O que ninguém tem: qualquer número tirado do histórico.
+      expect(find.textContaining('28 days'), findsNothing,
+          reason: 'No average survives anywhere');
+      expect(find.textContaining('23/03/2026'), findsNothing,
+          reason: 'No reference for a next date is estimated any more');
+    }
     expect(tester.takeException(), isNull);
   });
 

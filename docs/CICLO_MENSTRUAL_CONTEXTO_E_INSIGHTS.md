@@ -18,11 +18,20 @@ para que a próxima pessoa não precise redescobrir por quê.
   correspondência que a magia lunar associa a ela + a frase que separa as duas
   rodas) e a contagem de Luas dos começos recentes
   (`LunarComparison.phaseTally`).
-- **O segundo sim** (guardar o registro na conta) saiu da folha do Ciclo e
-  passou a viver em **Configurações → Privacidade**, com o texto resumido. As
-  regras não mudaram: nasce desligado, sem conta não há sim, ligar pergunta de
-  novo, desligar é um toque só, e apagar a cópia da nuvem continua sendo um
-  gesto à parte.
+- **O consentimento encurtou, sem deixar de ser explícito.** Isto é dado de
+  saúde, e a LGPD (art. 5º, II) pede consentimento destacado — o aceite dos
+  termos no cadastro não cobre. O que mudou foi a cerimônia: eram DOIS sins
+  (registrar, e depois guardar na conta, em telas diferentes) e virou UM,
+  dado na porta do Ciclo, que liga os dois. O interruptor para desligar mora
+  em **Configurações → Privacidade**, e desligar lá **também apaga a cópia
+  que já subiu** — era um botão solto, que ficava à vista mesmo com o envio
+  desligado, e virou a outra metade do mesmo gesto.
+- **A roda do mês deixou de ser Premium.** As duas visões do mês, calendário
+  e roda, são do plano gratuito. O `MenstrualAccess` não conhece mais plano
+  nenhum.
+- **O ciclo perdeu os botões próprios de apagar.** Apagar o registro deste
+  aparelho é o mesmo gesto que apaga o resto: "Limpar Dados Locais", em
+  Privacidade, já leva os dias e as páginas-espelho deles no Grimório.
 
 ## 2. O que ficou PREPARADO e não implementado
 
@@ -96,15 +105,15 @@ uma decisão de consentimento. Não é uma refatoração.
 Estas pareceram estranhas durante a implementação e foram mantidas porque são
 regras de negócio existentes, não defeitos:
 
-- **a roda do mês é Premium, o calendário não é** — e "A Lua e você" é de
-  graça, ACIMA do alternador, por decisão da dona (está escrito em
-  `MenstrualAccess`). "Práticas para este momento" entra na mesma faixa
-  gratuita porque não é resultado calculado: ela lê a marca do dia de hoje,
-  que é dado inserido;
+- **nada nesta área é Premium** — calendário, roda, "A Lua e você" e
+  "Práticas para este momento" são de todo mundo, por decisão da dona (está
+  escrito em `MenstrualAccess`). Nenhuma delas é resultado calculado a partir
+  do histórico: o que aparece é o que ela marcou;
 - **a área só é oferecida no feminino e no neutro** (`MenstrualAccess.isOffered`);
 - **cada dia registrado vira uma página-espelho no Grimório**, escrita e
   apagada pelo repositório, e essa página **nunca sai do aparelho**;
 - **escape nunca vira começo** — só a marca "começou" abre um ciclo;
 - **a lápide de um dia apagado é descartada nos dois sentidos do interruptor
   de nuvem**, para que uma data que ela apagou não saia daqui por causa de um
-  gesto que não era sobre isso.
+  gesto que não era sobre isso — o mesmo par de linhas roda agora também no
+  sim da porta, que é onde o envio passa a valer.

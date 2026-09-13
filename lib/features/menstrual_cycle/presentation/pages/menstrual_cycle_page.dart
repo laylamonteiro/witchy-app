@@ -26,19 +26,18 @@ import 'blood_lore_page.dart';
 
 /// A página do Ciclo, numa folha só, de cima para baixo: "Sangue de Lua" (a
 /// abertura, com a porta dos Saberes do Sangue), o dia de hoje com a Lua
-/// dele, "A Lua e você", o mês — calendário para todo mundo, roda para o
-/// Premium — e "Práticas para este momento", os atalhos para o que o
-/// Grimório já tem.
+/// dele, "A Lua e você", o mês — calendário ou roda, as duas de todo mundo —
+/// e "Práticas para este momento", os atalhos para o que o Grimório já tem.
 ///
-/// Antes de qualquer coisa, o consentimento de registrar. Recusar não apaga
-/// nada.
+/// Antes de qualquer coisa, o consentimento. Ele continua explícito, porque
+/// isto é dado de saúde; o que mudou é que agora é UM sim, não dois. O botão
+/// da porta liga o registro e a cópia na conta de uma vez, e o texto acima
+/// dele diz as duas coisas e diz onde desligar. Recusar não apaga nada.
 ///
-/// O SEGUNDO sim — enviar o registro para a conta na nuvem — NÃO mora mais
-/// aqui: ele foi para Configurações → Privacidade, junto do apagar do
-/// registro e das outras decisões sobre dado, e com o texto resumido. Quem
-/// procurar o interruptor nesta folha não vai achar, e é assim de propósito:
-/// esta folha é sobre registrar e olhar; o que sai do aparelho se decide em
-/// Privacidade, num lugar só.
+/// O interruptor de desligar não mora aqui: ele fica em Configurações →
+/// Privacidade, junto das outras decisões sobre dado — e lá desligar já
+/// apaga a cópia que subiu, para não sobrar uma segunda opção solta que
+/// ninguém acha.
 ///
 /// O calendário mostra só os dias que a pessoa registrou; a Lua de cada dia
 /// é a mesma do calendário lunar do app, e aparece para todo mundo. Nada
@@ -145,9 +144,18 @@ class _MenstrualCyclePageState extends State<MenstrualCyclePage> {
         to: DateTime(month.year, month.month + 1, 0),
       );
 
+  /// O sim, num gesto só: registrar e deixar o registro acompanhar a conta.
+  ///
+  /// As duas linhas depois do consentimento são as mesmas que o antigo
+  /// interruptor de nuvem rodava, e continuam necessárias pelo mesmo motivo:
+  /// a lápide de um dia apagado antes daqui não pode sair do aparelho por
+  /// causa deste gesto, e o histórico que a adoção de dados anônimos trouxe
+  /// carimbado como enviado precisa ser liberado para subir de verdade.
   Future<void> _accept() async {
     final userId = _userId;
-    await widget.consent.setRecordingAllowed(userId, true);
+    await widget.consent.accept(userId);
+    await _repository.descartarLapidesPendentes(userId);
+    await _repository.markForUpload(userId);
     if (!mounted) return;
     setState(() => _loading = true);
     await _load();
@@ -261,7 +269,6 @@ class _MenstrualCyclePageState extends State<MenstrualCyclePage> {
     final access = MenstrualAccess(
       gender: auth.currentUser.gender,
       consented: _consented,
-      premium: auth.isPremiumEffective,
     );
     return Scaffold(
       backgroundColor: context.gc.background,
@@ -272,7 +279,7 @@ class _MenstrualCyclePageState extends State<MenstrualCyclePage> {
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : access.canRecord
-              ? _record(context, l10n, access)
+              ? _record(context, l10n)
               : _consent(context, l10n),
     );
   }
@@ -312,8 +319,7 @@ class _MenstrualCyclePageState extends State<MenstrualCyclePage> {
         ),
       );
 
-  Widget _record(
-      BuildContext context, AppLocalizations l10n, MenstrualAccess access) {
+  Widget _record(BuildContext context, AppLocalizations l10n) {
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(vertical: 16),
       child: Column(
@@ -322,41 +328,38 @@ class _MenstrualCyclePageState extends State<MenstrualCyclePage> {
           _opening(context, l10n),
           _todayCard(context, l10n),
           LuaEVoceCard(days: _history, today: _today),
-          // A roda só existe para o Premium; o calendário é a alternativa
-          // explícita, e continua inteiro nas duas situações.
-          if (access.canSeeDerived)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: SegmentedButton<bool>(
-                      key: const ValueKey('menstrual-view-toggle'),
-                      segments: [
-                        ButtonSegment(
-                          value: false,
-                          icon: const Icon(Icons.calendar_month_outlined, size: 16),
-                          label: Text(l10n.menstrualViewCalendar),
-                        ),
-                        ButtonSegment(
-                          value: true,
-                          icon: const Icon(Icons.brightness_2_outlined, size: 16),
-                          label: Text(l10n.menstrualViewWheel),
-                        ),
-                      ],
-                      selected: {_wheelView},
-                      showSelectedIcon: false,
-                      onSelectionChanged: (choice) =>
-                          setState(() => _wheelView = choice.first),
-                    ),
+          // As duas visões do mês são de todo mundo: a roda deixou de ser
+          // Premium. O que ela registrou é dela, e olhar para isso em roda ou
+          // em grade não é um produto à parte.
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Row(
+              children: [
+                Expanded(
+                  child: SegmentedButton<bool>(
+                    key: const ValueKey('menstrual-view-toggle'),
+                    segments: [
+                      ButtonSegment(
+                        value: false,
+                        icon: const Icon(Icons.calendar_month_outlined, size: 16),
+                        label: Text(l10n.menstrualViewCalendar),
+                      ),
+                      ButtonSegment(
+                        value: true,
+                        icon: const Icon(Icons.brightness_2_outlined, size: 16),
+                        label: Text(l10n.menstrualViewWheel),
+                      ),
+                    ],
+                    selected: {_wheelView},
+                    showSelectedIcon: false,
+                    onSelectionChanged: (choice) =>
+                        setState(() => _wheelView = choice.first),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-          if (access.canSeeDerived && _wheelView)
-            _wheel(context, l10n)
-          else
-            _calendar(context, l10n, access),
+          ),
+          if (_wheelView) _wheel(context, l10n) else _calendar(context, l10n),
           // As portas vêm depois do mês: primeiro o que ela veio fazer
           // (registrar e olhar), depois o que ela pode fazer com isso.
           PraticasDoMomentoCard(
@@ -605,8 +608,7 @@ class _MenstrualCyclePageState extends State<MenstrualCyclePage> {
     );
   }
 
-  Widget _calendar(
-      BuildContext context, AppLocalizations l10n, MenstrualAccess access) {
+  Widget _calendar(BuildContext context, AppLocalizations l10n) {
     final first = DateTime(_month.year, _month.month);
     final total = DateTime(_month.year, _month.month + 1, 0).day;
     // Segunda a domingo, como o restante do app.
@@ -651,14 +653,6 @@ class _MenstrualCyclePageState extends State<MenstrualCyclePage> {
             Text(
               l10n.menstrualEmptyMonth,
               key: const ValueKey('menstrual-empty-month'),
-              style: MenstrualType.quiet(context),
-            ),
-          ],
-          if (access.showsGenericPremiumInvite) ...[
-            const SizedBox(height: 12),
-            Text(
-              l10n.menstrualPremiumInvite,
-              key: const ValueKey('menstrual-premium-invite'),
               style: MenstrualType.quiet(context),
             ),
           ],
