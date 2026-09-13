@@ -104,8 +104,10 @@ void main() {
             .toIso8601String(),
       };
 
-  String get idDaPagina =>
-      MenstrualArchiveRecorder.pageId(userId: uid, dayKey: dia);
+  // Variável, não getter: dentro de um corpo de função Dart não declara
+  // getter, e `uid`/`dia` são constantes deste arquivo — o valor não muda
+  // entre um teste e outro.
+  final idDaPagina = MenstrualArchiveRecorder.pageId(userId: uid, dayKey: dia);
 
   test('a revisão maior do servidor vence, e a página é reescrita', () async {
     final db = await DatabaseHelper.instance.database;
