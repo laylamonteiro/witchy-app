@@ -37,17 +37,46 @@ class DataExportService {
   /// apagou, e não há o que levar embora num id de coisa apagada).
   static final List<String> tables = TabelasLocais.conteudo;
 
-  /// Lê todas as tabelas e devolve o JSON do backup.
+  /// Lê as tabelas da conta [userId] e devolve o JSON do backup.
   ///
   /// Tabela ausente (versão antiga do banco, recurso ainda não usado) entra
   /// vazia em vez de interromper a exportação inteira.
-  Future<String> buildJson({String appVersion = '1.0.0'}) async {
+  ///
+  /// O FILTRO POR CONTA não é detalhe: o banco local sobrevive à troca de
+  /// conta — o `signOut` de quem tem e-mail preserva a base (auth_provider)
+  /// e a adoção de dados anônimos só alcança linhas de `local_user`
+  /// (`DatabaseHelper.claimLegacyData`) —, então num aparelho que já teve
+  /// duas contas as linhas da primeira continuam ali. A leitura sem `where`
+  /// entregava essas linhas a QUEM EXPORTA: diários, sonhos, tiragens e a
+  /// tabela `menstrual_days` inteira, com sintomas e datas. O gesto que
+  /// existe para cada uma levar o que é seu entregava o que era de outra.
+  ///
+  /// Sai junto o conteúdo que o app semeia (`is_preloaded = 1`): ele nasce
+  /// sob `local_user` e não é registro dela — é o que vem com o app, e
+  /// volta sozinho na abertura seguinte.
+  Future<String> buildJson({
+    required String userId,
+    String appVersion = '1.0.0',
+  }) async {
     final db = await DatabaseHelper.instance.database;
     final exportData = <String, dynamic>{};
 
     for (final table in tables) {
       try {
-        final rows = await db.query(table);
+        // Toda tabela de conteúdo ganhou `user_id` na versão 7 do banco. A
+        // pergunta é feita mesmo assim porque errar tem dois lados bem
+        // diferentes: filtrar uma tabela SEM a coluna faria a consulta
+        // estourar, o `catch` abaixo devolveria lista vazia e a tabela
+        // sumiria do backup em silêncio. Sem a coluna também não há duas
+        // contas para confundir — ali o certo continua sendo levar tudo.
+        final colunas = await db.rawQuery('PRAGMA table_info($table)');
+        final separaPorConta = colunas.any((c) => c['name'] == 'user_id');
+
+        final rows = await db.query(
+          table,
+          where: separaPorConta ? 'user_id = ?' : null,
+          whereArgs: separaPorConta ? [userId] : null,
+        );
         exportData[table] = table == 'free_writings'
             ? rows.where(_naoEhEspelho).toList()
             : rows;
@@ -102,7 +131,10 @@ class DataExportService {
   }
 
   /// Monta e entrega em um passo — o que as telas precisam.
-  Future<void> exportAndDeliver({required String subject}) async {
-    await deliver(await buildJson(), subject: subject);
+  Future<void> exportAndDeliver({
+    required String userId,
+    required String subject,
+  }) async {
+    await deliver(await buildJson(userId: userId), subject: subject);
   }
 }

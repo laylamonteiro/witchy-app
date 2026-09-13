@@ -470,6 +470,9 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
     // que o widget continua vivo (use_build_context_synchronously).
     final messenger = ScaffoldMessenger.of(context);
     final gc = context.gc;
+    // A conta ativa decide o que entra no arquivo: o banco deste aparelho
+    // pode guardar linhas de uma conta anterior, e elas não são dela.
+    final userId = context.read<AuthProvider>().currentUser.id;
     try {
       messenger.showSnackBar(
         SnackBar(
@@ -478,8 +481,10 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
         ),
       );
 
-      await DataExportService.instance
-          .exportAndDeliver(subject: l10n.privacyBackupSubject);
+      await DataExportService.instance.exportAndDeliver(
+        userId: userId,
+        subject: l10n.privacyBackupSubject,
+      );
 
       messenger.showSnackBar(
         SnackBar(
