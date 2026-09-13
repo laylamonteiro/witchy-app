@@ -332,12 +332,21 @@ class _AffirmationFormPageState extends State<AffirmationFormPage> {
       return;
     }
 
-    final affirmation = AffirmationModel(
-      id: widget.affirmation?.id,
-      text: _textController.text,
-      category: _selectedCategory,
-      isPreloaded: false,
-    );
+    // Na EDIÇÃO o modelo sai de `copyWith`, e não do construtor cheio. O
+    // construtor devolve `isFavorite: false` e `createdAt: DateTime.now()`
+    // por padrão: gravar isso desfavoritaria a afirmação e a jogaria para o
+    // topo da lista, que ordena por `created_at DESC`. Consertar a gravação
+    // desse jeito trocaria um defeito por dois.
+    final affirmation = widget.affirmation == null
+        ? AffirmationModel(
+            text: _textController.text,
+            category: _selectedCategory,
+            isPreloaded: false,
+          )
+        : widget.affirmation!.copyWith(
+            text: _textController.text,
+            category: _selectedCategory,
+          );
 
     final provider = context.read<AffirmationProvider>();
     if (widget.affirmation == null) {
@@ -355,6 +364,21 @@ class _AffirmationFormPageState extends State<AffirmationFormPage> {
       await authProvider.incrementAffirmations();
       unawaited(recorder.record(
           origin: ActionOrigin.affirmation, entityId: affirmation.id));
+    } else {
+      // Este ramo NÃO EXISTIA: todo o caminho de persistência estava dentro
+      // do `if` de criação, e editar caía direto no `pop` abaixo. A pessoa
+      // reescrevia o texto, trocava a categoria, tocava no botão que diz
+      // "Atualizar", a tela fechava sem erro nenhum — e a alteração se
+      // perdia, sem aviso e sem como perceber antes de reabrir.
+      final saved = await provider.updateAffirmation(affirmation);
+      if (!mounted) return;
+      if (!saved) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(provider.error ?? AppLocalizations.of(context).errorsGeneric),
+          backgroundColor: context.gc.alert,
+        ));
+        return;
+      }
     }
 
     if (!mounted) return;
