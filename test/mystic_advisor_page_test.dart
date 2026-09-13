@@ -364,7 +364,10 @@ void main() {
     await tester.pump(const Duration(milliseconds: 400));
     expect(rolagem.offset, greaterThan(0),
         reason: 'o teclado ainda ocupa a tela');
-    expect(calls, ['Which moon?'], reason: 'a consulta partiu mesmo assim');
+    // A consulta grava no banco antes de chamar a IA, e gravar é trabalho
+    // de verdade: sem `until` o teste olharia antes de a linha existir.
+    await until(tester, () => calls.isNotEmpty, 'a consulta partiu mesmo assim');
+    expect(calls, ['Which moon?']);
 
     // O teclado terminou de sumir.
     await show(tester);
