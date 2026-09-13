@@ -215,6 +215,22 @@ jobs:
           npm install --no-save --no-audit --no-fund playwright-core@1.63.0 > /dev/null
           node test/ponte_heic_navegador_test.mjs
 
+      - name: 🧪 As páginas legais do site vêm dos documentos (Node)
+        # As páginas de /privacidade/ e /termos/, nos três idiomas, deixaram
+        # de ser HTML digitado e passaram a ser geradas de assets/legal/*.md
+        # (scripts/gerar_paginas_legais.mjs). Enquanto eram digitadas, elas
+        # divergiram do documento e ninguém viu: a página prometia a nuvem
+        # "apenas para quem é Premium" muito depois de o paywall ter saído do
+        # código, porque a catraca de test/politica_legal_test.dart guardava o
+        # .md e o ARB — e o site não vinha do .md.
+        #
+        # Este é o gate que alcança o site. Ele roda o gerador (a página só
+        # existe depois da montagem) e compara bloco a bloco com o documento.
+        # Fica aqui, e não no job que publica, porque tem de falhar ANTES —
+        # o job do site leva ~2 min e um gate que só acusa depois de publicar
+        # não é gate. Não instala nada: o runner já traz Node.
+        run: node test/paginas_legais_site_test.mjs
+
       - name: 🔤 ARB key parity
         run: bash scripts/check_arb_sync.sh
 
