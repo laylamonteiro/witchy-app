@@ -42,9 +42,15 @@ class _SyncSettingsPageState extends State<SyncSettingsPage> {
   }
 
   Future<void> _saveCloudSync(bool value) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(DataSyncService.cloudSyncPreferenceKey, value);
-    await prefs.setBool(DataSyncService.cloudSyncUserConfiguredKey, true);
+    // Pelo serviço, e não por `prefs.setBool` na mão: desligar a nuvem
+    // descarta as exclusões que ainda não foram avisadas, e este interruptor
+    // existe em duas telas. Uma lápide pendente guarda o id do que ela apagou
+    // — e id é conteúdo com frequência demais —, então quem apagou algo,
+    // desligou e um dia religa via essa lista sair do aparelho, pelo gesto
+    // que ela fez justamente para nada mais sair. O preço está escrito em
+    // DataSyncService.descartarLapidesPendentes: um item apagado com a nuvem
+    // desligada volta se ela for religada.
+    await DataSyncService().definirSincronizacao(value);
   }
 
   @override

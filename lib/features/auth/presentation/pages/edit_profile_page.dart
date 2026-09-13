@@ -62,15 +62,19 @@ class _EditProfilePageState extends State<EditProfilePage> {
     });
   }
 
+  /// A chave da nuvem tem gesto próprio, e não é só uma preferência: desligar
+  /// precisa DESCARTAR as lápides pendentes, senão a lista de ids do que ela
+  /// apagou continua guardada no aparelho e sai na primeira varredura depois
+  /// de religar. Aqui havia uma segunda porta para o mesmo interruptor, que
+  /// gravava a preferência e ia embora — e um id deste app carrega conteúdo
+  /// com frequência demais para deixar isso passar.
   Future<void> _saveSetting(String key, bool value) async {
+    if (key == DataSyncService.cloudSyncPreferenceKey) {
+      await DataSyncService().definirSincronizacao(value);
+      return;
+    }
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(key, value);
-    if (key == DataSyncService.cloudSyncPreferenceKey) {
-      await prefs.setBool(
-        DataSyncService.cloudSyncUserConfiguredKey,
-        true,
-      );
-    }
   }
 
   @override

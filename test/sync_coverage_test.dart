@@ -53,6 +53,31 @@ void main() {
         'tarot_readings');
   });
 
+  test('o registro menstrual é a última entidade do enum', () {
+    // Ele não referencia nada além da conta e nada o referencia — então o fim
+    // da lista é onde ele cabe sem deslocar nenhum índice de que as chaves
+    // estrangeiras reais dependem (ver o teste acima). Se alguém o mover para
+    // o meio, é aqui que aparece.
+    expect(
+      SyncEntity.values.last,
+      SyncEntity.menstrualDays,
+      reason: 'entidade nova entrou depois do ciclo, ou o ciclo mudou de '
+          'lugar — confira as duas ordens do teste acima antes de mexer',
+    );
+  });
+
+  test('o registro menstrual tem par de tabelas como as outras', () {
+    // Ele não passa pelo motor genérico (a identidade da linha é
+    // (user_id, day_key), não um `id`), mas está no enum de propósito: é dele
+    // que saem a exclusão de conta, a adoção de dados anônimos e as catracas
+    // da política. Ficar sem par aqui quebraria os três.
+    final service = DataSyncService();
+    expect(service.localTableForTest(SyncEntity.menstrualDays),
+        'menstrual_days');
+    expect(service.remoteTableForTest(SyncEntity.menstrualDays),
+        'menstrual_days');
+  });
+
   test('a exportação cobre o que a pessoa registra', () {
     // Fontes que a Leitura do Ciclo lê: se entram na análise, são dados
     // dela e precisam sair na exportação.
@@ -67,6 +92,9 @@ void main() {
       'oracle_readings',
       'tarot_readings',
       'cycle_readings',
+      // Levar os próprios dados embora não depende de assinatura nem de o
+      // consentimento de envio continuar de pé.
+      'menstrual_days',
     ]) {
       expect(
         DataExportService.tables.contains(table),

@@ -88,6 +88,12 @@ class ServidorDeMentira implements ServidorDeSync {
         .removeWhere((l) => l['user_id'] == userId && l['date'] != date);
   }
 
+  @override
+  Future<void> apagarTudoDoUsuario(String tabela, String userId) async {
+    _exigirRede();
+    _tabela(tabela).removeWhere((l) => l['user_id'] == userId);
+  }
+
   void _exigirTabelaDeLapides() {
     _exigirRede();
     if (semTabelaDeLapides) {

@@ -952,18 +952,14 @@ Armadilhas que custaram ciclo de CI e vale não repetir:
    DEPOIS das guardas de conta e de nuvem, com a consequência aceita de que
    apagar com a nuvem desligada e religar depois faz o item voltar. A
    política de privacidade parou de dizer que a sincronização é exclusiva do
-   Premium (`24d4f18`) e passou a nomear o registro do ciclo, o que ele
-   guarda e por qual caminho ele sai (`e21a75a`).
-2. **Sincronização do registro menstrual** (pedido da dona) — continua
-   pendente, e já não espera por nada: o que a travava caiu com o item 1.
-   Mudou de natureza, porém. O registro e as páginas dele são hoje a única
-   coisa do app que NÃO sobe, em plano nenhum e com a chave ligada ou não,
-   barrada em quatro portas: as três do `FreeWritingRepository` (o upload, a
-   lápide da exclusão e a varredura das linhas não sincronizadas) e o funil
-   do `DataSyncService`, por onde toda varredura passa — inclusive a do
-   primeiro login. A política que o app exibe afirma isso, e é a promessa que
-   ela leu para dizer sim. Sincronizar o registro é reescrever essa promessa,
-   então o primeiro passo é um sim dela sobre a promessa nova, não código.
+   Premium (`24d4f18`) e passou a nomear o registro do ciclo e o caminho por
+   onde ele sai (`e21a75a`). A lista do que ele guarda, porém, ainda cita a
+   Estação Interna, extinta na Onda 1 — a política é de outra frente, e o
+   conserto é dela.
+2. ~~**Sincronização do registro menstrual**~~ — **entregue na Onda 3**
+   (abaixo). O registro passa a poder subir, e só com um segundo sim
+   explícito, desligado por padrão; a política ganhou a seção de dado
+   sensível ANTES do primeiro envio, como a catraca do teste exigia.
 3. P14: revisão de tamanhos e hierarquia e o percurso completo pelas 12
    entradas em aparelho — o que resta do pacote é avaliação visual.
 4. P15: integração e validação final do lote.
@@ -1117,3 +1113,59 @@ calendário; fontes, tamanhos e posições padronizados na jornada inteira.
   rótulo) e `menstrual_about_text_test.dart`, que agora proíbe vocabulário de
   causa no texto da Lua e nos oito convites, e vocabulário de boilerplate em
   todos.
+
+### Onda 3 — o registro pode subir, e só se ela pedir (13/09)
+
+A dona pediu a sincronização do ciclo há dias, e ela era o único pedido dela
+que continuava sem entrega. O que segurava não era código: o registro era a
+única coisa do app que não saía do aparelho em plano nenhum, e a política que
+ela exibe afirmava isso. Sincronizar é reescrever essa promessa.
+
+- **A ordem foi a que a catraca mandou.** `politica_legal_test.dart` tinha um
+  teste escrito de propósito para este momento: ele PROIBIA a tabela de entrar
+  no sync enquanto a política não tivesse uma seção sobre dado sensível com
+  consentimento destacado. A seção veio primeiro; a catraca antiga foi
+  substituída por outra, que agora trava a regra nova — o envio só existe
+  atrás do segundo sim, e a página espelho do dia no acervo continua sem subir
+  nunca.
+- **Dois sins, separados.** O primeiro é registrar no aparelho, como sempre
+  foi. O segundo é enviar para a conta: nasce desligado, mora na própria roda
+  do ciclo (foi ali que o primeiro foi dado, e é ali que ela vê o que sobe),
+  pede confirmação que repete o que sobe e o que nunca sobe, e desliga com um
+  toque. Sem conta, o card explica e não oferece sim nenhum.
+- **Lápide nenhuma, nunca.** O id de um dia é a data em que ela sangrou. Uma
+  lápide em `sync_tombstones` guardaria essa data em claro, no servidor, para
+  sempre — então a tabela não usa lápide em hipótese alguma: a própria linha
+  carrega `deleted` e `revision` e sobe pelo caminho normal, que é o caminho
+  do consentimento. O que fica registrado, e está escrito na política, é que a
+  data marcada como apagada permanece na linha até a purga.
+- **Apagar de verdade.** "Apagar meus registros do ciclo" passou a apagar a
+  cópia da conta junto. Se a rede engolir o pedido, ele fica anotado, é
+  retentado a cada varredura e NADA desce enquanto não confirmar — sem isso, o
+  apagar que falhou voltaria como registro na varredura seguinte. A tela
+  distingue os dois desfechos em vez de dizer "apagado" nos dois.
+- **Descartar as lápides ao desligar a nuvem** (resíduo antigo, e vale para
+  todas as entidades): desligar a sincronização descarta as exclusões ainda
+  não enviadas. A consequência aceita é que um item apagado com a nuvem
+  desligada volta se ela for religada — guardar a memória da exclusão é
+  guardar o id. O interruptor tem duas portas no app (Sincronização e Perfil),
+  e as duas passam a chamar o mesmo gesto.
+- **Sair da conta esquece os dois sins.** Eles moram nas preferências, fora do
+  banco: sem isso, quem entrasse depois no mesmo aparelho encontraria o
+  registro vazio e o envio já ligado.
+- **O servidor:** `supabase/menstrual_days_migration.sql`. Ele PRECISA ser
+  aplicado no painel antes de a versão com envio chegar às pessoas, e antes de
+  `rls_initplan_optimization_migration.sql` — a varredura de exclusão de conta
+  é derivada do enum e trata tabela inexistente como falha, então sem a
+  migração ninguém consegue excluir a própria conta.
+- **Os documentos legais em três idiomas.** A política e os termos existiam só
+  em português, num app oferecido em três. Agora existem em inglês e espanhol,
+  com a seção de dado sensível já traduzida, e o app escolhe pelo idioma ativo
+  com o português como reserva. O teste passou a comparar parágrafo por
+  parágrafo: uma tradução que perca um item de lista derruba o CI.
+- **Verificação:** `ciclo_na_nuvem_test.dart` (sem o segundo sim nada sai,
+  nem linha nem lápide; com ele a linha sobe e a página espelho não; a purga
+  que a rede engoliu não vira registro de volta; restaurar da nuvem devolve as
+  páginas do ciclo), `lapides_descartadas_ao_desligar_test.dart`,
+  `o_ciclo_nao_sobe_test.dart` ampliado, `sync_coverage_test.dart`,
+  `politica_legal_test.dart` (catraca nova e paridade das três traduções).

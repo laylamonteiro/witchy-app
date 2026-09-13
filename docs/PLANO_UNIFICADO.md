@@ -79,7 +79,8 @@ reabrem.
 - **Técnico:** *"mantém como está. Não mexer."*
 - **Código hoje:** a degustação **existe e é renderizada**
   (`lesson_page.dart`, `TeaserReveal`). O que impede de vê-la são dois
-  interceptadores antes dela: `trail_page.dart:59` e `lesson_page.dart:86`.
+  interceptadores antes dela: `needsPremium` em `trail_page.dart` e
+  `_isLocked` em `lesson_page.dart`.
   **O relatório técnico está factualmente errado sobre o estado** — ele
   descreve um teaser que não existe; ele existe e está atrás de porta.
 - **DECIDIDO (23/08): destravar** — com o estado real na mesa, o "não
@@ -182,12 +183,16 @@ equipe e ~20 testadoras, quase um terço da base não é usuária.
 
 **Sincronização**
 - aberta para todo mundo, nas duas pontas (era Premium)
-- **uma exceção, e só uma**: o registro do Ciclo Menstrual não sobe, em
-  plano nenhum e com a chave ligada ou não (`e21a75a`) — inclusive as
-  páginas que cada dia ganha no acervo. A promessa que ela leu para dizer
-  sim é essa, e o funil por onde toda varredura passa é quem a cumpre. A
-  única saída é um pedido dela: autorizar o Ciclo Menstrual como fonte de
-  uma Leitura do Ciclo
+- **uma exceção no conteúdo dela, e só uma** (estado em 13/09): o registro do
+  Ciclo Menstrual tem regra própria. Ele entrou no `SyncEntity`, mas a
+  sincronização geral NÃO o leva: é preciso um segundo sim, dado dentro da
+  própria roda do ciclo e desligado por padrão, e a política ganhou a seção de
+  dado sensível antes do primeiro envio. Sem esse sim, nada da tabela sai —
+  nem linha, nem exclusão. As páginas que cada dia ganha no acervo continuam
+  sem subir NUNCA, com ou sem o sim: quem as barra é o funil por onde toda
+  varredura passa (ele barra ainda o conteúdo que já vem pronto no app, que
+  não é dela). E a tabela não usa lápide em hipótese alguma, porque o id de um
+  dia é a data em que ela sangrou — a própria linha carrega a exclusão
 - **tombstone/lápide**: item apagado não ressuscita mais no download. O
   `deleteItem` grava a lápide **depois** das guardas de conta e de
   preferência de nuvem — a ordem foi invertida em `24d4f18`, e a inversão é

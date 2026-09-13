@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../../../core/services/data_sync_service.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/theme/grimoire_motion.dart';
 import '../../../../core/widgets/magical_card.dart';
@@ -72,6 +73,25 @@ class _MenstrualCyclePageState extends State<MenstrualCyclePage> {
   bool _saving = false;
   String? _formError;
 
+  /// O SEGUNDO sim: enviar o registro para a conta na nuvem. Nasce desligado
+  /// e não é o mesmo interruptor da sincronização do app — este mora aqui,
+  /// junto do primeiro sim e do que ele descreve, e não no meio dos ajustes
+  /// de backup, onde a pessoa não está pensando no próprio corpo.
+  bool _cloudOn = false;
+
+  /// A sincronização geral do app. O envio do ciclo precisa dela ligada para
+  /// acontecer: sem isso, o sim daqui fica esperando sem sintoma nenhum.
+  bool _appSyncOn = true;
+
+  /// Existe conta de verdade? Sem ela não há para onde enviar: o serviço nem
+  /// chega a tentar (`isReady` é falso), e o sim ficaria guardado sob o
+  /// `local_user` — nem faria nada, nem acompanharia ela ao entrar na conta.
+  /// Um sim que não tem efeito é um sim que engana, e isto é a outra metade
+  /// da mesma condição.
+  bool _temConta = false;
+
+  bool _cloudBusy = false;
+
   /// O ensaio da abertura começa recolhido: a dobra é curta, e o que ela
   /// veio fazer aqui primeiro é registrar.
   bool _aboutOpen = false;
@@ -106,17 +126,27 @@ class _MenstrualCyclePageState extends State<MenstrualCyclePage> {
 
   Future<void> _load() async {
     final userId = _userId;
+    final temConta = context.read<AuthProvider>().currentUser.isAuthenticated;
     try {
       final consented = await widget.consent.recordingAllowed(userId);
       final days =
           consented ? await _monthOf(userId, _month) : const <MenstrualDay>[];
       final history =
           consented ? await _repository.history(userId) : const <MenstrualDay>[];
+      // `temConta` entra no E: sem conta o sim não teria efeito nenhum, e
+      // mostrá-lo ligado seria dizer que o registro está acompanhando uma
+      // conta que não existe.
+      final cloudOn =
+          consented && temConta && await widget.consent.syncAllowed(userId);
+      final appSyncOn = await DataSyncService().cloudSyncEnabled;
       if (!mounted) return;
       setState(() {
         _consented = consented;
         _days = {for (final day in days) day.dayKey: day};
         _history = history;
+        _cloudOn = cloudOn;
+        _temConta = temConta;
+        _appSyncOn = appSyncOn;
         _loading = false;
       });
     } catch (_) {
@@ -137,6 +167,96 @@ class _MenstrualCyclePageState extends State<MenstrualCyclePage> {
     if (!mounted) return;
     setState(() => _loading = true);
     await _load();
+  }
+
+  /// Liga o envio, em dois tempos: o botão abre uma confirmação que repete o
+  /// que sobe e o que nunca sobe. É aqui que dado de saúde passa a sair do
+  /// aparelho, e um toque distraído não pode bastar para isso. Desligar é um
+  /// toque só — a saída nunca é a parte que se dificulta.
+  Future<void> _askCloudOn() async {
+    final l10n = AppLocalizations.of(context);
+    final confirmado = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        key: const ValueKey('menstrual-cloud-confirm'),
+        title: Text(l10n.menstrualCloudConfirmTitle),
+        content: Text(l10n.menstrualCloudConfirmBody),
+        actions: [
+          TextButton(
+            key: const ValueKey('menstrual-cloud-confirm-cancel'),
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: Text(l10n.menstrualCloudCancel),
+          ),
+          ElevatedButton(
+            key: const ValueKey('menstrual-cloud-confirm-accept'),
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: Text(l10n.menstrualCloudConfirmAction),
+          ),
+        ],
+      ),
+    );
+    if (confirmado == true && mounted) await _setCloud(true);
+  }
+
+  Future<void> _setCloud(bool on) async {
+    final l10n = AppLocalizations.of(context);
+    final userId = _userId;
+    await widget.consent.setSyncAllowed(userId, on);
+    // Nos dois sentidos, e antes de qualquer outra coisa: a lápide de um dia
+    // menstrual É a data em que ela sangrou e depois apagou. Desligando, ela
+    // ficaria guardada aqui esperando um religar; ligando, sairia daqui na
+    // primeira varredura — e ela não pediu nem uma coisa nem outra ao mexer
+    // neste interruptor.
+    await _repository.descartarLapidesPendentes(userId);
+    // Ligar vale para o registro INTEIRO, não só para o que vier depois: é
+    // sobre ele que ela acabou de dizer sim. O histórico de antes da conta
+    // chega adotado e já carimbado como enviado (DatabaseHelper.claimLegacyData
+    // explica por quê) justamente para esperar esta linha.
+    if (on) await _repository.markForUpload(userId);
+    if (!mounted) return;
+    setState(() => _cloudOn = on);
+    _say(on ? l10n.menstrualCloudEnabled : l10n.menstrualCloudDisabled);
+  }
+
+  /// Apagar a cópia da nuvem. Gesto à parte de desligar o envio, e de
+  /// propósito: desligar para de mandar, isto tira o que já foi. Juntar os
+  /// dois faria um deles acontecer sem ela ter pedido.
+  Future<void> _eraseCloud() async {
+    final l10n = AppLocalizations.of(context);
+    final confirmado = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        key: const ValueKey('menstrual-cloud-erase-confirm'),
+        title: Text(l10n.menstrualCloudEraseTitle),
+        // Apagar a cópia NÃO desliga o envio, e a leitura natural de "apagar
+        // da nuvem" é que aquilo acabou: sem esta frase, o próximo dia
+        // registrado sobe e o registro volta a existir no servidor sem que
+        // ela tenha entendido que ainda estava enviando.
+        content: Text(_cloudOn
+            ? '${l10n.menstrualCloudEraseBody}\n\n'
+                '${l10n.menstrualCloudEraseStillOn}'
+            : l10n.menstrualCloudEraseBody),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: Text(l10n.menstrualCloudCancel),
+          ),
+          ElevatedButton(
+            key: const ValueKey('menstrual-cloud-erase-accept'),
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: Text(l10n.menstrualCloudEraseAction),
+          ),
+        ],
+      ),
+    );
+    if (confirmado != true || !mounted) return;
+
+    setState(() => _cloudBusy = true);
+    final apagou = await DataSyncService().apagarCicloNaNuvem(_userId);
+    if (!mounted) return;
+    setState(() => _cloudBusy = false);
+    // Dizer "apagado" sem ter apagado é a pior resposta possível aqui.
+    _say(apagou ? l10n.menstrualCloudErased : l10n.menstrualCloudEraseFailed);
   }
 
   Future<void> _changeMonth(int months) async {
@@ -308,6 +428,7 @@ class _MenstrualCyclePageState extends State<MenstrualCyclePage> {
           _opening(context, l10n),
           _todayCard(context, l10n),
           LuaEVoceCard(days: _history, today: _today),
+          _cloudCard(context, l10n),
           // A roda só existe para o Premium; o calendário é a alternativa
           // explícita, e continua inteiro nas duas situações.
           if (access.canSeeDerived)
@@ -348,6 +469,73 @@ class _MenstrualCyclePageState extends State<MenstrualCyclePage> {
       ),
     );
   }
+
+  /// O segundo sim, com o que ele significa escrito antes do botão.
+  ///
+  /// Mora nesta folha, e não em Sincronização e Backup: o primeiro sim foi
+  /// dado aqui, o que sobe é o que esta tela mostra, e um interruptor no meio
+  /// dos ajustes de backup seria um sim dado longe da coisa sobre a qual ele
+  /// decide. Aqui ele é um card inteiro, com texto e botão próprios — nunca
+  /// uma chavinha perdida numa lista.
+  Widget _cloudCard(BuildContext context, AppLocalizations l10n) => MagicalCard(
+        key: const ValueKey('menstrual-cloud'),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(l10n.menstrualCloudTitle,
+                style: MenstrualType.cardTitle(context)),
+            const SizedBox(height: 12),
+            Text(l10n.menstrualCloudBody, style: MenstrualType.body(context)),
+            const SizedBox(height: 12),
+            Text(
+              !_temConta
+                  ? l10n.menstrualCloudStateNoAccount
+                  : _cloudOn
+                      ? l10n.menstrualCloudStateOn
+                      : l10n.menstrualCloudStateOff,
+              key: const ValueKey('menstrual-cloud-state'),
+              style: MenstrualType.quiet(context),
+            ),
+            // Um sim que não tem efeito é um sim que engana: com a
+            // sincronização do app desligada, nada sai daqui de qualquer jeito.
+            if (_temConta && _cloudOn && !_appSyncOn) ...[
+              const SizedBox(height: 8),
+              Text(l10n.menstrualCloudNeedsSync,
+                  style: MenstrualType.caption(context)),
+            ],
+            // Sem conta o card fica só no que explica: ligar gravaria o sim
+            // sob o `local_user`, que não sobe nada e não acompanha ela ao
+            // entrar na conta, e "apagar a cópia da nuvem" responderia que
+            // não deu para falar com uma conta que não existe.
+            if (_temConta) ...[
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: _cloudOn
+                    ? OutlinedButton(
+                        key: const ValueKey('menstrual-cloud-off'),
+                        onPressed: _cloudBusy ? null : () => _setCloud(false),
+                        child: Text(l10n.menstrualCloudDisable),
+                      )
+                    : ElevatedButton(
+                        key: const ValueKey('menstrual-cloud-on'),
+                        onPressed: _cloudBusy ? null : _askCloudOn,
+                        child: Text(l10n.menstrualCloudEnable),
+                      ),
+              ),
+              const SizedBox(height: 4),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: TextButton(
+                  key: const ValueKey('menstrual-cloud-erase'),
+                  onPressed: _cloudBusy ? null : _eraseCloud,
+                  child: Text(l10n.menstrualCloudErase),
+                ),
+              ),
+            ],
+          ],
+        ),
+      );
 
   /// A abertura sagrada: o título, duas linhas sobre o sangue e, para quem
   /// quiser ler mais, o ensaio "A menstruação e a bruxaria" no mesmo card.

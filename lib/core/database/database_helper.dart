@@ -1372,8 +1372,11 @@ class DatabaseHelper {
         'oracle_discoveries',
         'advisor_consultations',
         'progress_milestones',
-        // O registro menstrual também é da pessoa: entrar na conta no mesmo
-        // aparelho não pode fazê-la perder o que já escreveu.
+        // Redundante desde que `menstrualDays` entrou no SyncEntity — e fica,
+        // nomeada, porque o motivo dela é outro: o registro menstrual é
+        // adotado porque entrar na conta no mesmo aparelho não pode fazê-la
+        // perder o que já escreveu, e NÃO porque ele sincroniza. Se um dia o
+        // envio sair do enum, a adoção precisa continuar.
         MenstrualCycleSchema.table,
         // `sync_tombstones` NÃO entra, e essa ausência é a correção de um
         // vazamento: adotada, a lápide anônima virava `synced = 0` sob a
@@ -1406,7 +1409,20 @@ class DatabaseHelper {
       for (final table in tables) {
         await txn.update(
           table,
-          {'user_id': userId, 'synced': 0},
+          // O registro menstrual é adotado como todo o resto — entrar na
+          // conta no mesmo aparelho não pode fazê-la perder o que já
+          // escreveu —, mas entra JÁ CARIMBADO como enviado, e isso é a
+          // decisão. Ele agora está no SyncEntity: carimbá-lo `synced: 0`
+          // como os outros entregaria à primeira varredura do login todo o
+          // histórico que ela escreveu antes de existir conta, por efeito
+          // colateral da adoção e sem ninguém ter dito sim a nada. O envio
+          // dele nasce do segundo sim e de mais nada — é `setSyncAllowed`
+          // que manda `MenstrualCycleRepository.markForUpload` liberar
+          // estas linhas, com a conta real e por escolha dela.
+          {
+            'user_id': userId,
+            'synced': table == MenstrualCycleSchema.table ? 1 : 0,
+          },
           // O acervo tem origens que não saem do aparelho (o registro do
           // ciclo). Adotá-las com `synced: 0` seria carimbá-las como "a
           // enviar" e entregá-las à primeira varredura do login — antes de
@@ -1522,6 +1538,11 @@ class DatabaseHelper {
       'guided_ritual_logs',
       'user_encyclopedia_entries',
       'cycle_readings',
+      // Faltava, e a ausência tinha sintoma: o registro do ciclo sobrevivia à
+      // troca de conta no mesmo aparelho, preso ao `user_id` anterior — a
+      // tela de Privacidade já o apagava na lista dela, esta não. Duas listas
+      // escritas à mão que divergiram.
+      MenstrualCycleSchema.table,
       // As lápides vão junto: elas guardam o id de tudo que a pessoa apagou,
       // e sobreviver a um "apagar os dados" era manter no aparelho o índice
       // exatamente daquilo que ela mandou sumir — pronto para ser enviado.

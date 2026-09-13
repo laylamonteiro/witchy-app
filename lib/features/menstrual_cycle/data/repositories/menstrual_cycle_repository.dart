@@ -3,6 +3,7 @@ import 'package:sqflite/sqflite.dart';
 
 import '../../../../core/database/database_helper.dart';
 import '../../../../core/database/menstrual_cycle_schema.dart';
+import '../../../../core/services/data_sync_service.dart';
 import '../../domain/menstrual_day.dart';
 import '../services/menstrual_archive_recorder.dart';
 
@@ -15,7 +16,10 @@ import '../services/menstrual_archive_recorder.dart';
 ///
 /// Apagar deixa lápide: o dia sai do histórico, mas a linha continua com uma
 /// revisão maior, para que a cópia antiga de outro aparelho não o traga de
-/// volta. Só [purge] remove de verdade, quando a pessoa pede para apagar tudo.
+/// volta. Removem de verdade só [purge], quando a pessoa pede para apagar
+/// tudo, e [descartarLapidesPendentes], quando ela mexe no sim do envio — a
+/// lápide que ninguém vai avisar é só a data de um dia apagado guardada à
+/// toa.
 ///
 /// Toda linha que entra ou sai daqui tem um espelho no Grimório: a página do
 /// dia em "Meus Registros", escrita pelo [MenstrualArchiveRecorder]. O espelho
@@ -33,11 +37,14 @@ class MenstrualCycleRepository {
   MenstrualCycleRepository({
     DatabaseHelper? dbHelper,
     MenstrualArchiveRecorder? archive,
+    DataSyncService? syncService,
   })  : _dbHelper = dbHelper ?? DatabaseHelper.instance,
-        _archive = archive ?? MenstrualArchiveRecorder();
+        _archive = archive ?? MenstrualArchiveRecorder(),
+        _syncService = syncService ?? DataSyncService();
 
   final DatabaseHelper _dbHelper;
   final MenstrualArchiveRecorder _archive;
+  final DataSyncService _syncService;
 
   static const _table = MenstrualCycleSchema.table;
 
@@ -149,6 +156,30 @@ class MenstrualCycleRepository {
     return [for (final row in rows) MenstrualDay.fromRow(row)];
   }
 
+  /// Reescreve no Grimório a página de cada dia vivo desta conta.
+  ///
+  /// Existe por causa do "restaurar da nuvem": ele apaga o acervo inteiro e
+  /// reinsere só o que veio do servidor, e a página do dia menstrual não sobe
+  /// nunca — sem isto ela some no gesto que prometia trazer as coisas de
+  /// volta. Não depende do segundo sim nem de quem venceu o merge: a página é
+  /// derivável da linha, e é por isso mesmo que ela não precisa do servidor.
+  ///
+  /// Idempotente, porque o id da página vem de (conta, dia): reescrever é
+  /// reescrever a mesma página, nunca criar uma segunda. O erro de uma página
+  /// não derruba as outras — a folha do dia a reconstrói na próxima gravação.
+  Future<int> reconstruirEspelhos(String userId) async {
+    var escritas = 0;
+    for (final dia in await history(userId)) {
+      try {
+        await _archive.record(dia);
+        escritas++;
+      } catch (e) {
+        debugPrint('espelho do ciclo não reconstruiu: $e');
+      }
+    }
+    return escritas;
+  }
+
   /// Quantos dias existem. Serve para dizer o alcance de exportar ou apagar —
   /// é contagem de operação, não um número sobre o corpo de ninguém.
   Future<int> count(String userId) async {
@@ -164,15 +195,81 @@ class MenstrualCycleRepository {
   /// que os dias tinham no Grimório, que somem no mesmo gesto. A confirmação
   /// dessa tela conta dias, e há exatamente uma página por dia: o número que
   /// ela lê antes de confirmar é o número de páginas que somem.
-  Future<int> purge(String userId) async {
+  ///
+  /// Devolve quantos dias saíram daqui e se a cópia da nuvem também saiu.
+  /// Quem chama precisa das duas coisas: dizer "apagado" sobre uma cópia que
+  /// continua no servidor é a pior resposta possível neste gesto.
+  Future<({int apagados, bool nuvemLimpa})> purge(String userId) async {
     final db = await _dbHelper.database;
     await _archive.eraseAll(userId);
-    return db.delete(_table, where: 'user_id = ?', whereArgs: [userId]);
+    // A cópia da nuvem vai junto, e não é zelo extra: aqui o apagar é HARD —
+    // leva as lápides também —, então nada sobra no aparelho que se lembre da
+    // exclusão. Deixar o servidor intacto faria a primeira varredura seguinte
+    // baixar tudo de volta, e "apagar meus registros do ciclo" teria mentido.
+    //
+    // Falha de rede não impede o apagar local: o que ela pediu aqui é que
+    // saia DESTE aparelho, e isso acontece de qualquer jeito. O pedido remoto
+    // fica anotado no serviço, que tenta de novo e não deixa nada descer
+    // enquanto não conseguir — e o `false` sobe até a tela, para que ela
+    // saiba que a conta ainda tem uma cópia.
+    final nuvemLimpa = await _syncService.apagarCicloNaNuvem(userId);
+    final apagados =
+        await db.delete(_table, where: 'user_id = ?', whereArgs: [userId]);
+    return (apagados: apagados, nuvemLimpa: nuvemLimpa);
+  }
+
+  /// Libera o registro VIVO desta conta para subir na próxima varredura.
+  ///
+  /// É o que o SEGUNDO sim aciona, e o único lugar que faz isso. O histórico
+  /// escrito antes do consentimento (ou antes de existir conta, adotado no
+  /// login já carimbado como enviado) não pertence à nuvem até ela dizer que
+  /// sim — e quando diz, ela está dizendo sobre o registro inteiro, não só
+  /// sobre o que escrever daqui para a frente.
+  ///
+  /// `deleted = 0` no filtro é a parte que não pode cair: uma lápide liberada
+  /// aqui subiria ao servidor a DATA de um dia que ela apagou antes de
+  /// autorizar envio nenhum — o mapa dos dias apagados, que é exatamente o
+  /// que este desenho recusa a guardar. A confirmação promete "inclusive os
+  /// que você já registrou", não "inclusive as datas que você apagou".
+  Future<void> markForUpload(String userId) async {
+    final db = await _dbHelper.database;
+    await db.update(
+      _table,
+      {'synced': 0},
+      where: 'user_id = ? AND deleted = 0',
+      whereArgs: [userId],
+    );
+  }
+
+  /// Descarta as lápides que ainda não foram avisadas ao servidor.
+  ///
+  /// Chamado nos DOIS gestos do segundo sim, ligar e desligar, e o motivo é
+  /// o mesmo nos dois: uma lápide pendente é a data de um dia apagado
+  /// esperando para sair daqui. Desligando, ela ficaria guardada até um
+  /// religar; ligando, ela sairia na primeira varredura — e nenhum dos dois
+  /// é o que a pessoa pediu ao mexer no interruptor.
+  ///
+  /// O preço é o mesmo já aceito em `DataSyncService.descartarLapidesPendentes`
+  /// e não dá para disfarçar: se houver cópia remota daquele dia, ele volta na
+  /// próxima descida e ela apaga de novo. Guardar a memória da exclusão É
+  /// guardar a data.
+  Future<int> descartarLapidesPendentes(String userId) async {
+    final db = await _dbHelper.database;
+    return db.delete(
+      _table,
+      where: 'user_id = ? AND deleted = 1 AND synced = 0',
+      whereArgs: [userId],
+    );
   }
 
   /// Recebe a versão de outro aparelho. Ganha a revisão maior; empatadas,
   /// ganha a gravação mais recente. É assim que um apagar feito offline não
   /// volta quando um aparelho antigo se conecta com a cópia velha.
+  ///
+  /// Quando a cópia daqui é a que vale, ela volta a dever subida. Sem isso o
+  /// servidor guardaria a perdedora para sempre — ninguém mais a enviaria,
+  /// porque ela já está carimbada como enviada —, e todo aparelho novo
+  /// receberia a versão errada do dia.
   Future<bool> mergeRemote(MenstrualDay incoming) async {
     final db = await _dbHelper.database;
     final row = incoming.toRow();
@@ -182,7 +279,22 @@ class MenstrualCycleRepository {
         final older = incoming.revision < current.revision;
         final tie = incoming.revision == current.revision &&
             !incoming.updatedAt.isAfter(current.updatedAt);
-        if (older || tie) return false;
+        if (older || tie) {
+          // Empate exato (a mesma linha voltando) não é vitória de ninguém e
+          // não carimba nada: carimbar faria toda varredura reenviar o
+          // registro inteiro, sem que nada tivesse mudado.
+          final daquiEstaNaFrente = incoming.revision < current.revision ||
+              incoming.updatedAt.isBefore(current.updatedAt);
+          if (daquiEstaNaFrente) {
+            await txn.update(
+              _table,
+              {'synced': 0},
+              where: 'user_id = ? AND day_key = ?',
+              whereArgs: [incoming.userId, incoming.dayKey],
+            );
+          }
+          return false;
+        }
       }
       row['synced'] = 1;
       if (current != null) {

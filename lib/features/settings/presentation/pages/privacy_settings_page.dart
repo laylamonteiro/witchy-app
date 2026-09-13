@@ -94,7 +94,11 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
       ),
     );
     if (confirmed != true) return;
-    await MenstrualCycleRepository().purge(userId);
+    // O que ela pediu sai DESTE aparelho de qualquer jeito; o pedido à conta
+    // pode não ter ido, e a frase precisa dizer qual dos dois aconteceu.
+    // Prometer "apagado" enquanto a cópia ainda está lá é a única mentira que
+    // esta tela não pode contar.
+    final resultado = await MenstrualCycleRepository().purge(userId);
     await const MenstrualConsentStore().forget(userId);
     // As cópias derivadas vão junto: o relatório é onde as observações dela
     // continuariam existindo depois de o registro sumir. O crédito da
@@ -106,7 +110,9 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
     if (!mounted) return;
     setState(() => _menstrualDays = 0);
     messenger.showSnackBar(SnackBar(
-      content: Text(l10n.menstrualPrivacyErased),
+      content: Text(resultado.nuvemLimpa
+          ? l10n.menstrualPrivacyErased
+          : l10n.menstrualPrivacyErasedHere),
       backgroundColor: success,
     ));
   }
@@ -525,6 +531,14 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
 
     if (confirmed == true && mounted) {
       try {
+        // Antes de apagar daqui: o registro do ciclo é a única coisa desta
+        // lista que pode ter cópia na conta e é dado de saúde. Apagar só o
+        // local deixaria a cópia no servidor sem nada no aparelho que se
+        // lembre dela — e a varredura seguinte a traria de volta.
+        final userId = context.read<AuthProvider>().currentUser.id;
+        await MenstrualCycleRepository().purge(userId);
+        await const MenstrualConsentStore().forget(userId);
+        if (!mounted) return;
         final db = await DatabaseHelper.instance.database;
 
         // Tabelas para limpar (exceto dados pré-carregados)
@@ -549,7 +563,10 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
           'user_encyclopedia_entries',
           'daily_checkins',
           // O registro menstrual entra aqui como qualquer outro dado dela:
-          // limpar o aparelho limpa também o que ela escreveu do ciclo.
+          // limpar o aparelho limpa também o que ela escreveu do ciclo. A
+          // cópia na conta é pedida logo abaixo — desde que o registro pode
+          // subir, apagar só o daqui deixaria dado de saúde no servidor sem
+          // nada no aparelho que se lembre dele.
           MenstrualCycleSchema.table,
         ];
 

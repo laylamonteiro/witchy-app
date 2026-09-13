@@ -19,18 +19,34 @@ class LegalDocumentPage extends StatelessWidget {
     required this.assetPath,
   });
 
-  // Título localizado; o documento .md em si é o texto legal canônico do
-  // app (mantido em PT — ver auditoria).
+  // Título e documento seguem o idioma ativo. Um documento legal que a
+  // pessoa não entende não a informa de nada: o app é oferecido em três
+  // idiomas, e os três precisam poder ler o que autorizam.
   static LegalDocumentPage get terms => LegalDocumentPage(
         title: lookupAppLocalizations(ContentLocale.instance.locale)
             .authTermsOfUse,
-        assetPath: 'assets/legal/termos_de_uso.md',
+        assetPath: caminhoDosTermos(),
       );
 
   static LegalDocumentPage get privacy => LegalDocumentPage(
         title: lookupAppLocalizations(ContentLocale.instance.locale)
             .authPrivacyPolicy,
-        assetPath: 'assets/legal/politica_de_privacidade.md',
+        assetPath: caminhoDaPolitica(),
+      );
+
+  /// O português é o texto canônico — é dele que as traduções saem, e é ele
+  /// que vale quando um idioma ainda não tem a sua. Por isso a variante PT
+  /// não leva sufixo: o arquivo sem sufixo é a reserva de todos.
+  static String caminhoDosTermos() => ContentLocale.instance.select(
+        pt: 'assets/legal/termos_de_uso.md',
+        en: 'assets/legal/termos_de_uso_en.md',
+        es: 'assets/legal/termos_de_uso_es.md',
+      );
+
+  static String caminhoDaPolitica() => ContentLocale.instance.select(
+        pt: 'assets/legal/politica_de_privacidade.md',
+        en: 'assets/legal/politica_de_privacidade_en.md',
+        es: 'assets/legal/politica_de_privacidade_es.md',
       );
 
   @override
@@ -40,8 +56,23 @@ class LegalDocumentPage extends StatelessWidget {
         title: ResponsiveAppBarTitle(title),
       ),
       body: FutureBuilder<String>(
-        future: rootBundle.loadString(assetPath),
+        future: _carregarDocumento(),
         builder: (context, snapshot) {
+          // A reserva cobre a tradução que falta; não cobre o asset que não
+          // abre. Sem este ramo o erro vira um carregamento eterno, que é o
+          // pior dos dois: a pessoa fica esperando um documento que não vem.
+          if (snapshot.hasError) {
+            return Padding(
+              padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
+              child: Text(
+                AppLocalizations.of(context).errorsGeneric,
+                style: Theme.of(context)
+                    .textTheme
+                    .bodyMedium
+                    ?.copyWith(height: 1.55),
+              ),
+            );
+          }
           if (!snapshot.hasData) {
             return const LoadingWidget();
           }
@@ -55,6 +86,19 @@ class LegalDocumentPage extends StatelessWidget {
         },
       ),
     );
+  }
+
+  /// Uma tradução que falte no bundle cai no texto em português, que é o
+  /// único que sempre existe. O que a reserva não alcança — o asset que não
+  /// abre — sai daqui como erro, e quem o mostra é o ramo `hasError` acima.
+  Future<String> _carregarDocumento() async {
+    try {
+      return await rootBundle.loadString(assetPath);
+    } catch (_) {
+      final reserva = assetPath.replaceFirst(RegExp(r'_(en|es)\.md$'), '.md');
+      if (reserva == assetPath) rethrow;
+      return rootBundle.loadString(reserva);
+    }
   }
 
   List<Widget> _renderMarkdown(BuildContext context, String source) {
