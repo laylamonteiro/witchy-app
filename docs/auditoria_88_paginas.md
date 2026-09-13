@@ -16,11 +16,19 @@ Os dez graves originais já passaram por essa conferência, um a um: oito se
 sustentaram e dois caíram. Os médios e os leves ainda não — continuam
 sendo suspeita.
 
-**O que já foi corrigido**, e por isso saiu da fila: a exportação que
-entregava os dados da outra conta; a exclusão que dizia sucesso e deixava
-o cadastro de pé; a senha atual que não era conferida contra nada; e o
-nome com dois espaços que derrubava a aba de Configurações. Os graves que
-sobram estão marcados abaixo. A decisão de ordem continua sendo da dona.
+**OS OITO GRAVES ESTÃO CORRIGIDOS**, e cada um está marcado abaixo: a
+exportação que entregava os dados da outra conta; a exclusão que dizia
+sucesso e deixava o cadastro de pé; a senha atual que não era conferida
+contra nada; a afirmação que nunca gravava na edição; a escrita livre que
+sumia ao trocar de aba; os três símbolos sagrados que eram quadradinho de
+glifo ausente; a lição que selava a página sem conferir se ela foi
+gravada; e o nome com dois espaços que derrubava a aba de Configurações.
+
+**Os médios e os leves continuam abertos, e continuam sendo SUSPEITA** —
+nenhum deles passou pela conferência. Dois dos dez graves caíram quando
+foram conferidos, então a taxa de erro desta lista não é zero: leia o
+código antes de consertar qualquer um. A decisão de ordem continua sendo
+da dona.
 
 ## Graves (8)
 
@@ -48,7 +56,7 @@ A senha atual digitada nunca é conferida contra nada: a tela a lê na linha 290
 
 **Correção proposta:** Antes de `updateUser`, reautenticar de fato (`signInWithPassword` com o e-mail da sessão e a senha atual) e abortar com `changePasswordWrongCurrent` se falhar — ou, se a decisão for não conferir, remover o campo e corrigir o doc.
 
-### `lib/features/diary/presentation/pages/affirmation_form_page.dart:343` — ✔ confirmado, aberto
+### `lib/features/diary/presentation/pages/affirmation_form_page.dart:343` — ✅ CORRIGIDO
 
 Editar uma afirmação própria NUNCA grava. `_saveAffirmation` monta o `AffirmationModel` com o id existente e, logo abaixo, todo o caminho de persistência está dentro de `if (widget.affirmation == null) { ... }`; quando há afirmação, a função cai direto no `Navigator.pop(context)` da linha 361. O `AffirmationProvider` sequer tem um `updateAffirmation` (grep em lib/ inteiro: zero ocorrências) — só `addAffirmation`, `toggleFavorite` e `deleteAffirmation`.
 
@@ -68,7 +76,7 @@ edição, logo depois de gravar — qualquer ajuste ali também se perde. E o
 molde de retorno `bool` é o `addAffirmation` do próprio provider, não o
 `updateGratitude`, que devolve `Future<void>`.
 
-### `lib/features/diary/presentation/pages/free_writing_tab.dart:139` — ✔ confirmado, aberto
+### `lib/features/diary/presentation/pages/free_writing_tab.dart:139` — ✅ CORRIGIDO
 
 O canvas de escrita livre só salva em três gestos: abrir o histórico (linha 98), começar uma reflexão nova (linha 117) e o `PopScope` da linha 142. Mas nos Diários a aba 💭 NÃO é uma rota empilhada — é filha do `TabBarView` de diary_page.dart:114, e `DiaryPage` é `AutomaticKeepAliveClientMixin`. Trocar para a aba Sonhos/Gratidão, abrir Configurações, mudar de aba na bottom bar ou ter o app encerrado em background não dispara pop nenhum; o `dispose` (linha 59) só descarta o controller sem gravar, e não há `WidgetsBindingObserver` para o ciclo de vida.
 
@@ -84,7 +92,7 @@ Gratidão não é um caso em que o salvamento "não dispara" — é um caso em q
 o State é DESMONTADO e o texto digitado some na hora, sem precisar de app
 encerrado nem de background.
 
-### `lib/features/encyclopedia/data/data_sources/sacred_symbols_data_pt.dart:127` — ✔ confirmado, aberto
+### `lib/features/encyclopedia/data/data_sources/sacred_symbols_data_pt.dart:127` — ✅ CORRIGIDO
 
 Três verbetes de Símbolos Sagrados têm como `emoji` um caractere de bloco raro do Unicode, e não um emoji: 𓂀 (U+13080, Egyptian Hieroglyphs) no Olho de Hórus (linha 127), ⛤ (U+26E4) no Pentagrama (linha 11) e ☥ (U+2625) no Ankh (linha 69) — idênticos nos três idiomas (_pt/_en/_es). Nenhum celular traz fonte de hieróglifo egípcio, e o ⛤ o próprio repo JÁ declara quebrado: lib/core/tools/tool_identity.dart:45 diz que ⛤, ᚱ e ⟟ mostravam o quadradinho de glifo ausente e por isso viraram desenho. Para sacredSymbols o ArcaneGlyph não tem desenho (arcane_categories.dart:60 devolve null), então o caractere aparece cru em quatro lugares: o título da AppBar (arcane_detail_page.dart:53, '𓂀 Olho de Hórus'), a pílula de origem (arcane_detail_page.dart:152), a linha de referência do card de lista (arcane_list_page.dart:248) e a linha da busca global (encyclopedia_search_page.dart:139).
 
@@ -92,7 +100,7 @@ Três verbetes de Símbolos Sagrados têm como `emoji` um caractere de bloco rar
 
 **Correção proposta:** Dar a sacredSymbols uma entrada em ArcaneCategory.glyphIdFor e desenhar os três símbolos no mesmo sistema de ArchetypeGlyphArt (ou, como paliativo, trocar por emojis que existam no piso do app), mantendo o caractere só como reserva.
 
-### `lib/features/learning/presentation/pages/lesson_page.dart:236` — ✔ confirmado, aberto
+### `lib/features/learning/presentation/pages/lesson_page.dart:236` — ✅ CORRIGIDO
 
 `_saveRecord` descarta o retorno de todas as gravações: `addDream` (236), `addGratitude` (246), `addAffirmation` (254), `addDesire` (262) e `addSpell` (276) devolvem `Future<bool>` = 'foi persistido?', e nenhum é lido. Os providers engolem a exceção, gravam `_error` e devolvem `false`. Em seguida `_writePage` marca a lição como concluída, mostra o selo com o XP e empilha o formulário do registro. A docstring de `DreamProvider.addDream` (dream_provider.dart:39) diz textualmente 'the caller only records progress for a save that actually happened' — e todas as outras telas honram isso (dream_form_page:239, gratitude_form_page:185, desire_form_page:234, affirmation_form_page:345, spell_form_page:294); só a lição não.
 
