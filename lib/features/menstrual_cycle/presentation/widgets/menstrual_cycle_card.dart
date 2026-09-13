@@ -28,7 +28,6 @@ class MenstrualCycleCard extends StatelessWidget {
       // O cartão não precisa saber se já houve consentimento: quem abre
       // encontra a porta certa, com ou sem ele.
       consented: true,
-      premium: auth.isPremiumEffective,
     );
     if (!access.isOffered) return const SizedBox.shrink();
 

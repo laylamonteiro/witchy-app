@@ -10,8 +10,11 @@ import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'support/short_test_timeout.dart';
 
-/// A fonte íntima na tela de fontes: desligada por padrão, fechada sem
-/// Premium, e — mesmo aberta — sem autorizar nada até ela marcar.
+/// A fonte íntima na tela de fontes: LIGADA por padrão, como as outras
+/// quatro. O gate de Premium saiu — a Leitura do Ciclo é comprada à parte, e
+/// o registro do ciclo é gratuito; barrar aqui cobrava duas vezes pela mesma
+/// coisa. O que continua de pé é o consentimento do registro, sem o qual não
+/// há prévia porque não há registro.
 class _Records extends MenstrualCycleRepository {
   _Records(this.days);
 
@@ -24,6 +27,26 @@ class _Records extends MenstrualCycleRepository {
     required DateTime to,
   }) async =>
       days;
+}
+
+/// Um banco que devolve só os dias DA JANELA pedida — o `_Records` devolve
+/// sempre os mesmos, e com a fonte reabrindo sozinha isso esconderia a troca
+/// de período.
+class _PorJanela extends MenstrualCycleRepository {
+  _PorJanela(this.days);
+
+  final List<MenstrualDay> days;
+
+  @override
+  Future<List<MenstrualDay>> between({
+    required String userId,
+    required DateTime from,
+    required DateTime to,
+  }) async =>
+      [
+        for (final day in days)
+          if (!day.day.isBefore(from) && !day.day.isAfter(to)) day,
+      ];
 }
 
 /// Um banco que só responde quando o teste mandar.
@@ -72,8 +95,8 @@ void main() {
 
   Future<List<MenstrualReadingScope>> show(
     WidgetTester tester, {
-    bool premium = true,
     bool consented = true,
+    MenstrualCycleRepository? repository,
   }) async {
     SharedPreferences.setMockInitialValues(
         consented ? {'menstrual_consent_record_she': true} : {});
@@ -87,8 +110,7 @@ void main() {
           child: MenstrualSourceTile(
             userId: 'she',
             period: period,
-            premium: premium,
-            repository: _Records(days),
+            repository: repository ?? _Records(days),
             onChanged: emitted.add,
           ),
         ),
@@ -98,42 +120,35 @@ void main() {
     return emitted;
   }
 
-  testWidgets('sem Premium a chave não abre nada', (tester) async {
-    final emitted = await show(tester, premium: false);
-    final tile = tester.widget<SwitchListTile>(
-        find.byKey(const ValueKey('cycle-reading-menstrual')));
-    expect(tile.value, isFalse, reason: 'A fonte nasce desligada');
-    expect(tile.onChanged, isNull,
-        reason: 'Sem Premium nem é possível abrir a prévia');
-    expect(find.byKey(const ValueKey('cycle-reading-menstrual-all')),
-        findsNothing);
-    expect(emitted, isEmpty);
-  });
+  SwitchListTile chave(WidgetTester tester) => tester.widget<SwitchListTile>(
+      find.byKey(const ValueKey('cycle-reading-menstrual')));
 
-  testWidgets('abrir traz o período marcado, e ela desmarca o que não quer',
+  Finder diaDe(String dayKey) =>
+      find.byKey(ValueKey('cycle-reading-menstrual-$dayKey'));
+
+  testWidgets('a fonte nasce ligada e já traz o período marcado',
       (tester) async {
     final emitted = await show(tester);
-    await tester.tap(find.byKey(const ValueKey('cycle-reading-menstrual')));
-    await settle(
-        tester,
-        () => find
-            .byKey(const ValueKey('cycle-reading-menstrual-2026-03-04'))
-            .evaluate()
-            .isNotEmpty);
+    await settle(tester, () => diaDe('2026-03-04').evaluate().isNotEmpty);
 
-    expect(find.byKey(const ValueKey('cycle-reading-menstrual-2026-03-06')),
-        findsOneWidget);
-    // O sim está na chave: abrir já traz o período inteiro marcado.
+    expect(chave(tester).value, isTrue,
+        reason: 'É a quinta fonte da tela, e as outras quatro nascem ligadas');
+    expect(chave(tester).onChanged, isNotNull,
+        reason: 'Nenhum plano fecha esta chave: a leitura é que se compra');
+    expect(diaDe('2026-03-06'), findsOneWidget);
     expect(find.text('2 records included'), findsOneWidget);
     expect(emitted.last.recordCount, 2);
     expect(emitted.last.start, period.start);
     expect(emitted.last.end, period.end);
-    expect(emitted.last.includesWrittenWords, isTrue,
-        reason: 'Abrir a fonte manda o período inteiro, relato incluso');
+    expect(emitted.last.includesWrittenWords, isTrue);
+  });
 
-    // E daqui em diante ela DESmarca o que não quiser mandar.
-    await tester.tap(
-        find.byKey(const ValueKey('cycle-reading-menstrual-2026-03-04')));
+  testWidgets('daqui em diante ela DESmarca o que não quer mandar',
+      (tester) async {
+    final emitted = await show(tester);
+    await settle(tester, () => diaDe('2026-03-04').evaluate().isNotEmpty);
+
+    await tester.tap(diaDe('2026-03-04'));
     await tester.pump();
     expect(emitted.last.recordCount, 1);
     expect(emitted.last.entries.single.dayKey, '2026-03-06');
@@ -147,10 +162,9 @@ void main() {
     expect(emitted.last.recordCount, 2);
   });
 
-  testWidgets('as palavras dela saem no instante em que ela pede',
+  testWidgets('as palavras dela saem da leitura sem levar os dias junto',
       (tester) async {
     final emitted = await show(tester);
-    await tester.tap(find.byKey(const ValueKey('cycle-reading-menstrual')));
     await settle(
         tester,
         () => find
@@ -160,7 +174,6 @@ void main() {
     expect(emitted.last.includesWrittenWords, isTrue);
     expect(emitted.last.fields, contains(MenstrualField.note));
 
-    // Uma chave desliga o relato e deixa o resto do período de pé.
     await tester.tap(
         find.byKey(const ValueKey('cycle-reading-menstrual-words')));
     await tester.pump();
@@ -176,7 +189,7 @@ void main() {
     expect(emitted.last.includesWrittenWords, isFalse);
   });
 
-  testWidgets('trocar a janela desfaz a autorização da janela anterior',
+  testWidgets('trocar a janela desfaz o que estava marcado e reabre na nova',
       (tester) async {
     SharedPreferences.setMockInitialValues(
         {'menstrual_consent_record_she': true});
@@ -191,8 +204,7 @@ void main() {
               child: MenstrualSourceTile(
                 userId: 'she',
                 period: janela,
-                premium: true,
-                repository: _Records(days),
+                repository: _PorJanela(days),
                 onChanged: emitted.add,
               ),
             ),
@@ -200,60 +212,72 @@ void main() {
         ));
 
     await mostrar(period);
-    await tester.pump();
-    await tester.tap(find.byKey(const ValueKey('cycle-reading-menstrual')));
-    await settle(
-        tester,
-        () => find
-            .byKey(const ValueKey('cycle-reading-menstrual-2026-03-04'))
-            .evaluate()
-            .isNotEmpty);
+    await settle(tester, () => diaDe('2026-03-04').evaluate().isNotEmpty);
     expect(emitted.last.recordCount, 2);
 
     // Ela mexe no calendário da tela de compra: outro período, outra
     // pergunta. Os dias marcados eram os de março, e o escopo carrega as
-    // próprias datas — mantê-lo mandaria para a leitura os dias da janela
+    // próprias datas — mantê-los mandaria para a leitura os dias da janela
     // errada, sem que nada avisasse.
     await mostrar((start: DateTime(2026, 4, 1), end: DateTime(2026, 5, 1)));
-    await tester.pump();
+    await settle(
+        tester,
+        () => find
+            .byKey(const ValueKey('cycle-reading-menstrual-empty'))
+            .evaluate()
+            .isNotEmpty);
 
-    final chave = tester.widget<SwitchListTile>(
-        find.byKey(const ValueKey('cycle-reading-menstrual')));
-    expect(chave.value, isFalse,
-        reason: 'A fonte íntima volta a ficar fechada na janela nova');
-    expect(find.byKey(const ValueKey('cycle-reading-menstrual-2026-03-04')),
-        findsNothing);
-    expect(emitted.last.isEmpty, isTrue,
-        reason: 'Nada segue autorizado até ela marcar de novo');
+    expect(chave(tester).value, isTrue,
+        reason: 'A chave é dela: trocar de mês não desliga a fonte');
+    expect(diaDe('2026-03-04'), findsNothing,
+        reason: 'Os dias de março não seguem autorizados em abril');
+    expect(emitted.last.isEmpty, isTrue);
   });
 
-  testWidgets('fechar a fonte cancela a prévia que ainda vinha a caminho',
+  testWidgets('a fonte desligada continua desligada quando a janela muda',
       (tester) async {
     SharedPreferences.setMockInitialValues(
         {'menstrual_consent_record_she': true});
     final emitted = <MenstrualReadingScope>[];
-    final portao = _Portao(days);
-    await tester.pumpWidget(MaterialApp(
-      locale: const Locale('en'),
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
-      supportedLocales: AppLocalizations.supportedLocales,
-      home: Scaffold(
-        body: SingleChildScrollView(
-          child: MenstrualSourceTile(
-            userId: 'she',
-            period: period,
-            premium: true,
-            repository: portao,
-            onChanged: emitted.add,
+    Future<void> mostrar(({DateTime start, DateTime end}) janela) =>
+        tester.pumpWidget(MaterialApp(
+          locale: const Locale('en'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: SingleChildScrollView(
+              child: MenstrualSourceTile(
+                userId: 'she',
+                period: janela,
+                repository: _PorJanela(days),
+                onChanged: emitted.add,
+              ),
+            ),
           ),
-        ),
-      ),
-    ));
-    await tester.pump();
+        ));
 
-    // Ela liga, se arrepende e desliga antes de o banco responder.
+    await mostrar(period);
+    await settle(tester, () => diaDe('2026-03-04').evaluate().isNotEmpty);
     await tester.tap(find.byKey(const ValueKey('cycle-reading-menstrual')));
     await tester.pump();
+    expect(chave(tester).value, isFalse);
+
+    await mostrar((start: DateTime(2026, 4, 1), end: DateTime(2026, 5, 1)));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 50));
+    expect(chave(tester).value, isFalse,
+        reason: 'Trocar de mês não é pedir a fonte de volta');
+    expect(emitted.last.isEmpty, isTrue);
+  });
+
+  testWidgets('desligar cancela a prévia que ainda vinha a caminho',
+      (tester) async {
+    final portao = _Portao(days);
+    final emitted = await show(tester, repository: portao);
+    await tester.pump();
+
+    // A fonte nasceu ligada e está esperando o banco; ela desliga antes da
+    // resposta.
     await tester.tap(find.byKey(const ValueKey('cycle-reading-menstrual')));
     await tester.pump();
     expect(emitted.last.isEmpty, isTrue);
@@ -263,19 +287,17 @@ void main() {
     await tester.pump();
     await tester.pump();
 
-    final chave = tester.widget<SwitchListTile>(
-        find.byKey(const ValueKey('cycle-reading-menstrual')));
-    expect(chave.value, isFalse,
+    expect(chave(tester).value, isFalse,
         reason: 'A chave ficou desligada, e a tela não pode mentir sobre ela');
-    expect(find.byKey(const ValueKey('cycle-reading-menstrual-2026-03-04')),
-        findsNothing);
+    expect(diaDe('2026-03-04'), findsNothing);
     expect(emitted.last.isEmpty, isTrue,
         reason: 'A prévia atrasada não autoriza o que ela já desligou');
   });
 
   testWidgets('sem consentimento de registro não há prévia', (tester) async {
+    // A chave abre, porque plano nenhum a fecha — mas não há o que ler: sem
+    // o sim do registro não existe registro.
     await show(tester, consented: false);
-    await tester.tap(find.byKey(const ValueKey('cycle-reading-menstrual')));
     await settle(
         tester,
         () => find

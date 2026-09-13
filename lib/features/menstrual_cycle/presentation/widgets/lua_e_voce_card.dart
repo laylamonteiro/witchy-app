@@ -7,6 +7,7 @@ import '../../../../core/widgets/moon_glyph.dart';
 import '../../../../core/widgets/staggered_entrance.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../grimoire/data/models/spell_model.dart';
+import '../../data/data_sources/blood_lore_content.dart';
 import '../../data/menstrual_mood_labels.dart';
 import '../../domain/lunar_comparison.dart';
 import '../../domain/menstrual_day.dart';
@@ -42,6 +43,7 @@ class LuaEVoceCard extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final colors = context.gc;
     final report = LunarComparison.report(days, today: today);
+    final lore = bloodLoreContent;
     final timeline = report.timeline;
     final summary = report.summary;
     final head = MenstrualType.sectionHead(context);
@@ -82,6 +84,33 @@ class LuaEVoceCard extends StatelessWidget {
               style: body,
             )
           else ...[
+            // A leitura do começo mais recente: a Lua daquele dia, o que a
+            // magia lunar costuma associar a ela e a frase que impede a
+            // leitura de virar biologia. Correspondência, nunca causa.
+            if (report.latestStart case final latest?) ...[
+              Text(
+                BloodLoreContent.fill(lore.startUnderTemplate,
+                    {'phase': latest.phase.displayName}),
+                key: const ValueKey('lua-e-voce-latest'),
+                style: body,
+              ),
+              const SizedBox(height: 4),
+              Text(
+                BloodLoreContent.fill(lore.correspondenceTemplate, {
+                  'phase': latest.phase.displayName,
+                  'meaning': lore.moonCorrespondences[latest.phase]!,
+                }),
+                key: const ValueKey('lua-e-voce-correspondence'),
+                style: body,
+              ),
+              const SizedBox(height: 4),
+              Text(
+                lore.moonNotSynced,
+                key: const ValueKey('lua-e-voce-not-synced'),
+                style: quiet,
+              ),
+              const SizedBox(height: 12),
+            ],
             Text(l10n.menstrualLunarStartsTitle, style: head),
             const SizedBox(height: 8),
             if (reduced)
@@ -124,6 +153,21 @@ class LuaEVoceCard extends StatelessWidget {
                   key: const ValueKey('lua-e-voce-neither'),
                   style: body,
                 ),
+            ],
+            // A Lua que mais se repetiu entre os começos recentes. É
+            // observação de padrão pessoal, tirada só do que ela marcou —
+            // não previsão, não diagnóstico e não significado.
+            if (report.tally case final tally?) ...[
+              const SizedBox(height: 4),
+              Text(
+                BloodLoreContent.fill(lore.phaseTallyTemplate, {
+                  'count': '${tally.count}',
+                  'total': '${tally.total}',
+                  'phase': tally.phase.displayName,
+                }),
+                key: const ValueKey('lua-e-voce-tally'),
+                style: body,
+              ),
             ],
           ],
           if (report.moods.isNotEmpty) ...[

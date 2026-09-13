@@ -341,6 +341,9 @@ void main() {
           'en': 'sensitive',
           'es': 'sensible',
         },
+        // Continua valendo depois de a cerimônia encurtar: eram DOIS sins e
+        // virou UM, mas ele segue explícito, específico para esta finalidade
+        // e fora do aceite dos termos do cadastro. É a base legal do envio.
         'que o sim dele é destacado, e não o sim geral da sincronização': {
           'pt': 'consentimento destacado',
           'en': 'separate, specific consent',
@@ -356,10 +359,17 @@ void main() {
           'en': 'Turning it off stops',
           'es': 'Apagar interrumpe',
         },
-        'que desligar não apaga sozinho a cópia que já subiu': {
-          'pt': 'apagá-la é um gesto próprio',
-          'en': 'erasing it is a gesture of its own',
-          'es': 'borrarla es un gesto aparte',
+        // Mudou de mão, e é por isso que a frase mudou: apagar a cópia era um
+        // BOTÃO à parte, que ficava à vista mesmo com o envio desligado — uma
+        // opção para apagar algo que talvez nem estivesse lá. Hoje é a outra
+        // metade de desligar, e a confirmação diz as duas coisas. O que a
+        // catraca cobra continua sendo uma promessa de código: se a política
+        // parar de dizer que desligar apaga, o interruptor volta a deixar
+        // dado de saúde no servidor depois de ela ter retirado o sim.
+        'que desligar também apaga a cópia que já subiu': {
+          'pt': 'apaga a cópia',
+          'en': 'erases the copy',
+          'es': 'borra la copia',
         },
       };
 

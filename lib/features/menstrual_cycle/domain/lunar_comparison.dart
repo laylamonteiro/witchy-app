@@ -49,6 +49,28 @@ class LunarComparisonSummary {
       observations.where((o) => o.nearness == LunarNearness.fullMoon).length;
 }
 
+/// Uma Lua que se repete entre os começos recentes dela.
+///
+/// É contagem do que ela marcou — nada aqui é previsão, diagnóstico nem
+/// "verdade espiritual". A pergunta que isto responde é "com que Lua os meus
+/// começos têm se encontrado?", e a resposta é o número, não um significado.
+class LunarPhaseTally {
+  const LunarPhaseTally({
+    required this.phase,
+    required this.count,
+    required this.total,
+  });
+
+  /// A fase que mais apareceu na janela olhada.
+  final MoonPhase phase;
+
+  /// Quantos começos caíram nela.
+  final int count;
+
+  /// Quantos começos a janela tinha.
+  final int total;
+}
+
 /// Uma emoção anotada nos dias de sangue e quantas vezes ela apareceu.
 class MoodTally {
   const MoodTally({required this.mood, required this.count});
@@ -67,6 +89,7 @@ class LunarComparisonReport {
   const LunarComparisonReport({
     required this.timeline,
     required this.summary,
+    required this.tally,
     required this.moods,
     required this.moodsByPhase,
   });
@@ -76,6 +99,14 @@ class LunarComparisonReport {
 
   /// Nulo enquanto não houver quatro começos.
   final LunarComparisonSummary? summary;
+
+  /// A Lua que mais se repetiu entre os começos recentes, ou nulo enquanto
+  /// não houver começos suficientes — ou quando nenhuma fase se repetiu.
+  final LunarPhaseTally? tally;
+
+  /// O começo mais recente, ou nulo se ela ainda não marcou nenhum.
+  LunarObservation? get latestStart =>
+      timeline.isEmpty ? null : timeline.last;
 
   /// As emoções mais anotadas nos dias de sangue, da mais frequente para a
   /// menos — no máximo [LunarComparison.topMoods].
@@ -117,6 +148,9 @@ abstract final class LunarComparison {
 
   /// Quantas emoções a tela lista.
   static const topMoods = 3;
+
+  /// Quantos começos a contagem por fase olha para trás.
+  static const tallyWindow = 5;
 
   /// A convenção de cálculo: o meio-dia local do dia observado.
   static DateTime noonOf(DateTime day) =>
@@ -184,6 +218,43 @@ abstract final class LunarComparison {
     );
   }
 
+  /// A Lua que mais se repetiu entre os últimos [tallyWindow] começos.
+  ///
+  /// Nula em três situações, todas deliberadas: antes de [minimumStarts]
+  /// começos (não há padrão nenhum a observar em dois ou três), quando
+  /// nenhuma fase aparece mais de uma vez (repetir "1 de 4" não é padrão) e
+  /// em caso de empate no topo — anunciar uma das empatadas seria escolher
+  /// por ela. O empate é desfeito pela ordem do enum só para a leitura ser
+  /// estável entre uma abertura e outra quando a contagem é a mesma.
+  static LunarPhaseTally? phaseTally(Iterable<MenstrualDay> days) {
+    final starts = startsOf(days);
+    if (starts.length < minimumStarts) return null;
+    final window = starts.length <= tallyWindow
+        ? starts
+        : starts.sublist(starts.length - tallyWindow);
+    final counts = <MoonPhase, int>{};
+    for (final start in window) {
+      final phase = LunarProvider.phaseOn(noonOf(start));
+      counts[phase] = (counts[phase] ?? 0) + 1;
+    }
+    MoonPhase? chosen;
+    var best = 0;
+    var tied = false;
+    for (final phase in MoonPhase.values) {
+      final count = counts[phase] ?? 0;
+      if (count > best) {
+        chosen = phase;
+        best = count;
+        tied = false;
+      } else if (count == best && count > 0 && chosen != null) {
+        tied = true;
+      }
+    }
+    if (chosen == null || best < 2 || tied) return null;
+    return LunarPhaseTally(
+        phase: chosen, count: best, total: window.length);
+  }
+
   /// As emoções mais anotadas nos dias de sangue: as [topMoods] mais
   /// frequentes, e o empate é desfeito pela ordem alfabética para que a lista
   /// não mude de lugar entre uma abertura e outra.
@@ -219,6 +290,7 @@ abstract final class LunarComparison {
     return LunarComparisonReport(
       timeline: timelineOf(seen),
       summary: summarize(seen),
+      tally: phaseTally(seen),
       moods: moodsOf(seen),
       moodsByPhase: moodsByPhaseOf(seen),
     );

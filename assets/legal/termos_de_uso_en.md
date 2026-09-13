@@ -34,7 +34,7 @@ All content in the application — readings, interpretations, forecasts, suggest
 - Spells, diaries, reflections, dreams and other records created by you belong to you.
 - When you use Mystic Counselor features, the text you provide is processed to generate the answer (see Privacy Policy).
 - Everything you record in the application is kept in your Grimoire — including the days you record in the Menstrual Cycle wheel, which become pages under "My Records". Keeping it in the Grimoire is not sending it: sending to an artificial intelligence provider happens when you trigger a feature that uses it, with the material of that feature.
-- The Menstrual Cycle record has a rule of its own, a narrower one, because it is health information: it only goes to the cloud if you turn on Menstrual Cycle sending, a separate yes, inside the cycle wheel itself — the application's general sync does not carry it —, and it only reaches artificial intelligence inside a Cycle Reading that you authorize, with the days you mark. The Privacy Policy, section 2, describes the whole path.
+- The Menstrual Cycle record has a rule of its own, a narrower one, because it is health information: it only goes to the cloud with the yes you give when you start recording, a yes separate from your acceptance of these terms — the application's general sync does not carry it —, and it only reaches artificial intelligence inside a Cycle Reading that you authorize, with the days you mark. The Privacy Policy, section 2, describes the whole path.
 - You are responsible for the content you create and for the use you make of it.
 
 ## 6. Conduct and limits
