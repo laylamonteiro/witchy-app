@@ -93,6 +93,10 @@ void main() {
     await tester.pump(const Duration(milliseconds: 400));
     expect(find.byKey(const ValueKey('skip')), findsNothing);
 
+    // A new answer is a new widget (the page keys it by consultation); here
+    // the tree is torn down so the second scenario starts from zero instead
+    // of reusing the finished State above.
+    await tester.pumpWidget(const SizedBox.shrink());
     await show(tester, spans: const [RevealSpan(body)], skipLabel: 'Show all');
     await tester.pump();
     await tester.tap(find.byKey(const ValueKey('skip')));
@@ -108,6 +112,7 @@ void main() {
     expect(hasTransparentTail(tester), isFalse);
     expect(fogOf(tester), isNull);
 
+    await tester.pumpWidget(const SizedBox.shrink());
     await show(tester, spans: const [RevealSpan(body)], reduced: true);
     await tester.pump();
     expect(hasTransparentTail(tester), isFalse);
