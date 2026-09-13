@@ -44,13 +44,21 @@ class FreeWritingProvider with ChangeNotifier {
 
   /// Salva (upsert) uma reflexão. Usado pelo autosave do canvas: o mesmo id é
   /// reutilizado a cada digitação, então o insert com replace atualiza a linha.
-  Future<void> save(FreeWritingModel writing) async {
+  ///
+  /// Devolve se foi PERSISTIDA, como os cinco irmãos (`addDream`,
+  /// `addGratitude`, `addAffirmation`, `addDesire`, `addSpell`). Era o único
+  /// que devolvia `void`, e por isso quem chamava não tinha como saber se a
+  /// gravação aconteceu — a lição do Grimório Vivo selava a página e cobrava
+  /// o XP sem poder perguntar.
+  Future<bool> save(FreeWritingModel writing) async {
     try {
       await _repository.insert(writing.copyWith(userId: _currentUserId));
       await loadFreeWritings();
+      return true;
     } catch (e) {
       _error = e.toString();
       notifyListeners();
+      return false;
     }
   }
 

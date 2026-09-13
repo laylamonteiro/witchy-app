@@ -35,7 +35,7 @@ class FakeFreeWritingProvider extends FreeWritingProvider {
   Future<void> loadFreeWritings() async {}
 
   @override
-  Future<void> save(FreeWritingModel writing) async {
+  Future<bool> save(FreeWritingModel writing) async {
     saved.add(writing);
     final index = _writings.indexWhere((item) => item.id == writing.id);
     if (index == -1) {
@@ -44,6 +44,7 @@ class FakeFreeWritingProvider extends FreeWritingProvider {
       _writings[index] = writing;
     }
     notifyListeners();
+    return true;
   }
 
   @override
