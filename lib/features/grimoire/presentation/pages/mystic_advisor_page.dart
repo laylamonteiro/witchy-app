@@ -19,6 +19,7 @@ import '../../domain/advisor_consultation.dart';
 import '../widgets/advisor_feature_links.dart';
 import '../widgets/advisor_mist_flight.dart';
 import '../widgets/crystal_ball_view.dart';
+
 import '../../../../core/widgets/motion/retry_notice.dart';
 import '../../../../core/tools/tool_identity.dart';
 
@@ -73,6 +74,10 @@ class _AdvisorBodyState extends State<_AdvisorBody> {
   /// bola, de onde a névoa parte: o voo precisa dos dois retângulos.
   final _answerKey = GlobalKey();
   final _ballKey = GlobalKey();
+
+  /// O bloco de texto da resposta: a névoa pousa no começo do primeiro
+  /// parágrafo, não no meio do card.
+  final _textKey = GlobalKey();
 
   /// A névoa está a caminho do card: o texto já está lá, todo transparente,
   /// e a escrita começa quando ela pousa.
@@ -217,7 +222,14 @@ class _AdvisorBodyState extends State<_AdvisorBody> {
     await _scrollToAnswer();
     if (mounted && generation == _generation) {
       await AdvisorMistFlight.play(
-          context: context, from: _ballKey, to: _answerKey);
+        context: context,
+        from: _ballKey,
+        to: _textKey,
+        // De dentro do cristal até a primeira letra do primeiro parágrafo.
+        fromAnchor: const CrystalBallGeometry(120).sphereAnchor,
+        toAnchor: Alignment.topLeft,
+        toNudge: const Offset(10, 12),
+      );
     }
     if (!mounted || generation != _generation) return;
     setState(() => _flying = false);
@@ -506,6 +518,7 @@ class _AdvisorBodyState extends State<_AdvisorBody> {
                     answer: consultation.answer ?? '',
                     reveal: _revealId == consultation.id,
                     started: !_flying,
+                    textKey: _textKey,
                     saved: consultation.isSaved,
                     saving: _saving,
                     onSave: _save,
@@ -558,6 +571,7 @@ class _AnswerCard extends StatelessWidget {
     required this.answer,
     required this.reveal,
     required this.started,
+    required this.textKey,
     required this.saved,
     required this.saving,
     required this.onSave,
@@ -573,6 +587,9 @@ class _AnswerCard extends StatelessWidget {
 
   /// A névoa já pousou? Até pousar, o texto espera transparente.
   final bool started;
+
+  /// Marca o bloco de texto para o voo da névoa saber onde pousar.
+  final Key? textKey;
   final bool saved;
   final bool saving;
   final VoidCallback onSave;
@@ -649,6 +666,7 @@ class _AnswerCard extends StatelessWidget {
           ),
           reveal: reveal,
           started: started,
+          textKey: textKey,
           skipLabel: l10n.advisorShowAll,
           skipKey: const ValueKey('advisor-show-all'),
         ),

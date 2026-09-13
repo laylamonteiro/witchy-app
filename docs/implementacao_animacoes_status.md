@@ -161,8 +161,12 @@ Entregue em 10/09. Revisto em 13/09 (jornada):
 - **A névoa leva a resposta da bola ao card, e lá o texto é escrito.** O
   emblema de cada ferramenta já voava do hub para o cabeçalho; a resposta
   ganhou o mesmo gesto: `AdvisorMistFlight` (Overlay, porque o voo atravessa
-  a rolagem) manda névoa, faíscas e letras soltas da bola de cristal até o
-  card, em 1,1 s, depois de a tela rolar até "O Conselheiro responde". Só
+  a rolagem) acende um brilho DENTRO do cristal — `CrystalBallGeometry.
+  sphereAnchor` diz onde a esfera cai na caixa do widget, e o meio da caixa
+  cairia no anel dourado — e de lá manda névoa, faíscas e letras soltas até
+  o COMEÇO DO PRIMEIRO PARÁGRAFO da resposta, em 1,9 s, depois de a tela
+  rolar até "O Conselheiro responde". São 32 sopros, metade névoa, e a
+  descida não acelera no meio: o rastro tem de ser legível, não um risco. Só
   quando a névoa pousa é que `MistTypewriterText`
   (`lib/core/widgets/motion/`) começa a escrever, por fração de um
   controller (22 ms por caractere, teto de 9 s), com o texto inteiro na

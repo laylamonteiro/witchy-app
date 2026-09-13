@@ -43,6 +43,7 @@ class MistTypewriterText extends StatefulWidget {
     this.started = true,
     this.skipLabel,
     this.skipKey,
+    this.textKey,
     this.onCompleted,
   });
 
@@ -62,6 +63,11 @@ class MistTypewriterText extends StatefulWidget {
   /// texto continua pulando).
   final String? skipLabel;
   final Key? skipKey;
+
+  /// Marca só o bloco de texto. Quem vai escrever precisa saber onde fica o
+  /// começo do primeiro parágrafo — é ali que a névoa pousa.
+  final Key? textKey;
+
   final VoidCallback? onCompleted;
 
   /// Ritmo da escrita e teto do total: uma resposta longa não pode prender a
@@ -241,23 +247,26 @@ class _MistTypewriterTextState extends State<MistTypewriterText>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          AnimatedBuilder(
-            animation: _type,
-            builder: (context, _) {
-              final count = MistTypewriterText.snapToCodePoint(
-                  _fullText, (_type.value * total).round());
-              final text = Text.rich(
-                TextSpan(children: _revealed(count)),
-                key: const ValueKey('mist-typewriter-text'),
-                style: widget.style,
-              );
-              if (_type.value >= 1) return text;
-              return GestureDetector(
-                behavior: HitTestBehavior.translucent,
-                onTap: skip,
-                child: text,
-              );
-            },
+          KeyedSubtree(
+            key: widget.textKey,
+            child: AnimatedBuilder(
+              animation: _type,
+              builder: (context, _) {
+                final count = MistTypewriterText.snapToCodePoint(
+                    _fullText, (_type.value * total).round());
+                final text = Text.rich(
+                  TextSpan(children: _revealed(count)),
+                  key: const ValueKey('mist-typewriter-text'),
+                  style: widget.style,
+                );
+                if (_type.value >= 1) return text;
+                return GestureDetector(
+                  behavior: HitTestBehavior.translucent,
+                  onTap: skip,
+                  child: text,
+                );
+              },
+            ),
           ),
           if (widget.skipLabel != null)
             AnimatedBuilder(

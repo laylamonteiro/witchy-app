@@ -19,18 +19,23 @@ class AdvisorMistFlight extends StatefulWidget {
     super.key,
     required this.from,
     required this.to,
+    required this.scale,
     required this.colors,
   });
 
-  /// Retângulos em coordenadas globais: de onde a névoa sai e onde pousa.
-  final Rect from;
-  final Rect to;
+  /// Pontos em coordenadas globais: de dentro do cristal até o começo do
+  /// primeiro parágrafo da resposta.
+  final Offset from;
+  final Offset to;
+
+  /// Tamanho de referência da névoa (o raio da esfera de onde ela sai).
+  final double scale;
 
   final GrimoireColors colors;
 
-  /// O voo inteiro. Curto de propósito: é a ponte entre a espera e a
-  /// leitura, não uma cena à parte.
-  static const Duration duration = Duration(milliseconds: 1100);
+  /// O voo inteiro. Sem pressa: a névoa desce devagar, e é ela que dá o
+  /// tempo de quem lê chegar ao começo do parágrafo.
+  static const Duration duration = Duration(milliseconds: 1900);
 
   /// Voa de [from] até [to] por cima de tudo e volta quando a névoa pousa.
   ///
@@ -40,6 +45,9 @@ class AdvisorMistFlight extends StatefulWidget {
     required BuildContext context,
     required GlobalKey from,
     required GlobalKey to,
+    Alignment fromAnchor = Alignment.center,
+    Alignment toAnchor = Alignment.center,
+    Offset toNudge = Offset.zero,
   }) async {
     final overlay = Overlay.maybeOf(context);
     final origem = rectOf(from);
@@ -53,7 +61,12 @@ class AdvisorMistFlight extends StatefulWidget {
     final colors = context.gc;
     final entrada = OverlayEntry(
       builder: (_) => IgnorePointer(
-        child: AdvisorMistFlight(from: origem, to: destino, colors: colors),
+        child: AdvisorMistFlight(
+          from: fromAnchor.withinRect(origem),
+          to: toAnchor.withinRect(destino) + toNudge,
+          scale: (origem.shortestSide * .17).clamp(10.0, 26.0).toDouble(),
+          colors: colors,
+        ),
       ),
     );
     overlay.insert(entrada);
@@ -118,6 +131,7 @@ class _AdvisorMistFlightState extends State<AdvisorMistFlight>
               progress: _voo.value,
               from: widget.from,
               to: widget.to,
+              scale: widget.scale,
               colors: widget.colors,
               letras: _letras,
             ),
@@ -161,13 +175,28 @@ class _Particula {
 const String _alfabeto = 'aeioulmnrstvz';
 
 /// Posições congeladas: semente fixa, para o voo ser sempre o mesmo.
+///
+/// A receita se repete a cada dez: metade é névoa, para o rastro ter corpo;
+/// três letras, que são o rascunho da resposta; duas faíscas, que são o
+/// brilho do cristal saindo junto.
 final List<_Particula> _particulas = () {
   final random = math.Random(11);
-  const tipos = [_Sopro.nevoa, _Sopro.faisca, _Sopro.letra];
-  return List.generate(18, (i) {
+  const receita = [
+    _Sopro.nevoa,
+    _Sopro.nevoa,
+    _Sopro.letra,
+    _Sopro.nevoa,
+    _Sopro.faisca,
+    _Sopro.nevoa,
+    _Sopro.letra,
+    _Sopro.nevoa,
+    _Sopro.faisca,
+    _Sopro.letra,
+  ];
+  return List.generate(32, (i) {
     return _Particula(
-      tipo: tipos[i % tipos.length],
-      atraso: (i / 18) * .45,
+      tipo: receita[i % receita.length],
+      atraso: (i / 32) * .55,
       lateral: random.nextDouble() * 2 - 1,
       tamanho: .7 + random.nextDouble() * .6,
       giro: (random.nextDouble() - .5) * math.pi,
@@ -199,13 +228,15 @@ class _MistFlightPainter extends CustomPainter {
     required this.progress,
     required this.from,
     required this.to,
+    required this.scale,
     required this.colors,
     required this.letras,
   });
 
   final double progress;
-  final Rect from;
-  final Rect to;
+  final Offset from;
+  final Offset to;
+  final double scale;
   final GrimoireColors colors;
   final Map<int, TextPainter> letras;
 
@@ -219,18 +250,42 @@ class _MistFlightPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final origem = from.center;
-    // Pousa no alto do card, onde o texto vai nascer.
-    final destino = Offset(to.center.dx, to.top + to.height * .18);
+    final origem = from;
+    final destino = to;
     final distancia = (destino - origem).distance;
     if (distancia < 1) return;
-    final base = (from.shortestSide * .16).clamp(10.0, 24.0).toDouble();
+    final base = scale;
+
+    // O brilho nascendo DENTRO do cristal: acende no começo e se apaga
+    // quando a névoa já está a caminho.
+    final acende = Curves.easeOut.transform((progress / .28).clamp(0.0, 1.0));
+    final apaga =
+        1 - Curves.easeIn.transform(((progress - .32) / .34).clamp(0.0, 1.0));
+    final nascendo = (acende * apaga).clamp(0.0, 1.0).toDouble();
+    if (nascendo > 0) {
+      final raio = base * (1.8 + 1.4 * acende);
+      canvas.drawCircle(
+        origem,
+        raio,
+        Paint()
+          ..shader = RadialGradient(
+            colors: [
+              colors.textPrimary.withValues(alpha: .55 * nascendo),
+              colors.lilac.withValues(alpha: .32 * nascendo),
+              colors.lilac.withValues(alpha: 0),
+            ],
+            stops: const [0, .45, 1],
+          ).createShader(Rect.fromCircle(center: origem, radius: raio)),
+      );
+    }
 
     for (var i = 0; i < _particulas.length; i++) {
       final p = _particulas[i];
       final t = ((progress - p.atraso) / (1 - p.atraso)).clamp(0.0, 1.0);
       if (t <= 0) continue;
-      final andar = Curves.easeInOutCubic.transform(t);
+      // Sai do cristal e desce sem pressa: sem aceleração no meio, o rastro
+      // fica legível em vez de virar um risco.
+      final andar = Curves.easeInOutSine.transform(t);
       final controle = Offset(
         (origem.dx + destino.dx) / 2 + p.lateral * distancia * .22,
         (origem.dy + destino.dy) / 2 - distancia * .12,
@@ -306,5 +361,6 @@ class _MistFlightPainter extends CustomPainter {
       old.progress != progress ||
       old.from != from ||
       old.to != to ||
+      old.scale != scale ||
       old.colors != colors;
 }

@@ -54,6 +54,16 @@ class CrystalBallGeometry {
   /// A caixa que o widget reserva.
   Size get box => Size(width + 2 * halo, imageHeight + 2 * halo);
 
+  /// Onde o centro da esfera cai DENTRO da caixa do widget, em fração dela.
+  ///
+  /// A mesma fração em qualquer tamanho, porque tudo aqui deriva da largura.
+  /// É daqui que a névoa do Conselheiro sai: o meio da caixa cairia no anel
+  /// dourado da base, e o brilho tem de nascer de dentro do cristal.
+  Alignment get sphereAnchor => Alignment(
+        center.dx / box.width * 2 - 1,
+        center.dy / box.height * 2 - 1,
+      );
+
   /// Com o teclado aberto a bola encolhe para 64 e as faíscas saem: nesse
   /// tamanho elas viram poeira e a órbita ocuparia espaço que é do campo.
   bool get showsSparks => width >= 100;

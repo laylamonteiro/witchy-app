@@ -54,6 +54,25 @@ void main() {
       expect(const CrystalBallGeometry(120).showsSparks, isTrue);
     });
 
+    test('a névoa nasce dentro da esfera, no mesmo ponto em qualquer tamanho',
+        () {
+      // O voo da resposta parte daqui. O meio da CAIXA cairia no anel
+      // dourado da base; e a fração não pode depender do tamanho, senão a
+      // névoa sairia de um lugar com o teclado aberto e de outro sem ele.
+      final pequena = const CrystalBallGeometry(64).sphereAnchor;
+      final grande = const CrystalBallGeometry(120).sphereAnchor;
+      expect(pequena.x, moreOrLessEquals(grande.x, epsilon: 1e-9));
+      expect(pequena.y, moreOrLessEquals(grande.y, epsilon: 1e-9));
+
+      for (final largura in <double>[64, 120]) {
+        final g = CrystalBallGeometry(largura);
+        final ponto = g.sphereAnchor
+            .withinRect(Rect.fromLTWH(0, 0, g.box.width, g.box.height));
+        expect((ponto - g.center).distance, lessThan(g.radius * .01),
+            reason: 'a âncora é o centro da esfera, em $largura px');
+      }
+    });
+
     test('a caixa de repouso é a ilustração mais o halo', () {
       final g = const CrystalBallGeometry(120);
       expect(g.box.width, moreOrLessEquals(120 + 2 * g.halo, epsilon: 1e-9));
