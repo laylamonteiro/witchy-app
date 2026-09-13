@@ -31,7 +31,8 @@ import 'free_writings_list_page.dart';
 /// 2. [WidgetsBindingObserver] — o app indo para segundo plano grava o que
 ///    está escrito, antes de o sistema poder encerrá-lo;
 /// 3. o `dispose` ainda grava, sem esperar, para o caso de a página inteira
-///    dos Diários sair de cena.
+///    dos Diários sair de cena — mas fora do quadro em curso, porque ali a
+///    árvore está travada e o provider avisa os ouvintes ao gravar.
 class FreeWritingTab extends StatefulWidget {
   /// Reflexão a abrir já carregada no canvas (ex.: leitura de quiromancia
   /// recém-salva). Null = canvas em branco, comportamento da aba do Diário.
@@ -95,10 +96,18 @@ class _FreeWritingTabState extends State<FreeWritingTab>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    // ANTES de descartar o controller: é dele que sai o texto. Sem espera,
-    // porque aqui não há mais para quem esperar — o provider sobrevive à aba
-    // e termina a gravação sozinho.
-    _gravarSemEsperar();
+    // O texto é lido ANTES de o controller ser descartado — é dele que sai.
+    final pendente = _prepararGravacao();
+    if (pendente != null) {
+      final provider = _provider;
+      // A gravação sai do quadro em curso de propósito. Aqui dentro a árvore
+      // está TRAVADA (estamos no desmonte), e o provider avisa os ouvintes ao
+      // gravar: marcar alguém para reconstruir agora é proibido pelo
+      // framework ("setState() called when widget tree was locked"). O
+      // microtask roda assim que este quadro termina, e o provider vive fora
+      // desta aba — a gravação chega ao fim mesmo sem o State.
+      scheduleMicrotask(() => provider.save(pendente));
+    }
     _controller.removeListener(_onChanged);
     _controller.dispose();
     super.dispose();
@@ -110,11 +119,15 @@ class _FreeWritingTabState extends State<FreeWritingTab>
   /// novo; era por aqui que o desabafo longo se perdia inteiro.
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.inactive ||
-        state == AppLifecycleState.hidden ||
-        state == AppLifecycleState.paused) {
-      _gravarSemEsperar();
+    if (state != AppLifecycleState.inactive &&
+        state != AppLifecycleState.hidden &&
+        state != AppLifecycleState.paused) {
+      return;
     }
+    // Aqui a árvore NÃO está travada, então a gravação parte na hora, sem
+    // adiamento nenhum: o sistema pode congelar o processo logo em seguida.
+    final pendente = _prepararGravacao();
+    if (pendente != null) unawaited(_provider.save(pendente));
   }
 
   void _onChanged() {
@@ -153,20 +166,23 @@ class _FreeWritingTabState extends State<FreeWritingTab>
     });
   }
 
-  /// Gravação sem espera e sem `setState`, para os dois momentos em que não
-  /// existe mais para quem esperar: o app indo para segundo plano e o State
-  /// sendo desmontado.
+  /// O que gravar agora, já marcado como gravado — ou null se não há nada.
   ///
-  /// A marca de "já é esta a reflexão" é posta ANTES de disparar a gravação,
-  /// e não depois: é ela que faz a chamada seguinte reaproveitar o mesmo id
-  /// em vez de criar uma página nova.
-  void _gravarSemEsperar() {
-    if (_gravando) return;
+  /// Serve aos dois momentos em que não existe mais para quem esperar: o app
+  /// indo para segundo plano e o State sendo desmontado. Quem chama decide
+  /// COMO despachar, porque os dois momentos são diferentes: um pode gravar
+  /// na hora, o outro tem de sair do quadro em curso.
+  ///
+  /// A marca de "já é esta a reflexão" é posta AQUI, antes de a gravação
+  /// partir, e não depois: é ela que faz a chamada seguinte reaproveitar o
+  /// mesmo id em vez de criar uma página nova.
+  FreeWritingModel? _prepararGravacao() {
+    if (_gravando) return null;
     final model = _pendente();
-    if (model == null) return;
+    if (model == null) return null;
     _current = model;
     _originalContent = model.content;
-    unawaited(_provider.save(model));
+    return model;
   }
 
   Future<bool> _handleBack() async {
