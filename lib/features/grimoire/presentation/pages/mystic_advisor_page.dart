@@ -58,6 +58,11 @@ class _AdvisorBody extends StatefulWidget {
 class _AdvisorBodyState extends State<_AdvisorBody> {
   final _questionController = TextEditingController();
   final _questionFocus = FocusNode();
+  final _scroll = ScrollController();
+
+  /// O teclado estava aberto no quadro anterior? Fechá-lo é o sinal de que a
+  /// pessoa terminou de escrever: a tela sobe e a bola volta inteira à vista.
+  bool _keyboardOpen = false;
   final _repository = AdvisorConsultationRepository();
 
   /// A consulta em cena: pendente, respondida ou falha. Null antes da
@@ -135,9 +140,18 @@ class _AdvisorBodyState extends State<_AdvisorBody> {
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final aberto = MediaQuery.viewInsetsOf(context).bottom > 0;
+    if (_keyboardOpen && !aberto) unawaited(_scrollToBall());
+    _keyboardOpen = aberto;
+  }
+
+  @override
   void dispose() {
     _questionController.dispose();
     _questionFocus.dispose();
+    _scroll.dispose();
     super.dispose();
   }
 
@@ -171,6 +185,10 @@ class _AdvisorBodyState extends State<_AdvisorBody> {
     }
 
     final generation = ++_generation;
+    // A cena começa na bola: sem isto, a pessoa fica olhando o campo de
+    // texto enquanto a espera acontece fora da tela, e a névoa nasce num
+    // lugar que ela não está vendo.
+    unawaited(_scrollToBall());
     // A pergunta enviada vive na citação; o campo fica livre para a próxima.
     if (repeat == null) _questionController.clear();
     AdvisorConsultation consultation;
@@ -240,6 +258,18 @@ class _AdvisorBodyState extends State<_AdvisorBody> {
     ]);
     if (!mounted || generation != _generation) return;
     setState(() => _flying = false);
+  }
+
+  /// Sobe até a bola de cristal, que é onde a cena começa.
+  Future<void> _scrollToBall() async {
+    if (!mounted || !_scroll.hasClients || _scroll.offset <= 0) return;
+    await _scroll.animateTo(
+      0,
+      duration: GrimoireMotion.reduced(context)
+          ? Duration.zero
+          : const Duration(milliseconds: 420),
+      curve: Curves.easeInOutCubic,
+    );
   }
 
   /// O quadro em que o card de resposta já existe e foi medido.
@@ -354,6 +384,7 @@ class _AdvisorBodyState extends State<_AdvisorBody> {
       ),
       backgroundColor: context.gc.darkBackground,
       body: ToolSceneFrame(child: SingleChildScrollView(
+        controller: _scroll,
         // Só o respiro de cima e de baixo: a margem lateral é do MagicalCard,
         // e somando as duas o conteúdo ficava a 32dp da borda — mais estreito
         // que o das ferramentas vizinhas, justo numa tela de texto longo.

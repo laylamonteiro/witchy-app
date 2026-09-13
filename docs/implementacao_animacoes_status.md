@@ -158,6 +158,10 @@ Entregue em 10/09. Revisto em 13/09 (jornada):
   chega. `CrystalBallGeometry` guarda a esfera medida na imagem e a caixa
   com halo, e `bola_de_cristal_test` trava a contenção. Movimento reduzido
   mostra um quadro parado.
+- **A cena começa na bola.** Esconder o teclado ou tocar em "Consultar o
+  Conselheiro" sobe a tela até a bola de cristal (420 ms): a espera acontece
+  onde a pessoa está olhando, e a névoa nasce à vista. Só depois a tela
+  desce, junto com ela.
 - **A névoa leva a resposta da bola ao card, e lá o texto é escrito.** O
   emblema de cada ferramenta já voava do hub para o cabeçalho; a resposta
   ganhou o mesmo gesto: `AdvisorMistFlight` (Overlay, porque o voo atravessa
