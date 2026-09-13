@@ -42,6 +42,7 @@ class RuneDetailPage extends StatelessWidget {
                         .indexWhere((other) => other.name == rune.name)
                         .clamp(0, 23),
                     symbol: rune.symbol,
+                    runeName: rune.name,
                   ),
                   const SizedBox(height: 16),
 

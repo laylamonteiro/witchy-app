@@ -29,6 +29,7 @@ import '../../data/models/rune_spread_model.dart';
 import '../../data/repositories/rune_reading_repository.dart';
 import '../../data/repositories/rune_selection_repository.dart';
 import '../../domain/rune_selection_session.dart';
+import '../widgets/rune_art.dart';
 import '../widgets/rune_spread_board.dart';
 import '../../../../core/widgets/reading_focus_panel.dart';
 import '../widgets/rune_stone_view.dart';
@@ -701,6 +702,7 @@ class _RuneReadingBodyState extends State<_RuneReadingBody> {
       back: RuneStoneView(size: size, deckPosition: slot),
       front: RuneStoneView(
         size: size, deckPosition: slot, symbol: position.rune.symbol,
+        runeName: position.rune.name,
         reversed: position.isReversed,
         highlighted: _drawnRunes!.length > 1 && _focused == index,
       ),
@@ -890,6 +892,7 @@ class _RuneReadingBodyState extends State<_RuneReadingBody> {
           playToken: '${_activeSession?.id}-$_focused-$_sceneToken',
           deckPosition: slot,
           symbol: position.rune.symbol,
+          runeName: position.rune.name,
           reversed: position.isReversed,
           size: size,
         ),
@@ -1031,13 +1034,14 @@ class _RuneReadingBodyState extends State<_RuneReadingBody> {
                       child: Center(
                         child: RotatedBox(
                           quarterTurns: position.isReversed ? 2 : 0,
-                          child: Text(
-                            position.rune.symbol,
-                            style: TextStyle(
-                              fontSize: 32,
-                              color: context.gc.lilac,
-                              fontWeight: FontWeight.bold,
-                            ),
+                          // Sem halo: aqui a runa está num quadrado de
+                          // acento, e não cavada numa pedra — o entalhe é da
+                          // mesa, não deste chip.
+                          child: RuneMark(
+                            name: position.rune.name,
+                            symbol: position.rune.symbol,
+                            fontSize: 32,
+                            color: context.gc.lilac,
                           ),
                         ),
                       ),

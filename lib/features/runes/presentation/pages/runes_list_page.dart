@@ -131,6 +131,7 @@ class RunesListPage extends StatelessWidget {
               size: 76,
               deckPosition: index,
               symbol: rune.symbol,
+              runeName: rune.name,
             ),
             const SizedBox(height: 8),
 
