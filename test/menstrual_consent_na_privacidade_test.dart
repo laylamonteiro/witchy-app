@@ -293,19 +293,14 @@ void main() {
         () => find.byKey(const ValueKey('menstrual-cloud')).evaluate().isNotEmpty,
         'the cycle block');
     await tocarNaChave(tester);
-    await until(
-        tester,
-        () => find
-            .byKey(const ValueKey('menstrual-cloud-confirm'))
-            .evaluate()
-            .isNotEmpty,
-        'the confirmation');
-    await tester.tap(find.byKey(const ValueKey('menstrual-cloud-confirm-accept')));
+    // Ligar é um toque: o sim já foi dado na porta do Ciclo, e aqui não se
+    // pergunta de novo. A pergunta ficou só para desligar, que apaga.
     await until(
         tester,
         () => tester.any(chaveDoCiclo()) &&
             tester.widget<Switch>(chaveDoCiclo()).value,
         'the switch turned on');
+    expect(find.byKey(const ValueKey('menstrual-cloud-confirm')), findsNothing);
 
     final lidas = await tester.runAsync(() async {
       final db = await DatabaseHelper.instance.database;
