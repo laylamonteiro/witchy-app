@@ -215,57 +215,68 @@ class _ArchetypeQuizPageState extends State<ArchetypeQuizPage> {
     final questions = archetypeQuizQuestions;
     final question = questions[_index];
 
+    // As duas metades da tela escrevem o recuo do mesmo jeito que as outras
+    // onze ferramentas: rolagem só com respiro vertical, margem lateral de
+    // quem se desenha por dentro. Lá é o MagicalCard do resultado que a traz;
+    // aqui nada é MagicalCard, então ela é deste Padding.
+    //
+    // Em pixels isto não move nada — o `all(16)` de antes punha as opções nos
+    // mesmos 16dp da borda em que o cartão do resultado já estava. A troca é
+    // para que ninguém precise refazer essa conta ao mexer numa das metades.
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          LinearProgressIndicator(
-            value: (_index + 1) / questions.length,
-            backgroundColor: context.gc.surfaceBorder,
-            valueColor: AlwaysStoppedAnimation(context.gc.lilac),
-            borderRadius: BorderRadius.circular(4),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            AppLocalizations.of(context)
-                .quizProgress('${_index + 1}', '${questions.length}'),
-            textAlign: TextAlign.center,
-            style: TextStyle(color: context.gc.textSecondary, fontSize: 12),
-          ),
-          const SizedBox(height: 20),
-          Text(
-            question.text,
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  color: context.gc.textPrimary,
-                ),
-          ),
-          const SizedBox(height: 20),
-          for (final option in question.options)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 10),
-              child: InkWell(
-                onTap: () => _answer(option),
-                borderRadius: BorderRadius.circular(12),
-                child: Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: context.gc.surface,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: context.gc.surfaceBorder),
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            LinearProgressIndicator(
+              value: (_index + 1) / questions.length,
+              backgroundColor: context.gc.surfaceBorder,
+              valueColor: AlwaysStoppedAnimation(context.gc.lilac),
+              borderRadius: BorderRadius.circular(4),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              AppLocalizations.of(context)
+                  .quizProgress('${_index + 1}', '${questions.length}'),
+              textAlign: TextAlign.center,
+              style: TextStyle(color: context.gc.textSecondary, fontSize: 12),
+            ),
+            const SizedBox(height: 20),
+            Text(
+              question.text,
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    color: context.gc.textPrimary,
                   ),
-                  child: Text(
-                    option.text,
-                    style: Theme.of(context)
-                        .textTheme
-                        .bodyMedium
-                        ?.copyWith(height: 1.4),
+            ),
+            const SizedBox(height: 20),
+            for (final option in question.options)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: InkWell(
+                  onTap: () => _answer(option),
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: context.gc.surface,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: context.gc.surfaceBorder),
+                    ),
+                    child: Text(
+                      option.text,
+                      style: Theme.of(context)
+                          .textTheme
+                          .bodyMedium
+                          ?.copyWith(height: 1.4),
+                    ),
                   ),
                 ),
               ),
-            ),
-        ],
+          ],
+        ),
       ),
     );
   }

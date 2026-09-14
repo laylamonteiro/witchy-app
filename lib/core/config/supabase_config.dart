@@ -60,5 +60,6 @@ class SupabaseTables {
   static const String userEncyclopediaEntries =
       'user_encyclopedia_entries';
   static const String cycleReadings = 'cycle_readings';
+  static const String menstrualDays = 'menstrual_days';
   static const String betaCodes = 'beta_codes';
 }

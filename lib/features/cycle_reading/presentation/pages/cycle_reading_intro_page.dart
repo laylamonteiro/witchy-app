@@ -107,9 +107,8 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
   /// Quantas leituras a lista mostra antes de mandar para o acervo.
   static const int _recentesNaTela = 4;
 
-  /// Esta janela sai de graça pelo Vitalício? Exige compra REAL do lifetime
-  /// (entitlement sem expiração) — `SubscriptionPlan.lifetime` não serve,
-  /// porque também vem de Código Premium e do admin.
+  /// Esta janela sai de graça pelo Vitalício?
+  ///
   /// Este Vitalício é qualquer um: compra real, Código Premium ou admin —
   /// todos recebem `SubscriptionPlan.lifetime`. Decisão de produto: o
   /// Vitalício cobre as leituras sem cobrança, venha de onde vier.
@@ -225,7 +224,8 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
     // privacidade logo abaixo — e o calendário vira o "ler outro período",
     // mais adiante na página, em vez de ser a única coisa à vista.
     final janela =
-        widget.initialPeriod ?? _janelaDoAtalho(widget.initialPeriodType);
+        widget.initialPeriod ??
+            CycleReadingService.suggestedWindow(widget.initialPeriodType);
     _period = janela;
     _periodType =
         CycleReadingService.periodTypeForSpan(janela.start, janela.end);
@@ -1114,26 +1114,6 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
     );
   }
 
-  /// A janela que o atalho do tipo pedido marcaria no seletor: o mês
-  /// corrente até hoje ("Lunação") ou o giro de 8 dias ("Semana"), sempre
-  /// com o fim EXCLUSIVO da feature.
-  ///
-  /// É de propósito a MESMA conta dos atalhos do seletor — não a lunação
-  /// astronômica, que começa em qualquer dia e não acende chip nenhum:
-  /// abrindo com esta janela, o chip correspondente já nasce selecionado
-  /// (decisão da dona, 23/08).
-  static ({DateTime start, DateTime end}) _janelaDoAtalho(String tipo) {
-    if (tipo == CycleReadingPeriodType.week) {
-      return CycleReadingService.currentWeek();
-    }
-    final agora = DateTime.now();
-    return (
-      start: DateTime(agora.year, agora.month, 1),
-      // Hoje vivido por inteiro; o construtor normaliza a virada de mês.
-      end: DateTime(agora.year, agora.month, agora.day + 1),
-    );
-  }
-
   /// Sanfona da privacidade: recolhida por padrão, para não tomar a tela.
   /// Quem quer ajustar o que entra na análise abre; quem confia no padrão
   /// (tudo ligado) segue direto.
@@ -1191,13 +1171,11 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
             if (MenstrualAccess(
               gender: context.watch<AuthProvider>().currentUser.gender,
               consented: true,
-              premium: context.watch<AuthProvider>().isPremiumEffective,
             ).isOffered)
               MenstrualSourceTile(
                 key: ValueKey('menstrual-$_revisaoDaFonteIntima'),
                 userId: context.read<AuthProvider>().currentUser.id,
                 period: _period,
-                premium: context.watch<AuthProvider>().isPremiumEffective,
                 onChanged: (scope) => setState(() => _menstrual = scope),
               ),
           ],

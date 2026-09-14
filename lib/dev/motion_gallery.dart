@@ -76,8 +76,13 @@ class _GalleryState extends State<_Gallery> {
           Wrap(spacing: 12, runSpacing: 12, children: [
             for (var i = 0; i < 4; i++) RuneStoneView(size: 56, deckPosition: i),
             for (var i = 0; i < 2; i++)
+              // Com o NOME, e não só o caractere: era o último lugar do
+              // código que pedia à pedra a fonte do bloco Runic. Numa
+              // galeria de movimento o quadradinho vazio é pior que em
+              // qualquer tela, porque é aqui que se confere o desenho.
               RuneStoneView(size: 56, deckPosition: i + 4,
-                  symbol: runesData[i].symbol, reversed: i == 1),
+                  symbol: runesData[i].symbol, runeName: runesData[i].name,
+                  reversed: i == 1),
           ]),
           const SizedBox(height: 20),
           Builder(builder: (context) {

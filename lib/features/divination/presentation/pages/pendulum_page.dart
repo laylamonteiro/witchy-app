@@ -579,20 +579,35 @@ class _PendulumPageState extends State<PendulumPage>
       // sensação era de não conseguir escrever mesmo com o campo vivo.
       resizeToAvoidBottomInset: false,
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        // A margem lateral vem do MagicalCard (margin horizontal 16), como
+        // nas outras onze ferramentas: com `all(16)` aqui o conteúdo somava
+        // os dois recuos e ficava 32dp para dentro.
+        padding: const EdgeInsets.symmetric(vertical: 16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             MagicalCard(
               child: Column(
                 children: [
-                  const Text('⟟', style: TextStyle(fontSize: 48)),
+                  // O emblema DESENHADO, o mesmo do card das Ferramentas e
+                  // da AppBar. Era o glifo ⟟ (U+27DF), de um bloco raro do
+                  // Unicode: no aparelho sem fonte de símbolos, o maior
+                  // elemento desta tela era o quadradinho de glifo ausente, e
+                  // a linha que liga a entrada à cena se rompia no primeiro
+                  // olhar. `flies: false` porque quem ocupa a etiqueta do
+                  // Hero nesta rota é o cabeçalho da AppBar.
+                  const ToolEmblem(
+                      tool: ToolId.pendulum, size: 48, flies: false),
                   const SizedBox(height: 16),
                   Text(
                     AppLocalizations.of(context).pendulumConsult,
                     style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                           color: context.gc.lilac,
                         ),
+                    // Em duas linhas (320dp, ou espanhol) o título sairia
+                    // alinhado à esquerda com o subtítulo centralizado logo
+                    // abaixo — a abertura da ferramenta visivelmente torta.
+                    textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 8),
                   Text(
@@ -665,8 +680,6 @@ class _PendulumPageState extends State<PendulumPage>
                 ],
               ),
             ),
-
-            const SizedBox(height: 16),
 
             // Visualização do pêndulo
             //
@@ -817,8 +830,6 @@ class _PendulumPageState extends State<PendulumPage>
               ),
             ),
 
-            const SizedBox(height: 16),
-
             // Pergunta + Perguntar no MESMO card (como o CTA do card de
             // Leitura do Ciclo), LOGO ABAIXO do pêndulo: o cristal é o que
             // esta tela tem de maior, então ele fica no alto e a pergunta vem
@@ -925,8 +936,6 @@ class _PendulumPageState extends State<PendulumPage>
               ),
             ),
 
-            const SizedBox(height: 16),
-
             if (_answer != null)
               // A interpretação entra depois que o pêndulo assentou: fade +
               // subida curta, junto do destaque da resposta no painter.
@@ -943,13 +952,20 @@ class _PendulumPageState extends State<PendulumPage>
                             style: const TextStyle(fontSize: 64),
                           ),
                           const SizedBox(height: 16),
+                          // O mesmo corpo do nome que sai na leitura das
+                          // irmãs (Tarô e Oráculo, 20): era headlineLarge, 22,
+                          // e a palavra mais importante da tiragem mudava de
+                          // tamanho ao andar de uma adivinhação para a outra.
+                          // Continua sendo número escrito à mão nas quatro —
+                          // o papel de tema compartilhado é conserto de outra
+                          // frente, porque precisa das quatro páginas juntas.
                           Text(
                             _answer!.displayName,
-                            style:
-                                Theme.of(context).textTheme.headlineLarge?.copyWith(
-                                      color: context.gc.lilac,
-                                      fontWeight: FontWeight.bold,
-                                    ),
+                            style: TextStyle(
+                              color: context.gc.lilac,
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                           const SizedBox(height: 8),
                           Text(
@@ -963,14 +979,20 @@ class _PendulumPageState extends State<PendulumPage>
                       ),
                     ),
                     const SizedBox(height: 16),
-                    OutlinedButton.icon(
-                      onPressed: _reiniciarConsulta,
-                      icon: const Icon(Icons.refresh),
-                      label: Text(AppLocalizations.of(context).pendulumNewConsult),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: context.gc.lilac,
-                        side: BorderSide(color: context.gc.lilac),
-                        padding: const EdgeInsets.symmetric(vertical: 12),
+                    // Fora de card: quem dá a margem lateral aqui é este
+                    // Padding, já que a rolagem só cuida do vertical.
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: OutlinedButton.icon(
+                        onPressed: _reiniciarConsulta,
+                        icon: const Icon(Icons.refresh),
+                        label:
+                            Text(AppLocalizations.of(context).pendulumNewConsult),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: context.gc.lilac,
+                          side: BorderSide(color: context.gc.lilac),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                        ),
                       ),
                     ),
                   ],

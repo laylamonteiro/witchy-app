@@ -9,6 +9,28 @@ import 'demons_data_pt.dart';
 import 'sacred_symbols_data.dart';
 import 'sacred_symbols_data_pt.dart';
 
+/// O id do desenho do símbolo sagrado cujo `emoji` de catálogo é [emoji], ou
+/// null — o que é AUSÊNCIA, não erro: os outros oito símbolos continuam
+/// mostrando o emoji deles.
+///
+/// Os três que estão aqui não têm emoji de verdade. ⛤ (U+26E4), ☥ (U+2625) e
+/// 𓂀 (U+13080) são caracteres de blocos raros: nenhum sistema móvel traz
+/// fonte de hieróglifo egípcio, e o ⛤ o próprio app já registrava como
+/// quebrado quando trocou o emblema dos Sigilos por desenho. Onde o aparelho
+/// não tem a fonte, o que aparecia era o quadradinho de glifo ausente — no
+/// título da tela do verbete, na pílula de origem, no card da lista e na
+/// busca.
+///
+/// O caractere fica no catálogo: ele é a chave desta correspondência, é
+/// invariante entre os idiomas, e continua sendo a reserva de quem não passa
+/// por aqui.
+String? sacredSymbolIdForEmoji(String emoji) => switch (emoji) {
+      '⛤' => 'pentagrama',
+      '☥' => 'ankh',
+      '𓂀' => 'olho_de_horus',
+      _ => null,
+    };
+
 /// Categorias arcanas da Enciclopédia (Arquétipos, Anjos, Demônios e
 /// Símbolos Sagrados).
 ///
@@ -57,12 +79,17 @@ enum ArcaneCategory {
   /// `archetypeIdForEmoji` usa para achar o id gravado no aparelho — uma
   /// segunda tabela de correspondência seria uma segunda coisa para
   /// desencontrar.
+  /// Nos Símbolos Sagrados a resolução é pelo emoji pelo mesmo motivo dos
+  /// Arquétipos: ele é invariante entre os três idiomas (paridade testada) e
+  /// já é a coluna que liga o verbete ao desenho. Só TRÊS dos onze símbolos
+  /// têm desenho, e são justamente os três cujo "emoji" não é emoji — é um
+  /// caractere de bloco raro do Unicode que o aparelho não tem fonte para
+  /// escrever. Os outros oito continuam no emoji deles, que existe no piso
+  /// do app.
   String? glyphIdFor(ArcaneEntry entry) => switch (this) {
         ArcaneCategory.archetypes => archetypeIdForEmoji(entry.emoji),
-        ArcaneCategory.angels ||
-        ArcaneCategory.demons ||
-        ArcaneCategory.sacredSymbols =>
-          null,
+        ArcaneCategory.sacredSymbols => sacredSymbolIdForEmoji(entry.emoji),
+        ArcaneCategory.angels || ArcaneCategory.demons => null,
       };
 
   /// Caminho da imagem do verbete: slug do nome PT correspondente ao índice

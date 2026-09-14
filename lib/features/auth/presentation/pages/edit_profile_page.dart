@@ -62,15 +62,19 @@ class _EditProfilePageState extends State<EditProfilePage> {
     });
   }
 
+  /// A chave da nuvem tem gesto próprio, e não é só uma preferência: desligar
+  /// precisa DESCARTAR as lápides pendentes, senão a lista de ids do que ela
+  /// apagou continua guardada no aparelho e sai na primeira varredura depois
+  /// de religar. Aqui havia uma segunda porta para o mesmo interruptor, que
+  /// gravava a preferência e ia embora — e um id deste app carrega conteúdo
+  /// com frequência demais para deixar isso passar.
   Future<void> _saveSetting(String key, bool value) async {
+    if (key == DataSyncService.cloudSyncPreferenceKey) {
+      await DataSyncService().definirSincronizacao(value);
+      return;
+    }
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(key, value);
-    if (key == DataSyncService.cloudSyncPreferenceKey) {
-      await prefs.setBool(
-        DataSyncService.cloudSyncUserConfiguredKey,
-        true,
-      );
-    }
   }
 
   @override
@@ -647,6 +651,15 @@ class _EditProfilePageState extends State<EditProfilePage> {
               // Atualizar senha via Supabase ou local
               if (SupabaseConfig.isConfigured) {
                 try {
+                  // ATENÇÃO, se um dia esta tela voltar a ser alcançável: a
+                  // senha atual agora é CONFERIDA contra o servidor, e
+                  // conferir é entrar — o que neste projeto exige o token do
+                  // anti-robô. Esta chamada não o passa, então a troca
+                  // falharia. O portão não foi acrescentado aqui porque o
+                  // `context` deste botão é o do DIÁLOGO, e o diálogo já foi
+                  // fechado na linha acima: abrir a folha do captcha com ele
+                  // quebraria. A tela de trocar senha (change_password_page)
+                  // é a que está viva e faz isso certo.
                   final authRepo = SupabaseAuthRepository();
                   final result = await authRepo.updatePassword(
                     currentPasswordController.text,
@@ -742,6 +755,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
     final l10n = AppLocalizations.of(context);
     final messenger = ScaffoldMessenger.of(context);
     final gc = context.gc;
+    // A conta ativa decide o que entra no arquivo: o banco deste aparelho
+    // pode guardar linhas de uma conta anterior, e elas não são dela.
+    final userId = context.read<AuthProvider>().currentUser.id;
     try {
       messenger.showSnackBar(
         SnackBar(
@@ -752,8 +768,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
       // Mesma exportação da tela de Privacidade — antes eram duas cópias, e a
       // desta tela tinha ficado sem a tabela free_writings.
-      await DataExportService.instance
-          .exportAndDeliver(subject: l10n.privacyBackupSubject);
+      await DataExportService.instance.exportAndDeliver(
+        userId: userId,
+        subject: l10n.privacyBackupSubject,
+      );
 
       messenger.showSnackBar(
         SnackBar(
@@ -803,41 +821,14 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
     if (confirmed == true && mounted) {
       try {
-        final db = await DatabaseHelper.instance.database;
-
-        // Tabelas para limpar (exceto dados pré-carregados)
-        final tables = [
-          'spells',
-          'dreams',
-          'desires',
-          'gratitudes',
-          'daily_rituals',
-          'ritual_logs',
-          'sigils',
-          'birth_charts',
-          'magical_profiles',
-          'rune_readings',
-          'pendulum_consultations',
-          'oracle_readings',
-          'daily_magical_weather',
-          'learning_progress',
-          'guided_ritual_logs',
-          'user_encyclopedia_entries',
-          'daily_checkins'
-        ];
-
-        for (final table in tables) {
-          try {
-            if (table == 'spells' || table == 'affirmations') {
-              // Manter itens pré-carregados
-              await db.delete(table, where: 'is_preloaded = ?', whereArgs: [0]);
-            } else {
-              await db.delete(table);
-            }
-          } catch (e) {
-            // Ignorar erros de tabelas que não existem
-          }
-        }
+        // A lista de 17 tabelas que morava aqui esquecia o acervo inteiro, as
+        // tiragens de tarô, as compras de Leitura do Ciclo, as afirmações e o
+        // registro menstrual: a pessoa tocava em "limpar todos os dados deste
+        // aparelho", recebia a mensagem de sucesso, e tudo isso continuava ali.
+        // A tela de Privacidade tem o mesmo rótulo e o mesmo texto de
+        // confirmação, e a lista dela esquecia OUTRAS coisas — agora as duas
+        // chamam o mesmo método, que lê a lista canônica.
+        await DatabaseHelper.instance.limparConteudoDesteAparelho();
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(

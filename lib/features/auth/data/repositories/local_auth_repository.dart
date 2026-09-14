@@ -217,7 +217,11 @@ class LocalAuthRepository implements AuthRepository {
 
   @override
   Future<AuthResult> updatePassword(
-      String currentPassword, String newPassword) async {
+    String currentPassword,
+    String newPassword, {
+    String? captchaToken,
+    bool recuperacao = false,
+  }) async {
     // Simulação local - sempre sucesso (senhas não são armazenadas localmente)
     await Future.delayed(const Duration(milliseconds: 500));
     if (_currentUser != null) {

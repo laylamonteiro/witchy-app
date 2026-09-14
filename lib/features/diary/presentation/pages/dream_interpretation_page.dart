@@ -204,7 +204,9 @@ class _DreamInterpretationPageState extends State<DreamInterpretationPage> {
 
   Widget _buildInterpretFlow() {
     return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(vertical: 8),
+      // A margem lateral é do MagicalCard; aqui só o respiro de cima e de
+      // baixo, igual ao das outras ferramentas.
+      padding: const EdgeInsets.symmetric(vertical: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -301,13 +303,17 @@ class _DreamInterpretationPageState extends State<DreamInterpretationPage> {
                     children: [
                       Text('🌙 ',
                           style: TextStyle(color: context.gc.starYellow)),
-                      Text(
-                        AppLocalizations.of(context).dreamInterpretationLabel,
-                        style:
-                            Theme.of(context).textTheme.titleMedium?.copyWith(
-                                  color: context.gc.lilac,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                      // Traduzido e ao lado de um emblema: sem Expanded, a
+                      // linha estoura com fonte ampliada em vez de quebrar.
+                      Expanded(
+                        child: Text(
+                          AppLocalizations.of(context).dreamInterpretationLabel,
+                          style:
+                              Theme.of(context).textTheme.titleMedium?.copyWith(
+                                    color: context.gc.lilac,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                        ),
                       ),
                     ],
                   ),
@@ -334,24 +340,34 @@ class _DreamInterpretationPageState extends State<DreamInterpretationPage> {
                     decoration: InputDecoration(labelText: AppLocalizations.of(context).diaryTitleLabel),
                   ),
                   const SizedBox(height: 12),
+                  // É por aqui que a data do sonho se corrige antes de
+                  // interpretar: com 36dp de altura, errar o toque caía no
+                  // campo de texto logo acima e abria o teclado. Os 44dp são
+                  // o mínimo do alvo, e o rótulo com a data quebra a linha em
+                  // vez de estourar quando a fonte cresce.
                   InkWell(
                     onTap: _pickDate,
                     borderRadius: BorderRadius.circular(8),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                      child: Row(
-                        children: [
-                          Icon(Icons.calendar_today,
-                              size: 18, color: context.gc.lilac),
-                          const SizedBox(width: 8),
-                          Text(
-                            '${AppLocalizations.of(context).dreamDateLabel}: '
-                            '${_dreamDate.day.toString().padLeft(2, '0')}/'
-                            '${_dreamDate.month.toString().padLeft(2, '0')}/'
-                            '${_dreamDate.year}',
-                            style: TextStyle(color: context.gc.textPrimary),
-                          ),
-                        ],
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(minHeight: 44),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        child: Row(
+                          children: [
+                            Icon(Icons.calendar_today,
+                                size: 18, color: context.gc.lilac),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                '${AppLocalizations.of(context).dreamDateLabel}: '
+                                '${_dreamDate.day.toString().padLeft(2, '0')}/'
+                                '${_dreamDate.month.toString().padLeft(2, '0')}/'
+                                '${_dreamDate.year}',
+                                style: TextStyle(color: context.gc.textPrimary),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),

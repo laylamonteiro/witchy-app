@@ -37,14 +37,20 @@ class _LearningHomePageState extends State<LearningHomePage> {
       body: Consumer<LearningProvider>(
         builder: (context, learning, _) {
           return SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(vertical: 12),
+            // A margem lateral é do MagicalCard; aqui só o respiro de cima e
+            // de baixo, o mesmo das outras onze.
+            padding: const EdgeInsets.symmetric(vertical: 16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 MagicalCard(
                   child: Column(
                     children: [
-                      const Text('📖', style: TextStyle(fontSize: 44)),
+                      // O emblema da entrada continua na cena, no mesmo porte
+                      // de abertura das irmãs (48) e normalizado num quadrado
+                      // — como Text, o emoji crescia com a fonte do sistema.
+                      const ToolEmblem(
+                          tool: ToolId.livingGrimoire, size: 48, flies: false),
                       const SizedBox(height: 10),
                       Text(
                         AppLocalizations.of(context).learnHomeTitle,
@@ -139,86 +145,72 @@ class _LearningHomePageState extends State<LearningHomePage> {
     final total = trail.lessons.length;
     final complete = learning.isTrailComplete(trail);
 
-    return InkWell(
-      onTap: () => Navigator.of(context).push(
-        MaterialPageRoute(builder: (_) => TrailPage(trail: trail)),
-      ),
-      borderRadius: BorderRadius.circular(16),
-      child: complete
-          ? _buildBoundCover(context, trail)
-          : MagicalCard(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Text(trail.emoji, style: const TextStyle(fontSize: 30)),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Flexible(
-                            child: Text(
-                              trail.title,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .titleMedium
-                                  ?.copyWith(
-                                    color: context.gc.textPrimary,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                            ),
+    void abrir() => Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => TrailPage(trail: trail)),
+        );
+    // O toque é do próprio cartão, como no hub das Ferramentas: com um
+    // InkWell POR FORA, o Ink opaco cobria o brilho do toque e o encolhimento
+    // de resposta nunca disparava.
+    if (complete) return _buildBoundCover(context, trail, abrir);
+    return MagicalCard(
+      onTap: abrir,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text(trail.emoji, style: const TextStyle(fontSize: 30)),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      trail.title,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            color: context.gc.textPrimary,
+                            fontWeight: FontWeight.bold,
                           ),
-                          if (complete) ...[
-                            const SizedBox(width: 6),
-                            Text('📕',
-                                style: const TextStyle(fontSize: 14)),
-                          ],
-                        ],
-                      ),
-                      Text(
-                        trail.subtitle,
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: context.gc.textSecondary,
-                            ),
-                      ),
-                    ],
-                  ),
-                ),
-                Icon(Icons.chevron_right, color: context.gc.textSecondary),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: LinearProgressIndicator(
-                    value: total == 0 ? 0 : done / total,
-                    backgroundColor: context.gc.surfaceBorder,
-                    valueColor: AlwaysStoppedAnimation(
-                      complete ? context.gc.success : context.gc.lilac,
                     ),
-                    borderRadius: BorderRadius.circular(4),
-                  ),
+                    Text(
+                      trail.subtitle,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: context.gc.textSecondary,
+                          ),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 10),
-                Text(
-                  complete ? AppLocalizations.of(context).learnBoundShort : AppLocalizations.of(context).learnPagesProgress('$done', '$total'),
-                  style: TextStyle(
-                    color: complete
-                        ? context.gc.success
-                        : context.gc.textSecondary,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                  ),
+              ),
+              // A mesma seta de 'isto abre' do hub.
+              Icon(Icons.arrow_forward_ios, color: context.gc.lilac, size: 16),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: LinearProgressIndicator(
+                  value: total == 0 ? 0 : done / total,
+                  backgroundColor: context.gc.surfaceBorder,
+                  valueColor: AlwaysStoppedAnimation(context.gc.lilac),
+                  borderRadius: BorderRadius.circular(4),
                 ),
-              ],
-            ),
-          ],
-        ),
+              ),
+              const SizedBox(width: 10),
+              // A trilha completa sai daqui pela capa encadernada; este é
+              // sempre o contador de páginas de uma trilha em andamento.
+              Text(
+                AppLocalizations.of(context)
+                    .learnPagesProgress('$done', '$total'),
+                style: TextStyle(
+                  color: context.gc.textSecondary,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -231,14 +223,20 @@ class _LearningHomePageState extends State<LearningHomePage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // A mesma etiqueta de seção do hub das Ferramentas (caixa alta,
+          // bodySmall, 1.2 de entreletras, cinza): é o mesmo papel — o rótulo
+          // que agrupa blocos — e ela vê os dois em sequência ao abrir a
+          // primeira ferramenta da lista. O dourado ficou para o que é
+          // encadernado de verdade, logo abaixo.
           Text(
-            AppLocalizations.of(context).learnShelfTitle(bound.length),
-            style: TextStyle(
-              color: context.gc.starYellow,
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-              letterSpacing: 1.5,
-            ),
+            AppLocalizations.of(context)
+                .learnShelfTitle(bound.length)
+                .toUpperCase(),
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: context.gc.textSecondary,
+                  letterSpacing: 1.2,
+                  fontWeight: FontWeight.w700,
+                ),
           ),
           const SizedBox(height: 8),
           SizedBox(
@@ -251,7 +249,11 @@ class _LearningHomePageState extends State<LearningHomePage> {
                   Padding(
                     padding: const EdgeInsets.only(right: 8),
                     child: Semantics(
-                      label: trail.title,
+                      // A estante só tem volumes encadernados, e a capa
+                      // fechada diz isso a quem vê. Quem ouve a tela recebia
+                      // só o nome da trilha, igual ao da lista de baixo.
+                      label: '${trail.title} — '
+                          '${AppLocalizations.of(context).learnBoundShort}',
                       button: true,
                       child: InkWell(
                         onTap: () => Navigator.of(context).push(
@@ -271,21 +273,16 @@ class _LearningHomePageState extends State<LearningHomePage> {
     );
   }
 
-  Widget _buildBoundCover(BuildContext context, trail) {
+  Widget _buildBoundCover(BuildContext context, trail, VoidCallback onTap) {
+    final radius = BorderRadius.circular(16);
+    // A mesma montagem do MagicalCard: a sombra fica FORA do Material (dentro
+    // do Ink ela seria recortada) e o gradiente é pintado pelo Ink, para o
+    // brilho do toque aparecer POR CIMA dele. Com o InkWell por fora, a capa
+    // era o único cartão da tela que não respondia ao dedo.
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Color.lerp(context.gc.surface, context.gc.starYellow, 0.10)!,
-            Color.lerp(context.gc.surface, context.gc.lilac, 0.16)!,
-          ],
-        ),
-        border: Border.all(color: context.gc.starYellow, width: 1.6),
+        borderRadius: radius,
         boxShadow: [
           BoxShadow(
             color: context.gc.starYellow.withValues(alpha: 0.18),
@@ -293,36 +290,74 @@ class _LearningHomePageState extends State<LearningHomePage> {
           ),
         ],
       ),
-      child: Row(
-        children: [
-          // O mesmo livro fechado da cena de encadernação, em miniatura.
-          BoundBookCover(trailId: trail.id, emblem: trail.emoji, width: 44),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  trail.title,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        color: context.gc.textPrimary,
-                        fontWeight: FontWeight.bold,
-                      ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  AppLocalizations.of(context).learnBoundVolume('${trail.lessons.length}'),
-                  style: TextStyle(
-                    color: context.gc.starYellow,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: radius,
+        child: Ink(
+          decoration: BoxDecoration(
+            borderRadius: radius,
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Color.lerp(context.gc.surface, context.gc.starYellow, 0.10)!,
+                Color.lerp(context.gc.surface, context.gc.lilac, 0.16)!,
               ],
             ),
+            border: Border.all(color: context.gc.starYellow, width: 1.6),
           ),
-          Icon(Icons.auto_stories, color: context.gc.starYellow),
-        ],
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: radius,
+            splashColor: context.gc.lilac.withValues(alpha: 0.12),
+            highlightColor: context.gc.lilac.withValues(alpha: 0.06),
+            child: Padding(
+              padding: const EdgeInsets.all(18),
+              child: Row(
+                children: [
+                  // O mesmo livro fechado da cena de encadernação, em
+                  // miniatura.
+                  BoundBookCover(
+                      trailId: trail.id, emblem: trail.emoji, width: 44),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          trail.title,
+                          style:
+                              Theme.of(context).textTheme.titleMedium?.copyWith(
+                                    color: context.gc.textPrimary,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          AppLocalizations.of(context)
+                              .learnBoundVolume('${trail.lessons.length}'),
+                          style: TextStyle(
+                            color: context.gc.starYellow,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  // A mesma seta de 'isto abre' das outras trilhas — mesmo
+                  // glifo, mesmo tamanho e o MESMO lilás. O dourado é a
+                  // identidade do volume encadernado (a borda, a sombra, a
+                  // contagem de páginas); a seta não é identidade, é o sinal
+                  // de navegação que as doze entradas repetem, e tingi-la de
+                  // dourado aqui faria a única exceção da jornada.
+                  Icon(Icons.arrow_forward_ios,
+                      color: context.gc.lilac, size: 16),
+                ],
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }

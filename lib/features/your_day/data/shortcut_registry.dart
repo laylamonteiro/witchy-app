@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/navigation/app_deep_link.dart';
+import '../../../core/tools/tool_emblem_art.dart';
 import '../../astrology/presentation/pages/birth_chart_input_page.dart';
 import '../../astrology/presentation/pages/birth_chart_view_page.dart';
 import '../../astrology/presentation/providers/astrology_provider.dart';
@@ -23,8 +24,19 @@ class ShortcutTool {
   /// Id estável — persistido em SharedPreferences; não renomear.
   final String id;
 
-  /// Emoji do card (mesmo visual das ferramentas do Grimório).
-  final String emoji;
+  /// Emoji do card (mesmo visual das ferramentas do Grimório). É null quando
+  /// o emblema é DESENHADO — ver [drawing].
+  final String? emoji;
+
+  /// Emblema desenhado pelo app, para as ferramentas cujo símbolo era um
+  /// caractere de bloco raro do Unicode (Runas e Pêndulo): sem uma fonte de
+  /// símbolos instalada, o aparelho mostrava o quadradinho de glifo ausente
+  /// dentro do atalho. Desenho não depende de fonte. Ver [ToolDrawing].
+  ///
+  /// É um campo ao lado de [emoji], e não um `String` novo, porque desenho
+  /// não é texto: quem renderiza escolhe entre os dois caminhos. Exatamente
+  /// um dos dois é preenchido.
+  final ToolDrawing? drawing;
 
   /// Rótulo localizado (reutiliza as chaves das ferramentas existentes).
   final String Function(AppLocalizations l10n) label;
@@ -42,13 +54,16 @@ class ShortcutTool {
 
   const ShortcutTool({
     required this.id,
-    required this.emoji,
     required this.label,
+    this.emoji,
+    this.drawing,
     this.builder,
     this.link,
     this.onTap,
-  }) : assert(builder != null || link != null || onTap != null,
-            'Um atalho precisa de uma página, um destino ou uma ação');
+  })  : assert(builder != null || link != null || onTap != null,
+            'Um atalho precisa de uma página, um destino ou uma ação'),
+        assert((emoji == null) != (drawing == null),
+            'Um atalho tem emoji OU desenho — nunca os dois, nunca nenhum');
 }
 
 /// Catálogo dos atalhos personalizáveis do "Seu Dia".
@@ -70,7 +85,7 @@ class YourDayShortcuts {
     ),
     ShortcutTool(
       id: 'runes',
-      emoji: ' ᚱ ',
+      drawing: ToolDrawing.raidho,
       label: (l10n) => l10n.toolRunesTitle,
       builder: (_) => const RuneReadingPage(),
     ),
@@ -138,7 +153,7 @@ class YourDayShortcuts {
     ),
     ShortcutTool(
       id: 'pendulum',
-      emoji: ' ⟟ ',
+      drawing: ToolDrawing.pendulum,
       label: (l10n) => l10n.toolPendulumTitle,
       builder: (_) => const PendulumPage(),
     ),

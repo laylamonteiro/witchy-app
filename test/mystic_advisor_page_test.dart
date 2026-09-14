@@ -11,7 +11,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:grimorio_de_bolso/core/database/database_helper.dart';
 import 'package:grimorio_de_bolso/core/database/reading_session_schema.dart';
-import 'package:grimorio_de_bolso/core/widgets/motion/staggered_paragraphs.dart';
+import 'package:flutter/gestures.dart';
+import 'package:grimorio_de_bolso/core/widgets/motion/mist_typewriter.dart';
 import 'package:grimorio_de_bolso/features/auth/presentation/providers/auth_provider.dart';
 import 'package:grimorio_de_bolso/features/grimoire/presentation/pages/mystic_advisor_page.dart';
 import 'package:grimorio_de_bolso/features/grimoire/presentation/widgets/crystal_ball_view.dart';
@@ -85,7 +86,7 @@ void main() {
     ));
     await until(tester, () => tester.widget<ElevatedButton>(
         find.byKey(const ValueKey('advisor-consult'))).onPressed == null, 'restored');
-    // Never pumpAndSettle here: while a request is in flight the mist loops.
+    // Never pumpAndSettle here: the crystal ball animates all the time.
     await tester.pump(const Duration(milliseconds: 400));
   }
 
@@ -109,15 +110,28 @@ void main() {
     addTearDown(tester.view.resetDevicePixelRatio);
     await show(tester);
     await askQuestion(tester, 'Which moon for protection?');
-    await until(tester, () => find.byType(StaggeredParagraphs).evaluate().isNotEmpty, 'answer');
-    // Every paragraph is in the tree from the first frame; no typewriter.
-    expect(find.text('The waxing moon favors protection.'), findsOneWidget);
-    expect(find.text('Light a white candle and speak your intention aloud.'), findsOneWidget);
+    await until(tester, () => find.byType(MistTypewriterText).evaluate().isNotEmpty, 'answer');
+    // The whole answer is in one Text.rich from the first frame; the part
+    // not yet written is only transparent, so the text is findable at once.
+    expect(find.text(_answer), findsOneWidget);
     expect(calls, ['Which moon for protection?']);
-    await tester.pumpAndSettle();
+    // A fresh answer waits for the mist to land, then is written out.
+    expect(tester.widget<MistTypewriterText>(find.byType(MistTypewriterText)).reveal, isTrue);
+    await until(tester, () => find.byKey(const ValueKey('advisor-show-all'))
+        .evaluate().isNotEmpty, 'the mist landed and the writing began');
+    // The field is cleared on submit; the question lives on in the quote.
+    expect(tester.widget<TextField>(find.byKey(const ValueKey('advisor-question'))).controller!
+        .text, isEmpty);
+    // Never pumpAndSettle: the ball loops forever. Ten seconds cover the
+    // writing ceiling.
+    await tester.pump(const Duration(seconds: 10));
+    // ...plus the fade-out of the "show all" button.
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(find.byKey(const ValueKey('advisor-show-all')), findsNothing);
     expect(find.text('Which moon for protection?'), findsWidgets);
     final ball = tester.widget<CrystalBallView>(find.byKey(const ValueKey('advisor-ball')));
     expect(ball.active, isFalse);
+    expect(ball.pulseToken, isNotNull, reason: 'the aura pulses when the answer arrives');
 
     await tester.ensureVisible(find.byKey(const ValueKey('advisor-save')));
     await tester.tap(find.byKey(const ValueKey('advisor-save')));
@@ -129,10 +143,13 @@ void main() {
     expect(pages.single['content'], contains('Which moon for protection?'));
     expect(pages.single['content'], contains(_answer));
 
-    // Reopening restores the received answer without another call.
+    // Reopening restores the received answer without another call, whole
+    // and without the mist: only a fresh answer is written.
     await tester.pumpWidget(const SizedBox.shrink());
     await show(tester);
-    expect(find.text('The waxing moon favors protection.'), findsOneWidget);
+    expect(find.text(_answer), findsOneWidget);
+    expect(tester.widget<MistTypewriterText>(find.byType(MistTypewriterText)).reveal, isFalse);
+    expect(find.byKey(const ValueKey('advisor-show-all')), findsNothing);
     expect(find.byKey(const ValueKey('advisor-saved')), findsOneWidget);
     expect(calls, hasLength(1));
     pages = await rows(tester, 'free_writings');
@@ -156,14 +173,14 @@ void main() {
         isFalse);
     expect(tester.widget<ElevatedButton>(find.byKey(const ValueKey('advisor-consult'))).onPressed,
         isNull);
-    expect(find.byType(StaggeredParagraphs), findsNothing);
+    expect(find.byType(MistTypewriterText), findsNothing);
 
     await tester.pumpWidget(const SizedBox.shrink());
     await show(tester);
     expect(tester.widget<CrystalBallView>(find.byKey(const ValueKey('advisor-ball'))).active,
         isTrue, reason: 'The same request is still in flight');
     pending.complete(_answer);
-    await until(tester, () => find.byType(StaggeredParagraphs).evaluate().isNotEmpty,
+    await until(tester, () => find.byType(MistTypewriterText).evaluate().isNotEmpty,
         'answer after returning');
     expect(calls, ['Slow question?']);
     final consultations = await rows(tester, 'advisor_consultations');
@@ -188,10 +205,12 @@ void main() {
     await askQuestion(tester, 'Fragile question?');
     await until(tester, () => find.byKey(const ValueKey('advisor-retry')).evaluate().isNotEmpty,
         'failed state');
-    await tester.pumpAndSettle();
+    await tester.pump(const Duration(seconds: 1));
     expect(find.text('Fragile question?'), findsWidgets);
+    // The field was cleared on submit; the quote keeps the question and
+    // "try again" re-asks it.
     expect(tester.widget<TextField>(find.byKey(const ValueKey('advisor-question'))).controller!
-        .text, 'Fragile question?');
+        .text, isEmpty);
     expect(calls, hasLength(1));
 
     // Reopening does not resend.
@@ -203,7 +222,7 @@ void main() {
     fail = false;
     await tester.ensureVisible(find.byKey(const ValueKey('advisor-retry')));
     await tester.tap(find.byKey(const ValueKey('advisor-retry')));
-    await until(tester, () => find.byType(StaggeredParagraphs).evaluate().isNotEmpty, 'retry');
+    await until(tester, () => find.byType(MistTypewriterText).evaluate().isNotEmpty, 'retry');
     expect(calls, ['Fragile question?', 'Fragile question?']);
     final consultations = await rows(tester, 'advisor_consultations');
     expect(consultations.map((r) => r['status']).toSet(), {'failed', 'answered'});
@@ -235,6 +254,129 @@ void main() {
       expect(find.text('Old question?'), findsWidgets);
     }
     expect(calls, isEmpty);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  testWidgets('a feature name the advisor highlights is bold, tappable and saved as plain text',
+      (tester) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    ask = (q) async {
+      calls.add(q);
+      return 'Draw a card in the **Tarot** tonight and read **Xablau** too.';
+    };
+    await show(tester);
+    await askQuestion(tester, 'Which tool for tonight?');
+    await until(tester, () => find.byType(MistTypewriterText).evaluate().isNotEmpty, 'answer');
+    await until(tester, () => find.byKey(const ValueKey('advisor-show-all'))
+        .evaluate().isNotEmpty, 'the writing began');
+    await tester.pump(const Duration(seconds: 10));
+
+    final text = tester.widget<Text>(find.byKey(const ValueKey('mist-typewriter-text')));
+    final spans = (text.textSpan! as TextSpan).children!.cast<TextSpan>();
+    final tarot = spans.singleWhere((s) => s.text == 'Tarot');
+    expect(tarot.style?.fontWeight, FontWeight.w700);
+    expect(tarot.recognizer, isA<TapGestureRecognizer>(),
+        reason: 'a known feature opens on tap');
+    final unknown = spans.singleWhere((s) => s.text == 'Xablau');
+    expect(unknown.style?.fontWeight, FontWeight.w700);
+    expect(unknown.recognizer, isNull, reason: 'an unknown name is only highlighted');
+    expect(find.textContaining('**'), findsNothing);
+
+    await tester.ensureVisible(find.byKey(const ValueKey('advisor-save')));
+    await tester.tap(find.byKey(const ValueKey('advisor-save')));
+    await until(tester, () => find.byKey(const ValueKey('advisor-saved')).evaluate().isNotEmpty,
+        'saved');
+    final pages = await rows(tester, 'free_writings');
+    expect(pages.single['content'], contains('Tarot'));
+    expect(pages.single['content'], isNot(contains('**')));
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  testWidgets('the page climbs back to the ball when the keyboard closes and on asking',
+      (tester) async {
+    // A cena começa na bola: quem terminou de escrever tem de ver de onde a
+    // névoa sai. Sem isto a espera acontece fora da tela.
+    tester.view.physicalSize = const Size(390, 480);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await show(tester, viewInsets: const EdgeInsets.only(bottom: 240));
+    final rolagem = tester
+        .widget<SingleChildScrollView>(find.byType(SingleChildScrollView))
+        .controller!;
+    await tester.drag(find.byType(SingleChildScrollView), const Offset(0, -120));
+    await tester.pump();
+    expect(rolagem.offset, greaterThan(0), reason: 'a tela desceu');
+
+    // O teclado se fechou.
+    await show(tester);
+    await until(tester, () => rolagem.offset <= .5,
+        'the keyboard closed and the page climbed back');
+
+    // Consultar também sobe, e a resposta só chega depois.
+    final pendente = Completer<String>();
+    ask = (q) {
+      calls.add(q);
+      return pendente.future;
+    };
+    await tester.drag(find.byType(SingleChildScrollView), const Offset(0, -120));
+    await tester.pump();
+    expect(rolagem.offset, greaterThan(0));
+    await askQuestion(tester, 'Which moon?');
+    await until(tester, () => rolagem.offset <= .5, 'asking climbed back');
+
+    pendente.complete(_answer);
+    await until(tester, () => find.byType(MistTypewriterText).evaluate().isNotEmpty,
+        'answer');
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  testWidgets('asking with the keyboard open climbs only after it is gone',
+      (tester) async {
+    // O botão fecha o teclado sozinho. Subir enquanto ele encolhe é subir
+    // para uma altura que ainda vai mudar: a tela tem de esperar.
+    tester.view.physicalSize = const Size(390, 480);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final pendente = Completer<String>();
+    ask = (q) {
+      calls.add(q);
+      return pendente.future;
+    };
+
+    await show(tester, viewInsets: const EdgeInsets.only(bottom: 240));
+    final rolagem = tester
+        .widget<SingleChildScrollView>(find.byType(SingleChildScrollView))
+        .controller!;
+    await tester.drag(find.byType(SingleChildScrollView), const Offset(0, -120));
+    await tester.pump();
+    expect(rolagem.offset, greaterThan(0));
+
+    await askQuestion(tester, 'Which moon?');
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(rolagem.offset, greaterThan(0),
+        reason: 'o teclado ainda ocupa a tela');
+    // A consulta grava no banco antes de chamar a IA, e gravar é trabalho
+    // de verdade: sem `until` o teste olharia antes de a linha existir.
+    await until(tester, () => calls.isNotEmpty, 'a consulta partiu mesmo assim');
+    expect(calls, ['Which moon?']);
+
+    // O teclado terminou de sumir.
+    await show(tester);
+    await until(tester, () => rolagem.offset <= .5,
+        'the page climbed once the keyboard was gone');
+
+    pendente.complete(_answer);
+    await until(tester, () => find.byType(MistTypewriterText).evaluate().isNotEmpty,
+        'answer');
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox.shrink());
   });

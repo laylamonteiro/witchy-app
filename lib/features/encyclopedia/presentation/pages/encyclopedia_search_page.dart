@@ -8,6 +8,7 @@ import '../../data/encyclopedia_search.dart';
 import '../../data/models/user_entry_model.dart';
 import '../providers/encyclopedia_provider.dart';
 import '../widgets/archetype_glyph.dart';
+import '../../../runes/presentation/widgets/rune_art.dart';
 
 /// Busca global da Enciclopédia: um campo, todas as seções (e as entradas
 /// pessoais). Resultados agrupados por seção, cada um abrindo o verbete.
@@ -93,6 +94,7 @@ class _EncyclopediaSearchPageState extends State<EncyclopediaSearchPage> {
         // Em variável local para o compilador saber que, no ramo de baixo,
         // ela não é nula — campo de registro não promove sozinho.
         final glyphId = hit.glyphId;
+        final runeName = hit.runeName;
         // Cabeçalho de seção quando ela muda em relação ao item anterior.
         final showHeader = index == 0 || hits[index - 1].section != hit.section;
 
@@ -117,15 +119,26 @@ class _EncyclopediaSearchPageState extends State<EncyclopediaSearchPage> {
               // lista da seção e o verbete mostram, para a busca não ser a
               // única superfície fora de compasso. Mudo para o leitor de
               // tela: quem fala é o nome, na linha ao lado.
-              leading: glyphId == null
-                  ? ExcludeSemantics(
-                      child: Text(hit.emoji,
-                          style: const TextStyle(fontSize: 24)),
-                    )
-                  : ArchetypeGlyph(
+              leading: glyphId != null
+                  ? ArchetypeGlyph(
                       id: glyphId,
                       size: ArchetypeGlyphArt.boxForEmojiSize(24),
-                    ),
+                    )
+                  : runeName != null
+                      // A runa tem desenho próprio, de outro sistema: traço
+                      // reto, chave no nome, e o caractere do catálogo como
+                      // reserva quando o nome não tem desenho. RuneMark já
+                      // resolve os dois casos e já é mudo para o leitor.
+                      ? RuneMark(
+                          name: runeName,
+                          symbol: hit.emoji,
+                          fontSize: 24,
+                          color: context.gc.gold,
+                        )
+                      : ExcludeSemantics(
+                          child: Text(hit.emoji,
+                              style: const TextStyle(fontSize: 24)),
+                        ),
               title: Text(
                 hit.name,
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(

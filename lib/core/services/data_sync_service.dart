@@ -9,6 +9,9 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../config/supabase_config.dart';
 import '../database/database_helper.dart';
 import '../../features/diary/data/models/free_writing_model.dart';
+import '../../features/menstrual_cycle/data/menstrual_consent_store.dart';
+import '../../features/menstrual_cycle/data/repositories/menstrual_cycle_repository.dart';
+import '../../features/menstrual_cycle/domain/menstrual_day.dart';
 import 'debug_log_service.dart';
 import 'servidor_de_sync.dart';
 
@@ -27,6 +30,12 @@ AppLocalizations get _l10n =>
 /// Ou seja: alfabetizar este enum, a mudança mais inocente do mundo,
 /// quebraria o upload de quem acabou de montar o mapa. Quem trava a regra é
 /// test/sync_coverage_test.dart.
+///
+/// O QUE NÃO ESTÁ AQUI também é decisão, e está escrito: as tabelas de
+/// conteúdo que ficam no aparelho são nomeadas uma a uma, com o que se perde
+/// na reinstalação de cada uma, em `TabelasLocais.soNesteAparelho`. Ficar de
+/// fora dos dois lugares não é opção — test/nenhuma_tabela_esquecida_test.dart
+/// parte das tabelas que o banco cria e exige que cada uma esteja num deles.
 enum SyncEntity {
   spells,
   dreams,
@@ -48,6 +57,18 @@ enum SyncEntity {
   learningProgress,
   userEncyclopediaEntries,
   cycleReadings,
+
+  /// O registro menstrual. ÚLTIMO, e não por acaso: ele não referencia nada
+  /// além da conta e nada o referencia, então entrar no fim não desloca
+  /// nenhum índice que as chaves estrangeiras reais dependem.
+  ///
+  /// Esta entidade não passa pelo motor genérico: a identidade de uma linha
+  /// aqui é (user_id, day_key), não um `id` — a tabela não tem essa coluna —,
+  /// e a resolução de conflito é a do repositório (revisão, depois o mais
+  /// recente), que reconstrói a página do dia no Grimório na descida. Ela
+  /// está no enum porque é daqui que saem a exclusão de conta, a adoção de
+  /// dados anônimos e as catracas; o caminho de dados é próprio.
+  menstrualDays,
 }
 
 /// Status de sincronização
@@ -294,6 +315,33 @@ class DataSyncService {
     return ensureCloudSyncPreference(prefs);
   }
 
+  /// O SEGUNDO sim, o do registro menstrual, lido uma vez por varredura.
+  ///
+  /// Ele nasce falso e só vira verdadeiro por leitura explícita: se alguém
+  /// abrir um caminho novo e esquecer de chamar [_lerConsentimentoDoCiclo], o
+  /// esquecimento erra para o lado de não enviar. É o único campo do serviço
+  /// em que o padrão é a recusa, e é de propósito.
+  ///
+  /// Por que um campo e não um `await` dentro do filtro: [_isSyncableItem] é
+  /// síncrono e roda dentro de `.where(...)` em quatro pontos do funil.
+  /// Torná-lo assíncrono espalharia laço e `await` por todos eles sem
+  /// comprar nada — o consentimento não muda no meio de uma varredura, e
+  /// quem o desliga é uma tela, que não roda no mesmo instante.
+  bool _envioDoCicloPermitido = false;
+
+  static const _consentimentoDoCiclo = MenstrualConsentStore();
+
+  late final MenstrualCycleRepository _cicloMenstrual =
+      MenstrualCycleRepository();
+
+  /// Relê o segundo sim da conta atual e devolve o que encontrou.
+  Future<bool> _lerConsentimentoDoCiclo() async {
+    final uid = currentUserId;
+    _envioDoCicloPermitido =
+        uid != null && await _consentimentoDoCiclo.syncAllowed(uid);
+    return _envioDoCicloPermitido;
+  }
+
   /// Última sincronização concluída para a conta atual.
   Future<DateTime?> get lastSuccessfulSyncTime async {
     final prefs = await SharedPreferences.getInstance();
@@ -335,9 +383,18 @@ class DataSyncService {
     if (!isReady) {
       return SyncResult.error(_l10n.syncNotAuthenticated);
     }
+    // Acima da guarda da nuvem, e é a única coisa desta varredura que roda
+    // com a sincronização desligada: um "apagar a cópia da nuvem" que a rede
+    // engoliu é um pedido para TIRAR dado de saúde do servidor. Desligar
+    // interrompe o que sai daqui; nunca o que ela mandou sair de lá.
+    await _concluirPurgaDoCiclo();
     if (!await cloudSyncEnabled) {
       return SyncResult.error(_l10n.syncDisabled);
     }
+
+    // Antes de tudo, e não dentro do laço: o funil (`_isSyncableItem`) é
+    // síncrono e lê o campo que esta linha preenche.
+    await _lerConsentimentoDoCiclo();
 
     final useResolution = resolution ?? _defaultResolution;
     _setStatus(SyncStatus.syncing);
@@ -401,6 +458,12 @@ class DataSyncService {
     SyncEntity entity,
     ConflictResolution resolution,
   ) async {
+    // O registro menstrual não passa pelo motor genérico — ver
+    // [SyncEntity.menstrualDays] para as três razões.
+    if (entity == SyncEntity.menstrualDays) {
+      return _sincronizarCicloMenstrual();
+    }
+
     var uploaded = 0;
     var downloaded = 0;
     var conflictsResolved = 0;
@@ -728,6 +791,8 @@ class DataSyncService {
         return SupabaseTables.tarotReadings;
       case SyncEntity.cycleReadings:
         return SupabaseTables.cycleReadings;
+      case SyncEntity.menstrualDays:
+        return SupabaseTables.menstrualDays;
     }
   }
 
@@ -778,6 +843,8 @@ class DataSyncService {
         return 'tarot_readings';
       case SyncEntity.cycleReadings:
         return 'cycle_readings';
+      case SyncEntity.menstrualDays:
+        return 'menstrual_days';
     }
   }
 
@@ -805,18 +872,30 @@ class DataSyncService {
   /// Tabelas com UMA linha por dia (UNIQUE(user_id, date) local e remoto):
   /// cada aparelho/instalação gera um uuid próprio para o MESMO dia, então
   /// a identidade de verdade é (user_id, date) — nunca só o id.
-  static const _oneRowPerDayTables = {
-    'daily_magical_weather',
-    'daily_checkins',
+  ///
+  /// Derivado de [_chaveDeConflito] em vez de escrito à mão ao lado dele:
+  /// eram duas listas que precisavam concordar, e esta casa já consertou a
+  /// mesma família de defeito três vezes derivando de uma fonte só
+  /// (`tabelasDaExclusaoDeConta`, `tabelasDaAdocaoAnonima`,
+  /// `_origensQueNaoSaem`). Discordando, uma tabela nova ganharia
+  /// `onConflict` no upload e continuaria com `ConflictAlgorithm.abort` no
+  /// insert local. `menstrual_days` fica de fora sozinha, e certo: a chave
+  /// dela é `day_key`, e os dois leitores daqui — `_existsLocallyForDay` e
+  /// `_insertLocally` — falam em `date`.
+  static final _oneRowPerDayTables = {
+    for (final par in _chaveDeConflito.entries)
+      if (par.value == 'user_id,date') par.key
   };
 
   /// Envia item para o Supabase
   Future<void> _uploadItem(String table, Map<String, dynamic> item) async {
     final remoteItem = _toRemote(table, item);
-    // Tabelas com uma linha por DIA: cada aparelho gera um uuid próprio,
-    // então o conflito de verdade é (user_id, date) — sem isto, dois
-    // aparelhos criariam linhas duplicadas do mesmo dia.
-    if (_oneRowPerDayTables.contains(table)) {
+    // Quando a identidade da linha no servidor não é o `id`, é ela que
+    // governa o upsert: nas tabelas de um dia por vez cada aparelho gera um
+    // uuid próprio (sem isto, dois aparelhos criariam linhas duplicadas do
+    // mesmo dia), e em `menstrual_days` não existe `id` nenhum.
+    final chaveDeConflito = _chaveDeConflito[table];
+    if (chaveDeConflito != null) {
       if (table == 'daily_checkins') {
         // O upload NUNCA apaga ritos remotos: na reinstalação, o
         // registerVisit sobe o dia com rites vazio ANTES de o backup
@@ -837,7 +916,7 @@ class DataSyncService {
           // Sem linha remota ou leitura indisponível: segue com o local.
         }
       }
-      await _servidor!.upsert(table, remoteItem, onConflict: 'user_id,date');
+      await _servidor!.upsert(table, remoteItem, onConflict: chaveDeConflito);
       return;
     }
     await _servidor!.upsert(table, remoteItem);
@@ -876,6 +955,12 @@ class DataSyncService {
         FreeWritingSource.neverLeavesDevice.contains(item['source'])) {
       return false;
     }
+    // O registro menstrual é dado de saúde, e o interruptor geral da nuvem
+    // não fala por ele: ligar a sincronização do app NÃO liga este envio.
+    // Sem o segundo sim, nenhuma linha de 'menstrual_days' sai daqui —
+    // inclusive na varredura do primeiro login, que roda logo depois de a
+    // adoção de dados anônimos carimbar o histórico de antes da conta.
+    if (table == 'menstrual_days' && !_envioDoCicloPermitido) return false;
     return true;
   }
 
@@ -884,6 +969,9 @@ class DataSyncService {
     'affirmations': {'is_preloaded', 'is_favorite'},
     'daily_rituals': {'is_active'},
     'birth_charts': {'unknown_birth_time'},
+    // A lápide do dia menstrual mora na própria linha: `deleted` é INTEGER
+    // aqui e BOOLEAN no Postgres (supabase/menstrual_days_migration.sql).
+    'menstrual_days': {'deleted'},
   };
 
   static const _jsonFields = {
@@ -894,6 +982,10 @@ class DataSyncService {
     'tarot_readings': {'reading_data'},
     'daily_magical_weather': {'weather_data'},
     'user_encyclopedia_entries': {'data'},
+    // `symptoms` é texto JSON no SQLite e `jsonb` no servidor. Sem esta
+    // entrada, `temMudancas` compararia '["cólica"]' com a reserialização do
+    // jsonb e daria conflito falso em toda linha suja.
+    'menstrual_days': {'symptoms'},
   };
 
   static const _dateFields = {
@@ -925,6 +1017,30 @@ class DataSyncService {
       'created_at',
       'updated_at',
     },
+    // `day_key` fica de fora pelo mesmo motivo de `date` acima: é a string
+    // YYYY-MM-DD do dia local dela, e virar timestamp faria o dia mudar de
+    // data para quem está longe de Greenwich.
+    'menstrual_days': {'created_at', 'updated_at'},
+  };
+
+  /// Colunas locais que NÃO existem no servidor e não podem viajar: mandá-las
+  /// faz o PostgREST recusar a linha inteira.
+  ///
+  /// `season` e `season_note` ficaram na tabela desde a v29 porque a regra da
+  /// casa é migrar para a frente, mas a Estação Interna saiu do app e elas
+  /// não têm leitor. Criar coluna remota para campo morto seria pedir espaço
+  /// no servidor para guardar o que ninguém escreve nem lê.
+  static const _colunasQueNaoSobem = {
+    'menstrual_days': {'season', 'season_note'},
+  };
+
+  /// A chave de conflito do upsert, quando a identidade da linha no servidor
+  /// não é o `id`. Sem um índice único correspondente do outro lado, o
+  /// PostgREST responde 42P10 e nada sobe.
+  static const _chaveDeConflito = {
+    'daily_magical_weather': 'user_id,date',
+    'daily_checkins': 'user_id,date',
+    'menstrual_days': 'user_id,day_key',
   };
 
   /// Os nomes de tabela por entidade, para o teste que garante que nenhuma
@@ -956,6 +1072,9 @@ class DataSyncService {
     String? userIdOverride,
   }) {
     final data = Map<String, dynamic>.from(item)..remove('synced');
+    for (final coluna in _colunasQueNaoSobem[table] ?? const <String>{}) {
+      data.remove(coluna);
+    }
     data['user_id'] = userIdOverride ?? currentUserId;
 
     for (final field in _booleanFields[table] ?? const <String>{}) {
@@ -1161,6 +1280,7 @@ class DataSyncService {
   Future<void> syncItem(SyncEntity entity, Map<String, dynamic> item) async {
     if (!isReady) return;
     if (!await cloudSyncEnabled) return;
+    await _lerConsentimentoDoCiclo();
 
     try {
       final tableName = supabaseTableFor(entity);
@@ -1203,8 +1323,253 @@ class DataSyncService {
     }
   }
 
+  /// A sincronização do registro menstrual, por fora do motor genérico.
+  ///
+  /// A ordem é DESCE-e-depois-sobe, ao contrário do motor, e é ela que faz a
+  /// regra de conflito ser uma só. Subir primeiro seria um upsert cego: o
+  /// aparelho que passou a semana offline escreveria a revisão velha por cima
+  /// da nova e ressuscitaria no servidor o dia que ela apagou no celular.
+  /// Descendo primeiro, quem decide é sempre `mergeRemote` — revisão maior, e
+  /// empatadas a gravação mais recente —, e o que sobe depois é só o que
+  /// venceu aqui.
+  ///
+  /// Sem o segundo sim isto é um no-op inteiro — nem sobe nem desce. Não
+  /// descer também é decisão: baixar já seria ler no servidor um dado de
+  /// saúde que ela não autorizou a sair, e escrever no aparelho dias que
+  /// talvez ela tenha apagado de propósito.
+  Future<SyncResult> _sincronizarCicloMenstrual() async {
+    if (!await _lerConsentimentoDoCiclo()) return SyncResult.success();
+    // A retentativa da purga já rodou no topo de `_syncAll`, acima de todas
+    // as guardas — aqui só se lê o resultado. Enquanto o apagar não chegou ao
+    // servidor nada anda: descer traria de volta o registro que ela leu como
+    // apagado, e subir daria ao servidor uma cópia nova para a purga
+    // derrubar em seguida.
+    if (await _purgaDoCicloPendente()) return SyncResult.success();
+
+    try {
+      final baixados = await _baixarDiasMenstruais();
+      final enviados = await _subirDiasMenstruais();
+      return SyncResult.success(uploaded: enviados, downloaded: baixados);
+    } catch (e) {
+      debugPrint('Erro ao sincronizar o ciclo menstrual: $e');
+      return SyncResult.error(e.toString());
+    }
+  }
+
+  /// Sobe os dias pendentes. A identidade da linha é (user_id, day_key), e a
+  /// linha apagada sobe igual às outras: o `deleted = 1` dela É o aviso de
+  /// exclusão que os outros aparelhos precisam receber.
+  ///
+  /// Com [todos], sobe o registro inteiro e não só o pendente: é o que
+  /// `fullUpload` significa — "este aparelho é a verdade a enviar" —, e é o
+  /// botão de quem acabou de ficar sem cópia na nuvem, inclusive por ter
+  /// usado o "apagar a cópia da nuvem" desta mesma tela. Sem isso ele não
+  /// enviaria nada, porque está tudo carimbado como enviado.
+  Future<int> _subirDiasMenstruais({bool todos = false}) async {
+    if (!_envioDoCicloPermitido) return 0;
+    if (await _purgaDoCicloPendente()) return 0;
+
+    final db = await _db.database;
+    final pendentes = await db.query(
+      'menstrual_days',
+      // `deleted = 0 OR synced = 0` no ramo de [todos], e é a parte que não
+      // pode cair: uma lápide já carimbada como enviada ou o servidor já a
+      // tem — e reenviá-la é inútil —, ou ela nunca teve o direito de ir.
+      // Esse segundo caso existe: o dia apagado antes de haver conta chega
+      // pela adoção já `synced = 1`, escapa do `markForUpload` e do descarte
+      // de lápides, e um "enviar tudo" sem este filtro mandaria ao servidor
+      // a data em que ela sangrou e depois apagou, para uma conta que nunca
+      // teve cópia nenhuma daquele dia.
+      where: todos
+          ? 'user_id = ? AND (deleted = 0 OR synced = 0)'
+          : '(synced = ? OR synced IS NULL) AND user_id = ?',
+      whereArgs: todos ? [currentUserId] : [0, currentUserId],
+    );
+
+    var enviados = 0;
+    for (final linha in pendentes) {
+      // O funil de novo, e não por desconfiança do `if` acima: é ele que
+      // qualquer catraca lê, e é ele que continua valendo se alguém um dia
+      // chamar este método por outro caminho.
+      if (!_isSyncableItem('menstrual_days', linha)) continue;
+      await _uploadItem('menstrual_days', linha);
+      await _marcarDiaSincronizado(
+        linha['day_key'] as String,
+        (linha['revision'] as num?)?.toInt() ?? 1,
+      );
+      enviados++;
+    }
+    return enviados;
+  }
+
+  /// Desce o que está no servidor e entrega ao repositório, que resolve por
+  /// revisão (empatadas, a gravação mais recente) e reconstrói — ou apaga — a
+  /// página do dia no Grimório. O motor genérico não serviria: ele decide por
+  /// `updated_at` e escreve na tabela direto, deixando a página para trás.
+  ///
+  /// `mergeRemote` também carimba como pendente o dia em que a cópia DAQUI
+  /// venceu: sem isso o servidor guardaria a perdedora para sempre e todo
+  /// aparelho novo receberia ela.
+  Future<int> _baixarDiasMenstruais() async {
+    if (!_envioDoCicloPermitido) return 0;
+    // Enquanto um "apagar a cópia da nuvem" não chegou ao servidor, nada
+    // desce: baixar traria de volta o registro inteiro — com as páginas no
+    // Grimório — depois de ela já ter lido que estava apagado. A
+    // retentativa em si mora em quem chama, fora do consentimento.
+    if (await _purgaDoCicloPendente()) return 0;
+
+    final remotas = await _getRemoteData('menstrual_days');
+    var baixados = 0;
+    for (final remota in remotas) {
+      final MenstrualDay dia;
+      try {
+        dia = MenstrualDay.fromRow(_toLocal('menstrual_days', remota));
+      } catch (e) {
+        // Uma linha que esta versão do app não sabe ler não pode derrubar a
+        // descida das outras.
+        unawaited(debugLog('SYNC', 'dia do ciclo ilegivel: $e'));
+        continue;
+      }
+      if (await _cicloMenstrual.mergeRemote(dia)) baixados++;
+    }
+    return baixados;
+  }
+
+  /// Carimba um dia como enviado. Por (user_id, day_key): `_markAsSynced`
+  /// procura por `id`, coluna que esta tabela não tem — ele atualizaria zero
+  /// linhas e engoliria o erro, e o dia subiria de novo a cada varredura.
+  ///
+  /// Preso à [revision] que subiu: se ela gravou o mesmo dia entre a leitura
+  /// e o carimbo, a revisão já é outra e o carimbo não pega — a edição nova
+  /// continua pendente e sobe na varredura seguinte. Sem essa amarra, o
+  /// carimbo apagaria o `synced = 0` de uma gravação que nunca saiu daqui.
+  Future<void> _marcarDiaSincronizado(String dayKey, int revision) async {
+    final db = await _db.database;
+    await db.update(
+      'menstrual_days',
+      {'synced': 1},
+      where: 'user_id = ? AND day_key = ? AND revision = ?',
+      whereArgs: [currentUserId, dayKey, revision],
+    );
+  }
+
+  /// O pedido de apagar a cópia da nuvem que ainda não chegou ao servidor,
+  /// por conta. Fica no aparelho porque é a única memória de que ela pediu.
+  static const _purgaDoCicloPendentePrefix = 'menstrual_cloud_purge_pending_';
+
+  /// Existe um pedido de apagar que ainda não chegou ao servidor? Só lê — a
+  /// retentativa é de [_concluirPurgaDoCiclo]. Separados porque os dois
+  /// gestos do ciclo (subir e descer) precisam parar enquanto houver
+  /// pendência, e tentar de novo uma vez por varredura basta.
+  Future<bool> _purgaDoCicloPendente() async {
+    final uid = currentUserId;
+    if (uid == null) return false;
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool('$_purgaDoCicloPendentePrefix$uid') ?? false;
+  }
+
+  /// Termina a purga pendente, se houver. `true` quando não há nada devendo.
+  ///
+  /// Chamado no COMEÇO das três varreduras, e nunca de dentro do
+  /// consentimento: quem apaga a cópia da nuvem em Privacidade esquece o sim
+  /// na linha seguinte, e uma retentativa que dependesse dele morreria ali —
+  /// com a cópia do registro de saúde ainda no servidor.
+  Future<bool> _concluirPurgaDoCiclo() async {
+    final uid = currentUserId;
+    if (uid == null) return true;
+    if (!await _purgaDoCicloPendente()) return true;
+    return apagarCicloNaNuvem(uid);
+  }
+
+  /// Apaga no servidor a cópia do registro menstrual desta conta.
+  ///
+  /// Gesto próprio, e de propósito separado de desligar o envio: desligar
+  /// interrompe o que sai daqui, e o que já subiu continua lá até ela pedir
+  /// que saia. Sem guarda de `cloudSyncEnabled` — pedir para apagar precisa
+  /// funcionar justamente depois de ela ter desligado tudo.
+  ///
+  /// Devolve `false` quando o servidor não pôde ser alcançado: quem chama
+  /// mostra isso, porque dizer "apagado" sem ter apagado é a pior resposta
+  /// possível aqui. E o pedido não se perde — fica anotado, a varredura
+  /// tenta de novo, e até conseguir nada desce. Um "apagar" que a rede
+  /// engoliu e que a varredura seguinte desfaz, trazendo o registro inteiro
+  /// de volta, é pior que um erro na tela.
+  Future<bool> apagarCicloNaNuvem(String userId) async {
+    // A conta é conferida, e não presumida: quem chama daqui é o repositório,
+    // que recebe o `userId` de quem pediu — apagar na nuvem a conta ERRADA
+    // seria o pior defeito possível neste método.
+    if (currentUserId != userId) return false;
+    final prefs = await SharedPreferences.getInstance();
+    final pendencia = '$_purgaDoCicloPendentePrefix$userId';
+    if (isReady) {
+      try {
+        await _servidor!.apagarTudoDoUsuario('menstrual_days', userId);
+        await prefs.remove(pendencia);
+        return true;
+      } catch (e) {
+        unawaited(debugLog('SYNC', 'falha ao apagar o ciclo na nuvem: $e'));
+      }
+    }
+    await prefs.setBool(pendencia, true);
+    return false;
+  }
+
   /// A tabela local das lápides (DatabaseHelper, v23).
   static const _tabelaDeLapides = 'sync_tombstones';
+
+  /// Entidades que NUNCA deixam lápide.
+  ///
+  /// Sem meias palavras: isto não elimina o vazamento da data, escolhe onde
+  /// ela fica. Apagar um dia com o envio ligado deixa no servidor a linha
+  /// daquele dia com `deleted` e uma revisão maior — o conteúdo sai (marca,
+  /// intensidade, sintomas, humor, anotação), a data fica. Ela precisa ficar
+  /// em algum lugar, senão o outro aparelho traz o dia de volta.
+  ///
+  /// A escolha é entre dois lugares, e é por isso que não é `sync_tombstones`:
+  /// a lápide de lá a pessoa não alcança. Ela sobrevive ao "apagar a cópia da
+  /// nuvem", sobrevive ao "apagar meus registros do ciclo", e ainda vem
+  /// rotulada com `entity = 'menstrualDays'` numa tabela que não é do ciclo.
+  /// Dentro da própria linha, a data some nos dois gestos e na exclusão de
+  /// conta, junto com todo o resto.
+  static const _entidadesSemLapide = {SyncEntity.menstrualDays};
+
+  /// Liga ou desliga a sincronização da nuvem: a preferência E o que ela
+  /// arrasta junto.
+  ///
+  /// Existe como método porque este interruptor aparece em DUAS telas —
+  /// Sincronização e Backup, e o Perfil — e uma delas esquecer o descarte é o
+  /// vazamento voltando por uma porta. Quem for mexer nos interruptores:
+  /// chame isto, não `prefs.setBool` na mão.
+  Future<void> definirSincronizacao(bool ligada) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(cloudSyncPreferenceKey, ligada);
+    await prefs.setBool(cloudSyncUserConfiguredKey, true);
+    if (!ligada) await descartarLapidesPendentes();
+  }
+
+  /// Descarta as lápides ainda não enviadas. Chamado quando a pessoa DESLIGA
+  /// a sincronização.
+  ///
+  /// Guardar a memória de uma exclusão é guardar o `id` do que foi apagado, e
+  /// id aqui é conteúdo com frequência demais: `preloaded_<nome do feitiço>`,
+  /// o id do mapa no perfil mágico, `<conta>_<dia>` no check-in. Quem apagou
+  /// algo com a nuvem ligada, desligou e um dia religa via essa lista sair do
+  /// aparelho — pelo gesto que ela fez justamente para nada mais sair.
+  ///
+  /// A consequência é necessária e não dá para disfarçar: um item apagado com
+  /// a nuvem desligada VOLTA se ela for religada, porque não sobrou nada que
+  /// se lembrasse da exclusão. Entre ressuscitar um item, que ela apaga de
+  /// novo, e manter no aparelho a lista exata do que ela mandou sumir, o
+  /// ressuscitado é o dano menor.
+  ///
+  /// As já enviadas ficam: elas descrevem o que o servidor JÁ sabe, e
+  /// derrubá-las traria de volta o que outro aparelho apagou.
+  Future<int> descartarLapidesPendentes() async {
+    final db = await _db.database;
+    // Sem filtro de conta: desligar a nuvem é um gesto do APARELHO, e a
+    // lápide pendente de uma conta anterior vaza do mesmo jeito.
+    return db.delete(_tabelaDeLapides, where: 'synced = 0');
+  }
 
   /// Deleta um item do Supabase.
   ///
@@ -1228,6 +1593,11 @@ class DataSyncService {
   Future<void> deleteItem(SyncEntity entity, dynamic id) async {
     if (!isReady) return;
     if (!await cloudSyncEnabled) return;
+    // Ver [_entidadesSemLapide]: aqui não há o que gravar nem o que enviar.
+    // A exclusão de um dia menstrual viaja na própria linha, pelo upload, e
+    // é lá que o segundo sim decide se ela sai do aparelho — sem ele, apagar
+    // é local e silencioso.
+    if (_entidadesSemLapide.contains(entity)) return;
 
     final int deletedAt;
     try {
@@ -1377,6 +1747,10 @@ class DataSyncService {
         // Entidade que esta versão do app ainda não conhece.
         continue;
       }
+      // Lápide que não deveria existir (ver [_entidadesSemLapide]): aplicá-la
+      // consultaria a tabela local por `id`, coluna que `menstrual_days` não
+      // tem, e o erro derrubaria a varredura inteira.
+      if (_entidadesSemLapide.contains(entity)) continue;
       final deletedAt =
           _parseDateTime(remota['deleted_at']).millisecondsSinceEpoch;
       final localTable = localTableFor(entity);
@@ -1440,6 +1814,11 @@ class DataSyncService {
     for (final lapide in pendentes) {
       final entityName = lapide['entity'] as String;
       final itemId = lapide['item_id'] as String;
+      if (_entidadesSemLapide.any((e) => e.name == entityName)) {
+        // Resíduo de outra versão: apagar em silêncio, nunca enviar.
+        await _apagarLapideLocal(entityName, itemId);
+        continue;
+      }
       try {
         final completa = await _purgarNoServidor(
           entityName,
@@ -1471,10 +1850,19 @@ class DataSyncService {
       // volta exatamente o que a pessoa acabou de apagar.
       await _aplicarLapidesRemotas();
       await _subirLapidesLocais();
+      // Antes do consentimento, e pelo mesmo motivo do syncAll: apagar o que
+      // já subiu não depende de autorização para subir.
+      await _concluirPurgaDoCiclo();
+      await _lerConsentimentoDoCiclo();
 
       final downloadedByTable = <String, List<Map<String, dynamic>>>{};
       final entityErrors = <String, String>{};
       for (final entity in SyncEntity.values) {
+        // O registro menstrual fica fora do "apaga a tabela e baixa tudo":
+        // a descida dele é um merge por revisão, e limpar a tabela antes de
+        // baixar perderia os dias que ainda não subiram — inclusive os de
+        // quem nunca ligou o envio e não tem cópia nenhuma no servidor.
+        if (entity == SyncEntity.menstrualDays) continue;
         try {
           final tableName = supabaseTableFor(entity);
           final localTable = localTableFor(entity);
@@ -1506,6 +1894,25 @@ class DataSyncService {
       final db = await _db.database;
       await db.transaction((txn) async {
         for (final entry in downloadedByTable.entries) {
+          // O que nunca pôde subir é poupado, e sem isto o "baixar tudo da
+          // nuvem" apagava em silêncio exatamente o que foi prometido que
+          // jamais sairia do aparelho: as páginas do ciclo em `free_writings`
+          // e as linhas pré-carregadas adotadas. Este caminho troca a tabela
+          // inteira pelo que veio do servidor — e não há cópia remota do que
+          // o funil recusou, então "trocar" era perder.
+          //
+          // O filtro é o PRÓPRIO `_isSyncableItem`, não uma condição de SQL
+          // ao lado dele: escrever a mesma regra duas vezes é como esta casa
+          // já perdeu dado antes, e aqui a segunda cópia erraria em silêncio.
+          final locais = await txn.query(
+            entry.key,
+            where: 'user_id = ?',
+            whereArgs: [currentUserId],
+          );
+          final poupadas = locais
+              .where((linha) => !_isSyncableItem(entry.key, linha))
+              .toList();
+
           await txn.delete(
             entry.key,
             where: 'user_id = ?',
@@ -1514,10 +1921,53 @@ class DataSyncService {
           for (final item in entry.value) {
             await txn.insert(entry.key, item);
           }
+          // Depois das remotas, e VENCENDO delas: uma página do ciclo que
+          // subiu na janela em que a brecha existiu tem cópia no servidor, e
+          // ela acabou de aterrissar com o mesmo id. Uma linha que o funil
+          // recusa nunca teve o direito de sair daqui, então a versão deste
+          // aparelho é a verdadeira e a do servidor é resto de uma brecha
+          // fechada. O `replace` também é o que impede a colisão de derrubar
+          // a transação inteira da restauração.
+          for (final linha in poupadas) {
+            await txn.insert(
+              entry.key,
+              linha,
+              conflictAlgorithm: ConflictAlgorithm.replace,
+            );
+          }
         }
       });
+      // Depois da transação, e de propósito: ela reescreve o acervo inteiro a
+      // partir do que veio do servidor, e a página de cada dia menstrual não
+      // sobe nunca. Rodando antes, as páginas recém-escritas seriam apagadas
+      // pelo próprio restore.
+      //
+      // E num `try` próprio, como as outras entidades: o restore já
+      // aterrissou no banco. Uma falha só do ciclo — a tabela remota que
+      // ainda não foi criada no painel, a rede que caiu no meio — não pode
+      // dizer "falhou" sobre tudo o que já foi restaurado; ela diz o nome da
+      // entidade que ficou faltando.
+      var doCiclo = 0;
+      try {
+        doCiclo = await _baixarDiasMenstruais();
+        // A reconstrução das páginas vem DEPOIS da descida e não depende
+        // dela, nem do segundo sim, nem de quem venceu o merge: a página é
+        // função da linha, e é exatamente por isso que ela não precisa do
+        // servidor. Sem esta chamada, "restaurar da nuvem" apagaria do
+        // Grimório o registro do ciclo de quem nunca ligou o envio — o
+        // merge só reescreve o dia em que o servidor venceu, e quem não
+        // tem cópia lá não tem dia nenhum para vencer.
+        await _cicloMenstrual.reconstruirEspelhos(currentUserId!);
+      } catch (e) {
+        _setStatus(SyncStatus.error);
+        return SyncResult.error(
+          _l10n.syncDownloadFailed(SyncEntity.menstrualDays.name),
+          entityErrors: {SyncEntity.menstrualDays.name: e.toString()},
+        );
+      }
       final totalDownloaded = downloadedByTable.values
-          .fold<int>(0, (total, items) => total + items.length);
+              .fold<int>(0, (total, items) => total + items.length) +
+          doCiclo;
 
       _setStatus(SyncStatus.success);
       return SyncResult.success(downloaded: totalDownloaded);
@@ -1547,9 +1997,26 @@ class DataSyncService {
       // próximo download. As lápides remotas NÃO são aplicadas: este é o
       // caminho em que o estado deste aparelho é a verdade a enviar.
       await _subirLapidesLocais();
+      // Antes de subir qualquer coisa do ciclo, e essa ordem é o remédio de
+      // um estrago silencioso: com a purga pendente para depois, o "enviar
+      // tudo" mandaria os dias novos e a varredura seguinte terminaria a
+      // purga apagando no servidor exatamente o que acabara de chegar —
+      // com tudo carimbado como enviado aqui, ninguém reenviaria nada e a
+      // conta ficaria sem cópia sem ninguém perceber.
+      await _concluirPurgaDoCiclo();
+      await _lerConsentimentoDoCiclo();
 
       for (final entity in SyncEntity.values) {
         try {
+          if (entity == SyncEntity.menstrualDays) {
+            // `todos`, e não só o pendente: aqui a semântica é "este aparelho
+            // é a verdade a enviar", como para todas as outras entidades. É o
+            // botão de quem ficou sem cópia na nuvem — inclusive por ter
+            // apagado a cópia de propósito —, e mandar só o que está sujo
+            // não mandaria nada.
+            totalUploaded += await _subirDiasMenstruais(todos: true);
+            continue;
+          }
           final tableName = supabaseTableFor(entity);
           final localTable = localTableFor(entity);
 

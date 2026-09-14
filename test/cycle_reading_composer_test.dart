@@ -110,6 +110,34 @@ void main() {
       expect(mapa.containsKey('2026-08-11'), isFalse);
     });
 
+    test('o mapa deduplica como a contagem total: uma cópia conta uma vez',
+        () async {
+      // A cópia que a sincronização traz nasce com `id` novo, mesmo conteúdo
+      // e mesmo instante. Antes, a contagem total a engolia e o mapa do
+      // calendário não — e o cartão de Ciclos dizia um número enquanto o
+      // rodapé do calendário somava outro. Agora as duas são a mesma conta.
+      final instante = DateTime(2026, 8, 10, 9).millisecondsSinceEpoch;
+      await seedDream(createdAt: instante, content: 'o mesmo sonho');
+      await seedDream(createdAt: instante, content: 'o mesmo sonho');
+      // Outro conteúdo no mesmo instante é outro registro.
+      await seedDream(createdAt: instante, content: 'outro sonho');
+
+      final composer = CycleReadingComposer();
+      final mapa = await composer.dailyRecordCounts(
+        userId: userId,
+        start: periodStart,
+        end: periodEnd,
+      );
+      final total = await composer.countPeriodRecords(
+        userId: userId,
+        start: periodStart,
+        end: periodEnd,
+      );
+
+      expect(mapa['2026-08-10'], 2);
+      expect(total, 2);
+    });
+
     test('o mapa e a contagem total enxergam os mesmos registros', () async {
       // A regra que impede o calendário de mostrar um dia quente que a
       // contagem não vê: as duas leem a MESMA lista de tabelas.

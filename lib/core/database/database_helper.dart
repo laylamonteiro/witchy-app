@@ -3,10 +3,10 @@ import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'package:flutter/foundation.dart' show kIsWeb, visibleForTesting;
 import '../../features/grimoire/data/models/spell_model.dart';
-import '../services/data_sync_service.dart';
 import '../../features/diary/data/models/free_writing_model.dart';
 import 'menstrual_cycle_schema.dart';
 import 'reading_session_schema.dart';
+import 'tabelas_locais.dart';
 
 class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._init();
@@ -1247,7 +1247,7 @@ class DatabaseHelper {
   ///
   /// Uma lápide registra "este item foi apagado, e quando". É ela que impede
   /// o download da sincronização de ressuscitar o que a pessoa apagou:
-  /// `entity` é o nome do [SyncEntity] (o mesmo dos dois lados, local e
+  /// `entity` é o nome do `SyncEntity` (o mesmo dos dois lados, local e
   /// Supabase), `deleted_at` decide quem vence quando o item foi editado ou
   /// recriado depois da exclusão, e `synced` marca se a exclusão já chegou
   /// ao servidor.
@@ -1353,35 +1353,37 @@ class DatabaseHelper {
 
   /// As tabelas que a adoção de dados anônimos precisa varrer.
   ///
-  /// Derivada de [SyncEntity], e não escrita à mão: a lista que existia aqui
-  /// já tinha perdido `tarot_readings` — uma tiragem feita antes do login
-  /// continuava presa a 'local_user', sumia da tela ao entrar na conta e
-  /// nunca subia para a nuvem. Mesma família do que aconteceu com a exclusão
-  /// de conta. Derivando do enum, entidade nova nasce adotada.
+  /// Derivada de [TabelasLocais.conteudo], e não escrita à mão: a lista que
+  /// existia aqui já tinha perdido `tarot_readings` — uma tiragem feita antes
+  /// do login continuava presa a 'local_user', sumia da tela ao entrar na
+  /// conta e nunca subia para a nuvem. Mesma família do que aconteceu com a
+  /// exclusão de conta e com as duas limpezas locais. Derivando da lista
+  /// canônica, tabela nova nasce adotada — inclusive a que não sincroniza,
+  /// que também nasce anônima.
+  ///
+  /// O registro menstrual entra por ser conteúdo dela, e não por sincronizar:
+  /// entrar na conta no mesmo aparelho não pode fazê-la perder o que já
+  /// escreveu. Se um dia o envio sair do `SyncEntity`, a adoção continua.
   ///
   /// `spells` sai da lista porque é tratada à parte: os feitiços
   /// pré-carregados do app não pertencem a ninguém e não podem ser adotados.
+  /// Os contadores de cota saem porque não têm a coluna que o laço abaixo
+  /// carimba — ver [TabelasLocais.contadoresDeCota].
+  ///
+  /// `sync_tombstones` NÃO entra, e essa ausência é a correção de um
+  /// vazamento: adotada, a lápide anônima virava `synced = 0` sob a conta real
+  /// e a primeira varredura mandava ao servidor o id de tudo que a pessoa
+  /// apagou antes de existir conta. E não purgava nada — item apagado antes do
+  /// login nunca subiu para lugar nenhum. Quem a remove do aparelho é
+  /// [claimLegacyData]. Ela fica de fora por não ser conteúdo dela, ou seja,
+  /// pela própria [TabelasLocais.conteudo].
   @visibleForTesting
-  static Set<String> tabelasDaAdocaoAnonima() => <String>{
-        for (final entity in SyncEntity.values)
-          DataSyncService.localTableFor(entity),
-        // Não sincroniza, mas também nasce anônima e precisa ser adotada.
-        'guided_ritual_logs',
-        'selection_sessions',
-        'tarot_day_state',
-        'oracle_discoveries',
-        'advisor_consultations',
-        'progress_milestones',
-        // O registro menstrual também é da pessoa: entrar na conta no mesmo
-        // aparelho não pode fazê-la perder o que já escreveu.
-        MenstrualCycleSchema.table,
-        // `sync_tombstones` NÃO entra, e essa ausência é a correção de um
-        // vazamento: adotada, a lápide anônima virava `synced = 0` sob a
-        // conta real e a primeira varredura mandava ao servidor o id de
-        // tudo que a pessoa apagou antes de existir conta. E não purgava
-        // nada — item apagado antes do login nunca subiu para lugar nenhum.
-        // Quem a remove do aparelho é [claimLegacyData].
-      }..remove('spells');
+  static Set<String> tabelasDaAdocaoAnonima() {
+    final tabelas = <String>{...TabelasLocais.conteudo};
+    tabelas.remove('spells');
+    tabelas.removeAll(TabelasLocais.contadoresDeCota);
+    return tabelas;
+  }
 
   /// Associa dados anônimos/legados à primeira conta autenticada que os abrir.
   /// Registros já pertencentes a UUIDs reais nunca são alterados.
@@ -1406,7 +1408,20 @@ class DatabaseHelper {
       for (final table in tables) {
         await txn.update(
           table,
-          {'user_id': userId, 'synced': 0},
+          // O registro menstrual é adotado como todo o resto — entrar na
+          // conta no mesmo aparelho não pode fazê-la perder o que já
+          // escreveu —, mas entra JÁ CARIMBADO como enviado, e isso é a
+          // decisão. Ele agora está no SyncEntity: carimbá-lo `synced: 0`
+          // como os outros entregaria à primeira varredura do login todo o
+          // histórico que ela escreveu antes de existir conta, por efeito
+          // colateral da adoção e sem ninguém ter dito sim a nada. O envio
+          // dele nasce do segundo sim e de mais nada — é `setSyncAllowed`
+          // que manda `MenstrualCycleRepository.markForUpload` liberar
+          // estas linhas, com a conta real e por escolha dela.
+          {
+            'user_id': userId,
+            'synced': table == MenstrualCycleSchema.table ? 1 : 0,
+          },
           // O acervo tem origens que não saem do aparelho (o registro do
           // ciclo). Adotá-las com `synced: 0` seria carimbá-las como "a
           // enviar" e entregá-las à primeira varredura do login — antes de
@@ -1497,49 +1512,101 @@ class DatabaseHelper {
   /// - Atualizações do app
   /// - Mudanças de versão do banco de dados (use _upgradeDB)
   /// - Upgrade/downgrade de plano
-  Future<void> clearAllTables() async {
-    final db = await database;
-    final tables = [
-      ...ReadingSessionSchema.tables,
-      'tarot_readings',
-      'spells',
-      'dreams',
-      'desires',
-      'gratitudes',
-      'affirmations',
-      'free_writings',
-      'daily_rituals',
-      'ritual_logs',
-      'sigils',
-      'birth_charts',
-      'magical_profiles',
-      'rune_readings',
-      'pendulum_consultations',
-      'oracle_readings',
-      'daily_magical_weather',
-      'daily_checkins',
-      'learning_progress',
-      'guided_ritual_logs',
-      'user_encyclopedia_entries',
-      'cycle_readings',
-      // As lápides vão junto: elas guardam o id de tudo que a pessoa apagou,
-      // e sobreviver a um "apagar os dados" era manter no aparelho o índice
-      // exatamente daquilo que ela mandou sumir — pronto para ser enviado.
-      //
-      // Não ressuscita nada noutro aparelho: este método só roda quando a
-      // base local é a verdade sendo descartada inteira (conta anônima, ou
-      // conta sem cópia na nuvem). Quem tem sincronização mantém o banco no
-      // logout — ver `AuthProvider.signOut`.
-      'sync_tombstones',
-    ];
+  ///
+  /// A lista vem de [TabelasLocais.conteudo]. A que existia aqui, escrita à
+  /// mão, tinha perdido o registro menstrual: ele sobrevivia à troca de conta
+  /// no mesmo aparelho preso ao `user_id` anterior, e como o id anônimo é
+  /// sempre 'local_user', a próxima pessoa a abrir a roda no mesmo telefone
+  /// via o que a anterior escreveu do corpo dela.
+  ///
+  /// Aqui não há as ressalvas do "Limpar dados locais": a base local inteira
+  /// está sendo descartada como verdade — inclusive o conteúdo pré-carregado,
+  /// que a semeadura repõe na abertura seguinte.
+  ///
+  /// As lápides vão junto, e só aqui: elas guardam o id de tudo que a pessoa
+  /// apagou, e sobreviver a uma exclusão de conta era manter no aparelho o
+  /// índice exatamente daquilo que ela mandou sumir — pronto para ser enviado.
+  /// Não ressuscita nada noutro aparelho, porque este método só roda quando a
+  /// base local é a verdade sendo descartada (conta anônima, ou conta sem
+  /// cópia na nuvem). Quem tem sincronização mantém o banco no logout — ver
+  /// `AuthProvider.signOut`.
+  Future<void> clearAllTables() => _apagarTabelas(
+        [...TabelasLocais.conteudo, TabelasLocais.lapides],
+        limpezaLocal: false,
+      );
 
-    for (final table in tables) {
-      try {
-        await db.delete(table);
-      } catch (e) {
-        // Ignorar erros de tabelas que não existem
+  /// Apaga deste aparelho o que a pessoa registrou: o "Limpar dados locais"
+  /// das telas de Privacidade e de Editar Perfil, inteiro e num lugar só.
+  ///
+  /// Cada uma das duas mantinha a PRÓPRIA lista de tabelas, com o mesmo rótulo
+  /// e o mesmo texto de confirmação; as duas divergiram entre si e da
+  /// exportação, e o resultado era o pior possível: a pessoa tocava em "limpar
+  /// todos os dados deste aparelho", recebia a mensagem de sucesso, e
+  /// continuava ali o que a lista daquela tela tinha esquecido.
+  ///
+  /// A cópia na nuvem NÃO é tocada, e isso é o gesto, não um esquecimento: é o
+  /// que a confirmação promete em voz alta ("se você tem sincronização
+  /// ativada, seus dados na nuvem serão mantidos"). Vale para o registro do
+  /// ciclo como para todo o resto — quem quer a cópia da conta apagada tem o
+  /// gesto próprio dela na tela de Privacidade ("apagar meus registros do
+  /// ciclo"), que é o único que fala com o servidor e o único que sabe dizer
+  /// se conseguiu. Uma consequência disto precisa estar escrita: com a
+  /// sincronização ligada, a varredura seguinte baixa de volta o que ela
+  /// acabou de limpar. É o significado de "local".
+  ///
+  /// O que fica de fora do `DELETE` está em [TabelasLocais.limpezaParcial],
+  /// com o porquê de cada ressalva. As lápides também ficam: apagá-las traria
+  /// de volta, no download seguinte, exatamente o que ela mandou sumir.
+  ///
+  /// Não mexe em preferência nenhuma — nem nos "sim" do ciclo, nem nas marcas
+  /// das Leituras. Aquilo é resposta dela, não registro, e esquecer as marcas
+  /// enquanto os relatórios voltam da nuvem deixaria no acervo páginas que o
+  /// "apagar meus registros do ciclo" não alcança mais.
+  Future<void> limparConteudoDesteAparelho() => _apagarTabelas(
+        TabelasLocais.conteudo,
+        limpezaLocal: true,
+      );
+
+  /// O `DELETE` tabela por tabela.
+  ///
+  /// Com [limpezaLocal], valem as ressalvas de [TabelasLocais.limpezaParcial]
+  /// — o conteúdo que vem com o app, o crédito de leitura ainda não usado e a
+  /// lápide do ciclo. Sem ela é a exclusão de conta, e ali não há ressalva: a
+  /// base local inteira deixa de valer.
+  ///
+  /// A tabela que não existe nesta versão do banco é SALTADA, e não engolida
+  /// por um `catch`: o `catch` que existia aqui transformava qualquer falha —
+  /// banco trancado, arquivo corrompido — em sucesso silencioso, e as duas
+  /// telas anunciavam "dados removidos" sobre uma limpeza que não aconteceu.
+  /// No gesto mais destrutivo do app, o erro precisa chegar à tela.
+  Future<void> _apagarTabelas(
+    Iterable<String> tabelas, {
+    required bool limpezaLocal,
+  }) async {
+    final db = await database;
+    final existentes = await _tabelasExistentes(db);
+    for (final tabela in tabelas) {
+      if (!existentes.contains(tabela)) continue;
+      final oQueSai =
+          limpezaLocal ? TabelasLocais.limpezaParcial[tabela] : null;
+      if (oQueSai == null) {
+        await db.delete(tabela);
+      } else {
+        await db.delete(tabela, where: oQueSai);
       }
     }
+  }
+
+  /// As tabelas que este banco tem de verdade.
+  ///
+  /// Serve à limpeza: um aparelho que abriu o app numa versão antiga pode não
+  /// ter a tabela mais nova, e perguntar antes é o que permite não usar um
+  /// `catch` cego em volta do `DELETE`.
+  Future<Set<String>> _tabelasExistentes(Database db) async {
+    final linhas = await db.rawQuery(
+      "SELECT name FROM sqlite_master WHERE type = 'table'",
+    );
+    return {for (final linha in linhas) '${linha['name']}'};
   }
 
   Future<void> close() async {

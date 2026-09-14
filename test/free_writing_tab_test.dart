@@ -35,7 +35,7 @@ class FakeFreeWritingProvider extends FreeWritingProvider {
   Future<void> loadFreeWritings() async {}
 
   @override
-  Future<void> save(FreeWritingModel writing) async {
+  Future<bool> save(FreeWritingModel writing) async {
     saved.add(writing);
     final index = _writings.indexWhere((item) => item.id == writing.id);
     if (index == -1) {
@@ -44,6 +44,7 @@ class FakeFreeWritingProvider extends FreeWritingProvider {
       _writings[index] = writing;
     }
     notifyListeners();
+    return true;
   }
 
   @override
@@ -71,6 +72,45 @@ Future<void> pumpFreeWritingTab(
   );
 
   Navigator.of(tester.element(find.text('Home'))).pushNamed('/write');
+  await tester.pumpAndSettle();
+}
+
+/// O canvas onde ele REALMENTE vive: filho de um `TabBarView`, e não uma rota
+/// empilhada.
+///
+/// Os testes acima montam a aba como ROTA, que é a configuração da
+/// quiromancia — e por isso não viam o buraco: nos Diários não há pop, há
+/// troca de aba, e o `TabBarView` desmonta o filho que sai de cena.
+Future<void> pumpDentroDeAbas(
+  WidgetTester tester,
+  FakeFreeWritingProvider provider,
+) async {
+  await tester.pumpWidget(
+    ChangeNotifierProvider<FreeWritingProvider>.value(
+      value: provider,
+      child: MaterialApp(
+        locale: const Locale('pt', 'BR'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: DefaultTabController(
+          length: 2,
+          child: Scaffold(
+            appBar: AppBar(
+              bottom: const TabBar(
+                tabs: [Tab(text: 'canvas'), Tab(text: 'vizinha')],
+              ),
+            ),
+            body: const TabBarView(
+              children: [
+                FreeWritingTab(),
+                Center(child: Text('aba vizinha')),
+              ],
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
   await tester.pumpAndSettle();
 }
 
@@ -176,6 +216,79 @@ void main() {
     expect(find.text('Home'), findsOneWidget);
     expect(provider.saved, isEmpty);
     expect(provider.freeWritings, isEmpty);
+  });
+
+  // NOS DIÁRIOS NÃO HÁ POP. A aba é filha de um `TabBarView`, que desmonta o
+  // filho fora de cena — então trocar para Sonhos ou Gratidão destruía o
+  // State com o texto dentro, e o `dispose` só descartava o controller. Os
+  // testes acima não pegavam isso porque montam a aba como ROTA.
+
+  testWidgets('trocar de aba não perde o que ela estava escrevendo',
+      (tester) async {
+    final provider = FakeFreeWritingProvider();
+    await pumpDentroDeAbas(tester, provider);
+
+    await tester.enterText(find.byType(TextField), 'desabafo longo');
+    await tester.pump();
+
+    await tester.tap(find.text('vizinha'));
+    await tester.pumpAndSettle();
+    expect(find.text('aba vizinha'), findsOneWidget);
+
+    await tester.tap(find.text('canvas'));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text('desabafo longo'),
+      findsOneWidget,
+      reason: 'o TabBarView desmontava o canvas e o texto voltava em branco',
+    );
+  });
+
+  testWidgets('o canvas saindo de cena grava o que estava escrito',
+      (tester) async {
+    final provider = FakeFreeWritingProvider();
+    await pumpDentroDeAbas(tester, provider);
+
+    await tester.enterText(find.byType(TextField), 'escrito antes de sumir');
+    await tester.pump();
+    expect(provider.saved, isEmpty, reason: 'digitar não grava a cada letra');
+
+    // A página inteira dos Diários sai de cena: aqui o State é desmontado de
+    // verdade, e é a última chance de gravar.
+    await tester.pumpWidget(
+      ChangeNotifierProvider<FreeWritingProvider>.value(
+        value: provider,
+        child: const MaterialApp(
+          home: Scaffold(body: Text('outra tela')),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(
+      provider.saved.single.content,
+      'escrito antes de sumir',
+      reason: 'o dispose descartava o controller sem gravar o que havia nele',
+    );
+  });
+
+  testWidgets('sair de cena sem ter escrito não cria reflexão vazia',
+      (tester) async {
+    final provider = FakeFreeWritingProvider();
+    await pumpDentroDeAbas(tester, provider);
+
+    await tester.pumpWidget(
+      ChangeNotifierProvider<FreeWritingProvider>.value(
+        value: provider,
+        child: const MaterialApp(
+          home: Scaffold(body: Text('outra tela')),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(provider.saved, isEmpty);
   });
 }
 

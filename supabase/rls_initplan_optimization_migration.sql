@@ -51,7 +51,7 @@
 BEGIN;
 
 -- ----------------------------------------------------------------------------
--- 1. As 21 tabelas cuja posse é pela coluna `user_id`
+-- 1. As 22 tabelas cuja posse é pela coluna `user_id`
 -- ----------------------------------------------------------------------------
 DO $$
 DECLARE
@@ -63,7 +63,13 @@ DECLARE
     'sigils', 'birth_charts', 'magical_profiles', 'rune_readings',
     'pendulum_consultations', 'oracle_readings', 'daily_magical_weather',
     'user_encyclopedia_entries', 'daily_checkins', 'cycle_readings',
-    'tarot_readings', 'sync_tombstones'
+    'tarot_readings', 'sync_tombstones',
+    -- Chega com as políticas já na forma otimizada
+    -- (menstrual_days_migration.sql); entra na lista para que ela não volte a
+    -- divergir do que o app sincroniza. RODE `menstrual_days_migration.sql`
+    -- ANTES deste arquivo: aqui é uma transação só, e a tabela que não existe
+    -- aborta o bloco inteiro e leva as outras 21 no rollback.
+    'menstrual_days'
   ];
 BEGIN
   FOREACH t IN ARRAY tabelas LOOP

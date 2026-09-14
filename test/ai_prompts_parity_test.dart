@@ -13,6 +13,7 @@ import 'package:grimorio_de_bolso/features/astrology/data/models/magical_profile
 import 'package:grimorio_de_bolso/features/astrology/data/data_sources/daily_weather_content_en.dart';
 import 'package:grimorio_de_bolso/features/astrology/data/data_sources/daily_weather_content_es.dart';
 import 'package:grimorio_de_bolso/features/astrology/data/data_sources/daily_weather_content_pt.dart';
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 
 /// Paridade pt/en/es dos prompts do `AIService` (`AiPrompts`):
 /// campos não vazios nas três línguas, cabeçalhos exatos do Clima Mágico
@@ -257,6 +258,56 @@ void main() {
           expect(prompts.palmistrySystemPrompt(gender),
               allOf(contains('◈'), contains('✦')),
               reason: 'quiromancia [$lang/${gender.name}]');
+        }
+      });
+    });
+
+    test('o Conselheiro conhece o app pelos nomes que a interface mostra', () {
+      // O Conselheiro sugere funcionalidades escrevendo o nome entre `**`, e
+      // a tela transforma esse nome num link só se ele for IGUAL ao rótulo
+      // da interface. Um prompt que renomeie uma ferramenta quebra o link em
+      // silêncio — por isso os nomes são lidos dos ARBs, não copiados aqui.
+      final l10nByLang = {
+        'pt': lookupAppLocalizations(const Locale('pt', 'BR')),
+        'en': lookupAppLocalizations(const Locale('en')),
+        'es': lookupAppLocalizations(const Locale('es')),
+      };
+      promptsByLang.forEach((lang, prompts) {
+        final l10n = l10nByLang[lang]!;
+        final nomes = [
+          l10n.toolTarotTitle,
+          l10n.toolRunesTitle,
+          l10n.toolOracleTitle,
+          l10n.toolPendulumTitle,
+          l10n.toolSigilsTitle,
+          l10n.toolDreamsTitle,
+          l10n.toolPalmistryTitle,
+          l10n.toolNatureGuideTitle,
+          l10n.toolNumerologyTitle,
+          l10n.toolArchetypeTitle,
+          l10n.astroBirthChart,
+          l10n.yourDayWeatherTitle,
+          l10n.yourDayShortcutAiSpell,
+          l10n.toolLivingGrimoireTitle,
+          l10n.cycleReadingTitle,
+          l10n.guidedRitualsSectionTitle,
+          l10n.encyTabMoon,
+          l10n.encyTabSun,
+          l10n.encyTabSabbats,
+          l10n.encyTabCrystals,
+          l10n.encyTabHerbs,
+          l10n.diaryTabGratitude,
+          l10n.diaryTabAffirmations,
+          l10n.diaryTabDreams,
+          l10n.diaryTabDesires,
+          l10n.grimoireMyRecords,
+        ];
+        for (final gender in Gender.values) {
+          final prompt = prompts.mysticAdvisorSystemPrompt(gender);
+          for (final nome in nomes) {
+            expect(prompt, contains('**$nome**'),
+                reason: '"$nome" [$lang/${gender.name}]');
+          }
         }
       });
     });

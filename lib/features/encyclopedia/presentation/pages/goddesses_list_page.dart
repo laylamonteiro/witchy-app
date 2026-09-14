@@ -200,9 +200,15 @@ class _GoddessesListPageState extends State<GoddessesListPage> {
                     children: [
                       Text(goddess.origin.emoji),
                       const SizedBox(width: 4),
-                      Text(
-                        goddess.origin.displayName,
-                        style: Theme.of(context).textTheme.bodySmall,
+                      // A origem ("Mesopotâmica") divide a linha com a arte
+                      // de 60, a seta e as margens do cartão: numa tela de
+                      // 320 com a fonte ampliada ela não cabe inteira. Sem
+                      // Flexible a linha estoura; com ele, quebra.
+                      Flexible(
+                        child: Text(
+                          goddess.origin.displayName,
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
                       ),
                     ],
                   ),

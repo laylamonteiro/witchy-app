@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
@@ -10,27 +12,72 @@ import 'free_writings_list_page.dart';
 /// Aba 💡 de Diários: canvas de escrita livre.
 ///
 /// Superfície fluida e sem pressão — a pessoa simplesmente escreve. O texto é
-/// salvo AUTOMATICAMENTE ao sair da tela, ao abrir o histórico e ao começar
-/// uma reflexão nova, guardado no histórico e sincronizado: ninguém perde o
-/// que escreveu por ter esquecido de apertar um botão.
+/// salvo AUTOMATICAMENTE, guardado no histórico e sincronizado: ninguém perde
+/// o que escreveu por ter esquecido de apertar um botão.
+///
+/// Essa promessa já esteve quebrada, e por um detalhe de onde a aba mora. O
+/// salvamento dependia de gestos de ROTA — abrir o histórico, começar uma
+/// reflexão nova e o `PopScope`. Mas aqui não há rota: a aba é filha do
+/// `TabBarView` dos Diários, e o `TabBarView` DESMONTA o filho que sai de
+/// cena. Trocar para Sonhos ou Gratidão não era "o salvamento não dispara" —
+/// era o State sendo destruído com o texto dentro, e o `dispose` só
+/// descartava o controller. O app encerrado em segundo plano, que é o normal
+/// no Android, levava tudo junto pelo mesmo caminho.
+///
+/// São três as travas agora, e cada uma cobre o buraco da outra:
+///
+/// 1. [AutomaticKeepAliveClientMixin] — trocar de aba não desmonta mais o
+///    canvas. O texto continua NA TELA quando ela volta, com cursor e tudo;
+/// 2. [WidgetsBindingObserver] — o app indo para segundo plano grava o que
+///    está escrito, antes de o sistema poder encerrá-lo;
+/// 3. o `dispose` ainda grava, sem esperar, para o caso de a página inteira
+///    dos Diários sair de cena — mas fora do quadro em curso, porque ali a
+///    árvore está travada e o provider avisa os ouvintes ao gravar.
 class FreeWritingTab extends StatefulWidget {
   /// Reflexão a abrir já carregada no canvas (ex.: leitura de quiromancia
   /// recém-salva). Null = canvas em branco, comportamento da aba do Diário.
   final FreeWritingModel? initial;
 
-  const FreeWritingTab({super.key, this.initial});
+  /// Um convite mostrado ACIMA do campo, quando alguém abre a escrita livre
+  /// a partir de outro lugar do app (hoje, a seção "Práticas para este
+  /// momento" do Ciclo Menstrual).
+  ///
+  /// É convite, e não conteúdo: ele não entra no texto, não é salvo e some
+  /// assim que ela começa a escrever. O que ela escrever continua sendo uma
+  /// reflexão NORMAL do Diário — mesma tabela, mesma origem, mesmo
+  /// histórico. Null = a aba de sempre, sem nada acima do campo.
+  final String? prompt;
+
+  const FreeWritingTab({super.key, this.initial, this.prompt});
 
   @override
   State<FreeWritingTab> createState() => _FreeWritingTabState();
 }
 
-class _FreeWritingTabState extends State<FreeWritingTab> {
+class _FreeWritingTabState extends State<FreeWritingTab>
+    with AutomaticKeepAliveClientMixin, WidgetsBindingObserver {
   final _controller = TextEditingController();
   late FreeWritingProvider _provider;
 
   /// Reflexão sendo editada no momento (null = canvas em branco/nova).
   FreeWritingModel? _current;
   String _originalContent = '';
+
+  /// Uma gravação em voo.
+  ///
+  /// Sem isto, o app indo para segundo plano NO MEIO de um `_save()` montaria
+  /// um segundo modelo — e, no canvas em branco, modelo novo é id novo: a
+  /// mesma reflexão viraria duas páginas no acervo.
+  bool _gravando = false;
+
+  /// O canvas não sai de cena quando ela troca de aba.
+  ///
+  /// Sem isto o `TabBarView` desmonta este State, e o texto ainda não gravado
+  /// morre com ele. Gravar no `dispose` salvaria o conteúdo, mas ela voltaria
+  /// para um canvas EM BRANCO e teria de procurar a própria reflexão no
+  /// histórico — o que não é a mesma coisa que não ter perdido nada.
+  @override
+  bool get wantKeepAlive => true;
 
   @override
   void initState() {
@@ -44,6 +91,7 @@ class _FreeWritingTabState extends State<FreeWritingTab> {
       _controller.text = initial.content;
     }
     _controller.addListener(_onChanged);
+    WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<FreeWritingProvider>().loadFreeWritings();
     });
@@ -57,9 +105,39 @@ class _FreeWritingTabState extends State<FreeWritingTab> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    // O texto é lido ANTES de o controller ser descartado — é dele que sai.
+    final pendente = _prepararGravacao();
+    if (pendente != null) {
+      final provider = _provider;
+      // A gravação sai do quadro em curso de propósito. Aqui dentro a árvore
+      // está TRAVADA (estamos no desmonte), e o provider avisa os ouvintes ao
+      // gravar: marcar alguém para reconstruir agora é proibido pelo
+      // framework ("setState() called when widget tree was locked"). O
+      // microtask roda assim que este quadro termina, e o provider vive fora
+      // desta aba — a gravação chega ao fim mesmo sem o State.
+      scheduleMicrotask(() => provider.save(pendente));
+    }
     _controller.removeListener(_onChanged);
     _controller.dispose();
     super.dispose();
+  }
+
+  /// O app saindo de cena é a última chance de gravar.
+  ///
+  /// No Android o sistema encerra o processo em segundo plano sem avisar de
+  /// novo; era por aqui que o desabafo longo se perdia inteiro.
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state != AppLifecycleState.inactive &&
+        state != AppLifecycleState.hidden &&
+        state != AppLifecycleState.paused) {
+      return;
+    }
+    // Aqui a árvore NÃO está travada, então a gravação parte na hora, sem
+    // adiamento nenhum: o sistema pode congelar o processo logo em seguida.
+    final pendente = _prepararGravacao();
+    if (pendente != null) unawaited(_provider.save(pendente));
   }
 
   void _onChanged() {
@@ -67,24 +145,54 @@ class _FreeWritingTabState extends State<FreeWritingTab> {
     setState(() {});
   }
 
+  /// O que precisa ser gravado agora, ou null se não há o que gravar.
+  FreeWritingModel? _pendente() {
+    final text = _controller.text;
+    if (text.trim().isEmpty) return null;
+    // Nada mudou em uma reflexão já carregada: evita gravações repetidas.
+    if (_current != null && text == _originalContent) return null;
+
+    return _current == null
+        ? FreeWritingModel(content: text)
+        : _current!.copyWith(content: text);
+  }
+
   /// Salva a reflexão atual. Chamado automaticamente ao sair da tela ou iniciar
   /// uma nova reflexão — assim a pessoa nunca perde o que escreveu.
   Future<void> _save() async {
-    final text = _controller.text;
-    if (text.trim().isEmpty) return;
-    // Nada mudou em uma reflexão já carregada: evita gravações repetidas.
-    if (_current != null && text == _originalContent) return;
+    final model = _pendente();
+    if (model == null) return;
 
-    final model = _current == null
-        ? FreeWritingModel(content: text)
-        : _current!.copyWith(content: text);
-
-    await _provider.save(model);
+    _gravando = true;
+    try {
+      await _provider.save(model);
+    } finally {
+      _gravando = false;
+    }
     if (!mounted) return;
     setState(() {
       _current = model;
-      _originalContent = text;
+      _originalContent = model.content;
     });
+  }
+
+  /// O que gravar agora, já marcado como gravado — ou null se não há nada.
+  ///
+  /// Serve aos dois momentos em que não existe mais para quem esperar: o app
+  /// indo para segundo plano e o State sendo desmontado. Quem chama decide
+  /// COMO despachar, porque os dois momentos são diferentes: um pode gravar
+  /// na hora, o outro tem de sair do quadro em curso.
+  ///
+  /// A marca de "já é esta a reflexão" é posta AQUI, antes de a gravação
+  /// partir, e não depois: é ela que faz a chamada seguinte reaproveitar o
+  /// mesmo id em vez de criar uma página nova.
+  FreeWritingModel? _prepararGravacao() {
+    if (_gravando) return null;
+    final model = _pendente();
+    if (model == null) return null;
+    _current = model;
+    _originalContent = model.content;
+    return model;
   }
 
   Future<bool> _handleBack() async {
@@ -134,6 +242,8 @@ class _FreeWritingTabState extends State<FreeWritingTab> {
 
   @override
   Widget build(BuildContext context) {
+    // Exigido pelo AutomaticKeepAliveClientMixin.
+    super.build(context);
     final hasText = _controller.text.trim().isNotEmpty;
 
     return PopScope(
@@ -179,6 +289,19 @@ class _FreeWritingTabState extends State<FreeWritingTab> {
                   ],
                 ),
                 const SizedBox(height: 4),
+                // O convite vive enquanto a folha está em branco: assim que
+                // ela escreve, sai de cena e devolve a altura ao texto.
+                if ((widget.prompt?.trim().isNotEmpty ?? false) && !hasText) ...[
+                  Text(
+                    widget.prompt!,
+                    key: const ValueKey('free_writing_prompt'),
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: context.gc.textSecondary,
+                          height: 1.45,
+                        ),
+                  ),
+                  const SizedBox(height: 12),
+                ],
                 Expanded(
                   child: TextField(
                     controller: _controller,

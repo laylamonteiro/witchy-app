@@ -81,11 +81,16 @@ class GoddessDetailPage extends StatelessWidget {
                       children: [
                         Text(goddess.origin.emoji),
                         const SizedBox(width: 4),
-                        Text(
-                          goddess.origin.displayName,
-                          style: TextStyle(
-                            color: context.gc.softWhite,
-                            fontSize: 14,
+                        // A pílula é `mainAxisSize.min`, mas o mínimo dela
+                        // ainda pode passar da largura do cartão com a fonte
+                        // ampliada — e aí quem estoura é esta linha.
+                        Flexible(
+                          child: Text(
+                            goddess.origin.displayName,
+                            style: TextStyle(
+                              color: context.gc.softWhite,
+                              fontSize: 14,
+                            ),
                           ),
                         ),
                       ],
@@ -136,11 +141,16 @@ class GoddessDetailPage extends StatelessWidget {
                             Text(aspect.emoji,
                                 style: const TextStyle(fontSize: 16)),
                             const SizedBox(width: 6),
-                            Text(
-                              aspect.displayName,
-                              style: TextStyle(
-                                color: context.gc.lilac,
-                                fontWeight: FontWeight.bold,
+                            // Mesmo caso da pílula de origem: o Wrap escolhe
+                            // a linha, mas quem não cabe numa linha inteira
+                            // precisa poder quebrar dentro da própria pílula.
+                            Flexible(
+                              child: Text(
+                                aspect.displayName,
+                                style: TextStyle(
+                                  color: context.gc.lilac,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                             ),
                           ],

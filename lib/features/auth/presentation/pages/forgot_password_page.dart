@@ -344,8 +344,13 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
   }
 
   Widget _buildBackToLogin() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
+    // Wrap, e não Row: a pergunta e o link cabem lado a lado na maioria das
+    // telas, mas em 320 com a fonte ampliada a linha estourava e o "entrar"
+    // saía cortado — logo o link, que é a saída desta tela. Assim ele desce
+    // uma linha em vez de sumir.
+    return Wrap(
+      alignment: WrapAlignment.center,
+      crossAxisAlignment: WrapCrossAlignment.center,
       children: [
         Text(
           AppLocalizations.of(context).forgotRemembered,

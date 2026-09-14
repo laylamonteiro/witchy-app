@@ -115,6 +115,31 @@ class AffirmationProvider with ChangeNotifier {
     }
   }
 
+  /// Grava a edição de uma afirmação dela. Devolve se foi persistida.
+  ///
+  /// Não existia — e por isso o formulário de edição não tinha o que
+  /// chamar: ele montava o modelo, pulava a gravação e fechava a tela como
+  /// se tivesse salvado. Quem espelhar isto em outro lugar: o molde é o
+  /// [addAffirmation] logo acima, que devolve `bool`; o `updateGratitude`
+  /// devolve `void` e não serve de exemplo.
+  ///
+  /// A afirmação precisa chegar aqui por `copyWith`, e não montada de novo:
+  /// é ele que preserva `createdAt` (a lista ordena por ele) e
+  /// `isFavorite` (que é gesto dela, não do formulário).
+  Future<bool> updateAffirmation(AffirmationModel affirmation) async {
+    try {
+      await _repository.update(
+        affirmation.copyWith(userId: _currentUserId),
+      );
+      await loadAffirmations();
+      return true;
+    } catch (e) {
+      _error = e.toString();
+      notifyListeners();
+      return false;
+    }
+  }
+
   Future<void> toggleFavorite(AffirmationModel affirmation) async {
     try {
       // O modelo vindo da UI pode estar com o texto TRADUZIDO (exibição);

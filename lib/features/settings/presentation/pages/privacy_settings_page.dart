@@ -5,17 +5,16 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/legal/legal_document_page.dart';
 import '../../../../core/services/data_export_service.dart';
+import '../../../../core/services/data_sync_service.dart';
 import '../../../../core/theme/app_theme.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/loading_widget.dart';
 import '../../../../core/database/database_helper.dart';
-import '../../../../core/database/menstrual_cycle_schema.dart';
-import '../../../diary/data/repositories/free_writing_repository.dart';
 import '../../../menstrual_cycle/data/menstrual_consent_store.dart';
 import '../../../menstrual_cycle/data/menstrual_report_marks.dart';
 import '../../../menstrual_cycle/data/repositories/menstrual_cycle_repository.dart';
-import '../../../../core/database/reading_session_schema.dart';
+import '../../../menstrual_cycle/domain/menstrual_access.dart';
 import '../../../../core/config/supabase_config.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../auth/data/repositories/supabase_auth_repository.dart';
@@ -41,78 +40,146 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
     _loadSettings();
   }
 
-  /// Quantos dias do ciclo existem nesta conta. É contagem de operação:
-  /// serve para dizer o alcance de apagar, não para analisar nada.
-  int _menstrualDays = 0;
+  /// O bloco do Ciclo só aparece para quem a funcionalidade é oferecida e já
+  /// disse sim ao registro. Antes disso não há nada sobre o que decidir.
+  bool _menstrualOffered = false;
+  bool _menstrualConsented = false;
 
-  Future<void> _loadMenstrualCount() async {
+  /// O SEGUNDO sim: guardar o registro do ciclo também na conta.
+  ///
+  /// Ele morava dentro da própria página do Ciclo, num card com texto longo.
+  /// Mudou para cá por pedido da dona: é decisão sobre DADO, e todas as
+  /// outras — exportar, limpar o aparelho, apagar o ciclo, apagar a conta —
+  /// já se tomam nesta tela. O que não mudou foi a regra: nasce desligado,
+  /// ligar pergunta de novo, desligar é um toque só, e apagar a cópia da
+  /// nuvem continua sendo um gesto à parte de desligar o envio.
+  bool _menstrualCloudOn = false;
+
+  /// Existe conta de verdade? Sem ela não há para onde enviar: o sim ficaria
+  /// guardado sob o `local_user`, não faria nada e não acompanharia ela ao
+  /// entrar na conta. Um sim que não tem efeito é um sim que engana.
+  bool _menstrualHasAccount = false;
+
+  /// A sincronização geral do app. O envio do ciclo precisa dela ligada para
+  /// acontecer: sem isso, o sim daqui fica esperando sem sintoma nenhum.
+  bool _appSyncOn = true;
+
+  bool _menstrualCloudBusy = false;
+
+  Future<void> _loadMenstrual() async {
     try {
-      final userId = context.read<AuthProvider>().currentUser.id;
-      final days = await MenstrualCycleRepository().count(userId);
-      if (mounted) setState(() => _menstrualDays = days);
+      final auth = context.read<AuthProvider>();
+      final userId = auth.currentUser.id;
+      final temConta = auth.currentUser.isAuthenticated;
+      final oferecido = MenstrualAccess(
+        gender: auth.currentUser.gender,
+        consented: true,
+      ).isOffered;
+      final consentiu = await const MenstrualConsentStore().recordingAllowed(userId);
+      final cloudOn = consentiu &&
+          temConta &&
+          await const MenstrualConsentStore().syncAllowed(userId);
+      final appSyncOn = await DataSyncService().cloudSyncEnabled;
+      if (!mounted) return;
+      setState(() {
+        _menstrualOffered = oferecido;
+        _menstrualConsented = consentiu;
+        _menstrualCloudOn = cloudOn;
+        _menstrualHasAccount = temConta;
+        _appSyncOn = appSyncOn;
+      });
     } catch (_) {
       // Sem registro, o bloco simplesmente não aparece.
     }
   }
 
-  /// Apaga só o registro do ciclo, e esquece as respostas de consentimento.
+  /// O interruptor da cópia na conta.
   ///
-  /// Se alguma leitura levou esses registros junto, a confirmação diz quantas
-  /// são e o relatório derivado vai junto — apagar o original não basta se as
-  /// observações dela continuam dentro de um texto no acervo. Os créditos de
-  /// leitura ficam: ela pode gerar de novo, sem a fonte íntima.
-  Future<void> _eraseMenstrualRecord() async {
+  /// LIGAR é um toque só, sem segunda pergunta: o consentimento destacado já
+  /// foi dado na porta do Ciclo, com o texto que explica o que é guardado. A
+  /// pergunta que existia aqui repetia aquele sim e não acrescentava
+  /// escolha nenhuma.
+  ///
+  /// DESLIGAR pergunta, porque desligar faz DUAS coisas: para de enviar e
+  /// apaga a cópia que já está na conta. Antes eram dois gestos, e o segundo
+  /// vivia num botão solto que ficava à vista mesmo com o envio desligado —
+  /// uma opção para apagar algo que talvez nem existisse. Juntá-los é o que
+  /// tira esse botão da tela; o que impede que um aconteça sem ela pedir é a
+  /// confirmação dizer os dois com todas as letras.
+  Future<void> _onMenstrualCloudChanged(bool ligar) async {
+    if (ligar) {
+      await _setMenstrualCloud(true);
+      return;
+    }
     final l10n = AppLocalizations.of(context);
-    final userId = context.read<AuthProvider>().currentUser.id;
-    final messenger = ScaffoldMessenger.of(context);
-    final success = context.gc.success;
-    final marks = await const MenstrualReportMarks().all(userId);
-    if (!mounted) return;
-    final confirmed = await showDialog<bool>(
+    final confirmado = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
+        key: const ValueKey('menstrual-cloud-confirm'),
         backgroundColor: dialogContext.gc.surface,
-        title: Text(l10n.menstrualPrivacyErase,
+        title: Text(l10n.menstrualCloudOffTitle,
             style: TextStyle(color: dialogContext.gc.textPrimary)),
-        content: Text(
-            marks.isEmpty
-                ? l10n.menstrualPrivacyEraseConfirm(_menstrualDays)
-                : '${l10n.menstrualPrivacyEraseConfirm(_menstrualDays)}\n\n'
-                    '${l10n.menstrualPrivacyEraseReadings(marks.length)}',
+        content: Text(l10n.menstrualCloudOffBody,
             style: TextStyle(color: dialogContext.gc.textSecondary)),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(dialogContext, false),
-            child: Text(l10n.commonCancel),
+            key: const ValueKey('menstrual-cloud-confirm-cancel'),
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: Text(l10n.menstrualCloudCancel),
           ),
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, true),
-            style: TextButton.styleFrom(foregroundColor: dialogContext.gc.alert),
-            child: Text(l10n.commonDelete),
+          ElevatedButton(
+            key: const ValueKey('menstrual-cloud-confirm-accept'),
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: Text(l10n.menstrualCloudOffAction),
           ),
         ],
       ),
     );
-    if (confirmed != true) return;
-    await MenstrualCycleRepository().purge(userId);
-    await const MenstrualConsentStore().forget(userId);
-    // As cópias derivadas vão junto: o relatório é onde as observações dela
-    // continuariam existindo depois de o registro sumir. O crédito da
-    // leitura permanece, e a entrada pode ser gerada de novo sem a fonte.
-    for (final mark in marks) {
-      await FreeWritingRepository().delete(mark.writingId);
+    if (confirmado == true && mounted) await _setMenstrualCloud(false);
+  }
+
+  Future<void> _setMenstrualCloud(bool on) async {
+    final l10n = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    final userId = context.read<AuthProvider>().currentUser.id;
+    setState(() => _menstrualCloudBusy = true);
+    await const MenstrualConsentStore().setSyncAllowed(userId, on);
+    // Nos dois sentidos, e antes de qualquer outra coisa: a lápide de um dia
+    // menstrual É a data em que ela sangrou e depois apagou. Desligando, ela
+    // ficaria guardada esperando um religar; ligando, sairia daqui na
+    // primeira varredura — e ela não pediu nem uma coisa nem outra ao mexer
+    // neste interruptor.
+    await MenstrualCycleRepository().descartarLapidesPendentes(userId);
+    // Ligar vale para o registro INTEIRO, não só para o que vier depois.
+    // Desligar apaga a cópia que já subiu: é a outra metade do que a
+    // confirmação prometeu, e sem ela o dado ficaria no servidor depois de
+    // ela ter retirado o consentimento.
+    var apagou = true;
+    if (on) {
+      await MenstrualCycleRepository().markForUpload(userId);
+    } else {
+      apagou = await DataSyncService().apagarCicloNaNuvem(userId);
     }
-    await const MenstrualReportMarks().forget(userId);
     if (!mounted) return;
-    setState(() => _menstrualDays = 0);
+    setState(() {
+      _menstrualCloudOn = on;
+      _menstrualCloudBusy = false;
+    });
+    // Dizer "apagado" sem ter apagado é a pior resposta possível aqui. O
+    // pedido não se perde — fica anotado e a varredura seguinte termina —,
+    // mas a frase na tela precisa dizer qual dos dois aconteceu.
     messenger.showSnackBar(SnackBar(
-      content: Text(l10n.menstrualPrivacyErased),
-      backgroundColor: success,
+      content: Text(on
+          ? l10n.menstrualCloudEnabled
+          : apagou
+              ? l10n.menstrualCloudDisabled
+              : l10n.menstrualCloudDisabledPending),
+      duration: const Duration(seconds: 3),
     ));
   }
 
   Future<void> _loadSettings() async {
-    unawaited(_loadMenstrualCount());
+    unawaited(_loadMenstrual());
     final prefs = await SharedPreferences.getInstance();
     if (!mounted) return;
     setState(() {
@@ -211,20 +278,6 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
                       onTap: _clearLocalData,
                       isDestructive: false,
                     ),
-                    // O registro do ciclo tem porta própria: quem quiser
-                    // apagar só ele não precisa limpar o aparelho inteiro,
-                    // e quem retirou o consentimento continua podendo
-                    // apagar o que já escreveu.
-                    if (_menstrualDays > 0) ...[
-                      _buildDivider(),
-                      _buildActionTile(
-                        icon: Icons.nights_stay_outlined,
-                        title: l10n.menstrualPrivacyErase,
-                        subtitle: l10n.menstrualPrivacyEraseCount(_menstrualDays),
-                        onTap: _eraseMenstrualRecord,
-                        isDestructive: true,
-                      ),
-                    ],
                     _buildDivider(),
                     _buildActionTile(
                       icon: Icons.delete_forever_outlined,
@@ -234,6 +287,44 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
                       isDestructive: true,
                     ),
                   ]),
+
+                  // Seção: Ciclo Menstrual
+                  //
+                  // Só existe para quem a área é oferecida e já disse sim ao
+                  // registro: antes disso não há decisão nenhuma a tomar, e
+                  // um bloco sobre o corpo numa tela que ela nunca pediu
+                  // seria ruído.
+                  if (_menstrualOffered && _menstrualConsented) ...[
+                    const SizedBox(height: 24),
+                    _buildSectionHeader(l10n.menstrualCardTitle),
+                    Padding(
+                      padding: const EdgeInsets.only(left: 4, bottom: 8),
+                      child: Text(
+                        l10n.menstrualCloudBody,
+                        key: const ValueKey('menstrual-cloud-body'),
+                        style: TextStyle(
+                          color: context.gc.textSecondary,
+                          fontSize: 12,
+                          height: 1.4,
+                        ),
+                      ),
+                    ),
+                    _buildSettingsCard([
+                      _buildSwitchTile(
+                        tileKey: const ValueKey('menstrual-cloud'),
+                        icon: Icons.cloud_outlined,
+                        title: l10n.menstrualCloudTitle,
+                        subtitle: _menstrualCloudSubtitle(l10n),
+                        value: _menstrualCloudOn,
+                        // Sem conta não há para onde enviar, e um sim que não
+                        // tem efeito é um sim que engana: o interruptor fica
+                        // desligado e a linha abaixo dele explica por quê.
+                        onChanged: _menstrualHasAccount && !_menstrualCloudBusy
+                            ? _onMenstrualCloudChanged
+                            : null,
+                      ),
+                    ]),
+                  ],
 
                   const SizedBox(height: 24),
 
@@ -245,6 +336,17 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
               ),
             ),
     );
+  }
+
+  /// O estado do envio em uma linha: sem conta, ligado ou desligado — e, se
+  /// o sim estiver de pé mas a sincronização do app desligada, o aviso de que
+  /// nada sai daqui assim mesmo.
+  String _menstrualCloudSubtitle(AppLocalizations l10n) {
+    if (!_menstrualHasAccount) return l10n.menstrualCloudStateNoAccount;
+    if (!_menstrualCloudOn) return l10n.menstrualCloudStateOff;
+    return _appSyncOn
+        ? l10n.menstrualCloudStateOn
+        : '${l10n.menstrualCloudStateOn}\n${l10n.menstrualCloudNeedsSync}';
   }
 
   Widget _buildSectionHeader(String title) {
@@ -277,14 +379,18 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
     );
   }
 
+  /// [onChanged] nulo desliga o interruptor: é o que o bloco do Ciclo usa
+  /// quando não há conta para onde enviar.
   Widget _buildSwitchTile({
     required IconData icon,
     required String title,
     required String subtitle,
     required bool value,
-    required ValueChanged<bool> onChanged,
+    required ValueChanged<bool>? onChanged,
+    Key? tileKey,
   }) {
     return ListTile(
+      key: tileKey,
       leading: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
@@ -321,6 +427,7 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
     required String subtitle,
     required VoidCallback onTap,
     bool isDestructive = false,
+    Key? tileKey,
   }) {
     final color = isDestructive ? Colors.red : context.gc.textPrimary;
     final iconBgColor = isDestructive
@@ -329,6 +436,7 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
     final iconColor = isDestructive ? Colors.red : context.gc.lilac;
 
     return ListTile(
+      key: tileKey,
       leading: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
@@ -466,6 +574,9 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
     // que o widget continua vivo (use_build_context_synchronously).
     final messenger = ScaffoldMessenger.of(context);
     final gc = context.gc;
+    // A conta ativa decide o que entra no arquivo: o banco deste aparelho
+    // pode guardar linhas de uma conta anterior, e elas não são dela.
+    final userId = context.read<AuthProvider>().currentUser.id;
     try {
       messenger.showSnackBar(
         SnackBar(
@@ -474,8 +585,10 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
         ),
       );
 
-      await DataExportService.instance
-          .exportAndDeliver(subject: l10n.privacyBackupSubject);
+      await DataExportService.instance.exportAndDeliver(
+        userId: userId,
+        subject: l10n.privacyBackupSubject,
+      );
 
       messenger.showSnackBar(
         SnackBar(
@@ -494,6 +607,9 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
   }
   Future<void> _clearLocalData() async {
     final l10n = AppLocalizations.of(context);
+    // Capturado ANTES do diálogo: depois dele o `context` já atravessou um
+    // await, e a conta ativa é quem decide de quem são as marcas a limpar.
+    final userId = context.read<AuthProvider>().currentUser.id;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -525,46 +641,24 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
 
     if (confirmed == true && mounted) {
       try {
-        final db = await DatabaseHelper.instance.database;
-
-        // Tabelas para limpar (exceto dados pré-carregados)
-        final tables = [
-          ...ReadingSessionSchema.tables,
-          'tarot_readings',
-          'spells',
-          'dreams',
-          'desires',
-          'gratitudes',
-          'daily_rituals',
-          'ritual_logs',
-          'sigils',
-          'birth_charts',
-          'magical_profiles',
-          'rune_readings',
-          'pendulum_consultations',
-          'oracle_readings',
-          'daily_magical_weather',
-          'learning_progress',
-          'guided_ritual_logs',
-          'user_encyclopedia_entries',
-          'daily_checkins',
-          // O registro menstrual entra aqui como qualquer outro dado dela:
-          // limpar o aparelho limpa também o que ela escreveu do ciclo.
-          MenstrualCycleSchema.table,
-        ];
-
-        for (final table in tables) {
-          try {
-            if (table == 'spells' || table == 'affirmations') {
-              // Manter itens pré-carregados
-              await db.delete(table, where: 'is_preloaded = ?', whereArgs: [0]);
-            } else {
-              await db.delete(table);
-            }
-          } catch (e) {
-            // Ignorar erros de tabelas que não existem
-          }
-        }
+        // A lista de tabelas não mora mais aqui, e é essa a correção: esta
+        // tela e o Editar Perfil mantinham cada uma a sua, com o mesmo rótulo
+        // e o mesmo texto de confirmação, e as duas divergiram — aqui o
+        // registro menstrual sumia e as páginas-espelho dele no Grimório
+        // ficavam legíveis depois de a pessoa mandar limpar tudo.
+        //
+        // A cópia na nuvem fica, como o texto da confirmação promete. Quem
+        // quer o registro do ciclo fora da CONTA desliga o interruptor do
+        // Ciclo Menstrual, abaixo: é ele que fala com o servidor e sabe dizer
+        // se conseguiu — este aqui não saberia.
+        await DatabaseHelper.instance.limparConteudoDesteAparelho();
+        // As marcas de quais leituras levaram o registro do ciclo junto
+        // apontam para relatórios que a linha acima acabou de apagar. Elas
+        // moram no SharedPreferences e não seriam alcançadas por ela — e um
+        // ponteiro para um texto que não existe mais é lixo com cara de
+        // registro. O "apagar meus registros do ciclo" fazia esta limpeza; ele
+        // saiu, e ela veio para cá, que é o gesto que ficou.
+        await const MenstrualReportMarks().forget(userId);
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(

@@ -147,7 +147,62 @@ Entregue em 10/09, com o seletor de cartas compartilhado do Tarot.
 
 ## Conselheiro Místico (P06)
 
-Entregue em 10/09.
+Entregue em 10/09. Revisto em 13/09 (jornada):
+
+- **A bola é uma ilustração viva.** A esfera e a base dourada são a imagem
+  escolhida pela dona (`assets/images/conselheiro/bola_de_cristal.webp`);
+  `CrystalBallView` pinta em volta e por dentro dela: aura lilás que
+  respira, nebulosa e névoa girando, estrelas cintilando dentro do cristal e
+  faíscas douradas em órbita (que saem no tamanho do teclado aberto). É uma
+  animação só, parada ou consultando; a aura pulsa uma vez quando a resposta
+  chega. `CrystalBallGeometry` guarda a esfera medida na imagem e a caixa
+  com halo, e `bola_de_cristal_test` trava a contenção. Movimento reduzido
+  mostra um quadro parado.
+- **A cena começa na bola.** Esconder o teclado ou tocar em "Consultar o
+  Conselheiro" sobe a tela até a bola de cristal (420 ms): a espera acontece
+  onde a pessoa está olhando, e a névoa nasce à vista. Só depois a tela
+  desce, junto com ela. A subida espera o teclado terminar de sumir — o
+  botão o fecha sozinho, e enquanto ele encolhe a viewport muda de tamanho a
+  cada quadro; subir no meio disso termina numa altura que ninguém pediu.
+- **A névoa leva a resposta da bola ao card, e lá o texto é escrito.** O
+  emblema de cada ferramenta já voava do hub para o cabeçalho; a resposta
+  ganhou o mesmo gesto: `AdvisorMistFlight` (Overlay, porque o voo atravessa
+  a rolagem) acende um brilho DENTRO do cristal — `CrystalBallGeometry.
+  sphereAnchor` diz onde a esfera cai na caixa do widget, e o meio da caixa
+  cairia no anel dourado — e de lá manda névoa, faíscas e letras soltas até
+  o COMEÇO DO PRIMEIRO PARÁGRAFO da resposta, em 1,9 s. A tela DESCE JUNTO:
+  rolar primeiro e só então soltar a névoa escondia o voo inteiro, então a
+  rolagem (1,5 s) e o voo partem no mesmo quadro, e o voo mira o parágrafo
+  por chave — os dois retângulos são lidos dentro do `paint`, já com o
+  layout do quadro, senão a névoa pousaria onde o texto estava quando ela
+  saiu. São 32 sopros, metade névoa, e a descida não acelera no meio: o
+  rastro tem de ser legível, não um risco. A curva é cúbica, com o primeiro
+  controle ABAIXO do centro da esfera: com um controle só, no meio do
+  caminho, a névoa partia na direção dele — para cima — e parecia escapar
+  pela tampa da bola em vez de sair de dentro dela. Só quando a névoa pousa é que
+  `MistTypewriterText`
+  (`lib/core/widgets/motion/`) começa a escrever, por fração de um
+  controller (22 ms por caractere, teto de 9 s), com o texto inteiro na
+  árvore desde o primeiro quadro — o que falta escrever é transparente, e o
+  leitor de tela recebe a resposta completa de saída. Tocar no texto ou em
+  "Mostrar tudo" completa; só uma resposta recém-chegada anima — a
+  restaurada ao reabrir aparece inteira, assim como sob movimento reduzido.
+  A escrita anda por ticker, e o desta cena pode ficar mudo (aba em segundo
+  plano, tela que saiu da frente): um relógio de segurança mostra a resposta
+  inteira dois segundos depois do fim previsto, porque o que ainda não foi
+  escrito é transparente e ficaria invisível para sempre. Foi o que a
+  primeira versão, com uma faixa de névoa descendo sobre o próprio texto,
+  não deu conta de mostrar.
+- **O campo é limpo ao consultar.** A pergunta enviada segue na citação; a
+  falha mantém a citação e "Tentar novamente" reenvia o que está nela.
+- **O Conselheiro conhece o app.** O prompt (pt/en/es) lista as ferramentas
+  pelos nomes da interface e pede que ele as escreva entre `**` quando uma
+  ajuda; a tela mostra o nome em lilás e negrito e, quando
+  `AdvisorFeatureCatalog` conhece o destino, tocável — abre a ferramenta
+  pelo mesmo caminho dos atalhos do Seu Dia ou por deep link de aba (novos
+  destinos: Cristais, Ervas, Gratidão, Afirmações, Desejos). Nome que o
+  catálogo não conhece fica só realçado. Guardar o conselho remove os
+  marcadores; `ai_prompts_parity_test` amarra os nomes do prompt aos ARBs.
 
 - **Estado da requisição separado da animação:** cada pergunta vira uma
   linha em `advisor_consultations` (schema 26): pendente antes da chamada,
@@ -944,36 +999,43 @@ Armadilhas que custaram ciclo de CI e vale não repetir:
 
 ## Continuação do lote
 
-1. **O registro do ciclo vira página no Grimório e vai para a IA** (decisão da
-   dona, 11/09: registrar já é o consentimento, com chip próprio no acervo).
-   Plano pronto, mas ele COMEÇA pelo caminho de apagar, não pelo de gravar: a
-   exclusão de uma página grava uma lápide local e a manda ao servidor sem
-   passar pelo porteiro da nuvem — um id que carregue a data menstruada faria
-   o calendário inteiro subir no ato em que a pessoa pede para apagar. E a
-   política de privacidade que o app EXIBE não fala em menstruação, saúde nem
-   dado sensível, e ainda afirma que a sincronização é exclusiva do Premium,
-   o que já é falso.
-2. **Sincronização do registro menstrual** (pedido da dona) — depende do item
-   1 estar resolvido, porque hoje o relatório derivado já sobe pelo acervo.
+1. ~~**O registro do ciclo vira página no Grimório e vai para a IA**~~ —
+   **entregue em `e21a75a`.** Cada dia tem página no acervo, com chip próprio
+   no filtro, e entra na Leitura do Ciclo; registrar é o consentimento, como
+   a dona decidiu em 11/09. O caminho de apagar, por onde o plano precisava
+   começar, foi resolvido antes, em `24d4f18`: a lápide passou a ser gravada
+   DEPOIS das guardas de conta e de nuvem, com a consequência aceita de que
+   apagar com a nuvem desligada e religar depois faz o item voltar. A
+   política de privacidade parou de dizer que a sincronização é exclusiva do
+   Premium (`24d4f18`) e passou a nomear o registro do ciclo e o caminho por
+   onde ele sai (`e21a75a`). A lista do que ele guarda, porém, ainda cita a
+   Estação Interna, extinta na Onda 1 — a política é de outra frente, e o
+   conserto é dela.
+2. ~~**Sincronização do registro menstrual**~~ — **entregue na Onda 3**
+   (abaixo). O registro passa a poder subir, e só com um segundo sim
+   explícito, desligado por padrão; a política ganhou a seção de dado
+   sensível ANTES do primeiro envio, como a catraca do teste exigia.
 3. P14: revisão de tamanhos e hierarquia e o percurso completo pelas 12
    entradas em aparelho — o que resta do pacote é avaliação visual.
 4. P15: integração e validação final do lote.
 
-Esperando decisão da dona (não mexer sem ela):
+A lista de "esperando decisão da dona" acabou — as cinco que estavam nela
+foram decididas e entregues:
 
-- **Quem já disse sim sob a promessa antiga** ("não vai para o Diário, para o
-  acervo nem para a IA"). É o que trava o item 1.
-- **Os emblemas de Sigilos, Runas e Pêndulo** (⛤, ᚱ, ⟟): não são emoji, são
-  símbolos raros que dependem de fonte de símbolos. Trocar por desenho muda a
-  identidade visual das três ferramentas.
-- **O prêmio do quiz de arquétipos**: o resultado é gravado no aparelho pelo
-  SÍMBOLO, não pelo nome — símbolo que não bate, resultado perdido em
-  silêncio.
-- **Os oito símbolos planetários** na lista de retrógrados, hoje o único
-  diferenciador visual entre as linhas.
-- **A altura da célula no seletor de período** (33-37px de alvo de toque,
-  abaixo do mínimo): subir desfaz a decisão de 23/08 de deixar o calendário
-  compacto.
+- **Quem já disse sim sob a promessa antiga**: a dona respondeu em 12/09 que
+  não há ninguém em produção, e por isso a regra nova foi escrita sem
+  migração e sem pedir sim de novo (`e21a75a`).
+- **Os emblemas de Sigilos, Runas e Pêndulo** (⛤, ᚱ, ⟟): viraram desenho do
+  app, em `tool_emblem_art.dart` (`e21a75a`).
+- **O prêmio do quiz de arquétipos**: passou a ser gravado por id estável, com
+  migração do que já existia — e a migração só regrava quando entendeu todas
+  as energias, em vez de apagar a que não soubesse ler (`24d4f18`).
+- **Os símbolos planetários** na lista de retrógrados: cada planeta ganhou cor
+  própria e uma segunda pista além da cor, para a linha continuar se
+  distinguindo sem o glifo e para quem não distingue cor (`e21a75a`).
+- **A altura da célula no seletor de período**: o alvo de toque subiu de 33px
+  para perto de 40, apertando as margens em volta para o calendário crescer o
+  mínimo — a decisão de 23/08 de deixá-lo compacto continua de pé (`e21a75a`).
 
 As decisões mais recentes sobre menstruação estão mantidas no plano:
 registro, leitura dos dados inseridos, edição, exclusão e exportação Free;
@@ -1068,6 +1130,23 @@ calendário; fontes, tamanhos e posições padronizados na jornada inteira.
   cabeçalho, bloco e card são os mesmos em todos. O card "Ciclo Menstrual" da
   aba Ciclos fala a língua dos vizinhos dele (Leitura do Ciclo, Eras), não a
   da página — é lá que ele mora.
+- **Apagar o dia do ciclo pelo Grimório** (pedido da dona, 12/09): a página
+  do dia em "Meus Registros" ganhou o botão de apagar — e apagar ali é
+  apagar o DIA, pelo repositório do ciclo, que grava a lápide da linha e
+  tira a página junto, o mesmo caminho do "Apagar este dia" da roda. Editar
+  continua sendo na roda. A lista do acervo é recarregada em seguida, porque
+  ela lê do provedor e o repositório do ciclo escreve por baixo dele. Teste:
+  `apagar_dia_do_ciclo_no_grimorio_test.dart`.
+- **Uma conta só de registros** (a dona viu o cartão de Ciclos dizer 16 e o
+  rodapé do calendário da leitura somar 15): eram duas consultas parecidas —
+  a total deduplicava e respeitava lápides, a do calendário não — e duas
+  janelas — o cartão contava desde o instante da última leitura, o calendário
+  contava o mês até hoje. Agora `countPeriodRecords` é a soma de
+  `dailyRecordCounts` (uma consulta só, com dedup e lápides), e a janela com
+  que a leitura abre mora em `CycleReadingService.suggestedWindow`, usada
+  pela tela da leitura e pelo cartão; o cartão só corta o que nasceu antes
+  da última leitura quando ela é deste mês. Testes: `janela_da_leitura_test`
+  e "uma cópia conta uma vez" em `cycle_reading_composer_test`.
 - **A constelação do arquétipo** (fora do Ciclo, mas pedida no mesmo teste
   em aparelho: "muito grandes e desorganizadas"): a figura passou a morar num
   quadrado do menor lado da caixa, em vez de esticar com a largura — era isso
@@ -1089,3 +1168,115 @@ calendário; fontes, tamanhos e posições padronizados na jornada inteira.
   rótulo) e `menstrual_about_text_test.dart`, que agora proíbe vocabulário de
   causa no texto da Lua e nos oito convites, e vocabulário de boilerplate em
   todos.
+
+### Onda 3 — o registro pode subir, e só se ela pedir (13/09)
+
+A dona pediu a sincronização do ciclo há dias, e ela era o único pedido dela
+que continuava sem entrega. O que segurava não era código: o registro era a
+única coisa do app que não saía do aparelho em plano nenhum, e a política que
+ela exibe afirmava isso. Sincronizar é reescrever essa promessa.
+
+- **A ordem foi a que a catraca mandou.** `politica_legal_test.dart` tinha um
+  teste escrito de propósito para este momento: ele PROIBIA a tabela de entrar
+  no sync enquanto a política não tivesse uma seção sobre dado sensível com
+  consentimento destacado. A seção veio primeiro; a catraca antiga foi
+  substituída por outra, que agora trava a regra nova — o envio só existe
+  atrás do segundo sim, e a página espelho do dia no acervo continua sem subir
+  nunca.
+- **Dois sins, separados.** O primeiro é registrar no aparelho, como sempre
+  foi. O segundo é enviar para a conta: nasce desligado, mora na própria roda
+  do ciclo (foi ali que o primeiro foi dado, e é ali que ela vê o que sobe),
+  pede confirmação que repete o que sobe e o que nunca sobe, e desliga com um
+  toque. Sem conta, o card explica e não oferece sim nenhum.
+- **Lápide nenhuma, nunca.** O id de um dia é a data em que ela sangrou. Uma
+  lápide em `sync_tombstones` guardaria essa data em claro, no servidor, para
+  sempre — então a tabela não usa lápide em hipótese alguma: a própria linha
+  carrega `deleted` e `revision` e sobe pelo caminho normal, que é o caminho
+  do consentimento. O que fica registrado, e está escrito na política, é que a
+  data marcada como apagada permanece na linha até a purga.
+- **Apagar de verdade.** "Apagar meus registros do ciclo" passou a apagar a
+  cópia da conta junto. Se a rede engolir o pedido, ele fica anotado, é
+  retentado a cada varredura e NADA desce enquanto não confirmar — sem isso, o
+  apagar que falhou voltaria como registro na varredura seguinte. A tela
+  distingue os dois desfechos em vez de dizer "apagado" nos dois.
+- **Descartar as lápides ao desligar a nuvem** (resíduo antigo, e vale para
+  todas as entidades): desligar a sincronização descarta as exclusões ainda
+  não enviadas. A consequência aceita é que um item apagado com a nuvem
+  desligada volta se ela for religada — guardar a memória da exclusão é
+  guardar o id. O interruptor tem duas portas no app (Sincronização e Perfil),
+  e as duas passam a chamar o mesmo gesto.
+- **Sair da conta esquece os dois sins.** Eles moram nas preferências, fora do
+  banco: sem isso, quem entrasse depois no mesmo aparelho encontraria o
+  registro vazio e o envio já ligado.
+- **O servidor:** `supabase/menstrual_days_migration.sql`. Ele PRECISA ser
+  aplicado no painel antes de a versão com envio chegar às pessoas, e antes de
+  `rls_initplan_optimization_migration.sql` — a varredura de exclusão de conta
+  é derivada do enum e trata tabela inexistente como falha, então sem a
+  migração ninguém consegue excluir a própria conta.
+- **Os documentos legais em três idiomas.** A política e os termos existiam só
+  em português, num app oferecido em três. Agora existem em inglês e espanhol,
+  com a seção de dado sensível já traduzida, e o app escolhe pelo idioma ativo
+  com o português como reserva. O teste passou a comparar parágrafo por
+  parágrafo: uma tradução que perca um item de lista derruba o CI.
+- **Verificação:** `ciclo_na_nuvem_test.dart` (sem o segundo sim nada sai,
+  nem linha nem lápide; com ele a linha sobe e a página espelho não; a purga
+  que a rede engoliu não vira registro de volta; restaurar da nuvem devolve as
+  páginas do ciclo), `lapides_descartadas_ao_desligar_test.dart`,
+  `o_ciclo_nao_sobe_test.dart` ampliado, `sync_coverage_test.dart`,
+  `politica_legal_test.dart` (catraca nova e paridade das três traduções).
+
+### P14 e P15 — a auditoria, e o que ela achou (13/09)
+
+Três leituras adversariais varreram o código atrás do que só se vê lendo: a
+coerência das doze ferramentas (P14) e os furos de integração (P15). Foram 42
+achados; os oito graves e a maioria dos médios estão corrigidos.
+
+- **Os símbolos raros, de novo.** ⛤, ᚱ e ⟟ viraram desenho em agosto, mas a
+  troca tinha chegado só aos cards e às barras: dentro das telas do Pêndulo,
+  das Runas e dos Sigilos o caractere cru continuava sendo a FIGURA
+  PRINCIPAL, a 48 pontos. Num aparelho sem fonte de símbolos, o maior
+  elemento da tela era um quadradinho vazio. Agora os três são `ToolEmblem`. A
+  animação de glifos da abertura das Runas trocava quatro caracteres; virou
+  opacidade sobre o desenho de Raidho, mesma cadência — perdeu-se a troca de
+  runa, e isso está escrito no código. Sobraram glifos crus no hub de
+  Adivinhação e nos atalhos de Seu Dia: anotados, não corrigidos.
+- **A margem das doze.** Metade das páginas usava `all(16)` e a outra metade
+  `symmetric(vertical: 16)`. Como o cartão já traz margem lateral própria, o
+  conteúdo ficava com 32dp de recuo num grupo e 16dp no outro, e o vão entre
+  cartões dobrava junto. Numa tela de 320dp isso é 10% da largura de leitura,
+  perdida justamente nas ferramentas que mais escrevem. Agora é um padrão só,
+  e o conteúdo que não mora em cartão ganhou o recuo explícito.
+- **Alvo de toque e fonte grande.** As Horas Espelho tinham 24 alvos de 40dp
+  colados; a data do sonho, 36dp. `Row` com texto sem folga estourava o
+  cabeçalho dos Sigilos e o verbete das Runas com fonte ampliada — era o
+  defeito mais repetido da auditoria.
+- **Uma lista de tabelas só.** "Limpar dados locais" tinha duas cópias
+  escritas à mão, uma no Editar Perfil e outra em Privacidade, e elas
+  divergiram entre si e da exportação: cada tela apagava um conjunto
+  diferente, e nenhuma apagava tudo. Agora existe `TabelasLocais`, derivada
+  num lugar só, que a exportação, a limpeza, a exclusão de conta e a adoção do
+  primeiro login consomem. As ressalvas são nomeadas: o pré-carregado é do
+  app, o crédito de leitura pago e não usado fica, e a lápide do dia menstrual
+  fica (sem ela, limpar o aparelho ressuscitaria no download um dia apagado).
+- **A catraca que faltava** (`nenhuma_tabela_esquecida_test.dart`): ela parte
+  das TABELAS do banco, não do enum, e exige de cada uma ou entrada no sync ou
+  uma declaração explícita de "fica neste aparelho por decisão". O teste de
+  cobertura antigo só olhava o enum, e por isso nunca viu o que estava de
+  fora.
+- **Seis tabelas ficam desprotegidas, e agora está escrito.** Os ritos
+  guiados (sabbats, luas e águas celebrados, e o XP que veio deles), o álbum
+  do Oráculo, a memória das consultas ao Conselheiro, os marcos das jornadas,
+  uma leitura interrompida antes de revelar e a pergunta da carta do dia. Tudo
+  isso some numa reinstalação, inclusive para quem tem a nuvem ligada. Não foi
+  corrigido de propósito: exige tabelas novas no servidor de produção, e a
+  decisão é da dona, com o custo à vista.
+- **O texto que vendia o que já é de graça.** A pergunta frequente ainda dizia
+  que a nuvem é do Premium, o que deixou de ser verdade. A catraca da política
+  já proibia essa frase no documento legal; agora ela alcança também os quatro
+  ARBs, e em qualquer chave — a frase migrou uma vez, e o próximo lugar
+  ninguém adivinha.
+- **Fica pendente:** o site em `site/privacidade/index.html` repete a mentira
+  da nuvem Premium e não é gerado a partir dos documentos legais; o guia
+  `docs/SUPABASE_RESTORE.md` descreve um "script único" que já não é único; e
+  as 24 runas continuam sendo caracteres nas pedras, o que o sistema de
+  emblemas não resolve (ele desenha só Raidho).

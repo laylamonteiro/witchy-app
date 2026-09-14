@@ -211,6 +211,28 @@ class CycleReadingService {
     );
   }
 
+  /// A janela com que a tela da leitura ABRE — e, por isso, a que o cartão
+  /// de Ciclos tem de contar.
+  ///
+  /// Semana é o giro corrente ([currentWeek]). Lunação é o mês do calendário
+  /// até hoje: é o que o seletor mostra selecionado quando ela chega, e a
+  /// dona conferiu o rodapé dele contra o cartão e achou o cartão errado. O
+  /// cartão contava desde o instante da última leitura, o calendário contava
+  /// o mês — duas janelas para o mesmo "quantos registros". Agora é uma:
+  /// quem quer o número que ela vai ver ao abrir a leitura chama isto.
+  static ({DateTime start, DateTime end}) suggestedWindow(
+    String periodType, {
+    DateTime? now,
+  }) {
+    if (periodType == CycleReadingPeriodType.week) return currentWeek(now: now);
+    final reference = now ?? DateTime.now();
+    return (
+      start: DateTime(reference.year, reference.month, 1),
+      // Hoje vivido por inteiro; o construtor normaliza a virada de mês.
+      end: DateTime(reference.year, reference.month, reference.day + 1),
+    );
+  }
+
   /// A janela de um [CycleReadingPeriodType].
   static ({DateTime start, DateTime end}) periodFor(
     String periodType, {

@@ -587,67 +587,43 @@ class CycleReadingComposer {
   }
 
   /// Quantos registros a pessoa fez em CADA dia da janela — o mapa de calor
-  /// do seletor de período.
+  /// do seletor de período, e a ÚNICA conta de registros que existe: o
+  /// número da oferta, o do cartão de Ciclos e o do aviso de leitura rasa
+  /// são a soma deste mapa ([countPeriodRecords]).
+  ///
+  /// Já foram duas consultas parecidas — uma por dia para o calendário,
+  /// outra total para os números —, e "parecidas" foi o problema: a total
+  /// deduplicava e respeitava lápides, a do calendário não, e a dona viu o
+  /// cartão dizer um número e o calendário somar outro. Uma consulta só não
+  /// tem como divergir de si mesma.
   ///
   /// A chave é `yyyy-MM-dd` no fuso do aparelho. O agrupamento é feito em
   /// Dart, e não com `date()` no SQL, de propósito: o SQLite converteria os
   /// millis em UTC e um registro das 22h cairia no dia seguinte para quem
   /// vive a leste — o calendário mostraria calor no dia errado.
   ///
-  /// Dias sem registro simplesmente não aparecem no mapa.
-  Future<Map<String, int>> dailyRecordCounts({
-    required String userId,
-    required DateTime start,
-    required DateTime end,
-  }) async {
-    final db = await _db;
-    final counts = <String, int>{};
-    for (final table in _recordTables) {
-      final timeColumn = _timeColumnOf(table);
-      try {
-        final rows = await db.rawQuery(
-          'SELECT $timeColumn AS t FROM $table '
-          'WHERE user_id = ? AND $timeColumn >= ? AND $timeColumn < ?'
-          '${_ownRecordsFilter(table)}',
-          [
-            userId,
-            start.millisecondsSinceEpoch,
-            end.millisecondsSinceEpoch,
-          ],
-        );
-        for (final row in rows) {
-          final millis = row['t'];
-          if (millis is! int) continue;
-          final dia = _dayKey(DateTime.fromMillisecondsSinceEpoch(millis));
-          counts[dia] = (counts[dia] ?? 0) + 1;
-        }
-      } catch (_) {
-        // Tabela ausente numa base antiga: segue com as demais.
-      }
-    }
-    return counts;
-  }
-
-  /// Contagem barata dos registros do período — usada pelo card de oferta
-  /// no Seu Dia ("Sua lunação rendeu {N} registros") e pelo aviso de
-  /// leitura rasa, sem montar o material inteiro.
+  /// Dias sem registro simplesmente não aparecem no mapa. Duplicatas (mesma
+  /// assinatura de conteúdo E mesmo instante — tipicamente a cópia que a
+  /// sincronização traz com `id` novo) contam uma vez, e o que já tem lápide
+  /// não conta.
+  ///
   /// Com [options], a conta passa a ser a do que VAI para a análise: o que
   /// ela desligou some do número, porque prometer material que não será
   /// enviado é prometer uma leitura que não vai existir. Sem [options] — o
-  /// caminho da oferta e do cartão de Ciclos — a conta continua sendo a do
-  /// período inteiro, que é o que aquelas telas querem dizer.
-  Future<int> countPeriodRecords({
+  /// caminho da oferta e do cartão de Ciclos — a conta é a do período
+  /// inteiro, que é o que aquelas telas querem dizer.
+  Future<Map<String, int>> dailyRecordCounts({
     required String userId,
     required DateTime start,
     required DateTime end,
     CycleReadingSourceOptions? options,
   }) async {
     final db = await _db;
-    var total = 0;
+    final counts = <String, int>{};
     final fontesDoAcervo =
         options == null ? const <String>[] : _fontesDoGrupo(options);
     final fontesEmLista =
-        fontesDoAcervo.map((fonte) => "'" + fonte + "'").join(', ');
+        fontesDoAcervo.map((fonte) => "'$fonte'").join(', ');
     for (final table in _recordTables) {
       if (options != null) {
         final grupo = _grupoDaTabela[table];
@@ -663,10 +639,13 @@ class CycleReadingComposer {
       final apagadosFilter = _filtroDeApagados(table);
       try {
         final rows = await db.rawQuery(
-          // DISTINCT sobre a assinatura de conteúdo, e não `COUNT(*)`: a
-          // contagem é o que a pessoa vê antes de comprar a leitura, e somar
-          // a mesma coisa duas vezes promete um material que não existe.
-          'SELECT COUNT(DISTINCT ${_chaveDeDeduplicacao(table)}) AS total '
+          // DISTINCT sobre a assinatura de conteúdo, e não uma linha por
+          // registro: a contagem é o que a pessoa vê antes de comprar a
+          // leitura, e somar a mesma coisa duas vezes promete um material
+          // que não existe. A assinatura já carrega o instante, então o
+          // `t` ao lado não abre o DISTINCT — só diz o dia.
+          'SELECT DISTINCT ${_chaveDeDeduplicacao(table)} AS assinatura, '
+          '$timeColumn AS t '
           'FROM $table '
           'WHERE user_id = ? AND $timeColumn >= ? AND $timeColumn < ?'
           '$preloadedFilter$apagadosFilter',
@@ -678,12 +657,36 @@ class CycleReadingComposer {
             if (apagadosFilter.isNotEmpty) userId,
           ],
         );
-        total += (rows.first['total'] as int?) ?? 0;
+        for (final row in rows) {
+          final millis = row['t'];
+          if (millis is! int) continue;
+          final dia = _dayKey(DateTime.fromMillisecondsSinceEpoch(millis));
+          counts[dia] = (counts[dia] ?? 0) + 1;
+        }
       } catch (_) {
         // Tabela ausente numa base antiga: segue com as demais.
       }
     }
-    return total;
+    return counts;
+  }
+
+  /// Contagem barata dos registros do período — o número da oferta no Seu
+  /// Dia, o do cartão de Ciclos e o do aviso de leitura rasa. É a soma de
+  /// [dailyRecordCounts], e por isso bate com o rodapé do calendário para a
+  /// mesma janela, sempre.
+  Future<int> countPeriodRecords({
+    required String userId,
+    required DateTime start,
+    required DateTime end,
+    CycleReadingSourceOptions? options,
+  }) async {
+    final porDia = await dailyRecordCounts(
+      userId: userId,
+      start: start,
+      end: end,
+      options: options,
+    );
+    return porDia.values.fold<int>(0, (soma, n) => soma + n);
   }
 
   /// Monta o material completo do período.

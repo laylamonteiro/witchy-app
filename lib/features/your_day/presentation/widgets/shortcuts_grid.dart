@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../core/navigation/app_deep_link.dart';
 import '../../../../core/theme/grimoire_colors.dart';
+import '../../../../core/tools/tool_emblem_art.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../data/shortcut_registry.dart';
@@ -84,7 +85,28 @@ class _ShortcutsGridState extends State<ShortcutsGrid> {
                   final isSelected = selected.contains(tool.id);
                   return FilterChip(
                     selected: isSelected,
-                    label: Text('${tool.emoji} ${tool.label(l10n)}'),
+                    // Emblema e nome em widgets separados: o de duas das
+                    // ferramentas é desenhado, e desenho não entra numa
+                    // interpolação de string. 18 aproxima o desenho do corpo
+                    // do emoji no rótulo do chip.
+                    //
+                    // O nome vai em `Flexible` porque o rótulo antes era um
+                    // `Text` solto: o chip mede o rótulo com largura máxima
+                    // FINITA, então aquele texto quebrava em duas linhas e o
+                    // chip crescia em altura. Num `Row`, filho sem flex
+                    // recebe largura infinita e o nome vira uma linha rígida
+                    // que estoura o `Row` — o maior deles, "Interpretación de
+                    // Sueños" do espanhol, já estoura numa tela de 320 com a
+                    // fonte do sistema aumentada. `Flexible` devolve a quebra
+                    // de linha que o `Text` solto tinha.
+                    label: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        _EmblemaDoAtalho(tool: tool, size: 18),
+                        const SizedBox(width: 6),
+                        Flexible(child: Text(tool.label(l10n))),
+                      ],
+                    ),
                     selectedColor: sheetContext.gc.lilac.withValues(alpha: 0.3),
                     checkmarkColor: sheetContext.gc.lilac,
                     onSelected: (value) {
@@ -200,7 +222,7 @@ class _ShortcutsGridState extends State<ShortcutsGrid> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text(tool.emoji, style: const TextStyle(fontSize: 28)),
+                      _EmblemaDoAtalho(tool: tool, size: 28),
                       const SizedBox(height: 6),
                       Text(
                         tool.label(l10n),
@@ -218,5 +240,40 @@ class _ShortcutsGridState extends State<ShortcutsGrid> {
         ],
       ),
     );
+  }
+}
+
+/// O emblema de um atalho: o emoji do sistema ou o desenho do app.
+///
+/// Existe para os dois caminhos conviverem no MESMO slot — a grade e o chip
+/// do Editar pedem o emblema em tamanhos diferentes, e nenhum dos dois quer
+/// saber qual dos dois caminhos aquele atalho usa.
+///
+/// O desenho NÃO voa (é [ToolDrawingArt] direto, e não o `ToolEmblem`): a
+/// etiqueta de Hero de cada ferramenta pertence ao card do Grimório, e a aba
+/// do Grimório vive no mesmo IndexedStack do shell que a aba do Seu Dia —
+/// dois donos da mesma etiqueta na mesma rota derrubariam a tela. O desenho
+/// também já sai da árvore de semântica por conta própria: o nome da
+/// ferramenta está escrito ao lado nos dois lugares.
+class _EmblemaDoAtalho extends StatelessWidget {
+  const _EmblemaDoAtalho({required this.tool, required this.size});
+
+  final ShortcutTool tool;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    final drawing = tool.drawing;
+    if (drawing != null) return ToolDrawingArt(drawing: drawing, size: size);
+    final emoji = tool.emoji;
+    // Sem emoji E sem desenho não deveria existir — o construtor do
+    // ShortcutTool garante que há exatamente um dos dois. Mas `assert` só
+    // roda em debug: no app publicado um atalho mal construído passaria, e
+    // `tool.emoji!` derrubaria a aba inteira do Seu Dia por causa de um
+    // quadradinho. O slot vazio guarda o lugar e a grade continua de pé.
+    // Quem impede o atalho sem emblema de nascer é
+    // test/atalhos_com_emblema_test.dart, que roda no CI.
+    if (emoji == null) return SizedBox.square(dimension: size);
+    return Text(emoji, style: TextStyle(fontSize: size));
   }
 }
