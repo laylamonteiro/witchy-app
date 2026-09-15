@@ -141,6 +141,11 @@ class OracleReading {
   final List<OracleCardPosition> positions;
   final DateTime date;
 
+  /// O que a pessoa perguntou. Nulo nas tiragens anteriores a o Oráculo ter
+  /// pergunta, e também quando ela escolheu não escrever nada — perguntar é
+  /// opcional nas três adivinhações.
+  final String? question;
+
   /// Conselho do Conselheiro guardado junto da tiragem (P05); reabrir a
   /// mesma mesa não pede outra geração.
   final String? interpretation;
@@ -154,6 +159,7 @@ class OracleReading {
     required this.spreadType,
     required this.positions,
     required this.date,
+    this.question,
     this.interpretation,
     this.sessionId,
   });
@@ -164,6 +170,7 @@ class OracleReading {
       'spreadType': spreadType.name,
       'positions': positions.map((p) => p.toJson()).toList(),
       'date': date.toIso8601String(),
+      if (question != null) 'question': question,
       if (interpretation != null) 'interpretation': interpretation,
       if (sessionId != null) 'session_id': sessionId,
     };
@@ -183,6 +190,7 @@ class OracleReading {
           .map((p) => OracleCardPosition.fromJson(p))
           .toList(),
       date: DateTime.parse(json['date']),
+      question: json['question'] as String?,
       interpretation: json['interpretation'] as String?,
       sessionId: json['session_id'] as String?,
     );

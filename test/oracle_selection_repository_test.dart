@@ -4,6 +4,8 @@ import 'dart:math';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:grimorio_de_bolso/core/database/database_helper.dart';
+import 'package:grimorio_de_bolso/core/divination/contexto_da_tiragem.dart';
+import 'package:grimorio_de_bolso/core/divination/regra_da_tiragem.dart';
 import 'package:grimorio_de_bolso/core/database/reading_session_schema.dart';
 import 'package:grimorio_de_bolso/core/services/usage_coordinator.dart';
 import 'package:grimorio_de_bolso/features/divination/data/data_sources/oracle_cards_data.dart';
@@ -38,20 +40,43 @@ void main() {
     repo = OracleSelectionRepository(random: Random(42));
   });
 
+  /// Estende a mesa e escreve a pergunta em cima dela, que é a ordem nova: a
+  /// mesa é de graça e sem pergunta, e ela é escrita enquanto se escolhe.
   Future<OracleSelectionSession> prepare({
     OracleSpreadType spread = OracleSpreadType.threeCard,
     bool premium = false, bool startNew = false, int legacyUsed = 0,
+    String question = 'My question?',
     DateTime? at, String owner = user,
-  }) => repo.prepare(userId: owner, spread: spread, catalog: oracleCardsData,
-      premium: premium, legacyOracleUsed: legacyUsed, freeLimit: 1,
-      startNew: startNew, now: at ?? day);
+  }) async {
+    if (legacyUsed > 0) {
+      await UsageCoordinator()
+          .oracleUsed(userId: owner, legacyUsed: legacyUsed, day: at ?? day);
+    }
+    final aberta = await repo.prepare(userId: owner, spread: spread,
+        catalog: oracleCardsData, startNew: startNew, now: at ?? day);
+    if (aberta.isCommitted) return aberta;
+    await repo.atualizarPergunta(
+        userId: owner, sessionId: aberta.id, pergunta: question);
+    return repo.prepare(userId: owner, spread: spread,
+        catalog: oracleCardsData, now: at ?? day);
+  }
+
+  /// O contexto que a tela de escolha usa para avisar ANTES da escolha.
+  Future<ContextoDaTiragem> contexto({
+          OracleSpreadType spread = OracleSpreadType.threeCard,
+          int legacyUsed = 0, DateTime? at, String owner = user}) =>
+      ContextoDaTiragemRepository().carregar(userId: owner,
+          tool: OracleSelectionSession.tool, spread: spread.name,
+          categoriaDeCota: UsageCoordinator.oracle, legacyUsed: legacyUsed,
+          freeLimit: 1, now: at ?? day);
 
   Future<OracleSelectionUpdate> choose(OracleSelectionSession session, String id,
       {bool premium = false, bool active = true, String owner = user}) =>
       repo.select(userId: owner, sessionId: session.id, cardId: id,
           expectedCount: session.selectedIds.length, catalog: oracleCardsData,
           positionLabels: List.generate(session.cardsNeeded, (i) => 'Position $i'),
-          isCurrentUser: () => active, isPremium: () => premium, freeLimit: 1);
+          isCurrentUser: () => active, isPremium: () => premium, freeLimit: 1,
+          legacyOracleUsed: 0);
 
   Future<int> used([DateTime? at]) =>
       UsageCoordinator().oracleUsed(userId: user, legacyUsed: 0, day: at ?? day);
@@ -84,6 +109,8 @@ void main() {
 
   for (final spread in OracleSpreadType.values) {
     test('${spread.name} persists each position, commits once and records discoveries', () async {
+      // A Carta Diária é a do DIA: uma por dia, e não custa nada.
+      final cobra = spread != OracleSpreadType.daily ? 1 : 0;
       var session = await prepare(spread: spread);
       final chosen = [session.deck.last, session.deck.first, ...session.deck.skip(5)]
           .take(spread.cardCount).toList();
@@ -92,7 +119,7 @@ void main() {
         session = update.session;
         expect(session.selectedIds, chosen.take(i + 1).toList());
         expect(update.created, i == chosen.length - 1);
-        expect(await used(), i == chosen.length - 1 ? 1 : 0);
+        expect(await used(), i == chosen.length - 1 ? cobra : 0);
         if (update.created) {
           expect(update.newDiscoveries, chosen.map(int.parse).toList());
         } else {
@@ -105,7 +132,7 @@ void main() {
       final repeated = await choose(session, session.deck[3]);
       expect(repeated.created, isFalse);
       expect(repeated.newDiscoveries, isEmpty);
-      expect(await used(), 1);
+      expect(await used(), cobra);
       final db = await DatabaseHelper.instance.database;
       final rows = await db.query('oracle_readings');
       expect(rows, hasLength(1));
@@ -207,17 +234,67 @@ void main() {
     expect(await used(), 1);
   });
 
-  test('Free shares the tarot quota, reopens today and blocks another table', () async {
+  test('a cota é por PERGUNTA e a Carta Diária fica de fora dela', () async {
     final done = await finish(await prepare());
     expect(await used(), 1);
-    expect((await prepare()).id, done.session.id);
-    expect((await prepare(startNew: true)).id, done.session.id);
-    await expectLater(prepare(spread: OracleSpreadType.daily),
-        throwsA(isA<OracleQuotaExceeded>()));
-    await UsageCoordinator().recordOracleUse(userId: user, legacyUsed: 0, day: day,
-        operationId: 'tarot-elsewhere');
-    expect(await used(), 2);
-    expect((await prepare()).isCommitted, isTrue);
+    expect(done.session.question, 'My question?',
+        reason: 'o Oráculo passou a ter pergunta');
+    expect((await prepare()).id, done.session.id,
+        reason: 'a mesma pergunta reabre a mesa já feita');
+
+    // A Carta Diária é a do DIA: sai mesmo com a cota toda gasta, e não
+    // debita nada.
+    await finish(await prepare(spread: OracleSpreadType.daily));
+    expect(await used(), 1, reason: 'a Carta Diária não cobra');
+
+    // Uma pergunta NOVA abre a mesa de graça e é barrada no fechamento.
+    final outra = await prepare(
+        spread: OracleSpreadType.weeklyGuidance, question: 'Another question?');
+    expect(outra.isCommitted, isFalse);
+    await expectLater(finish(outra), throwsA(isA<OracleQuotaExceeded>()));
+
+    // E a tela sabia disso antes de qualquer carta ser tocada.
+    final previa = await contexto();
+    expect(previa.situacaoDe('My question?', premium: false),
+        SituacaoDaTiragem.jaFeita);
+    expect(previa.situacaoDe('Another question?', premium: false),
+        SituacaoDaTiragem.semCota);
+    expect(previa.situacaoDe('Another question?', premium: true),
+        SituacaoDaTiragem.livre);
+  });
+
+  test('a pergunta é gravada na coluna nova de oracle_readings', () async {
+    // Era a única das quatro adivinhações sem coluna de pergunta, nem local
+    // nem no servidor.
+    final feita = await finish(await prepare(question: '  Vou viajar?  '));
+    final db = await DatabaseHelper.instance.database;
+    final linha = (await db.query('oracle_readings',
+            where: 'id = ?', whereArgs: [feita.session.resultId]))
+        .single;
+    expect(linha['question'], 'Vou viajar?',
+        reason: 'na grafia da pessoa, sem os espaços das pontas');
+    final guardada = await repo.reading(feita.session);
+    expect(guardada?.question, 'Vou viajar?');
+  });
+
+  test('sem pergunta, a coluna fica nula — e continua sendo uma tiragem',
+      () async {
+    final feita = await finish(await prepare(question: '   '));
+    final db = await DatabaseHelper.instance.database;
+    final linha = (await db.query('oracle_readings',
+            where: 'id = ?', whereArgs: [feita.session.resultId]))
+        .single;
+    expect(linha['question'], isNull,
+        reason: 'nulo distingue "não quis escrever" de "tiragem antiga"');
+    expect(await used(), 1, reason: 'o balde vazio é um balde como outro');
+  });
+
+  test('a mesma pergunta abre as outras mesas do Oráculo de graça', () async {
+    await finish(await prepare());
+    expect(await used(), 1);
+    await finish(await prepare(spread: OracleSpreadType.weeklyGuidance));
+    expect(await used(), 1,
+        reason: 'a pergunta do dia já estava paga — antes isto era barrado');
   });
 
   test('quota consumed elsewhere during selection is rechecked at commit', () async {

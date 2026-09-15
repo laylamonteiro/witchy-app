@@ -311,6 +311,7 @@ class DatabaseHelper {
         id TEXT PRIMARY KEY,
         user_id TEXT NOT NULL DEFAULT 'local_user',
         spread_type TEXT NOT NULL,
+        question TEXT,
         reading_data TEXT NOT NULL,
         date INTEGER NOT NULL,
         created_at INTEGER NOT NULL,
@@ -1265,6 +1266,24 @@ class DatabaseHelper {
         UPDATE selection_sessions SET question = '', normalized_question = ''
         WHERE tool = 'tarot' AND spread = 'daily'
       ''');
+
+      // O Oráculo ganhou pergunta e era a única das quatro adivinhações sem
+      // uma. Nullable de propósito, sem DEFAULT '': assim "tiragem antiga, de
+      // quando não havia pergunta" continua distinguível de "a pessoa escolheu
+      // não escrever nada".
+      // A tabela pode não existir: ela nasce na migração v5, que um aparelho
+      // vindo de uma versão posterior nunca roda. Sem esta guarda, o ALTER
+      // estoura em "no such table" e derruba a migração — e migração que falha
+      // é app que não abre.
+      final temOracle = await db.rawQuery("SELECT name FROM sqlite_master "
+          "WHERE type = 'table' AND name = 'oracle_readings'");
+      if (temOracle.isNotEmpty) {
+        final colunas = await db.rawQuery('PRAGMA table_info(oracle_readings)');
+        if (!colunas.any((c) => c['name'] == 'question')) {
+          await db
+              .execute('ALTER TABLE oracle_readings ADD COLUMN question TEXT');
+        }
+      }
     }
   }
 
