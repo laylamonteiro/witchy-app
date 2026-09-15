@@ -365,18 +365,59 @@ async function aquecer(urls) {
       } else {
         continue;
       }
-      if (await cache.match(chaveNoCache)) continue;
-      const resposta = await fetch(new Request(chaveNoCache, { cache: 'no-cache' }));
-      if (resposta.ok) await cache.put(chaveNoCache, resposta);
+      await guardarSeFaltar(cache, chaveNoCache);
     } catch (_) {
       // Aquecimento é oportunista: o que não entrou agora entra no próximo.
     }
   }
 }
 
+// AQUECIMENTO DE FUNDO: completa o cache com o que ninguém pediu ainda.
+//
+// O cache preguiçoso só guarda o que a pessoa VISITOU. Quem abriu o app,
+// ficou no Seu Dia e depois perdeu a rede encontrava a tela do Conselheiro
+// sem a bola de cristal, a erva sem foto, a carta sem ilustração — o app
+// abria, mas pela metade, e pela metade é o tipo de defeito que parece
+// aleatório para quem usa. Aqui o resto do build entra em segundo plano,
+// uma requisição por vez, depois que o app já está de pé.
+//
+// FORA o `canvaskit/`: são três variantes (~7 MB cada) e o navegador usa UMA.
+// A que ele usa já entra por outro caminho — pelo aquecimento oportunista na
+// primeira visita, e pelo `fetch` normal da segunda em diante, quando o SW já
+// controla a página. Baixar as outras duas seria jogar 14 MB fora.
+//
+// Quem decide QUANDO chamar é o index.html, que também respeita a economia de
+// dados do aparelho: isto aqui é o braço, não a cabeça.
+async function aquecerTudo() {
+  const app = await caches.open(CACHE_APP);
+  for (const chave of Object.keys(RECURSOS)) {
+    if (chave.startsWith('canvaskit/')) continue;
+    try {
+      await guardarSeFaltar(app, urlDoRecurso(chave));
+    } catch (_) {
+      // Idem: um arquivo que não veio agora vem no próximo aquecimento.
+    }
+  }
+}
+
+// Busca e guarda, se ainda não estiver no cache. `cache: 'no-cache'` revalida
+// com o servidor, então um arquivo que o navegador já tem no cache HTTP não é
+// baixado de novo — só confirmado.
+async function guardarSeFaltar(cache, chaveNoCache) {
+  if (await cache.match(chaveNoCache)) return;
+  const resposta = await fetch(new Request(chaveNoCache, { cache: 'no-cache' }));
+  if (resposta.ok) await cache.put(chaveNoCache, resposta);
+}
+
 self.addEventListener('message', function (event) {
   const dados = event.data;
-  if (!dados || dados.tipo !== 'aquecer' || !Array.isArray(dados.urls)) return;
-  const trabalho = aquecer(dados.urls);
-  if (typeof event.waitUntil === 'function') event.waitUntil(trabalho);
+  if (!dados) return;
+
+  let trabalho = null;
+  if (dados.tipo === 'aquecer' && Array.isArray(dados.urls)) {
+    trabalho = aquecer(dados.urls);
+  } else if (dados.tipo === 'aquecer-tudo') {
+    trabalho = aquecerTudo();
+  }
+  if (trabalho && typeof event.waitUntil === 'function') event.waitUntil(trabalho);
 });

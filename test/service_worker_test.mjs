@@ -625,3 +625,50 @@ test('o que o aquecimento guardou durante a ativação sobrevive a ela', async (
     'o que saiu do build é apagado',
   );
 });
+
+test('i. aquecer-tudo completa o cache com o que ninguém visitou', async () => {
+  // O defeito que isto fecha: quem abriu o app, ficou no Seu Dia e perdeu a
+  // rede encontrava a tela do Conselheiro sem a bola de cristal. O cache
+  // preguiçoso só guarda o que foi visitado; este aquecimento guarda o resto.
+  const { sw, manifesto } = await servicoPronto();
+  const app = await sw.caches.open(`gdb-app-${manifesto.versao}`);
+  const imagem = `${ORIGEM}/assets/images/x.png`;
+
+  // Antes: a imagem nunca foi pedida, então não está no cache.
+  assert.ok(!app.urls.includes(imagem), 'a imagem não deveria estar no cache ainda');
+
+  rede.chamadas = [];
+  await sw.mensagem({ tipo: 'aquecer-tudo' });
+
+  assert.ok(app.urls.includes(imagem), 'a imagem tem de entrar no cache');
+  // As variantes do CanvasKit ficam de fora: são três (~7 MB cada) e o
+  // navegador usa uma, que entra pelo aquecimento oportunista ou pelo fetch.
+  assert.ok(
+    !rede.chamadas.some((u) => u.includes('/canvaskit/')),
+    'aquecer-tudo não pode baixar as variantes de CanvasKit',
+  );
+  // E é ofensivo com o que já está guardado: o núcleo não é rebaixado.
+  assert.ok(!rede.chamadas.includes(`${ORIGEM}/main.dart.js`), 'o que já está no cache não é rebaixado');
+
+  // Depois disso, offline, a imagem sai do cache.
+  rede.modo = 'offline';
+  const resposta = await sw.dispararFetch(new Request(imagem));
+  assert.equal(await resposta.text(), 'corpo de /assets/images/x.png');
+});
+
+test('i2. aquecer-tudo rodado duas vezes não baixa nada de novo', async () => {
+  const { sw } = await servicoPronto();
+  await sw.mensagem({ tipo: 'aquecer-tudo' });
+  rede.chamadas = [];
+  await sw.mensagem({ tipo: 'aquecer-tudo' });
+  assert.deepEqual(rede.chamadas, [], 'o segundo aquecimento não pede nada');
+});
+
+test('i3. mensagem desconhecida é ignorada sem estourar', async () => {
+  const { sw } = await servicoPronto();
+  rede.chamadas = [];
+  await sw.mensagem({ tipo: 'nao-existe' });
+  await sw.mensagem(null);
+  await sw.mensagem({ tipo: 'aquecer' });
+  assert.deepEqual(rede.chamadas, []);
+});

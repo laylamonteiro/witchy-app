@@ -235,9 +235,10 @@
         setTimeout(function () { splash.remove(); }, 400);
         // A casca subiu: hora de aquecer o cache do service worker (abaixo).
         // Agora, e de novo em ~15 s — as fontes do Google e as imagens do
-        // Seu Dia chegam depois da montagem.
+        // Seu Dia chegam depois da montagem. Depois disso, o resto do build.
         aquecerCache();
         setTimeout(aquecerCache, 15000);
+        setTimeout(completarCacheOffline, 20000);
       });
       observador.observe(document.body, { childList: true, subtree: true });
     })();
@@ -271,6 +272,45 @@
         }).catch(function () {});
       } catch (e) {
         // Sem aquecimento nesta abertura; o cache preguiçoso cobre depois.
+      }
+    }
+
+    // COMPLETAR O CACHE OFFLINE: o resto do build, em segundo plano.
+    //
+    // O aquecimento acima só guarda o que a página JÁ baixou, e o cache do
+    // service worker só guarda o que a pessoa VISITOU. Quem abriu o app,
+    // ficou no Seu Dia e perdeu a rede depois encontrava o Conselheiro sem a
+    // bola de cristal e a erva sem foto: o app abria, mas pela metade — um
+    // defeito que parece aleatório para quem usa, porque depende de por onde
+    // ela andou. Aqui o SW puxa o restante (as imagens, os ícones, as cartas
+    // — sem as variantes de CanvasKit que este navegador não usa), uma
+    // requisição por vez.
+    //
+    // Vinte segundos depois da casca subir, de propósito: primeiro a pessoa
+    // usa o app, depois a gente completa o cache. E NUNCA contra a vontade do
+    // aparelho: com a economia de dados ligada, ou numa rede que o navegador
+    // classifica como lenta, não puxamos nada — quem está contando megabyte
+    // não pediu um download de fundo.
+    function completarCacheOffline() {
+      try {
+        if (!('serviceWorker' in navigator)) return;
+        var conexao = navigator.connection;
+        if (conexao) {
+          if (conexao.saveData) return;
+          var tipo = conexao.effectiveType || '';
+          if (tipo === 'slow-2g' || tipo === '2g') return;
+        }
+        var mensagem = { tipo: 'aquecer-tudo' };
+        var controlador = navigator.serviceWorker.controller;
+        if (controlador) {
+          controlador.postMessage(mensagem);
+          return;
+        }
+        navigator.serviceWorker.ready.then(function (reg) {
+          if (reg && reg.active) reg.active.postMessage(mensagem);
+        }).catch(function () {});
+      } catch (e) {
+        // O cache preguiçoso continua valendo; só não adiantamos o trabalho.
       }
     }
   </script>
