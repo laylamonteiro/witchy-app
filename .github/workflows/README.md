@@ -64,11 +64,17 @@ nenhum passo manual de digitação entre elas.
   para a `main` assim que o gate fica verde (job `abrir-pr`). Já existindo
   um PR aberto, o job não faz nada — os commits seguintes entram nele.
 - **Cache do site**: `site/_headers` obriga o navegador a revalidar os
-  pontos de entrada (`/`, `index.html`, `flutter_bootstrap.js`,
-  `flutter_service_worker.js`, `version.*`). O resto continua cacheado para
-  sempre — vem com hash no nome. Junto com o recarregamento automático em
+  pontos de entrada (`/`, `index.html`, `flutter_bootstrap.js`, `sw.js`,
+  `version.*`). O resto fica no cache do service worker, por versão, e só é
+  baixado de novo quando o md5 muda. Junto com o recarregamento automático em
   `controllerchange` (em `web/index.html`), acaba o "publicou e não
   aparece até recarregar duas vezes".
+  O `sw.js` é NOSSO, gerado na montagem (`scripts/gerar_service_worker.mjs`,
+  lógica em `scripts/service_worker/logica.js`): o service worker do Flutter
+  foi descontinuado e a 3.47 o desregistra. É ele que faz o app abrir sem
+  rede depois da primeira visita — e exige `--pwa-strategy=none` e
+  `--no-web-resources-cdn` no build (a montagem para sem eles).
+  `test/service_worker_test.mjs` roda no gate dos dois workflows.
 - **Carimbo de versão**: todo site publicado (prévia, staging e produção)
   serve `/version.txt` com commit, branch e run. "Por que a novidade não
   aparece?" se responde abrindo `<endereço>/version.txt`, em vez de

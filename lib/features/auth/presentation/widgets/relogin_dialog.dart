@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:flutter/material.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
@@ -40,6 +41,28 @@ class ReloginDialog {
     caseSensitive: false,
   );
 
+  /// A chave em que o supabase_flutter persiste a sessão — nas
+  /// SharedPreferences no celular, no localStorage cru na web:
+  /// `sb-<primeiro rótulo do host da URL>-auth-token`
+  /// (ex.: https://abcdefg.supabase.co → `sb-abcdefg-auth-token`).
+  ///
+  /// Espelha o `persistSessionKey` de
+  /// packages/supabase_flutter/lib/src/supabase.dart (2.17). É um contrato
+  /// do pacote, não uma API: se ele mudar a chave, esta conferência passa a
+  /// dizer "sem sessão no disco" e o diálogo volta a aparecer offline — o
+  /// teste tranca o formato para a troca de versão não passar em silêncio.
+  @visibleForTesting
+  static String chaveDaSessaoPersistida(String supabaseUrl) =>
+      'sb-${Uri.parse(supabaseUrl).host.split('.').first}-auth-token';
+
+  /// Pedir a senha só quando NÃO há sessão em memória NEM no disco.
+  @visibleForTesting
+  static bool deveReconectar({
+    required bool sessaoViva,
+    required bool sessaoPersistida,
+  }) =>
+      !sessaoViva && !sessaoPersistida;
+
   static Future<void> maybeShow(BuildContext context) async {
     if (_jaPerguntou) return;
     if (!SupabaseConfig.isConfigured) return;
@@ -49,7 +72,29 @@ class ReloginDialog {
     // Só contas Supabase (id UUID): usuários do modo local não têm sessão
     // por definição e não devem ser incomodados.
     if (!user.isAuthenticated || !_uuidRegExp.hasMatch(user.id)) return;
-    if (Supabase.instance.client.auth.currentSession != null) return;
+
+    // Sessão viva em memória — ou, pelo menos, gravada no disco. Sem rede a
+    // sessão pode estar expirada e sem renovar, mas ela EXISTE no disco, e o
+    // supabase_flutter a renova quando a rede voltar. Pedir a senha aqui,
+    // offline, é trancar a pessoa fora do próprio grimório. O caso do limbo
+    // (20-27/08) não tem token nenhum no disco, e continua coberto.
+    final sessaoViva = Supabase.instance.client.auth.currentSession != null;
+    // Pelo armazenamento DO PACOTE, e não por `SharedPreferences` direto: no
+    // celular a sessão vive nas SharedPreferences, mas na web o
+    // supabase_flutter grava direto no localStorage (sem o prefixo `flutter.`
+    // que o shared_preferences usa) — conferir na mão aqui daria sempre
+    // "sem sessão" no navegador, que é o único caminho no iPhone.
+    final armazenamento = SharedPreferencesLocalStorage(
+      persistSessionKey: chaveDaSessaoPersistida(SupabaseConfig.url),
+    );
+    await armazenamento.initialize();
+    final sessaoPersistida = await armazenamento.hasAccessToken();
+    if (!deveReconectar(
+      sessaoViva: sessaoViva,
+      sessaoPersistida: sessaoPersistida,
+    )) {
+      return;
+    }
 
     _jaPerguntou = true;
     final email = user.email;

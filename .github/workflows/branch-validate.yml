@@ -238,6 +238,14 @@ jobs:
         # este gate. O runner já traz Node.
         run: node test/redirecionamento_qr_test.mjs
 
+      - name: 🧪 Service worker (Node)
+        # O sw.js é gerado na montagem e roda dentro do navegador: `flutter
+        # test` nunca chega nele, e o que ele protege só aparece sem rede, no
+        # celular de alguém. O teste roda o gerador contra um build falso e o
+        # sw.js gerado num vm com dublês de caches e fetch. O runner já traz
+        # Node.
+        run: node test/service_worker_test.mjs
+
       - name: 🔤 ARB key parity
         run: bash scripts/check_arb_sync.sh
 
@@ -456,7 +464,14 @@ jobs:
           # Ciclo sai sem a espera de 7/30 dias, para dar para avaliar o
           # resultado sem esperar um mês. O release.yml, que é quem publica
           # em produção, tem o build dele e NÃO passa este define.
+          # O service worker do Flutter foi removido na 3.47 (o que sobra é
+          # um stub que se desregistra); o nosso sw.js, gerado na montagem, o
+          # substitui — por isso o Flutter não escreve nenhum. E o CanvasKit
+          # local, em vez da CDN do Google, é o que cabe no cache offline.
+          # scripts/assemble_site.sh confere os dois e para sem eles.
           flutter build web --release --no-wasm-dry-run \
+            --pwa-strategy=none \
+            --no-web-resources-cdn \
             --build-name="${{ steps.versao.outputs.nome }}" \
             --dart-define=SUPABASE_URL="$SUPABASE_URL" \
             --dart-define=SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY" \

@@ -356,6 +356,12 @@ Future<SharedPreferences> _initializeApp() async {
             DateTime.now().millisecondsSinceEpoch)));
         _abrirTrocaDeSenhaDaRecuperacao();
       }
+    }, onError: (Object e) {
+      // A renovação do token em segundo plano (o `recoverSession` do
+      // supabase_flutter) publica o erro de rede NESTE stream, sem derrubar
+      // a sessão. Sem tratador ele caía na zona guardada como "erro não
+      // capturado" — sujeira no log de diagnóstico a cada boot sem rede.
+      unawaited(debugLog('AUTH', 'Fluxo de auth com erro (sem rede?): $e'));
     });
 
     // O boot pós-recomeço da web: o evento já disparou no documento
@@ -390,6 +396,11 @@ Future<SharedPreferences> _initializeApp() async {
   // Quem decide se há pagamento é a presença da chave — na web, a `rcb_` do
   // RevenueCat Billing. Sem chave, o `initialize` sai na primeira linha e
   // nada quebra.
+  //
+  // E o await é barato: o `initialize` só configura o SDK e volta SEM esperar
+  // a rede — o status do cliente e o catálogo chegam depois, pelo listener.
+  // Sem internet o app abre do mesmo jeito, com o espelho local decidindo o
+  // plano; antes o boot ficava preso aqui até o RevenueCat desistir.
   await PaymentService().initialize();
   await debugLog('SYSTEM', 'PaymentService inicializado');
 
