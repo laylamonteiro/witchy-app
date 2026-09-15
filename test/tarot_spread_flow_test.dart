@@ -127,12 +127,19 @@ void main() {
           of: find.byKey(const ValueKey('tarot-table')),
           matching: find.byType(TarotCardView));
       Future<void> open() async {
-        await tester.enterText(find.byType(TextField), 'A manual spread question');
         await tester.ensureVisible(find.text(title));
         await tester.tap(find.text(title));
         await until(tester, () => find.byType(TarotSpreadSelectionPage).evaluate().isNotEmpty,
             'selection route');
         await tester.pumpAndSettle();
+        // A pergunta é escrita EM CIMA DA MESA, na tela de escolha, e continua
+        // editável enquanto a pessoa escolhe as cartas.
+        final campo = find.byKey(const ValueKey('campo-da-pergunta'));
+        expect(campo, findsOneWidget,
+            reason: 'a pergunta mora na tela de escolha, acima do leque');
+        await tester.ensureVisible(campo);
+        await tester.enterText(campo, 'A manual spread question');
+        await tester.pump();
       }
       await open();
       final chosen = <String>[];
@@ -183,7 +190,12 @@ void main() {
       expect(ModalRoute.of(tester.element(selection))!.isCurrent, isTrue);
       refreshGate.complete();
       await until(tester, () {
-        expect(find.byType(TextField), findsNothing,
+        // O menu é marcado pelo texto da tiragem: o campo de pergunta deixou
+        // de servir de sinal, porque agora ele vive na tela de escolha.
+        expect(find.byType(TarotSpreadSelectionPage).evaluate().isEmpty
+                ? find.text(title)
+                : find.byKey(const ValueKey('nada-aqui')),
+            findsNothing,
             reason: 'No frame between the fan and the result may show the spread menu');
         if (selection.evaluate().isNotEmpty) {
           expect(naMesa, findsNothing,

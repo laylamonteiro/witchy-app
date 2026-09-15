@@ -67,7 +67,7 @@ class _RuneSelectionPageState extends State<RuneSelectionPage> {
       TextEditingController(text: _session.question);
   // O nó vive no State, nunca dentro do TextField: uma reconstrução que
   // re-infla a subárvore levaria o foco junto, e o teclado fecharia sozinho.
-  final _focoDaPergunta = FocusNode(debugLabel: 'pergunta da mesa de runas');
+  final _focoDaPergunta = FocusNode(debugLabel: 'rune table question');
   Timer? _gravacaoDoRascunho;
 
   @override

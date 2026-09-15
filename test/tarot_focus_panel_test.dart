@@ -142,7 +142,7 @@ void main() {
 
   Future<void> tirarCartaDoDia(WidgetTester tester,
       AppLocalizations l10n) async {
-    await tester.enterText(find.byType(TextField), 'A focus panel question');
+    // A Carta do Dia não tem pergunta.
     await tester.ensureVisible(find.text(l10n.tarotDailyCard));
     await tester.tap(find.text(l10n.tarotDailyCard));
     await until(
@@ -156,7 +156,6 @@ void main() {
 
   Future<void> tirarCruzDeTres(WidgetTester tester,
       AppLocalizations l10n) async {
-    await tester.enterText(find.byType(TextField), 'A focus panel question');
     await tester.ensureVisible(find.text(l10n.tarotThreeCards));
     await tester.tap(find.text(l10n.tarotThreeCards));
     await until(
@@ -164,6 +163,10 @@ void main() {
         () => find.byType(TarotSpreadSelectionPage).evaluate().isNotEmpty,
         'rota de escolha da tiragem');
     await tester.pumpAndSettle();
+    // A pergunta é escrita em cima da mesa, na tela de escolha.
+    await tester.enterText(
+        find.byKey(const ValueKey('campo-da-pergunta')), 'A focus panel question');
+    await tester.pump();
     for (var i = 0; i < 3; i++) {
       tester
           .widget<Focus>(find.byKey(const ValueKey('card-fan-focus')))
