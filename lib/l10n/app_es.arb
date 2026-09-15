@@ -573,7 +573,7 @@
   "commonSaving": "Guardando...",
   "commonFinish": "Finalizar",
   "advisorAskFirst": "Haz tu pregunta primero",
-  "advisorDailyLimit": "Ya consultaste al Consejero hoy. ¡Vuelve mañana o hazte Premium!",
+  "advisorDailyLimit": "Ya leíste al Consejero esta semana. Vuelve la semana que viene o hazte Premium",
   "advisorGenericError": "El consejero no pudo responder ahora. Inténtalo de nuevo más tarde",
   "advisorRateLimited": "El consejero necesita descansar. Se hicieron demasiadas peticiones. Espera unos minutos",
   "advisorTempError": "Error temporal en el servicio místico. Inténtalo de nuevo en unos instantes",
@@ -584,7 +584,7 @@
   "advisorQuestionHint": "Ej.: ¿Cuál es la mejor fase lunar para un ritual de protección?",
   "advisorConsultingStars": "Consultando los astros...",
   "advisorConsult": "Consultar al Consejero",
-  "advisorRemainingToday": "Consultas restantes hoy: {used}",
+  "advisorRemainingToday": "Lecturas restantes esta semana: {used}",
   "advisorAnswers": "El Consejero responde",
   "spellGroupProtection": "Protección y Limpieza",
   "spellGroupProtectionSub": "Defensa, destierro y purificación",
@@ -1916,6 +1916,7 @@
   "conviteRotuloOraculo": "Oráculo y Tarot",
   "conviteRotuloAfirmacoes": "Afirmaciones",
   "conviteUltimaHoje": "{rotulo} · queda 1 hoy",
+  "conviteUltimaEstaSemana": "{rotulo} · queda 1 esta semana",
   "@conviteUltimaHoje": {
     "placeholders": {
       "rotulo": {

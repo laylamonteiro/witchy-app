@@ -72,7 +72,13 @@ class UserModel {
   final int affirmationsToday;  // Limite: 3/dia
   final int runeReadingsToday;  // Limite: 1/dia (cada tipo)
   final int oracleReadingsToday;  // Limite: 1/dia (cada tipo)
-  final int advisorConsultationsToday;  // Conselheiro Místico (P&R) - Limite: 1/dia
+  /// Leituras do Conselheiro Místico gastas NESTA SEMANA — na página dele ou
+  /// na interpretação de uma tiragem, que dividem a mesma cota.
+  ///
+  /// A chave em JSON continua sendo `advisorConsultationsToday`, de quando a
+  /// cota era diária: trocá-la zeraria o contador de quem já tem o app, o que
+  /// é inofensivo mas gratuito.
+  final int advisorConsultationsThisWeek;
   final int palmistryReadingsToday;  // Leitura de mãos (Premium) - Limite: 3/dia
 
   const UserModel({
@@ -99,7 +105,7 @@ class UserModel {
     this.affirmationsToday = 0,
     this.runeReadingsToday = 0,
     this.oracleReadingsToday = 0,
-    this.advisorConsultationsToday = 0,
+    this.advisorConsultationsThisWeek = 0,
     this.palmistryReadingsToday = 0,
   });
 
@@ -173,7 +179,13 @@ class UserModel {
   /// Limite de leituras de oracle por dia para free
   static const int freeOracleReadingsLimit = 1;
 
-  /// Limite de consultas ao Conselheiro Místico (P&R) por dia para free
+  /// Leituras do Conselheiro Místico por SEMANA para o Free.
+  ///
+  /// É a única coisa do app que custa dinheiro para servir (geração de IA) e é
+  /// o que a assinatura de fato vende — tirar cartas qualquer site faz. Por
+  /// isso ela é semanal em vez de diária, e vale tanto na página do
+  /// Conselheiro quanto na interpretação de uma tiragem: uma por semana, gasta
+  /// onde a pessoa quiser.
   static const int freeAdvisorConsultationsLimit = 1;
 
   /// Limite de identificações do Guia da Natureza por dia.
@@ -246,14 +258,14 @@ class UserModel {
     return freeOracleReadingsLimit - oracleReadingsToday;
   }
 
-  /// Verifica se pode consultar o Conselheiro Místico (P&R) hoje
+  /// Verifica se pode consultar o Conselheiro Místico esta semana
   bool get canUseAdvisor =>
-      isPremium || advisorConsultationsToday < freeAdvisorConsultationsLimit;
+      isPremium || advisorConsultationsThisWeek < freeAdvisorConsultationsLimit;
 
   /// Quantas consultas ao Conselheiro Místico restam hoje
   int get remainingAdvisorConsultations {
     if (isPremium) return -1; // ilimitado
-    return freeAdvisorConsultationsLimit - advisorConsultationsToday;
+    return freeAdvisorConsultationsLimit - advisorConsultationsThisWeek;
   }
 
   UserModel copyWith({
@@ -280,7 +292,7 @@ class UserModel {
     int? affirmationsToday,
     int? runeReadingsToday,
     int? oracleReadingsToday,
-    int? advisorConsultationsToday,
+    int? advisorConsultationsThisWeek,
     int? palmistryReadingsToday,
   }) {
     return UserModel(
@@ -307,8 +319,8 @@ class UserModel {
       affirmationsToday: affirmationsToday ?? this.affirmationsToday,
       runeReadingsToday: runeReadingsToday ?? this.runeReadingsToday,
       oracleReadingsToday: oracleReadingsToday ?? this.oracleReadingsToday,
-      advisorConsultationsToday:
-          advisorConsultationsToday ?? this.advisorConsultationsToday,
+      advisorConsultationsThisWeek:
+          advisorConsultationsThisWeek ?? this.advisorConsultationsThisWeek,
       palmistryReadingsToday:
           palmistryReadingsToday ?? this.palmistryReadingsToday,
     );
@@ -339,7 +351,7 @@ class UserModel {
       'affirmationsToday': affirmationsToday,
       'runeReadingsToday': runeReadingsToday,
       'oracleReadingsToday': oracleReadingsToday,
-      'advisorConsultationsToday': advisorConsultationsToday,
+      'advisorConsultationsToday': advisorConsultationsThisWeek,
       'palmistryReadingsToday': palmistryReadingsToday,
     };
   }
@@ -393,7 +405,7 @@ class UserModel {
       affirmationsToday: json['affirmationsToday'] ?? 0,
       runeReadingsToday: json['runeReadingsToday'] ?? 0,
       oracleReadingsToday: json['oracleReadingsToday'] ?? 0,
-      advisorConsultationsToday: json['advisorConsultationsToday'] ?? 0,
+      advisorConsultationsThisWeek: json['advisorConsultationsToday'] ?? 0,
       palmistryReadingsToday: json['palmistryReadingsToday'] ?? 0,
     );
   }

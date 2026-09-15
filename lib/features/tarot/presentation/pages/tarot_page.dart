@@ -658,9 +658,13 @@ class _SpreadTabState extends State<_SpreadTab>
   Future<void> _askCounselor() async {
     if (_drawn.isEmpty || _isReadingAI) return;
 
-    // Interpretação do Conselheiro Místico: exclusiva Premium. Sem acesso o
-    // botão nem aparece — o card mostra a degustação no lugar.
-    if (!context.read<AuthProvider>().isPremiumEffective) return;
+    // A leitura do Conselheiro é o que a assinatura vende — tirar cartas
+    // qualquer site faz. Então ela não é mais zero para quem não assina: o
+    // Free tem UMA por semana, a mesma da página do Conselheiro, e gasta onde
+    // quiser. Sem ela, o botão nem aparece e o card mostra a prévia no lugar.
+    final auth = context.read<AuthProvider>();
+    final ehPremium = auth.isPremiumEffective;
+    if (!ehPremium && !auth.canUseAdvisor) return;
 
     final signature = _signature(_activeSpread!, _drawn);
     setState(() => _isReadingAI = true);
@@ -670,6 +674,9 @@ class _SpreadTabState extends State<_SpreadTab>
         question: _question.isEmpty ? null : _question,
       );
       if (!mounted || _activeReadingSignature != signature) return;
+      // A leitura saiu: é ela que gasta a cota semanal, e só do Free.
+      // Debitar antes seria cobrar por um erro de rede.
+      if (!ehPremium) await auth.incrementAdvisorConsultations();
       final spreadLabel = _activeSpread!.displayName(AppLocalizations.of(context));
       setState(() => _aiReading = reading);
       // Guarda a interpretação atrelada a estas cartas para não regerar.
@@ -943,9 +950,9 @@ class _SpreadTabState extends State<_SpreadTab>
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            if (!context.watch<AuthProvider>().isPremiumEffective)
-              // Sem acesso: no lugar do botão, o sumário do que o Conselheiro
-              // teceria sobre as cartas que já estão na mesa.
+            if (!context.watch<AuthProvider>().podeLerOConselheiro)
+              // Sem leitura disponível: no lugar do botão, o sumário do que o
+              // Conselheiro teceria sobre as cartas que já estão na mesa.
               _previaDoConselheiro(context)
             else if (_aiReading == null)
               // Sem interpretação para estas cartas: mostra o botão.

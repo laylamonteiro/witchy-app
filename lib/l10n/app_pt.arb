@@ -676,7 +676,7 @@
   "commonSaving": "Salvando...",
   "commonFinish": "Finalizar",
   "advisorAskFirst": "Faça sua pergunta primeiro",
-  "advisorDailyLimit": "Você já consultou o Conselheiro hoje. Volte amanhã ou seja Premium!",
+  "advisorDailyLimit": "Você já leu o Conselheiro esta semana. Volte na semana que vem ou seja Premium",
   "advisorGenericError": "O conselheiro não pôde responder agora. Tente novamente mais tarde",
   "advisorRateLimited": "O conselheiro precisa de descanso. Muitos pedidos foram feitos. Por favor, aguarde alguns minutos",
   "advisorTempError": "Erro temporário no serviço místico. Tente novamente em instantes",
@@ -687,7 +687,7 @@
   "advisorQuestionHint": "Ex: Qual a melhor fase da lua para um ritual de proteção?",
   "advisorConsultingStars": "Consultando os astros...",
   "advisorConsult": "Consultar o Conselheiro",
-  "advisorRemainingToday": "Consultas restantes hoje: {used}",
+  "advisorRemainingToday": "Leituras restantes esta semana: {used}",
   "advisorAnswers": "O Conselheiro responde",
   "spellGroupProtection": "Proteção & Limpeza",
   "spellGroupProtectionSub": "Defesa, banimento e purificação",
@@ -2786,11 +2786,20 @@
   "conviteRotuloOraculo": "Oráculo e Tarô",
   "conviteRotuloAfirmacoes": "Afirmações",
   "conviteUltimaHoje": "{rotulo} · resta 1 hoje",
+  "conviteUltimaEstaSemana": "{rotulo} · resta 1 esta semana",
   "@conviteUltimaHoje": {
     "placeholders": {
       "rotulo": {
         "type": "String",
         "example": "Runas"
+      }
+    }
+  },
+  "@conviteUltimaEstaSemana": {
+    "placeholders": {
+      "rotulo": {
+        "type": "String",
+        "example": "Conselheiro Místico"
       }
     }
   },

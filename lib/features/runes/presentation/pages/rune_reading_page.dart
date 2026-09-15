@@ -341,8 +341,12 @@ class _RuneReadingBodyState extends State<_RuneReadingBody> {
     final reading = _lastReading;
     if (reading == null || _isReadingAI) return;
 
-    // Sem acesso o botão nem aparece: o card mostra a degustação no lugar.
-    if (!context.read<AuthProvider>().isPremiumEffective) return;
+    // A leitura do Conselheiro é o que a assinatura vende — tirar qualquer
+    // site faz. O Free tem UMA por semana, a mesma da página do Conselheiro,
+    // e gasta onde quiser. Sem ela, o botão nem aparece.
+    final auth = context.read<AuthProvider>();
+    final ehPremium = auth.isPremiumEffective;
+    if (!ehPremium && !auth.canUseAdvisor) return;
 
     setState(() => _isReadingAI = true);
     try {
@@ -355,6 +359,9 @@ class _RuneReadingBodyState extends State<_RuneReadingBody> {
       );
       // Uma resposta atrasada não pertence a outra mesa.
       if (!mounted || _lastReading?.id != reading.id) return;
+      // A leitura saiu: é ela que gasta a cota semanal, e só do Free.
+      // Debitar antes seria cobrar por um erro de rede.
+      if (!ehPremium) await auth.incrementAdvisorConsultations();
       setState(() => _aiReading = interpretation);
       // Fica junto da leitura: reabrir a mesa não pede outra geração.
       await _repository.attachInterpretation(
@@ -1117,9 +1124,9 @@ class _RuneReadingBodyState extends State<_RuneReadingBody> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           if (_lastReading != null &&
-              !context.watch<AuthProvider>().isPremiumEffective)
-            // Sem acesso: no lugar do botão, o sumário do que o
-            // Conselheiro teceria sobre as runas que já estão na mesa.
+              !context.watch<AuthProvider>().podeLerOConselheiro)
+            // Sem leitura disponível: no lugar do botão, o sumário do que o
+            // Conselheiro teceria sobre o que já está na mesa.
             _previaDoConselheiro(context)
           else if (_aiReading == null)
             ElevatedButton.icon(

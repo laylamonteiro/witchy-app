@@ -100,7 +100,7 @@ enum AppFeature {
 }
 
 /// Janela de apuração de limites de uso.
-enum LimitWindow { daily, monthly, total }
+enum LimitWindow { daily, weekly, monthly, total }
 
 /// Definição centralizada de limite para uma feature.
 class FeatureUsageLimit {
@@ -309,8 +309,10 @@ class FeatureAccessService {
     // Premium: fora do mapa de limites, o plano Free recebe preview -> paywall.
     AppFeature.aiMysticCounselor: FeatureUsageLimit(
       limit: UserModel.freeAdvisorConsultationsLimit,
-      window: LimitWindow.daily,
-      used: (user) => user.advisorConsultationsToday,
+      // Semanal, não diária: é a leitura que a assinatura vende, e a única
+      // coisa do app que custa geração de IA para servir.
+      window: LimitWindow.weekly,
+      used: (user) => user.advisorConsultationsThisWeek,
       availableMessage: _l10n.featureLimitCounselorAvailable,
       blockedMessage: _l10n.featureLimitCounselorBlocked,
     ),

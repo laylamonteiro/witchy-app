@@ -14,6 +14,7 @@ import '../../../../core/services/data_sync_service.dart';
 import '../../../../core/database/database_helper.dart';
 import '../../../../core/config/supabase_config.dart';
 import '../../data/models/user_model.dart';
+import '../../domain/semana_da_cota.dart';
 import '../../data/models/feature_access.dart';
 import '../../data/repositories/beta_code_repository.dart';
 import '../../data/repositories/supabase_auth_repository.dart';
@@ -30,6 +31,7 @@ class AuthProvider extends ChangeNotifier {
   static const String _lastAiResetKey = 'last_ai_reset';
   static const String _lastPendulumResetKey = 'last_pendulum_reset';
   static const String _lastDailyLimitsResetKey = 'last_daily_limits_reset';
+  static const String _lastAdvisorResetKey = 'last_advisor_reset';
   static const String _isOriginalAdminKey = 'is_original_admin';
   static const String _authVersionKey = 'auth_version';
 
@@ -427,6 +429,7 @@ class AuthProvider extends ChangeNotifier {
     final diaryKey = _scopedKey(_lastDiaryResetKey);
     final pendulumKey = _scopedKey(_lastPendulumResetKey);
     final dailyLimitsKey = _scopedKey(_lastDailyLimitsResetKey);
+    final advisorKey = _scopedKey(_lastAdvisorResetKey);
 
     // Reset diário de IA
     final lastAiReset = prefs.getString(aiKey);
@@ -482,7 +485,6 @@ class AuthProvider extends ChangeNotifier {
           affirmationsToday: 0,
           runeReadingsToday: 0,
           oracleReadingsToday: 0,
-          advisorConsultationsToday: 0,
           palmistryReadingsToday: 0,
         );
         await prefs.setString(dailyLimitsKey, now.toIso8601String());
@@ -490,6 +492,26 @@ class AuthProvider extends ChangeNotifier {
       }
     } else {
       await prefs.setString(dailyLimitsKey, now.toIso8601String());
+    }
+
+    // Reset SEMANAL do Conselheiro Místico. É a única cota do app que não é
+    // diária, e de propósito: a leitura do Conselheiro é o que a assinatura
+    // vende, e o que custa geração de IA. Uma por semana para quem não assina,
+    // gasta onde ela quiser — na página dele ou na tiragem.
+    final lastAdvisorReset = prefs.getString(advisorKey);
+    if (lastAdvisorReset != null) {
+      if (virouASemana(
+          ultimoReset: DateTime.parse(lastAdvisorReset), agora: now)) {
+        _currentUser = _currentUser.copyWith(advisorConsultationsThisWeek: 0);
+        await prefs.setString(advisorKey, now.toIso8601String());
+        needsSave = true;
+      }
+    } else {
+      // Primeira vez com a cota semanal: quem vinha da diária começa a semana
+      // zerado, em vez de herdar um contador que significava outra coisa.
+      _currentUser = _currentUser.copyWith(advisorConsultationsThisWeek: 0);
+      await prefs.setString(advisorKey, now.toIso8601String());
+      needsSave = true;
     }
 
     if (needsSave) {
@@ -701,10 +723,18 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Verifica se pode consultar o Conselheiro Místico (P&R) hoje
+  /// Verifica se pode consultar o Conselheiro Místico esta semana
   bool get canUseAdvisor => _currentUser.canUseAdvisor;
 
-  /// Quantas consultas ao Conselheiro Místico restam hoje
+  /// Se a leitura do Conselheiro está ao alcance AGORA — por assinatura ou
+  /// pela leitura da semana que o Free ainda tem.
+  ///
+  /// É o que as telas de tiragem olham para decidir entre o botão e a prévia:
+  /// perguntar só por `isPremiumEffective` deixava quem não assina sem nunca
+  /// experimentar o que a assinatura vende.
+  bool get podeLerOConselheiro => isPremiumEffective || canUseAdvisor;
+
+  /// Quantas leituras do Conselheiro Místico restam esta semana
   int get remainingAdvisorConsultations =>
       _currentUser.remainingAdvisorConsultations;
 
@@ -712,7 +742,8 @@ class AuthProvider extends ChangeNotifier {
   Future<void> incrementAdvisorConsultations() async {
     if (_currentUser.isFree) {
       _currentUser = _currentUser.copyWith(
-        advisorConsultationsToday: _currentUser.advisorConsultationsToday + 1,
+        advisorConsultationsThisWeek:
+            _currentUser.advisorConsultationsThisWeek + 1,
       );
       await _saveUser();
       notifyListeners();

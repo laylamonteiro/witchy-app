@@ -573,7 +573,7 @@
   "commonSaving": "Saving...",
   "commonFinish": "Finish",
   "advisorAskFirst": "Ask your question first",
-  "advisorDailyLimit": "You've already consulted the Advisor today. Come back tomorrow or go Premium!",
+  "advisorDailyLimit": "You've already read the Advisor this week. Come back next week or go Premium",
   "advisorGenericError": "The advisor couldn't answer right now. Please try again later",
   "advisorRateLimited": "The advisor needs a rest. Too many requests were made. Please wait a few minutes",
   "advisorTempError": "Temporary error in the mystic service. Try again shortly",
@@ -584,7 +584,7 @@
   "advisorQuestionHint": "E.g.: What's the best moon phase for a protection ritual?",
   "advisorConsultingStars": "Consulting the stars...",
   "advisorConsult": "Consult the Advisor",
-  "advisorRemainingToday": "Consultations left today: {used}",
+  "advisorRemainingToday": "Readings left this week: {used}",
   "advisorAnswers": "The Advisor answers",
   "spellGroupProtection": "Protection & Cleansing",
   "spellGroupProtectionSub": "Defense, banishing and purification",
@@ -1916,6 +1916,7 @@
   "conviteRotuloOraculo": "Oracle and Tarot",
   "conviteRotuloAfirmacoes": "Affirmations",
   "conviteUltimaHoje": "{rotulo} · 1 left today",
+  "conviteUltimaEstaSemana": "{rotulo} · 1 left this week",
   "@conviteUltimaHoje": {
     "placeholders": {
       "rotulo": {
