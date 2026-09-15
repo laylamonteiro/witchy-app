@@ -676,7 +676,7 @@
   "commonSaving": "Salvando...",
   "commonFinish": "Finalizar",
   "advisorAskFirst": "Faça sua pergunta primeiro",
-  "advisorDailyLimit": "Você já leu o Conselheiro esta semana. Volte na semana que vem ou seja Premium",
+  "advisorDailyLimit": "Você já consultou o Conselheiro hoje. Volte amanhã ou seja Premium!",
   "advisorGenericError": "O conselheiro não pôde responder agora. Tente novamente mais tarde",
   "advisorRateLimited": "O conselheiro precisa de descanso. Muitos pedidos foram feitos. Por favor, aguarde alguns minutos",
   "advisorTempError": "Erro temporário no serviço místico. Tente novamente em instantes",
@@ -687,7 +687,7 @@
   "advisorQuestionHint": "Ex: Qual a melhor fase da lua para um ritual de proteção?",
   "advisorConsultingStars": "Consultando os astros...",
   "advisorConsult": "Consultar o Conselheiro",
-  "advisorRemainingToday": "Leituras restantes esta semana: {used}",
+  "advisorRemainingToday": "Consultas restantes hoje: {used}",
   "advisorAnswers": "O Conselheiro responde",
   "spellGroupProtection": "Proteção & Limpeza",
   "spellGroupProtectionSub": "Defesa, banimento e purificação",
@@ -1180,6 +1180,8 @@
   "featureLimitTarotAvailable": "leitura(s) gratuita(s) de tarot hoje",
   "featureLimitCounselorAvailable": "consulta(s) ao Conselheiro hoje",
   "featureLimitCounselorBlocked": "Você usou sua consulta ao Conselheiro Místico hoje. Assine Premium para consultas ilimitadas",
+  "featureLimitInterpretationAvailable": "leitura(s) da tiragem esta semana",
+  "featureLimitInterpretationBlocked": "Você já leu uma tiragem esta semana. Assine Premium para ler todas",
   "featurePreviewEncyclopedia": "Desbloqueie detalhes completos da enciclopédia com o plano Premium",
   "featurePreviewLunar": "Informações detalhadas das fases lunares são exclusivas Premium",
   "featurePreviewWheel": "Rituais e celebrações detalhadas são conteúdo Premium",
@@ -2799,7 +2801,7 @@
     "placeholders": {
       "rotulo": {
         "type": "String",
-        "example": "Conselheiro Místico"
+        "example": "Leitura da tiragem"
       }
     }
   },

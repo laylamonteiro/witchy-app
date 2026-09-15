@@ -378,12 +378,12 @@ class _OracleBodyState extends State<_OracleBody> {
     final reading = _lastReading;
     if (reading == null || _isReadingAI) return;
 
-    // A leitura do Conselheiro é o que a assinatura vende — tirar qualquer
-    // site faz. O Free tem UMA por semana, a mesma da página do Conselheiro,
-    // e gasta onde quiser. Sem ela, o botão nem aparece.
+    // Ler o que as peças dizem JUNTAS é o que a assinatura vende — tirar
+    // qualquer site faz. O Free tem UMA leitura por semana, dividida entre
+    // tarô, runas e oráculo. Sem ela, o botão nem aparece.
     final auth = context.read<AuthProvider>();
     final ehPremium = auth.isPremiumEffective;
-    if (!ehPremium && !auth.canUseAdvisor) return;
+    if (!ehPremium && !auth.currentUser.canInterpretReading) return;
 
     setState(() => _isReadingAI = true);
     try {
@@ -395,9 +395,9 @@ class _OracleBodyState extends State<_OracleBody> {
       );
       // Uma resposta atrasada não pertence a outra mesa.
       if (!mounted || _lastReading?.id != reading.id) return;
-      // A leitura saiu: é ela que gasta a cota semanal, e só do Free.
+      // A leitura saiu: é ela que gasta a leitura da semana, e só do Free.
       // Debitar antes seria cobrar por um erro de rede.
-      if (!ehPremium) await auth.incrementAdvisorConsultations();
+      if (!ehPremium) await auth.incrementReadingInterpretations();
       setState(() => _aiReading = interpretation);
       // Fica junto da tiragem: reabrir a mesa não pede outra geração.
       await _readings.attachInterpretation(
@@ -1044,7 +1044,7 @@ class _OracleBodyState extends State<_OracleBody> {
           if (_lastReading != null &&
               !context.watch<AuthProvider>().podeLerOConselheiro)
             // Sem leitura disponível: no lugar do botão, o sumário do que o
-            // Conselheiro teceria sobre o que já está na mesa.
+            // Conselheiro teceria sobre as cartas que já estão na mesa.
             _previaDoConselheiro(context)
           else if (_aiReading == null)
             ElevatedButton.icon(

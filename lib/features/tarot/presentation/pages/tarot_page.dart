@@ -658,13 +658,14 @@ class _SpreadTabState extends State<_SpreadTab>
   Future<void> _askCounselor() async {
     if (_drawn.isEmpty || _isReadingAI) return;
 
-    // A leitura do Conselheiro é o que a assinatura vende — tirar cartas
-    // qualquer site faz. Então ela não é mais zero para quem não assina: o
-    // Free tem UMA por semana, a mesma da página do Conselheiro, e gasta onde
-    // quiser. Sem ela, o botão nem aparece e o card mostra a prévia no lugar.
+    // Ler o que as cartas dizem JUNTAS é o que a assinatura vende — tirar
+    // qualquer site faz. Então isto deixou de ser zero para quem não assina:
+    // o Free tem UMA leitura por semana, dividida entre tarô, runas e oráculo,
+    // e escolhe em qual mesa gastar. Sem ela, o botão nem aparece e o card
+    // mostra a prévia no lugar.
     final auth = context.read<AuthProvider>();
     final ehPremium = auth.isPremiumEffective;
-    if (!ehPremium && !auth.canUseAdvisor) return;
+    if (!ehPremium && !auth.currentUser.canInterpretReading) return;
 
     final signature = _signature(_activeSpread!, _drawn);
     setState(() => _isReadingAI = true);
@@ -674,9 +675,9 @@ class _SpreadTabState extends State<_SpreadTab>
         question: _question.isEmpty ? null : _question,
       );
       if (!mounted || _activeReadingSignature != signature) return;
-      // A leitura saiu: é ela que gasta a cota semanal, e só do Free.
+      // A leitura saiu: é ela que gasta a leitura da semana, e só do Free.
       // Debitar antes seria cobrar por um erro de rede.
-      if (!ehPremium) await auth.incrementAdvisorConsultations();
+      if (!ehPremium) await auth.incrementReadingInterpretations();
       final spreadLabel = _activeSpread!.displayName(AppLocalizations.of(context));
       setState(() => _aiReading = reading);
       // Guarda a interpretação atrelada a estas cartas para não regerar.

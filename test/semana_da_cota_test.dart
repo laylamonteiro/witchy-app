@@ -1,6 +1,6 @@
-// A cota do Conselheiro é a única semanal do app, e a virada da semana é
-// aritmética de calendário — o tipo de coisa que erra na virada do ano e só
-// aparece em janeiro.
+// A cota da interpretação da tiragem é a única semanal do app, e a virada da
+// semana é aritmética de calendário — o tipo de coisa que erra na virada do
+// ano e só aparece em janeiro.
 import 'package:flutter_test/flutter_test.dart';
 import 'package:grimorio_de_bolso/features/auth/domain/semana_da_cota.dart';
 

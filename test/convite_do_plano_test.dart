@@ -34,7 +34,7 @@ UserModel _bruxa({
     lastLoginAt: DateTime(2026, 1, 1),
     spellsCount: feiticos,
     diaryEntriesThisMonth: diario,
-    advisorConsultationsThisWeek: conselheiro,
+    advisorConsultationsToday: conselheiro,
     aiConsultationsToday: ia,
     runeReadingsToday: runas,
     pendulumUsesToday: pendulo,

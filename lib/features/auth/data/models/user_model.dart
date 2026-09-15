@@ -72,13 +72,11 @@ class UserModel {
   final int affirmationsToday;  // Limite: 3/dia
   final int runeReadingsToday;  // Limite: 1/dia (cada tipo)
   final int oracleReadingsToday;  // Limite: 1/dia (cada tipo)
-  /// Leituras do Conselheiro Místico gastas NESTA SEMANA — na página dele ou
-  /// na interpretação de uma tiragem, que dividem a mesma cota.
-  ///
-  /// A chave em JSON continua sendo `advisorConsultationsToday`, de quando a
-  /// cota era diária: trocá-la zeraria o contador de quem já tem o app, o que
-  /// é inofensivo mas gratuito.
-  final int advisorConsultationsThisWeek;
+  final int advisorConsultationsToday;  // Conselheiro Místico (P&R) - Limite: 1/dia
+
+  /// Interpretações de tiragem gastas NESTA SEMANA, somando tarô, runas e
+  /// oráculo. Cota própria, separada da página do Conselheiro.
+  final int readingInterpretationsThisWeek;
   final int palmistryReadingsToday;  // Leitura de mãos (Premium) - Limite: 3/dia
 
   const UserModel({
@@ -105,7 +103,8 @@ class UserModel {
     this.affirmationsToday = 0,
     this.runeReadingsToday = 0,
     this.oracleReadingsToday = 0,
-    this.advisorConsultationsThisWeek = 0,
+    this.advisorConsultationsToday = 0,
+    this.readingInterpretationsThisWeek = 0,
     this.palmistryReadingsToday = 0,
   });
 
@@ -179,14 +178,20 @@ class UserModel {
   /// Limite de leituras de oracle por dia para free
   static const int freeOracleReadingsLimit = 1;
 
-  /// Leituras do Conselheiro Místico por SEMANA para o Free.
-  ///
-  /// É a única coisa do app que custa dinheiro para servir (geração de IA) e é
-  /// o que a assinatura de fato vende — tirar cartas qualquer site faz. Por
-  /// isso ela é semanal em vez de diária, e vale tanto na página do
-  /// Conselheiro quanto na interpretação de uma tiragem: uma por semana, gasta
-  /// onde a pessoa quiser.
+  /// Limite de consultas ao Conselheiro Místico (P&R) por dia para free
   static const int freeAdvisorConsultationsLimit = 1;
+
+  /// Interpretações de tiragem por SEMANA para o Free, somando tarô, runas e
+  /// oráculo.
+  ///
+  /// É a única cota semanal do app, e de propósito. Ler o que as cartas dizem
+  /// JUNTAS é o que a assinatura vende — tirar é o que qualquer site faz —, e
+  /// é também a única coisa aqui que custa geração de IA para servir. Semanal
+  /// deixa a leitura ser um evento em vez de rotina, e ainda assim faz com que
+  /// quem não assina EXPERIMENTE o que está sendo vendido.
+  ///
+  /// Uma só para as três ferramentas: a pessoa escolhe em qual mesa gastar.
+  static const int freeReadingInterpretationsLimit = 1;
 
   /// Limite de identificações do Guia da Natureza por dia.
   ///
@@ -240,6 +245,17 @@ class UserModel {
     return freeAffirmationsLimit - affirmationsToday;
   }
 
+  /// Verifica se pode pedir a interpretação de uma tiragem esta semana
+  bool get canInterpretReading =>
+      isPremium ||
+      readingInterpretationsThisWeek < freeReadingInterpretationsLimit;
+
+  /// Quantas interpretações de tiragem restam esta semana
+  int get remainingReadingInterpretations {
+    if (isPremium) return -1; // ilimitado
+    return freeReadingInterpretationsLimit - readingInterpretationsThisWeek;
+  }
+
   /// Verifica se pode fazer leitura de runas hoje
   bool get canUseRunes => isPremium || runeReadingsToday < freeRuneReadingsLimit;
 
@@ -258,14 +274,14 @@ class UserModel {
     return freeOracleReadingsLimit - oracleReadingsToday;
   }
 
-  /// Verifica se pode consultar o Conselheiro Místico esta semana
+  /// Verifica se pode consultar o Conselheiro Místico (P&R) hoje
   bool get canUseAdvisor =>
-      isPremium || advisorConsultationsThisWeek < freeAdvisorConsultationsLimit;
+      isPremium || advisorConsultationsToday < freeAdvisorConsultationsLimit;
 
   /// Quantas consultas ao Conselheiro Místico restam hoje
   int get remainingAdvisorConsultations {
     if (isPremium) return -1; // ilimitado
-    return freeAdvisorConsultationsLimit - advisorConsultationsThisWeek;
+    return freeAdvisorConsultationsLimit - advisorConsultationsToday;
   }
 
   UserModel copyWith({
@@ -292,7 +308,8 @@ class UserModel {
     int? affirmationsToday,
     int? runeReadingsToday,
     int? oracleReadingsToday,
-    int? advisorConsultationsThisWeek,
+    int? advisorConsultationsToday,
+    int? readingInterpretationsThisWeek,
     int? palmistryReadingsToday,
   }) {
     return UserModel(
@@ -319,8 +336,10 @@ class UserModel {
       affirmationsToday: affirmationsToday ?? this.affirmationsToday,
       runeReadingsToday: runeReadingsToday ?? this.runeReadingsToday,
       oracleReadingsToday: oracleReadingsToday ?? this.oracleReadingsToday,
-      advisorConsultationsThisWeek:
-          advisorConsultationsThisWeek ?? this.advisorConsultationsThisWeek,
+      advisorConsultationsToday:
+          advisorConsultationsToday ?? this.advisorConsultationsToday,
+      readingInterpretationsThisWeek: readingInterpretationsThisWeek ??
+          this.readingInterpretationsThisWeek,
       palmistryReadingsToday:
           palmistryReadingsToday ?? this.palmistryReadingsToday,
     );
@@ -351,7 +370,8 @@ class UserModel {
       'affirmationsToday': affirmationsToday,
       'runeReadingsToday': runeReadingsToday,
       'oracleReadingsToday': oracleReadingsToday,
-      'advisorConsultationsToday': advisorConsultationsThisWeek,
+      'advisorConsultationsToday': advisorConsultationsToday,
+      'readingInterpretationsThisWeek': readingInterpretationsThisWeek,
       'palmistryReadingsToday': palmistryReadingsToday,
     };
   }
@@ -405,7 +425,9 @@ class UserModel {
       affirmationsToday: json['affirmationsToday'] ?? 0,
       runeReadingsToday: json['runeReadingsToday'] ?? 0,
       oracleReadingsToday: json['oracleReadingsToday'] ?? 0,
-      advisorConsultationsThisWeek: json['advisorConsultationsToday'] ?? 0,
+      advisorConsultationsToday: json['advisorConsultationsToday'] ?? 0,
+      readingInterpretationsThisWeek:
+          json['readingInterpretationsThisWeek'] ?? 0,
       palmistryReadingsToday: json['palmistryReadingsToday'] ?? 0,
     );
   }
