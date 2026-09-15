@@ -42,8 +42,14 @@ if grep -qE '^\s*ADMIN_(EMAIL|PASSWORD)=' "$ENV_FILE"; then
   exit 1
 fi
 
+# Os dois flags são os que assemble_site.sh exige: o service worker do Flutter
+# saiu (3.47 gera um stub que se desregistra) e o nosso sw.js o substitui;
+# o CanvasKit local é o que permite abrir offline.
 echo "==> Build web (release)"
-flutter build web --release --no-wasm-dry-run --dart-define-from-file="$ENV_FILE"
+flutter build web --release --no-wasm-dry-run \
+  --pwa-strategy=none \
+  --no-web-resources-cdn \
+  --dart-define-from-file="$ENV_FILE"
 
 # O que sobe é a MONTAGEM, não o build cru.
 #
@@ -71,7 +77,7 @@ echo "==> Sync de assets (cache longo)"
 aws s3 sync public/ "s3://$S3_BUCKET/" --delete \
   --cache-control "public,max-age=31536000,immutable" \
   --exclude "*.html" \
-  --exclude "flutter_service_worker.js" \
+  --exclude "sw.js" \
   --exclude "flutter_bootstrap.js" \
   --exclude "sitemap.xml" \
   --exclude "robots.txt" \
@@ -95,7 +101,10 @@ find public -name "*.html" -type f | while read -r pagina; do
   key="${pagina#public/}"
   aws s3 cp "$pagina" "s3://$S3_BUCKET/$key" --cache-control "no-cache,max-age=0"
 done
-for f in flutter_service_worker.js flutter_bootstrap.js sitemap.xml robots.txt _headers; do
+# O sw.js está aqui porque o navegador só instala a versão nova do service
+# worker quando enxerga bytes diferentes — preso no cache, a publicação
+# nunca chegaria.
+for f in sw.js flutter_bootstrap.js sitemap.xml robots.txt _headers; do
   if [ -f "public/$f" ]; then
     aws s3 cp "public/$f" "s3://$S3_BUCKET/$f" \
       --cache-control "no-cache,max-age=0"

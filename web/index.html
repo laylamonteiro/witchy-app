@@ -127,6 +127,35 @@
   </style>
 
   <script>
+    // SERVICE WORKER PRÓPRIO (sw.js): é o que faz o app abrir sem rede.
+    //
+    // O Flutter 3.35 descontinuou o service worker que ele gerava e o 3.47
+    // escreve um stub que se DESREGISTRA ao ativar — sem nada no lugar, o
+    // app web não tinha cache nenhum e, sem internet, mostrava a página de
+    // erro do navegador para uma pessoa logada com todos os dados no SQLite
+    // local. O sw.js é gerado por scripts/gerar_service_worker.mjs a partir
+    // do build (o build precisa de --pwa-strategy=none, para o stub sair
+    // vazio, e de --no-web-resources-cdn, para o CanvasKit vir da própria
+    // origem e caber no cache). Registrado cedo, e a promessa é ignorada de
+    // propósito: sem service worker o app funciona igual — só não offline —,
+    // e nada aqui pode segurar o boot.
+    (function () {
+      if (!('serviceWorker' in navigator)) return;
+      try {
+        // A lista de recursos carregados (usada no aquecimento, abaixo) tem
+        // um teto padrão de 250 entradas; o app passa disso com as imagens
+        // do Seu Dia, e o CanvasKit e as fontes precisam caber nela.
+        if (window.performance && performance.setResourceTimingBufferSize) {
+          performance.setResourceTimingBufferSize(1000);
+        }
+        navigator.serviceWorker.register('sw.js').catch(function () {});
+      } catch (e) {
+        // Sem offline nesta aba; o resto segue.
+      }
+    })();
+  </script>
+
+  <script>
     // TECLADO DO CELULAR: o canvas do Flutter não volta ao tamanho quando o
     // teclado fecha, deixando uma faixa vazia no fim da página. A meta tag
     // `interactive-widget` sozinha não resolveu, então aqui a altura da página
@@ -185,7 +214,8 @@
     conta própria (dentro de databaseFactoryFfiWeb) — registrá-lo como
     service worker fazia o SW interceptar o fetch do sqlite3.wasm e
     devolver vazio, estourando "unsupported result null" no boot a partir
-    do segundo load, além de sobrescrever o flutter_service_worker.js do PWA.
+    do segundo load, além de tomar o lugar do sw.js (o service worker do
+    app, registrado no <head>).
   -->
   <div id="boot-splash">
     <img src="/icons/Icon-512.png" alt="Grimório de Bolso">
@@ -203,24 +233,65 @@
         observador.disconnect();
         splash.classList.add('done');
         setTimeout(function () { splash.remove(); }, 400);
+        // A casca subiu: hora de aquecer o cache do service worker (abaixo).
+        // Agora, e de novo em ~15 s — as fontes do Google e as imagens do
+        // Seu Dia chegam depois da montagem.
+        aquecerCache();
+        setTimeout(aquecerCache, 15000);
       });
       observador.observe(document.body, { childList: true, subtree: true });
     })();
+
+    // AQUECIMENTO DO CACHE OFFLINE.
+    //
+    // Na PRIMEIRA visita o service worker ainda está instalando quando a
+    // página baixa o CanvasKit (~7 MB), o sqlite3.wasm e as fontes — esses
+    // pedidos não passam por ele e não entram no cache. Sem isto, a segunda
+    // visita sem rede abriria a casca e ficaria sem renderizador. A página
+    // sabe o que baixou (performance.getEntriesByType('resource')) e manda a
+    // lista para o SW, que guarda o que é dele e ignora o resto. Tudo em
+    // try/catch: aquecer é um bônus, e um bônus nunca pode quebrar o boot.
+    function aquecerCache() {
+      try {
+        if (!('serviceWorker' in navigator)) return;
+        if (!window.performance || !performance.getEntriesByType) return;
+        var urls = performance.getEntriesByType('resource').map(function (e) {
+          return e.name;
+        });
+        var mensagem = { tipo: 'aquecer', urls: urls };
+        var controlador = navigator.serviceWorker.controller;
+        if (controlador) {
+          controlador.postMessage(mensagem);
+          return;
+        }
+        // Primeira visita: o SW ainda não controla esta aba. `ready` resolve
+        // quando ele ativa; aí o `active` recebe a mensagem.
+        navigator.serviceWorker.ready.then(function (reg) {
+          if (reg && reg.active) reg.active.postMessage(mensagem);
+        }).catch(function () {});
+      } catch (e) {
+        // Sem aquecimento nesta abertura; o cache preguiçoso cobre depois.
+      }
+    }
   </script>
 
   <script>
     // Publicação nova sem "recarrega duas vezes".
     //
-    // O service worker do Flutter baixa a versão nova em segundo plano e
-    // assume o controle depois — então o load em que a atualização chega
-    // ainda está rodando o app ANTIGO. Para quem publicou, isso se parece
+    // O nosso service worker (sw.js, registrado no <head>) baixa a versão
+    // nova em segundo plano — o navegador vê que os bytes do sw.js mudaram,
+    // instala o novo, e ele faz skipWaiting + clients.claim — então o load
+    // em que a atualização chega ainda está rodando o app ANTIGO, servido do
+    // cache da versão anterior. Para quem publicou, isso se parece
     // exatamente com "a mudança não subiu": nada quebra, nada avisa, e a
     // novidade simplesmente não está lá.
     //
     // `controllerchange` dispara quando o SW novo assume. Aí recarregar é
     // barato (os arquivos já estão em cache) e a pessoa passa a ver a
     // versão nova sem saber que houve troca. A trava evita laço em
-    // navegador que dispare o evento mais de uma vez.
+    // navegador que dispare o evento mais de uma vez. (Era assim com o
+    // service worker antigo do Flutter, que a 3.47 desregistra; o nosso
+    // segue o mesmo contrato, e esta lógica vale igual.)
     (function () {
       if (!('serviceWorker' in navigator)) return;
 

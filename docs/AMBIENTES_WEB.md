@@ -137,6 +137,35 @@ E o `GOOGLE_WEB_CLIENT_ID` é secret de GitHub: sem ele no build, o caminho
 novo não existe em lugar nenhum. O `release.yml` **aborta** se ele faltar,
 justamente porque a ausência não tem sintoma próprio.
 
+## Offline: o service worker
+
+O app web abre sem rede depois da primeira visita — e isso não vem do
+Flutter. O Flutter 3.35 descontinuou o service worker dele e a 3.47 gera um
+stub que se desregistra ao ativar; sem nada no lugar, o navegador mostrava
+a própria página de erro para uma pessoa logada, com os dados no SQLite
+local (no iPhone, o único caminho para o app). O `sw.js` é nosso: gerado na
+montagem por `scripts/gerar_service_worker.mjs` (md5 de cada arquivo do
+build + `scripts/service_worker/logica.js`), guarda a casca do app na
+instalação, o resto conforme é usado, e responde qualquer rota do app
+(`/seu-dia`, `/grimorio`…) com a casca quando a rede falha ou pendura.
+
+O build precisa de **dois flags**, e `scripts/assemble_site.sh` para sem
+eles:
+
+- `--pwa-strategy=none` — o stub do Flutter sai vazio e o
+  `flutter_bootstrap.js` não registra service worker nenhum (senão ele
+  registraria o stub por cima do nosso, e o stub se desregistra).
+- `--no-web-resources-cdn` — o CanvasKit vem da própria origem, não de
+  `www.gstatic.com`; recurso de outra origem não entra no cache, e o app
+  abriria offline sem renderizador.
+
+Como conferir num endereço qualquer: DevTools → **Application → Service
+Workers** deve mostrar `sw.js` registrado e ativado (e em **Cache Storage**
+um `gdb-app-<versão>`). Depois, com a rede desligada na aba *Network*,
+recarregar `/seu-dia` abre o app. `/sobre/`, `/privacidade/`, `/termos/` e
+`/baixar` seguem **online-only** de propósito: são páginas estáticas e uma
+Pages Function, não o app.
+
 ## Regra prática
 
 Prefira sempre **staging** para testar: é um endereço fixo, autorizado uma

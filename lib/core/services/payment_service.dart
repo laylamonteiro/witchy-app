@@ -124,10 +124,32 @@ class PaymentService extends ChangeNotifier {
   CustomerInfo? get customerInfo => _customerInfo;
   Offerings? get offerings => _offerings;
 
+  /// A chamada do [initialize] em voo, compartilhada com quem chega junto.
+  Future<void>? _inicializacaoEmVoo;
+
+  /// A carga inicial (status do cliente + catálogo) em voo — ver
+  /// [aguardarEstadoInicial].
+  Future<void>? _estadoInicialEmVoo;
+
   /// Inicializa o RevenueCat SDK
   ///
-  /// Deve ser chamado no início do app, preferencialmente em main.dart
-  Future<void> initialize() async {
+  /// Deve ser chamado no início do app, preferencialmente em main.dart.
+  ///
+  /// SÓ CONFIGURA; o status chega depois. O boot (main.dart) e o AuthProvider
+  /// não podem ficar reféns de uma chamada de rede: `getCustomerInfo` e
+  /// `getOfferings` esperam a rede (no Android, até 30 s numa rede
+  /// "conectada mas sem internet"; na web, sem cache nenhum), e enquanto isso
+  /// o app ficava parado na tela nativa. Sem internet o app tem de abrir com
+  /// o espelho local (`profiles`) decidindo o plano; o RevenueCat responde
+  /// quando puder, e o status entra pelo listener de CustomerInfo. Quem quer
+  /// o status de fato, e não só o SDK de pé, espera [aguardarEstadoInicial].
+  ///
+  /// Idempotente COM a chamada em voo compartilhada:
+  /// `_checkSubscriptionExpiration`, `logIn`, `garantirStatus` e
+  /// `garantirCatalogo` chamam este método. Antes o boot esperava o fim e
+  /// ninguém colidia; agora, sem esse compartilhamento, dois chamadores
+  /// rodariam `Purchases.configure` duas vezes.
+  Future<void> initialize() {
     // Sai cedo só quando não há mais nada a tentar: SDK de pé, ou sem chave
     // para esta plataforma. Um boot que falhou no configure (rede ruim) pode
     // ser retomado por qualquer chamador depois — antes, `_isInitialized`
@@ -135,9 +157,20 @@ class PaymentService extends ChangeNotifier {
     if (_isInitialized &&
         (_sdkConfigurado || !RevenueCatConfig.isConfigured)) {
       debugPrint('ℹ️  RevenueCat já inicializado');
-      return;
+      return Future<void>.value();
     }
 
+    final emVoo = _inicializacaoEmVoo;
+    if (emVoo != null) return emVoo;
+
+    final inicializacao = _inicializar().whenComplete(() {
+      _inicializacaoEmVoo = null;
+    });
+    _inicializacaoEmVoo = inicializacao;
+    return inicializacao;
+  }
+
+  Future<void> _inicializar() async {
     debugPrint('🔄 Iniciando RevenueCat...');
     // Platform.* (dart:io) estoura no navegador — só loga fora da web.
     if (!kIsWeb) {
@@ -182,24 +215,43 @@ class PaymentService extends ChangeNotifier {
       Purchases.addCustomerInfoUpdateListener(_onCustomerInfoUpdated);
       debugPrint('👂 Listener de CustomerInfo registrado');
 
-      // Carregar informações iniciais
-      debugPrint('📥 Carregando informações do cliente...');
-      await _loadCustomerInfo();
-
-      debugPrint('🛒 Carregando ofertas...');
-      await _loadOfferings();
-
       _isInitialized = true;
       notifyListeners();
+      debugPrint('✅ RevenueCat configurado; status e catálogo a caminho');
 
-      debugPrint('✅ RevenueCat inicializado com sucesso!');
-      debugPrint('   Status Pro: $_isPro');
-      debugPrint('   Produtos disponíveis: ${_products.length}');
+      // Sem await, de propósito (ver o comentário do `initialize`): a carga
+      // inicial vai à rede, e o boot não a espera. A promessa fica guardada
+      // para quem precisar esperá-la.
+      _estadoInicialEmVoo = _carregarEstadoInicial().whenComplete(() {
+        _estadoInicialEmVoo = null;
+      });
     } catch (e) {
       debugPrint('❌ Erro ao inicializar RevenueCat: $e');
       debugPrint('⚠️  Continuando sem funcionalidade de pagamentos');
       _isInitialized = true; // Continuar sem pagamentos
     }
+  }
+
+  /// Espera a carga inicial disparada pelo [initialize] (status do cliente e
+  /// catálogo). Volta na hora quando não há carga em voo — já terminou, ou o
+  /// SDK nem subiu. Para quem pede o status de verdade, e não só o SDK de pé.
+  Future<void> aguardarEstadoInicial() =>
+      _estadoInicialEmVoo ?? Future<void>.value();
+
+  /// A carga que o boot deixou de esperar: status do cliente, depois o
+  /// catálogo. Cada passo engole a própria falha (rede ruim é o caso normal
+  /// aqui), então esta promessa nunca estoura em quem não a espera.
+  Future<void> _carregarEstadoInicial() async {
+    debugPrint('📥 Carregando informações do cliente...');
+    await _loadCustomerInfo();
+
+    debugPrint('🛒 Carregando ofertas...');
+    await _loadOfferings();
+
+    notifyListeners();
+    debugPrint('✅ RevenueCat pronto!');
+    debugPrint('   Status Pro: $_isPro');
+    debugPrint('   Produtos disponíveis: ${_products.length}');
   }
 
   /// Registra callback para ser notificado quando o status Pro mudar
@@ -209,15 +261,41 @@ class PaymentService extends ChangeNotifier {
     _onProStatusChanged = callback;
   }
 
-  /// Callback quando CustomerInfo é atualizado
-  void _onCustomerInfoUpdated(CustomerInfo info) {
+  /// Callback quando CustomerInfo é atualizado (listener do SDK e carga
+  /// inicial): avisa o AuthProvider também quando o status acaba de ficar
+  /// conhecido — ver [deveAvisarAuth].
+  void _onCustomerInfoUpdated(CustomerInfo info) =>
+      _aplicarCustomerInfo(info, avisarSeRecemConhecido: true);
+
+  /// Guarda o CustomerInfo, recalcula `isPro` e decide se o AuthProvider
+  /// precisa saber.
+  ///
+  /// [avisarSeRecemConhecido] existe para o `logIn` manter a regra de
+  /// sempre (só avisa quando `isPro` mudou): depois de um `logOut` o status
+  /// é SEMPRE desconhecido, e a resposta do `logIn` avisaria o AuthProvider
+  /// em todo login — em paralelo com o `syncAuthenticatedUser`, que acabou
+  /// de gravar o usuário vindo do servidor. O rebaixamento por sinal
+  /// positivo continua com `_checkSubscriptionExpiration` e
+  /// `refreshPremiumStatus`, como antes do boot sem espera.
+  void _aplicarCustomerInfo(
+    CustomerInfo info, {
+    required bool avisarSeRecemConhecido,
+  }) {
+    final statusEraDesconhecido =
+        avisarSeRecemConhecido && _customerInfo == null;
     final oldIsPro = _isPro;
     _customerInfo = info;
     _updateProStatus();
 
-    // Notificar AuthProvider se o status Pro mudou
-    if (oldIsPro != _isPro && _onProStatusChanged != null) {
-      debugPrint('🔄 Status Pro mudou: $oldIsPro → $_isPro');
+    if (deveAvisarAuth(
+          statusEraDesconhecido: statusEraDesconhecido,
+          isProAntes: oldIsPro,
+          isProAgora: _isPro,
+        ) &&
+        _onProStatusChanged != null) {
+      debugPrint(statusEraDesconhecido
+          ? '🔄 Status Pro conhecido: $_isPro'
+          : '🔄 Status Pro mudou: $oldIsPro → $_isPro');
       debugPrint('   Notificando AuthProvider para sincronizar UserRole...');
       _onProStatusChanged!(_isPro);
     }
@@ -225,11 +303,31 @@ class PaymentService extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// O AuthProvider precisa ser avisado desta atualização?
+  ///
+  /// Sim quando `isPro` mudou (compra, cancelamento, reembolso) — a regra de
+  /// sempre — e TAMBÉM quando o status acabou de ficar conhecido, mesmo que
+  /// seja o mesmo `false` de antes. O segundo caso nasceu com o boot que não
+  /// espera a rede: a primeira resposta do RevenueCat chega DEPOIS de o
+  /// AuthProvider ter feito a conferência de expiração com status
+  /// desconhecido (que, por regra, não rebaixa ninguém). Sem este aviso, o
+  /// rebaixamento de uma assinatura expirada só aconteceria num
+  /// `refreshPremiumStatus` — e ele não roda em todo boot.
+  @visibleForTesting
+  static bool deveAvisarAuth({
+    required bool statusEraDesconhecido,
+    required bool isProAntes,
+    required bool isProAgora,
+  }) =>
+      statusEraDesconhecido || isProAntes != isProAgora;
+
   /// Carrega informações do cliente
   Future<void> _loadCustomerInfo() async {
     try {
-      _customerInfo = await Purchases.getCustomerInfo();
-      _updateProStatus();
+      // Pelo mesmo caminho do listener, e não atribuindo direto: é assim que
+      // o AuthProvider fica sabendo do status também quando ele chega depois
+      // do boot (ver [deveAvisarAuth]).
+      _onCustomerInfoUpdated(await Purchases.getCustomerInfo());
     } catch (e) {
       debugPrint('Erro ao carregar informações do cliente: $e');
     }
@@ -376,11 +474,32 @@ class PaymentService extends ChangeNotifier {
   /// inteira, sem retry em lugar nenhum.
   Future<void> garantirCatalogo() async {
     await initialize();
+    // A carga inicial corre sem espera: decidir que o catálogo faltou antes
+    // de ela terminar dispararia um segundo getOfferings em cima do primeiro.
+    await aguardarEstadoInicial();
     if (_offerings != null || !_sdkConfigurado) return;
 
     debugPrint('🔁 Catálogo vazio — tentando carregar de novo');
     await _loadOfferings();
     notifyListeners();
+  }
+
+  /// Garante que o RevenueCat foi consultado sobre este cliente, indo à rede
+  /// de novo se a carga do boot morreu sem resposta.
+  ///
+  /// Irmão de [garantirCatalogo]. `initialize` + [aguardarEstadoInicial] só
+  /// cobrem a consulta que o boot deixou em voo: num boot sem rede ela falha
+  /// (a falha é engolida), e quando a rede volta ninguém a refazia — o
+  /// status ficava desconhecido até o próximo boot. Com o boot que não
+  /// espera a rede, "abriu offline, ficou online depois" virou o caso comum.
+  /// Quem pede o status quer o status.
+  Future<void> garantirStatus() async {
+    await initialize();
+    await aguardarEstadoInicial();
+    if (subscriptionStatusKnown || !_sdkConfigurado) return;
+
+    debugPrint('🔁 Status desconhecido — consultando de novo');
+    await _loadCustomerInfo();
   }
 
   // ============================================================
@@ -825,7 +944,8 @@ class PaymentService extends ChangeNotifier {
 
     try {
       final result = await Purchases.logIn(userId);
-      _onCustomerInfoUpdated(result.customerInfo);
+      // Regra antiga (avisa só se `isPro` mudou) — ver [_aplicarCustomerInfo].
+      _aplicarCustomerInfo(result.customerInfo, avisarSeRecemConhecido: false);
       debugPrint('Usuário logado no RevenueCat: $userId');
     } catch (e) {
       debugPrint('Erro ao fazer login no RevenueCat: $e');
