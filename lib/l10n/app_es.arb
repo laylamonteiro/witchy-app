@@ -2271,5 +2271,12 @@
   "@menstrualLunarNearNew": {"placeholders": {"near": {"type": "int"}, "total": {"type": "int"}}},
   "@menstrualLunarNearFull": {"placeholders": {"near": {"type": "int"}, "total": {"type": "int"}}},
   "@menstrualLunarNeither": {"placeholders": {"total": {"type": "int"}}},
-  "@menstrualLunarMoods": {"placeholders": {"moods": {"type": "String"}}}
+  "@menstrualLunarMoods": {"placeholders": {"moods": {"type": "String"}}},
+  "perguntaAjudaLivre": "Esta tirada es libre: es tu pregunta de hoy",
+  "perguntaAjudaGastaUma": "Una pregunta nueva usa tu tirada de hoy",
+  "perguntaAjudaSemCota": "Ya hiciste tu pregunta de hoy",
+  "perguntaAjudaJaFeita": "Ya tendiste esta mesa hoy — es la misma",
+  "perguntaVoltarParaHoje": "Volver a la pregunta de hoy",
+  "perguntaVerAMesa": "Ver la mesa",
+  "oracleQuestionHint": "¿Qué debe iluminar el oráculo?"
 }

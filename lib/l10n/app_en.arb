@@ -2271,5 +2271,12 @@
   "@menstrualLunarNearNew": {"placeholders": {"near": {"type": "int"}, "total": {"type": "int"}}},
   "@menstrualLunarNearFull": {"placeholders": {"near": {"type": "int"}, "total": {"type": "int"}}},
   "@menstrualLunarNeither": {"placeholders": {"total": {"type": "int"}}},
-  "@menstrualLunarMoods": {"placeholders": {"moods": {"type": "String"}}}
+  "@menstrualLunarMoods": {"placeholders": {"moods": {"type": "String"}}},
+  "perguntaAjudaLivre": "This reading is free: it's your question for today",
+  "perguntaAjudaGastaUma": "A new question uses your reading for today",
+  "perguntaAjudaSemCota": "You've already asked your question today",
+  "perguntaAjudaJaFeita": "You've already laid this table today — it's the same one",
+  "perguntaVoltarParaHoje": "Back to today's question",
+  "perguntaVerAMesa": "See the table",
+  "oracleQuestionHint": "What should the oracle shed light on?"
 }

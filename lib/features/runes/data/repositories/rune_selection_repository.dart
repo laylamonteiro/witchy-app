@@ -5,6 +5,8 @@ import 'package:sqflite/sqflite.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../../core/database/database_helper.dart';
+import '../../../../core/divination/dia_da_pergunta_repository.dart';
+import '../../../../core/divination/regra_da_tiragem.dart';
 import '../../../../core/services/usage_coordinator.dart';
 import '../../domain/rune_selection_session.dart';
 import '../models/rune_model.dart';
@@ -22,19 +24,21 @@ class RuneSelectionRepository {
   final DatabaseHelper _dbHelper;
   final Random _random;
 
-  /// Resume the open draft (or today's finished table) for this spread and
-  /// question, or lay out a new cloth after checking the daily quota.
-  /// [startNew] is an explicit "new reading" and only Premium can use it to
-  /// leave a finished table behind; Free keeps one table per spread/question
-  /// per day, exactly like the tarot policy.
+  /// Estende o pano: retoma o rascunho aberto do dia, ou lança um novo.
+  ///
+  /// NÃO recebe pergunta e NÃO cobra nada. A pergunta passou a ser escrita na
+  /// tela de escolha, em cima do pano, e continua editável enquanto a pessoa
+  /// escolhe — então quando o pano é estendido ainda não se sabe qual pergunta
+  /// vai valer. Quem decide e cobra é [select], no instante em que a mesa
+  /// fecha. O rascunho nasce com a última pergunta do dia, que é o que repõe o
+  /// texto no campo.
+  ///
+  /// [startNew] é um "nova leitura" explícito: deixa para trás a mesa aberta e
+  /// começa outra.
   Future<RuneSelectionSession> prepare({
     required String userId,
     required RuneSpreadType spread,
-    required String question,
     required List<Rune> catalog,
-    required bool premium,
-    required int legacyRuneUsed,
-    required int freeLimit,
     bool startNew = false,
     DateTime? now,
   }) async {
@@ -42,32 +46,50 @@ class RuneSelectionRepository {
         catalog.map((r) => r.name).toSet().length != catalog.length) {
       throw const FormatException('Expected the complete rune catalog');
     }
-    final asked = question.trim();
-    final normalized = RuneSelectionSession.normalize(asked);
     final instant = now ?? DateTime.now();
     final key = UsageCoordinator.dayKey(instant);
     final start = DateTime(instant.year, instant.month, instant.day);
     final end = DateTime(instant.year, instant.month, instant.day + 1);
+    final seed = await DiaDaPerguntaRepository.legacySeed(userId, instant,
+        tool: DiaDaPerguntaRepository.runas);
     final db = await _dbHelper.database;
     return db.transaction((txn) async {
-      await UsageCoordinator.importBalance(txn, userId: userId, dayKey: key,
-          legacyUsed: legacyRuneUsed, category: UsageCoordinator.runes);
-      if (!(startNew && premium)) {
-        // An unfinished consultation keeps its original day across midnight.
-        final existing = await txn.query('selection_sessions',
+      final dia = await DiaDaPerguntaRepository.ensureIn(txn,
+          userId: userId,
+          dayKey: key,
+          tool: DiaDaPerguntaRepository.runas,
+          seed: seed);
+      final asked = dia.ultimaPergunta?.trim() ?? '';
+      final normalized = RuneSelectionSession.normalize(asked);
+      if (!startNew) {
+        // Um rascunho aberto por tiragem: a pergunta ainda pode mudar, então
+        // ele não é mais identificado por ela. Uma consulta inacabada mantém o
+        // dia em que começou, mesmo depois da meia-noite.
+        final aberto = await txn.query('selection_sessions',
             where: 'user_id = ? AND tool = ? AND spread = ? '
-                'AND normalized_question = ? AND (day_key = ? OR result_id IS NULL)',
-            whereArgs: [userId, RuneSelectionSession.tool, spread.name,
-              normalized, key],
+                'AND result_id IS NULL',
+            whereArgs: [userId, RuneSelectionSession.tool, spread.name],
             orderBy: 'rowid DESC', limit: 1);
-        if (existing.isNotEmpty) {
-          return RuneSelectionSession.fromRow(existing.single);
+        if (aberto.isNotEmpty) {
+          return RuneSelectionSession.fromRow(aberto.single);
         }
-      }
-      if (!premium) {
-        final used = await UsageCoordinator.usedIn(txn, userId: userId,
-            dayKey: key, category: UsageCoordinator.runes);
-        if (used >= freeLimit) throw const RuneQuotaExceeded();
+        // Sem rascunho: se a mesa de hoje já foi feita com a pergunta que a
+        // pessoa deixou escrita, é ELA que volta — reabrir o que já se viu
+        // não estende pano novo.
+        final feita = await txn.query('selection_sessions',
+            where: 'user_id = ? AND tool = ? AND spread = ? AND day_key = ? '
+                'AND normalized_question = ? AND result_id IS NOT NULL',
+            whereArgs: [
+              userId,
+              RuneSelectionSession.tool,
+              spread.name,
+              key,
+              normalized,
+            ],
+            orderBy: 'rowid DESC', limit: 1);
+        if (feita.isNotEmpty) {
+          return RuneSelectionSession.fromRow(feita.single);
+        }
       }
       final shuffled = [...catalog]..shuffle(_random);
       // The existing domain gives every stone a 50% chance of being reversed.
@@ -90,6 +112,47 @@ class RuneSelectionRepository {
     });
   }
 
+  /// Guarda a pergunta que está sendo escrita em cima do pano.
+  ///
+  /// Não cobra e não move a âncora da cota: digitar nunca pode custar nada. A
+  /// âncora só se mexe quando uma mesa fecha e é de fato cobrada.
+  ///
+  /// Uma mesa já confirmada não muda mais de pergunta — a leitura gravada
+  /// citaria uma pergunta que não foi a dela.
+  Future<void> atualizarPergunta({
+    required String userId,
+    required String sessionId,
+    required String pergunta,
+  }) async {
+    final asked = pergunta.trim();
+    final db = await _dbHelper.database;
+    await db.transaction((txn) async {
+      final linhas = await txn.query('selection_sessions',
+          columns: ['day_key', 'result_id'],
+          where: 'id = ? AND user_id = ?',
+          whereArgs: [sessionId, userId],
+          limit: 1);
+      if (linhas.isEmpty || linhas.single['result_id'] != null) return;
+      await txn.update('selection_sessions', {
+        'question': asked,
+        'normalized_question': RuneSelectionSession.normalize(asked),
+        'updated_at': DateTime.now().millisecondsSinceEpoch,
+      }, where: 'id = ? AND user_id = ?', whereArgs: [sessionId, userId]);
+      await DiaDaPerguntaRepository.ensureIn(txn,
+          userId: userId,
+          dayKey: linhas.single['day_key'] as String,
+          tool: DiaDaPerguntaRepository.runas,
+          seed: const EstadoDoDia());
+      await txn.update('day_question_state', {'last_question': asked},
+          where: 'user_id = ? AND day_key = ? AND tool = ?',
+          whereArgs: [
+            userId,
+            linhas.single['day_key'],
+            DiaDaPerguntaRepository.runas,
+          ]);
+    });
+  }
+
   /// Persist one choice. When the table is complete, confirm usage and the
   /// reading in a single transaction; a failed write keeps every stone.
   Future<RuneSelectionUpdate> select({
@@ -103,6 +166,7 @@ class RuneSelectionRepository {
     required bool Function() isCurrentUser,
     required bool Function() isPremium,
     required int freeLimit,
+    required int legacyRuneUsed,
   }) async {
     final db = await _dbHelper.database;
     final chosen = await db.transaction((txn) async {
@@ -134,11 +198,39 @@ class RuneSelectionRepository {
       _account(isCurrentUser);
       final session = await _read(txn, userId, sessionId);
       if (session.isCommitted) return RuneSelectionUpdate(session);
-      final premium = isPremium();
-      if (!premium) {
-        final used = await UsageCoordinator.usedIn(txn, userId: userId,
-            dayKey: session.dayKey, category: UsageCoordinator.runes);
-        if (used >= freeLimit) throw const RuneQuotaExceeded();
+      // A cota é por PERGUNTA: repetir a do dia sai livre, uma nova é que
+      // gasta. A MESMA regra que a tela usou para avisar antes da escolha —
+      // se as duas divergissem, o aviso mentiria.
+      final dia = await DiaDaPerguntaRepository.ensureIn(txn,
+          userId: userId,
+          dayKey: session.dayKey,
+          tool: DiaDaPerguntaRepository.runas,
+          seed: const EstadoDoDia());
+      // O pano já não semeia o dia — ele nem olha a cota. Semear aqui deixa o
+      // fechamento da mesa de pé sozinho, sem depender de quem abriu a tela.
+      await UsageCoordinator.importBalance(txn,
+          userId: userId,
+          dayKey: session.dayKey,
+          legacyUsed: legacyRuneUsed,
+          category: UsageCoordinator.runes);
+      final used = await UsageCoordinator.usedIn(txn,
+          userId: userId,
+          dayKey: session.dayKey,
+          category: UsageCoordinator.runes);
+      final decisao = decidirTiragem(
+        premium: isPremium(),
+        perguntaDoDia: dia.perguntaDoDia,
+        pergunta: session.question,
+        tiragemJaFeitaHoje: false,
+        temCota: used < freeLimit,
+      );
+      // Rede de segurança, não caminho normal: a tela já desligou o pano neste
+      // caso. Só sobra a corrida — a cota gasta em outra aba entre o desenho
+      // da tela e o fechamento da mesa.
+      if (decisao == DecisaoDaTiragem.bloquear) {
+        throw const RuneQuotaExceeded();
+      }
+      if (decisao == DecisaoDaTiragem.cobrar) {
         await UsageCoordinator.recordIn(txn, userId: userId,
             dayKey: session.dayKey, operationId: session.id,
             category: UsageCoordinator.runes);
@@ -160,6 +252,16 @@ class RuneSelectionRepository {
       _account(isCurrentUser);
       payload = await RuneReadingRepository(dbHelper: _dbHelper)
           .insertReading(reading, userId, executor: txn);
+      await txn.update('day_question_state', {
+        if (decisao == DecisaoDaTiragem.cobrar || dia.perguntaDoDia == null)
+          'daily_question': normalizarPergunta(session.question),
+        'last_question': session.question,
+      }, where: 'user_id = ? AND day_key = ? AND tool = ?',
+          whereArgs: [
+            userId,
+            session.dayKey,
+            DiaDaPerguntaRepository.runas,
+          ]);
       await txn.update('selection_sessions', {
         'result_id': reading.id,
         'result_signature': 'rune-session:${session.id}',

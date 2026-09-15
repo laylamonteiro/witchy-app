@@ -124,9 +124,19 @@ void main() {
     await tester.ensureVisible(find.text(spread.displayName));
     await tester.tap(find.text(spread.displayName));
     await tester.pumpAndSettle();
-    await tester.enterText(find.byType(TextField), 'A manual rune question');
     await tester.ensureVisible(find.byKey(const ValueKey('runes-draw')));
     await tester.tap(find.byKey(const ValueKey('runes-draw')));
+  }
+
+  /// A pergunta é escrita EM CIMA DO PANO, na tela de escolha, e continua
+  /// editável enquanto a pessoa escolhe as pedras.
+  Future<void> escreverPergunta(WidgetTester tester, String texto) async {
+    final campo = find.byKey(const ValueKey('campo-da-pergunta'));
+    expect(campo, findsOneWidget,
+        reason: 'a pergunta mora na tela de escolha, acima do pano');
+    await tester.ensureVisible(campo);
+    await tester.enterText(campo, texto);
+    await tester.pump();
   }
 
   testWidgets('nine stones: choose, reveal after the cloth leaves, archive, revisit and new reading',
@@ -143,6 +153,7 @@ void main() {
     await until(tester, () => find.byType(RuneSelectionPage).evaluate().isNotEmpty,
         'selection route');
     await tester.pumpAndSettle();
+    await escreverPergunta(tester, 'A manual rune question');
 
     final chosen = <String>[];
     final slots = <int>[];
@@ -197,7 +208,9 @@ void main() {
     expect(ModalRoute.of(tester.element(selection))!.isCurrent, isTrue);
     refreshGate.complete();
     await until(tester, () {
-      expect(find.byType(TextField), findsNothing,
+      // O botão de tirar é o que marca o menu: o campo de pergunta deixou de
+      // servir de sinal, porque agora ele vive na tela de escolha.
+      expect(find.byKey(const ValueKey('runes-draw')), findsNothing,
           reason: 'No frame between the cloth and the table may show the menu');
       if (selection.evaluate().isNotEmpty) {
         expect(faces(), findsNothing, reason: 'The flip starts after the cloth has left');
@@ -263,7 +276,8 @@ void main() {
     await tester.ensureVisible(find.byKey(const ValueKey('runes-new-reading')));
     await tester.tap(find.byKey(const ValueKey('runes-new-reading')));
     await tester.pumpAndSettle();
-    expect(find.byType(TextField), findsOneWidget);
+    expect(find.byKey(const ValueKey('runes-draw')), findsOneWidget,
+        reason: '"nova leitura" volta ao menu das tiragens');
     await open(tester, spread);
     await until(tester, () => find.byType(RuneSelectionPage).evaluate().isNotEmpty,
         'new reading selection route');
