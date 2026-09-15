@@ -2279,5 +2279,9 @@
   "perguntaAjudaJaFeita": "Você já tirou esta mesa hoje — é a mesma",
   "perguntaVoltarParaHoje": "Voltar para a pergunta de hoje",
   "perguntaVerAMesa": "Ver a mesa",
-  "oracleQuestionHint": "O que o oráculo deve iluminar?"
+  "oracleQuestionHint": "O que o oráculo deve iluminar?",
+  "conviteAvaliacaoTitulo": "Avalie o Grimório de Bolso",
+  "conviteAvaliacaoCorpo": "Sua avaliação na Play Store ajuda outras bruxas a encontrarem o app 🌙",
+  "conviteAvaliacaoAvaliar": "Avaliar",
+  "conviteAvaliacaoAgoraNao": "Agora não"
 }

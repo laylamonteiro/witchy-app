@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart' show debugPrint, kIsWeb;
 import 'package:flutter/material.dart';
+
+import '../../../../core/reviews/vigia_do_convite.dart';
 import 'package:go_router/go_router.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
@@ -352,7 +354,13 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
 
     // Splash de marca (2,5s) só na primeira entrada — a regra dos 30 min é
     // decidida uma vez, ao montar. Fora dela, o app aparece direto.
-    return _mostrarSplash ? SplashScreen(child: conteudo) : conteudo;
+    final comSplash = _mostrarSplash ? SplashScreen(child: conteudo) : conteudo;
+
+    // O convite de avaliação mora AQUI, envolvendo as quatro abas: ele não é
+    // de uma tela, e pode acontecer depois de qualquer rito — tirar cartas,
+    // consultar o pêndulo, selar o dia. O vigia não desenha nada; só espera um
+    // rito fechar para perguntar à regra se é hora.
+    return VigiaDoConvite(child: comSplash);
   }
 
   Widget _buildScaffold(BuildContext context, MascotProvider mascot) {

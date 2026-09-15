@@ -220,6 +220,20 @@ class DailyCheckinRepository {
     return streak;
   }
 
+  /// Em quantos dias ela praticou, somando tudo.
+  ///
+  /// Uma linha por dia visitado, então contar linhas é contar dias. Serve de
+  /// medida de "usa o app de verdade" para quem pratica bastante sem manter
+  /// sequência — e é o que o convite de avaliação olha antes de aparecer.
+  Future<int> diasPraticados(String userId) async {
+    final db = await DatabaseHelper.instance.database;
+    final linhas = await db.rawQuery(
+      'SELECT COUNT(*) AS dias FROM $_table WHERE user_id = ?',
+      [userId],
+    );
+    return (linhas.first['dias'] as num?)?.toInt() ?? 0;
+  }
+
   /// Maior sequência já alcançada (para o "recorde").
   Future<int> bestStreak(String userId) async {
     final db = await DatabaseHelper.instance.database;
