@@ -10,7 +10,7 @@ Um grimório vivo, agenda mágica e companheiro de jornada para bruxas e bruxos 
 
 **Grimório de Bolso** é um aplicativo Flutter para quem está começando na bruxaria e estuda sozinho — organizando a prática, guardando registros e aprendendo com conteúdo curado, sem dogma e sem sensacionalismo
 
-O app é **local-first**: tudo funciona offline no SQLite do aparelho, com sincronização opcional na nuvem (Supabase) para quem cria conta. A pessoa usuária escolhe o idioma, o tema visual e como quer ser tratada (feminino, masculino ou neutro) — e todo o conteúdo, inclusive as respostas da IA, respeita essas escolhas
+O app é **local-first**: tudo funciona offline no SQLite do aparelho, com sincronização opcional na nuvem (Supabase) para quem cria conta — e o app web tem service worker próprio, então também abre sem rede depois da primeira visita. A pessoa usuária escolhe o idioma, o tema visual e como quer ser tratada (feminino, masculino ou neutro) — e todo o conteúdo, inclusive as respostas da IA, respeita essas escolhas
 
 ---
 

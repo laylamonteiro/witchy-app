@@ -45,6 +45,11 @@ class AuthProvider extends ChangeNotifier {
   /// Para mudanças críticas de segurança/auth: incremente com MUITO cuidado.
   static const int _currentAuthVersion = 3;
 
+  /// A versão vigente, para o teste gravar um `auth_version` que não dispare
+  /// o reset de credenciais ao subir o provider.
+  @visibleForTesting
+  static int get versaoAtualDoFluxo => _currentAuthVersion;
+
   UserModel _currentUser = UserModel.defaultUser();
   bool _isInitialized = false;
 
@@ -169,31 +174,42 @@ class AuthProvider extends ChangeNotifier {
       }
     }
 
-    // Registrar callback com PaymentService para sincronizar status Premium
-    _registerPaymentServiceCallback();
+    // Daqui até a sessão do servidor, nada pode segurar o boot. Este método
+    // roda sem await no construtor do estado do app, e uma exceção em
+    // qualquer passo abaixo deixava `_isInitialized` em false para sempre —
+    // o router preso em /carregando, spinner eterno. E sem rede é exatamente
+    // onde exceções aparecem. O usuário salvo já foi lido acima; o que falhar
+    // daqui em diante é acessório e se resolve depois (o status do RevenueCat
+    // chega pelo callback; a sessão do servidor, quando a rede voltar).
+    try {
+      // Registrar callback com PaymentService para sincronizar status Premium
+      _registerPaymentServiceCallback();
 
-    // Verificar se assinatura expirou (exceto para Códigos Premium lifetime e admin)
-    await _checkSubscriptionExpiration();
+      // Verificar se assinatura expirou (exceto para Códigos Premium lifetime e admin)
+      await _checkSubscriptionExpiration();
 
-    // Boot vindo do retorno OAuth com estado local anônimo: a sessão está
-    // a caminho. Segura a tela de entrada até ela chegar — com prazo: se a
-    // troca falhar (código expirado, verifier perdido), a pessoa não pode
-    // ficar presa num spinner eterno.
-    if (bootCameFromOAuthReturn && !_currentUser.isAuthenticated) {
-      _oauthReturnPending = true;
-      _oauthReturnTimeout = Timer(const Duration(seconds: 15), () {
-        if (!_oauthReturnPending) return;
-        _oauthReturnPending = false;
-        debugLog('AUTH', 'Retorno OAuth não virou sessão em 15s — liberando a tela de entrada');
-        notifyListeners();
-      });
+      // Boot vindo do retorno OAuth com estado local anônimo: a sessão está
+      // a caminho. Segura a tela de entrada até ela chegar — com prazo: se a
+      // troca falhar (código expirado, verifier perdido), a pessoa não pode
+      // ficar presa num spinner eterno.
+      if (bootCameFromOAuthReturn && !_currentUser.isAuthenticated) {
+        _oauthReturnPending = true;
+        _oauthReturnTimeout = Timer(const Duration(seconds: 15), () {
+          if (!_oauthReturnPending) return;
+          _oauthReturnPending = false;
+          debugLog('AUTH', 'Retorno OAuth não virou sessão em 15s — liberando a tela de entrada');
+          notifyListeners();
+        });
+      }
+
+      // Adota uma sessão que já exista no servidor (retorno do OAuth na web).
+      await _watchServerSession();
+    } catch (e) {
+      await debugLog('AUTH', 'Boot: passo falhou, seguindo sem ele: $e');
+    } finally {
+      _isInitialized = true;
+      notifyListeners();
     }
-
-    // Adota uma sessão que já exista no servidor (retorno do OAuth na web).
-    await _watchServerSession();
-
-    _isInitialized = true;
-    notifyListeners();
 
     // Sync oportunista de BOOT (fire-and-forget): o auto-sync pós-login roda
     // uma única vez — se falhou (rede, sessão atrasada) ou se esta instalação
@@ -322,13 +338,29 @@ class AuthProvider extends ChangeNotifier {
 
     // Atualizar role baseado no status da assinatura
     if (isPro) {
+      final plano = _planoDoTipo(PaymentService().activeSubscriptionType);
+      // Simétrico ao ramo free abaixo: o aviso chega a cada boot, e uma conta
+      // premium que o RevenueCat confirma no mesmo plano não tem o que
+      // regravar nem árvore para notificar.
+      if (_currentUser.role == UserRole.premium &&
+          _currentUser.plan == plano) {
+        return;
+      }
       await debugLog('AUTH', 'Atualizando para Premium');
-      final paymentService = PaymentService();
       _currentUser = _currentUser.copyWith(
         role: UserRole.premium,
-        plan: _planoDoTipo(paymentService.activeSubscriptionType),
+        plan: plano,
       );
     } else {
+      // O status agora é avisado também na primeira vez que fica conhecido,
+      // e não só quando muda — ou seja, a cada boot. Uma conta free que o
+      // RevenueCat confirma como free não tem o que rebaixar: regravar e
+      // notificar a árvore inteira por isso seria trabalho a cada abertura.
+      if (_currentUser.role == UserRole.free &&
+          _currentUser.plan == SubscriptionPlan.free) {
+        return;
+      }
+
       // Não fazer downgrade de usuários com acesso lifetime (Código Premium):
       // o RevenueCat não conhece esse plano, então isPro=false é esperado.
       // Mesma regra de _checkSubscriptionExpiration e refreshPremiumStatus.
@@ -840,6 +872,12 @@ class AuthProvider extends ChangeNotifier {
     // Sem a conferência de `isInitialized`: ela virava true até nos caminhos
     // de erro do boot, e então travava a segunda tentativa. O `initialize`
     // hoje se guarda sozinho — sai na primeira linha quando o SDK está de pé.
+    //
+    // E volta SEM esperar o RevenueCat responder: só configura o SDK, a
+    // consulta corre em segundo plano. Neste ponto do boot o status costuma
+    // estar desconhecido ainda — e desconhecido nunca rebaixa (regra abaixo).
+    // Quando a resposta chegar, o callback (`_onPaymentStatusChanged`) faz
+    // esta mesma conferência; nada fica para o próximo boot.
     await paymentService.initialize();
 
     // Só rebaixa com sinal POSITIVO de que não é mais Pro (RevenueCat
@@ -873,8 +911,11 @@ class AuthProvider extends ChangeNotifier {
 
     final paymentService = PaymentService();
 
-    // Idem: `initialize` é idempotente e retoma o que ficou pela metade.
-    await paymentService.initialize();
+    // Quem pede o status quer o status: sobe o SDK se preciso (`initialize`
+    // é idempotente e retoma o que ficou pela metade), espera a consulta que
+    // o boot deixou em segundo plano e, se ela morreu sem resposta (boot sem
+    // rede), consulta de novo.
+    await paymentService.garantirStatus();
 
     if (paymentService.isPro) {
       // Usuário tem assinatura ativa
