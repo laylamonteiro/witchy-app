@@ -9,7 +9,7 @@ import 'package:grimorio_de_bolso/core/services/usage_coordinator.dart';
 import 'package:grimorio_de_bolso/features/tarot/data/data_sources/tarot_cards_data.dart';
 import 'package:grimorio_de_bolso/features/tarot/data/models/tarot_card_model.dart';
 import 'package:grimorio_de_bolso/features/tarot/data/repositories/daily_tarot_repository.dart';
-import 'package:grimorio_de_bolso/features/tarot/data/repositories/tarot_day_repository.dart';
+import 'package:grimorio_de_bolso/core/divination/dia_da_pergunta_repository.dart';
 import 'package:grimorio_de_bolso/features/tarot/data/repositories/tarot_reading_repository.dart';
 import 'package:grimorio_de_bolso/features/tarot/domain/daily_tarot_session.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -64,7 +64,9 @@ void main() {
     final resumed = await prepare(question: '  MY QUESTION?  ');
     expect(resumed.id, first.id);
     expect(resumed.deck.map((c) => c.toJson()), first.deck.map((c) => c.toJson()));
-    expect((await TarotDayRepository().read(user, day)).lastQuestion, 'My question?');
+    expect((await DiaDaPerguntaRepository()
+            .read(user, day, tool: DiaDaPerguntaRepository.tarot))
+        .ultimaPergunta, 'My question?');
   });
 
   test('the exact selected card is recorded; duplicate commits consume once', () async {
@@ -188,6 +190,8 @@ void main() {
     final session = await prepare(legacyUsed: 1);
     await commit(session);
     expect(await used(), 1);
-    expect((await TarotDayRepository().read(user, day)).dailyQuestion, 'my question?');
+    expect((await DiaDaPerguntaRepository()
+            .read(user, day, tool: DiaDaPerguntaRepository.tarot))
+        .perguntaDoDia, 'my question?');
   });
 }

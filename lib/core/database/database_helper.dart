@@ -81,7 +81,7 @@ class DatabaseHelper {
     // é no-op — o sqflite envolve os dois numa transação).
     return await openDatabase(
       path,
-      version: 29,
+      version: 30,
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
     );
@@ -1218,6 +1218,18 @@ class DatabaseHelper {
     // frente (menstrual_cycle_schema.dart explica).
     if (oldVersion < 29) {
       await MenstrualCycleSchema.addSeason(db);
+    }
+    // v30: a pergunta do dia deixa de ser só do tarô. A tabela nova nasce
+    // sabendo o que `tarot_day_state` já sabia — e a velha fica onde está: a
+    // casa só migra para a frente, e apagar tabela não é migração aditiva.
+    if (oldVersion < 30) {
+      await ReadingSessionSchema.create(db);
+      await db.execute('''
+        INSERT OR IGNORE INTO day_question_state
+          (user_id, day_key, tool, daily_question, last_question, synced)
+        SELECT user_id, day_key, 'tarot', daily_question, last_question, 0
+        FROM tarot_day_state
+      ''');
     }
   }
 

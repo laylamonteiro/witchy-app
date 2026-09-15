@@ -9,7 +9,7 @@ import '../../../../core/services/usage_coordinator.dart';
 import '../../domain/daily_tarot_session.dart';
 import '../../domain/regra_da_carta_do_dia.dart';
 import '../models/tarot_card_model.dart';
-import 'tarot_day_repository.dart';
+import '../../../../core/divination/dia_da_pergunta_repository.dart';
 import 'tarot_reading_repository.dart';
 
 /// A resumable daily choice. Animation never selects, records or consumes.
@@ -40,11 +40,15 @@ class DailyTarotRepository {
     final key = UsageCoordinator.dayKey(instant);
     final start = DateTime(instant.year, instant.month, instant.day);
     final end = DateTime(instant.year, instant.month, instant.day + 1);
-    final seed = await TarotDayRepository.legacySeed(userId, instant);
+    final seed = await DiaDaPerguntaRepository.legacySeed(userId, instant,
+        tool: DiaDaPerguntaRepository.tarot);
     final db = await _dbHelper.database;
     return db.transaction((txn) async {
-      final day = await TarotDayRepository.ensureIn(txn,
-          userId: userId, dayKey: key, seed: seed);
+      final day = await DiaDaPerguntaRepository.ensureIn(txn,
+          userId: userId,
+          dayKey: key,
+          tool: DiaDaPerguntaRepository.tarot,
+          seed: seed);
       await UsageCoordinator.importBalance(txn,
           userId: userId, dayKey: key, legacyUsed: legacyOracleUsed);
 
@@ -73,7 +77,7 @@ class DailyTarotRepository {
       if (legacy == null) {
         final used = await UsageCoordinator.usedIn(txn,
             userId: userId, dayKey: key);
-        _checkQuota(premium, day.dailyQuestion, asked, used, freeLimit);
+        _checkQuota(premium, day.perguntaDoDia, asked, used, freeLimit);
       }
 
       final cards = [...catalog]..shuffle(_random);
@@ -126,8 +130,9 @@ class DailyTarotRepository {
       await txn.insert('selection_sessions', row);
       // Remember a draft's question without charging or moving the quota's
       // remembered question. Reopening the app can resume this same fan.
-      await txn.update('tarot_day_state', {'last_question': asked},
-          where: 'user_id = ? AND day_key = ?', whereArgs: [userId, key]);
+      await txn.update('day_question_state', {'last_question': asked},
+          where: 'user_id = ? AND day_key = ? AND tool = ?',
+          whereArgs: [userId, key, DiaDaPerguntaRepository.tarot]);
       return DailyTarotSession.fromRow(row);
     });
   }
@@ -163,13 +168,16 @@ class DailyTarotRepository {
       if (session.isCommitted) return DailyTarotCommit(session, created: false);
       final selected = session.card(session.selectedId!);
       final card = catalog.firstWhere((c) => c.id == selected.id);
-      final day = await TarotDayRepository.ensureIn(txn,
-          userId: userId, dayKey: session.dayKey, seed: const TarotDayState());
+      final day = await DiaDaPerguntaRepository.ensureIn(txn,
+          userId: userId,
+          dayKey: session.dayKey,
+          tool: DiaDaPerguntaRepository.tarot,
+          seed: const EstadoDoDia());
       final used = await UsageCoordinator.usedIn(txn,
           userId: userId, dayKey: session.dayKey);
       _checkAccount(isCurrentUser);
       final decision = _checkQuota(
-          isPremium(), day.dailyQuestion, session.question, used, freeLimit);
+          isPremium(), day.perguntaDoDia, session.question, used, freeLimit);
       if (decision == DecisaoDaTiragem.cobrar) {
         await UsageCoordinator.recordIn(txn, userId: userId,
             dayKey: session.dayKey, operationId: session.id);
@@ -187,12 +195,12 @@ class DailyTarotRepository {
         sessionId: session.id,
         date: session.dayStart,
       );
-      await txn.update('tarot_day_state', {
-        if (decision == DecisaoDaTiragem.cobrar || day.dailyQuestion == null)
-          'daily_question': session.question.toLowerCase(),
+      await txn.update('day_question_state', {
+        if (decision == DecisaoDaTiragem.cobrar || day.perguntaDoDia == null)
+          'daily_question': normalizarPergunta(session.question),
         'last_question': session.question,
-      }, where: 'user_id = ? AND day_key = ?',
-          whereArgs: [userId, session.dayKey]);
+      }, where: 'user_id = ? AND day_key = ? AND tool = ?',
+          whereArgs: [userId, session.dayKey, DiaDaPerguntaRepository.tarot]);
       _checkAccount(isCurrentUser);
       await txn.update('selection_sessions', {
         'result_id': resultId,

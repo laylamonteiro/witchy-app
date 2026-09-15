@@ -13,7 +13,7 @@ import '../../../../core/theme/grimoire_motion.dart';
 import '../../../../core/widgets/reading_focus_panel.dart';
 import '../../../auth/data/models/user_model.dart';
 import '../../data/repositories/daily_tarot_repository.dart';
-import '../../data/repositories/tarot_day_repository.dart';
+import '../../../../core/divination/dia_da_pergunta_repository.dart';
 import '../../domain/daily_tarot_session.dart';
 import '../../domain/tarot_spread_session.dart';
 import '../../data/repositories/tarot_spread_repository.dart';
@@ -264,15 +264,16 @@ class _SpreadTabState extends State<_SpreadTab>
   /// campo; a de ontem, não. Se o dia virou com a tela aberta e o campo
   /// ainda mostra o que foi preenchido, limpa — o que a pessoa digitou fica.
   Future<void> _carregarPerguntaDoDia() async {
-    TarotDayState state;
+    EstadoDoDia state;
     try {
-      state = await TarotDayRepository().read(_userId, DateTime.now());
+      state = await DiaDaPerguntaRepository()
+          .read(_userId, DateTime.now(), tool: DiaDaPerguntaRepository.tarot);
     } catch (_) {
       return; // A failed draft lookup must not overwrite typed text.
     }
     if (!mounted) return;
     final hoje = _todayKey();
-    final deHoje = state.lastQuestion;
+    final deHoje = state.ultimaPergunta;
     final campo = _questionController.text;
     if (deHoje != null) {
       if (campo.isEmpty || campo == _perguntaPreenchida) {
