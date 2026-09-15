@@ -148,7 +148,6 @@ void main() {
     await expectLater(DailyTarotRepository().selectAndCommit(
       userId: user, sessionId: session.id, cardId: session.deck.first.id,
       catalog: tarotCards, positionLabel: 'Daily', isCurrentUser: () => true,
-      isPremium: () => true, freeLimit: 1,
     ), throwsA(isA<TarotAccountChanged>()));
     expect((await prepare()).selectedIds, isEmpty);
     expect(await used(), 0);

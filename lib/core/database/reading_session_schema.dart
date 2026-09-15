@@ -43,7 +43,7 @@ abstract final class ReadingSessionSchema {
     ''');
     await db.execute('''
       CREATE UNIQUE INDEX IF NOT EXISTS idx_daily_selection_identity
-      ON selection_sessions(user_id, tool, spread, day_key, normalized_question)
+      ON selection_sessions(user_id, tool, spread, day_key)
       WHERE tool = 'tarot' AND spread = 'daily'
     ''');
     await db.execute('''

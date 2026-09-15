@@ -314,23 +314,14 @@ class _SpreadTabState extends State<_SpreadTab>
   }
 
   Future<void> _startDailySpread() async {
-    final question = _questionController.text.trim();
-    if (question.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(AppLocalizations.of(context).tarotQuestionRequired)));
-      _questionFocus.requestFocus();
-      return;
-    }
+    // A Carta do Dia não tem pergunta, não consome cota e é UMA por dia: é a
+    // carta DO DIA, não a resposta de alguma coisa. Perguntar é o que as
+    // outras tiragens fazem.
     final auth = context.read<AuthProvider>();
-    await auth.refreshOracleUsage();
     if (!mounted || auth.currentUser.id != _userId) return;
     final session = await _dailyRepository.prepare(
       userId: _userId,
-      question: question,
       catalog: tarotCards,
-      premium: auth.isPremiumEffective,
-      legacyOracleUsed: auth.currentUser.oracleReadingsToday,
-      freeLimit: UserModel.freeOracleReadingsLimit,
     );
     if (!mounted || auth.currentUser.id != _userId) return;
     _questionFocus.unfocus();
@@ -351,8 +342,6 @@ class _SpreadTabState extends State<_SpreadTab>
               catalog: tarotCards,
               positionLabel: position,
               isCurrentUser: () => mounted && auth.currentUser.id == _userId,
-              isPremium: () => auth.isPremiumEffective,
-              freeLimit: UserModel.freeOracleReadingsLimit,
             );
             // Keep the fan in front while loading the result. The destination
             // must already contain the closed card when the route pops.

@@ -1230,6 +1230,41 @@ class DatabaseHelper {
         SELECT user_id, day_key, 'tarot', daily_question, last_question, 0
         FROM tarot_day_state
       ''');
+
+      // A Carta do Dia volta a ser UMA por dia: a pergunta sai da identidade
+      // dela. A ORDEM destes três passos importa, e inverter derruba a
+      // abertura do app — criar o índice antes de desempatar estoura em
+      // "UNIQUE constraint failed" e leva a migração inteira junto.
+      //
+      // 1. Desempatar: onde já houve mais de uma carta do dia no mesmo dia
+      //    (perguntas diferentes), fica a PRIMEIRA — a que a pessoa chamou de
+      //    "a minha de hoje". As outras perdem só a sessão de escolha; as
+      //    tiragens em si continuam em `tarot_readings`, em Meus Registros e
+      //    no acervo, que esta migração não toca.
+      await db.execute('''
+        DELETE FROM selection_sessions
+        WHERE tool = 'tarot' AND spread = 'daily' AND rowid NOT IN (
+          SELECT MIN(rowid) FROM selection_sessions
+          WHERE tool = 'tarot' AND spread = 'daily'
+          GROUP BY user_id, day_key
+        )
+      ''');
+      // 2. O índice velho carrega a pergunta na chave; `IF NOT EXISTS` não o
+      //    redefiniria, então ele precisa cair.
+      await db.execute('DROP INDEX IF EXISTS idx_daily_selection_identity');
+      // 3. E o novo entra sem ela.
+      await db.execute('''
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_daily_selection_identity
+        ON selection_sessions(user_id, tool, spread, day_key)
+        WHERE tool = 'tarot' AND spread = 'daily'
+      ''');
+      // A carta do dia deixou de ter pergunta: as que ficaram guardam uma que
+      // não vale mais, e deixá-la ali faria a tela citar uma pergunta que a
+      // pessoa não fez para aquela carta.
+      await db.execute('''
+        UPDATE selection_sessions SET question = '', normalized_question = ''
+        WHERE tool = 'tarot' AND spread = 'daily'
+      ''');
     }
   }
 
