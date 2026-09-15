@@ -160,6 +160,7 @@ class _Perto extends StatelessWidget {
 
     final frase = switch (limite.janela) {
       LimitWindow.daily => l10n.conviteUltimaHoje(limite.rotulo),
+      LimitWindow.weekly => l10n.conviteUltimaEstaSemana(limite.rotulo),
       LimitWindow.monthly => l10n.conviteUltimaEsteMes(limite.rotulo),
       LimitWindow.total => l10n.conviteUltimaNoTotal(limite.rotulo),
     };

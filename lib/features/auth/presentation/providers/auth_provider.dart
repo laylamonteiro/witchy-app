@@ -14,6 +14,7 @@ import '../../../../core/services/data_sync_service.dart';
 import '../../../../core/database/database_helper.dart';
 import '../../../../core/config/supabase_config.dart';
 import '../../data/models/user_model.dart';
+import '../../domain/semana_da_cota.dart';
 import '../../data/models/feature_access.dart';
 import '../../data/repositories/beta_code_repository.dart';
 import '../../data/repositories/supabase_auth_repository.dart';
@@ -30,6 +31,8 @@ class AuthProvider extends ChangeNotifier {
   static const String _lastAiResetKey = 'last_ai_reset';
   static const String _lastPendulumResetKey = 'last_pendulum_reset';
   static const String _lastDailyLimitsResetKey = 'last_daily_limits_reset';
+  static const String _lastInterpretationResetKey =
+      'last_interpretation_reset';
   static const String _isOriginalAdminKey = 'is_original_admin';
   static const String _authVersionKey = 'auth_version';
 
@@ -427,6 +430,7 @@ class AuthProvider extends ChangeNotifier {
     final diaryKey = _scopedKey(_lastDiaryResetKey);
     final pendulumKey = _scopedKey(_lastPendulumResetKey);
     final dailyLimitsKey = _scopedKey(_lastDailyLimitsResetKey);
+    final interpretacaoKey = _scopedKey(_lastInterpretationResetKey);
 
     // Reset diário de IA
     final lastAiReset = prefs.getString(aiKey);
@@ -490,6 +494,21 @@ class AuthProvider extends ChangeNotifier {
       }
     } else {
       await prefs.setString(dailyLimitsKey, now.toIso8601String());
+    }
+
+    // Reset SEMANAL da interpretação de tiragem. É a única cota do app que não
+    // é diária: ler o que as cartas dizem JUNTAS é o que a assinatura vende, e
+    // a única coisa aqui que custa geração de IA para servir.
+    final ultimaInterpretacao = prefs.getString(interpretacaoKey);
+    if (ultimaInterpretacao != null) {
+      if (virouASemana(
+          ultimoReset: DateTime.parse(ultimaInterpretacao), agora: now)) {
+        _currentUser = _currentUser.copyWith(readingInterpretationsThisWeek: 0);
+        await prefs.setString(interpretacaoKey, now.toIso8601String());
+        needsSave = true;
+      }
+    } else {
+      await prefs.setString(interpretacaoKey, now.toIso8601String());
     }
 
     if (needsSave) {
@@ -707,6 +726,32 @@ class AuthProvider extends ChangeNotifier {
   /// Quantas consultas ao Conselheiro Místico restam hoje
   int get remainingAdvisorConsultations =>
       _currentUser.remainingAdvisorConsultations;
+
+  /// Se a interpretação de uma tiragem está ao alcance AGORA — por assinatura
+  /// ou pela leitura da semana que o Free ainda tem.
+  ///
+  /// É o que as três telas de tiragem olham para decidir entre o botão e a
+  /// prévia: perguntar só por `isPremiumEffective` deixava quem não assina sem
+  /// nunca experimentar o que a assinatura vende.
+  bool get podeLerOConselheiro =>
+      isPremiumEffective || _currentUser.canInterpretReading;
+
+  /// Quantas interpretações de tiragem restam esta semana
+  int get remainingReadingInterpretations =>
+      _currentUser.remainingReadingInterpretations;
+
+  /// Gasta a interpretação da semana. Só o Free é debitado, e as três
+  /// ferramentas dividem a mesma cota.
+  Future<void> incrementReadingInterpretations() async {
+    if (_currentUser.isFree) {
+      _currentUser = _currentUser.copyWith(
+        readingInterpretationsThisWeek:
+            _currentUser.readingInterpretationsThisWeek + 1,
+      );
+      await _saveUser();
+      notifyListeners();
+    }
+  }
 
   /// Incrementa contador de consultas ao Conselheiro Místico (P&R)
   Future<void> incrementAdvisorConsultations() async {

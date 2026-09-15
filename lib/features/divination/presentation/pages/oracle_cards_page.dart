@@ -9,6 +9,8 @@ import 'package:provider/provider.dart';
 
 import '../../../../core/ai/ai_service.dart';
 import '../../../../core/services/ad_service.dart';
+import '../../../../core/divination/contexto_da_tiragem.dart';
+import '../../../../core/services/usage_coordinator.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/theme/grimoire_motion.dart';
 import '../../../../core/widgets/magical_card.dart';
@@ -58,6 +60,7 @@ class _OracleBody extends StatefulWidget {
 
 class _OracleBodyState extends State<_OracleBody> {
   final _sessions = OracleSelectionRepository();
+  final _contextos = ContextoDaTiragemRepository();
   final _readings = OracleReadingRepository();
 
   /// Escreve a tiragem em "Meus Registros" assim que ela sai.
@@ -151,15 +154,27 @@ class _OracleBodyState extends State<_OracleBody> {
     await auth.refreshOracleUsage();
     if (!mounted || auth.currentUser.id != _userId) return;
     final spread = _selectedSpread;
+    // A mesa é estendida de graça e sem pergunta: ela é escrita em cima dela,
+    // na tela de escolha, e continua editável enquanto a pessoa escolhe.
     final session = await _sessions.prepare(
       userId: _userId,
       spread: spread,
       catalog: oracleCardsData,
-      premium: auth.isPremiumEffective,
-      legacyOracleUsed: auth.currentUser.oracleReadingsToday,
-      freeLimit: UserModel.freeOracleReadingsLimit,
       startNew: _newReadingRequested,
     );
+    // O que a tela de escolha precisa para avisar, ANTES da escolha, o que a
+    // pergunta custa. A Carta Diária é a do DIA e não custa nada, então nela
+    // não há aviso nenhum a dar.
+    final contexto = spread == OracleSpreadType.daily
+        ? const ContextoDaTiragem()
+        : await _contextos.carregar(
+            userId: _userId,
+            tool: OracleSelectionSession.tool,
+            spread: spread.name,
+            categoriaDeCota: UsageCoordinator.oracle,
+            legacyUsed: auth.currentUser.oracleReadingsToday,
+            freeLimit: UserModel.freeOracleReadingsLimit,
+          );
     if (!mounted || auth.currentUser.id != _userId) return;
     _newReadingRequested = false;
     final labels = List.generate(spread.cardCount, spread.getPositionMeaning);
@@ -171,6 +186,12 @@ class _OracleBodyState extends State<_OracleBody> {
       final route = MaterialPageRoute<OracleSelectionUpdate>(builder: (_) =>
         OracleSelectionPage(
           session: session, positionLabels: labels,
+          contexto: contexto,
+          premium: auth.isPremiumEffective,
+          // A Carta Diária não tem pergunta: é a carta do DIA.
+          pedePergunta: spread != OracleSpreadType.daily,
+          aoEscreverPergunta: (pergunta) => _sessions.atualizarPergunta(
+              userId: _userId, sessionId: session.id, pergunta: pergunta),
           onSelect: (cardId, expectedCount) async {
             final update = await _sessions.select(
               userId: _userId, sessionId: session.id, cardId: cardId,
@@ -179,6 +200,7 @@ class _OracleBodyState extends State<_OracleBody> {
               isCurrentUser: () => mounted && auth.currentUser.id == _userId,
               isPremium: () => auth.isPremiumEffective,
               freeLimit: UserModel.freeOracleReadingsLimit,
+              legacyOracleUsed: auth.currentUser.oracleReadingsToday,
             );
             // Keep the fan in front while the table is prepared: the
             // destination must already hold the backs when the route pops.
@@ -356,16 +378,26 @@ class _OracleBodyState extends State<_OracleBody> {
     final reading = _lastReading;
     if (reading == null || _isReadingAI) return;
 
-    // Sem acesso o botão nem aparece: o card mostra a degustação no lugar.
-    if (!context.read<AuthProvider>().isPremiumEffective) return;
+    // Ler o que as peças dizem JUNTAS é o que a assinatura vende — tirar
+    // qualquer site faz. O Free tem UMA leitura por semana, dividida entre
+    // tarô, runas e oráculo. Sem ela, o botão nem aparece.
+    final auth = context.read<AuthProvider>();
+    final ehPremium = auth.isPremiumEffective;
+    if (!ehPremium && !auth.currentUser.canInterpretReading) return;
 
     setState(() => _isReadingAI = true);
     try {
       final interpretation = await AIService.instance.interpretOracleSpread(
         summary: _readingSummary(reading),
+        // O parâmetro sempre existiu no serviço e nunca chegava a ser usado:
+        // o Oráculo não tinha pergunta para mandar.
+        question: reading.question,
       );
       // Uma resposta atrasada não pertence a outra mesa.
       if (!mounted || _lastReading?.id != reading.id) return;
+      // A leitura saiu: é ela que gasta a leitura da semana, e só do Free.
+      // Debitar antes seria cobrar por um erro de rede.
+      if (!ehPremium) await auth.incrementReadingInterpretations();
       setState(() => _aiReading = interpretation);
       // Fica junto da tiragem: reabrir a mesa não pede outra geração.
       await _readings.attachInterpretation(
@@ -644,6 +676,19 @@ class _OracleBodyState extends State<_OracleBody> {
                       color: context.gc.lilac,
                     ),
               ),
+              // A pergunta volta na leitura, como nas runas e no tarô: é ela
+              // que a mesa responde.
+              if ((_lastReading?.question?.trim() ?? '').isNotEmpty) ...[
+                const SizedBox(height: 12),
+                Text(
+                  l10n.tarotQuestionPrefix(_lastReading!.question!),
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: context.gc.textSecondary,
+                        fontStyle: FontStyle.italic,
+                      ),
+                ),
+              ],
             ],
           ),
         ),
@@ -997,8 +1042,8 @@ class _OracleBodyState extends State<_OracleBody> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           if (_lastReading != null &&
-              !context.watch<AuthProvider>().isPremiumEffective)
-            // Sem acesso: no lugar do botão, o sumário do que o
+              !context.watch<AuthProvider>().podeLerOConselheiro)
+            // Sem leitura disponível: no lugar do botão, o sumário do que o
             // Conselheiro teceria sobre as cartas que já estão na mesa.
             _previaDoConselheiro(context)
           else if (_aiReading == null)

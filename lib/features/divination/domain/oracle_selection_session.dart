@@ -14,6 +14,7 @@ class OracleSelectionSession {
     required this.id,
     required this.userId,
     required this.spread,
+    required this.question,
     required this.dayKey,
     required this.dayStart,
     required this.startedAt,
@@ -39,6 +40,11 @@ class OracleSelectionSession {
   final String id;
   final String userId;
   final OracleSpreadType spread;
+
+  /// O que a pessoa escreveu, na grafia dela. Vazio é válido: perguntar é
+  /// opcional, e "sem pergunta" é um balde de cota como qualquer outro.
+  final String question;
+
   final String dayKey;
   final DateTime dayStart;
   final DateTime startedAt;
@@ -62,6 +68,7 @@ class OracleSelectionSession {
       id: row['id'] as String,
       userId: row['user_id'] as String,
       spread: OracleSpreadType.values.byName(row['spread'] as String),
+      question: (row['question'] as String?) ?? '',
       dayKey: row['day_key'] as String,
       dayStart: DateTime.fromMillisecondsSinceEpoch(row['day_start'] as int),
       startedAt: DateTime.fromMillisecondsSinceEpoch(row['created_at'] as int),

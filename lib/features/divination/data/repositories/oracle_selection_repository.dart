@@ -5,6 +5,8 @@ import 'package:sqflite/sqflite.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../../core/database/database_helper.dart';
+import '../../../../core/divination/dia_da_pergunta_repository.dart';
+import '../../../../core/divination/regra_da_tiragem.dart';
 import '../../../../core/services/usage_coordinator.dart';
 import '../../domain/oracle_selection_session.dart';
 import '../models/oracle_card_model.dart';
@@ -12,8 +14,11 @@ import 'oracle_discovery_repository.dart';
 import 'oracle_reading_repository.dart';
 
 /// Manual Oracle consultations on the tarot's selection infrastructure.
-/// The Oracle shares the tarot/oracle daily quota category; it has no
-/// question, so Free keeps one table per spread per day and can reopen it.
+/// O Oráculo divide com o tarô a mesma categoria de cota do dia — e agora tem
+/// pergunta, como as outras duas adivinhações. A cota é por PERGUNTA: com a
+/// mesma pergunta a pessoa abre as três mesas; é uma pergunta nova que gasta.
+///
+/// A Carta Diária é a exceção: é a do DIA, uma por dia, e não custa nada.
 class OracleSelectionRepository {
   OracleSelectionRepository({DatabaseHelper? dbHelper, Random? random})
       : _dbHelper = dbHelper ?? DatabaseHelper.instance,
@@ -22,13 +27,15 @@ class OracleSelectionRepository {
   final DatabaseHelper _dbHelper;
   final Random _random;
 
+  /// Estende a mesa: retoma o rascunho aberto do dia, ou lança uma nova.
+  ///
+  /// NÃO recebe pergunta e NÃO cobra nada. A pergunta é escrita na tela de
+  /// escolha, em cima da mesa, e continua editável enquanto a pessoa escolhe.
+  /// Quem decide e cobra é [select], quando a mesa fecha.
   Future<OracleSelectionSession> prepare({
     required String userId,
     required OracleSpreadType spread,
     required List<OracleCard> catalog,
-    required bool premium,
-    required int legacyOracleUsed,
-    required int freeLimit,
     bool startNew = false,
     DateTime? now,
   }) async {
@@ -40,32 +47,53 @@ class OracleSelectionRepository {
     final key = UsageCoordinator.dayKey(instant);
     final start = DateTime(instant.year, instant.month, instant.day);
     final end = DateTime(instant.year, instant.month, instant.day + 1);
+    final seed = await DiaDaPerguntaRepository.legacySeed(userId, instant,
+        tool: DiaDaPerguntaRepository.oraculo);
     final db = await _dbHelper.database;
     return db.transaction((txn) async {
-      await UsageCoordinator.importBalance(txn,
-          userId: userId, dayKey: key, legacyUsed: legacyOracleUsed);
+      final dia = await DiaDaPerguntaRepository.ensureIn(txn,
+          userId: userId,
+          dayKey: key,
+          tool: DiaDaPerguntaRepository.oraculo,
+          seed: seed);
       // Discoveries recoverable from the local history are adopted quietly.
       await OracleDiscoveryRepository.backfillIn(txn, userId);
-      if (!(startNew && premium)) {
-        final existing = await txn.query('selection_sessions',
+      final asked = dia.ultimaPergunta?.trim() ?? '';
+      final normalizada = normalizarPergunta(asked);
+      if (!startNew) {
+        // Um rascunho aberto por tiragem: a pergunta ainda pode mudar, então
+        // ele não é identificado por ela.
+        final aberta = await txn.query('selection_sessions',
             where: 'user_id = ? AND tool = ? AND spread = ? '
-                'AND (day_key = ? OR result_id IS NULL)',
-            whereArgs: [userId, OracleSelectionSession.tool, spread.name, key],
+                'AND result_id IS NULL',
+            whereArgs: [userId, OracleSelectionSession.tool, spread.name],
             orderBy: 'rowid DESC', limit: 1);
-        if (existing.isNotEmpty) {
-          return OracleSelectionSession.fromRow(existing.single);
+        if (aberta.isNotEmpty) {
+          return OracleSelectionSession.fromRow(aberta.single);
         }
-      }
-      if (!premium) {
-        final used = await UsageCoordinator.usedIn(txn, userId: userId, dayKey: key);
-        if (used >= freeLimit) throw const OracleQuotaExceeded();
+        // Sem rascunho: se a mesa de hoje já foi feita com a pergunta que a
+        // pessoa deixou escrita, é ELA que volta.
+        final feita = await txn.query('selection_sessions',
+            where: 'user_id = ? AND tool = ? AND spread = ? AND day_key = ? '
+                'AND normalized_question = ? AND result_id IS NOT NULL',
+            whereArgs: [
+              userId,
+              OracleSelectionSession.tool,
+              spread.name,
+              key,
+              normalizada,
+            ],
+            orderBy: 'rowid DESC', limit: 1);
+        if (feita.isNotEmpty) {
+          return OracleSelectionSession.fromRow(feita.single);
+        }
       }
       final deck = [for (final c in [...catalog]..shuffle(_random))
         OracleSelectionSession.idOf(c)];
       final row = <String, Object?>{
         'id': const Uuid().v4(), 'user_id': userId,
         'tool': OracleSelectionSession.tool, 'spread': spread.name,
-        'question': '', 'normalized_question': '',
+        'question': asked, 'normalized_question': normalizada,
         'day_key': key, 'day_start': start.millisecondsSinceEpoch,
         'day_end': end.millisecondsSinceEpoch,
         'deck_version': OracleSelectionSession.deckVersion,
@@ -75,6 +103,42 @@ class OracleSelectionRepository {
       };
       await txn.insert('selection_sessions', row);
       return OracleSelectionSession.fromRow(row);
+    });
+  }
+
+  /// Guarda a pergunta que está sendo escrita em cima da mesa.
+  ///
+  /// Não cobra e não move a âncora da cota: digitar nunca pode custar nada. Uma
+  /// mesa já confirmada não muda mais de pergunta — a leitura gravada citaria
+  /// uma pergunta que não foi a dela.
+  Future<void> atualizarPergunta({
+    required String userId,
+    required String sessionId,
+    required String pergunta,
+  }) async {
+    final asked = pergunta.trim();
+    final db = await _dbHelper.database;
+    await db.transaction((txn) async {
+      final linhas = await txn.query('selection_sessions',
+          columns: ['day_key', 'result_id'],
+          where: 'id = ? AND user_id = ?',
+          whereArgs: [sessionId, userId],
+          limit: 1);
+      if (linhas.isEmpty || linhas.single['result_id'] != null) return;
+      final dia = linhas.single['day_key'] as String;
+      await txn.update('selection_sessions', {
+        'question': asked,
+        'normalized_question': normalizarPergunta(asked),
+        'updated_at': DateTime.now().millisecondsSinceEpoch,
+      }, where: 'id = ? AND user_id = ?', whereArgs: [sessionId, userId]);
+      await DiaDaPerguntaRepository.ensureIn(txn,
+          userId: userId,
+          dayKey: dia,
+          tool: DiaDaPerguntaRepository.oraculo,
+          seed: const EstadoDoDia());
+      await txn.update('day_question_state', {'last_question': asked},
+          where: 'user_id = ? AND day_key = ? AND tool = ?',
+          whereArgs: [userId, dia, DiaDaPerguntaRepository.oraculo]);
     });
   }
 
@@ -88,6 +152,7 @@ class OracleSelectionRepository {
     required bool Function() isCurrentUser,
     required bool Function() isPremium,
     required int freeLimit,
+    required int legacyOracleUsed,
   }) async {
     final db = await _dbHelper.database;
     final chosen = await db.transaction((txn) async {
@@ -120,18 +185,51 @@ class OracleSelectionRepository {
       _account(isCurrentUser);
       final session = await _read(txn, userId, sessionId);
       if (session.isCommitted) return OracleSelectionUpdate(session);
-      if (!isPremium()) {
+      // A Carta Diária é a do DIA: uma por dia, e não custa nada. As outras
+      // duas mesas seguem a regra de todas — a cota é por PERGUNTA.
+      final DecisaoDaTiragem decisao;
+      final EstadoDoDia dia;
+      if (session.spread == OracleSpreadType.daily) {
+        decisao = DecisaoDaTiragem.liberar;
+        dia = const EstadoDoDia();
+      } else {
+        dia = await DiaDaPerguntaRepository.ensureIn(txn,
+            userId: userId,
+            dayKey: session.dayKey,
+            tool: DiaDaPerguntaRepository.oraculo,
+            seed: const EstadoDoDia());
+        // A mesa já não semeia o dia — ela nem olha a cota. Semear aqui deixa
+        // o fechamento de pé sozinho, sem depender de quem abriu a tela.
+        await UsageCoordinator.importBalance(txn,
+            userId: userId,
+            dayKey: session.dayKey,
+            legacyUsed: legacyOracleUsed);
         final used = await UsageCoordinator.usedIn(txn,
             userId: userId, dayKey: session.dayKey);
-        if (used >= freeLimit) throw const OracleQuotaExceeded();
-        await UsageCoordinator.recordIn(txn, userId: userId,
-            dayKey: session.dayKey, operationId: session.id);
+        decisao = decidirTiragem(
+          premium: isPremium(),
+          perguntaDoDia: dia.perguntaDoDia,
+          pergunta: session.question,
+          tiragemJaFeitaHoje: false,
+          temCota: used < freeLimit,
+        );
+        // Rede de segurança, não caminho normal: a tela já desligou o leque
+        // neste caso. Só sobra a corrida — a cota gasta em outra aba entre o
+        // desenho da tela e o fechamento da mesa.
+        if (decisao == DecisaoDaTiragem.bloquear) {
+          throw const OracleQuotaExceeded();
+        }
+        if (decisao == DecisaoDaTiragem.cobrar) {
+          await UsageCoordinator.recordIn(txn, userId: userId,
+              dayKey: session.dayKey, operationId: session.id);
+        }
       }
       final cards = [for (final id in session.selectedIds)
         catalog.firstWhere((c) => OracleSelectionSession.idOf(c) == id)];
       final reading = OracleReading(
         id: const Uuid().v4(),
         spreadType: session.spread,
+        question: session.question.isEmpty ? null : session.question,
         positions: [for (var i = 0; i < cards.length; i++)
           OracleCardPosition(position: i, card: cards[i],
               positionMeaning: positionLabels[i])],
@@ -144,6 +242,18 @@ class OracleSelectionRepository {
       final fresh = await OracleDiscoveryRepository.recordIn(txn,
           userId: userId, cardIds: cards.map((c) => c.id),
           readingId: reading.id, seenAt: session.startedAt);
+      if (session.spread != OracleSpreadType.daily) {
+        await txn.update('day_question_state', {
+          if (decisao == DecisaoDaTiragem.cobrar || dia.perguntaDoDia == null)
+            'daily_question': normalizarPergunta(session.question),
+          'last_question': session.question,
+        }, where: 'user_id = ? AND day_key = ? AND tool = ?',
+            whereArgs: [
+              userId,
+              session.dayKey,
+              DiaDaPerguntaRepository.oraculo,
+            ]);
+      }
       await txn.update('selection_sessions', {
         'result_id': reading.id,
         'result_signature': 'oracle-session:${session.id}',

@@ -80,7 +80,8 @@ void main() {
     ));
     await tester.pumpAndSettle();
     final l10n = AppLocalizations.of(tester.element(find.byType(TarotPage)));
-    await tester.enterText(find.byType(TextField), 'A fixture question');
+    // A Carta do Dia não tem pergunta: é a carta DO DIA, não a resposta de
+    // alguma coisa. O campo nem aparece nesta jornada.
     await tester.ensureVisible(find.text(l10n.tarotDailyCard));
     await tester.tap(find.text(l10n.tarotDailyCard));
     await until(tester, () => find.byType(DailyTarotSelectionPage).evaluate().isNotEmpty,
@@ -138,7 +139,10 @@ void main() {
     expect(archive, hasLength(1));
     expect(archive.single['id'], draws.single['id']);
     expect(archive.single['created_at'], draws.single['date']);
-    expect(archive.single['content'], contains('A fixture question'));
+    expect(archive.single['content'], contains(l10n.tarotDailyCard),
+        reason: 'o acervo cita a carta e o dia, não uma pergunta');
+    expect(archive.single['content'], isNot(contains(l10n.readingQuestionLabel)),
+        reason: 'não há pergunta a citar');
 
     await tester.ensureVisible(find.text(l10n.tarotNewSpread));
     await tester.tap(find.text(l10n.tarotNewSpread));

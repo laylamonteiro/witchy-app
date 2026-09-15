@@ -73,6 +73,10 @@ class UserModel {
   final int runeReadingsToday;  // Limite: 1/dia (cada tipo)
   final int oracleReadingsToday;  // Limite: 1/dia (cada tipo)
   final int advisorConsultationsToday;  // Conselheiro Místico (P&R) - Limite: 1/dia
+
+  /// Interpretações de tiragem gastas NESTA SEMANA, somando tarô, runas e
+  /// oráculo. Cota própria, separada da página do Conselheiro.
+  final int readingInterpretationsThisWeek;
   final int palmistryReadingsToday;  // Leitura de mãos (Premium) - Limite: 3/dia
 
   const UserModel({
@@ -100,6 +104,7 @@ class UserModel {
     this.runeReadingsToday = 0,
     this.oracleReadingsToday = 0,
     this.advisorConsultationsToday = 0,
+    this.readingInterpretationsThisWeek = 0,
     this.palmistryReadingsToday = 0,
   });
 
@@ -176,6 +181,18 @@ class UserModel {
   /// Limite de consultas ao Conselheiro Místico (P&R) por dia para free
   static const int freeAdvisorConsultationsLimit = 1;
 
+  /// Interpretações de tiragem por SEMANA para o Free, somando tarô, runas e
+  /// oráculo.
+  ///
+  /// É a única cota semanal do app, e de propósito. Ler o que as cartas dizem
+  /// JUNTAS é o que a assinatura vende — tirar é o que qualquer site faz —, e
+  /// é também a única coisa aqui que custa geração de IA para servir. Semanal
+  /// deixa a leitura ser um evento em vez de rotina, e ainda assim faz com que
+  /// quem não assina EXPERIMENTE o que está sendo vendido.
+  ///
+  /// Uma só para as três ferramentas: a pessoa escolhe em qual mesa gastar.
+  static const int freeReadingInterpretationsLimit = 1;
+
   /// Limite de identificações do Guia da Natureza por dia.
   ///
   /// Valor inalterado (5) — só mudou de lugar. Morava no meio da tela que o
@@ -226,6 +243,17 @@ class UserModel {
   int get remainingAffirmations {
     if (isPremium) return -1; // ilimitado
     return freeAffirmationsLimit - affirmationsToday;
+  }
+
+  /// Verifica se pode pedir a interpretação de uma tiragem esta semana
+  bool get canInterpretReading =>
+      isPremium ||
+      readingInterpretationsThisWeek < freeReadingInterpretationsLimit;
+
+  /// Quantas interpretações de tiragem restam esta semana
+  int get remainingReadingInterpretations {
+    if (isPremium) return -1; // ilimitado
+    return freeReadingInterpretationsLimit - readingInterpretationsThisWeek;
   }
 
   /// Verifica se pode fazer leitura de runas hoje
@@ -281,6 +309,7 @@ class UserModel {
     int? runeReadingsToday,
     int? oracleReadingsToday,
     int? advisorConsultationsToday,
+    int? readingInterpretationsThisWeek,
     int? palmistryReadingsToday,
   }) {
     return UserModel(
@@ -309,6 +338,8 @@ class UserModel {
       oracleReadingsToday: oracleReadingsToday ?? this.oracleReadingsToday,
       advisorConsultationsToday:
           advisorConsultationsToday ?? this.advisorConsultationsToday,
+      readingInterpretationsThisWeek: readingInterpretationsThisWeek ??
+          this.readingInterpretationsThisWeek,
       palmistryReadingsToday:
           palmistryReadingsToday ?? this.palmistryReadingsToday,
     );
@@ -340,6 +371,7 @@ class UserModel {
       'runeReadingsToday': runeReadingsToday,
       'oracleReadingsToday': oracleReadingsToday,
       'advisorConsultationsToday': advisorConsultationsToday,
+      'readingInterpretationsThisWeek': readingInterpretationsThisWeek,
       'palmistryReadingsToday': palmistryReadingsToday,
     };
   }
@@ -394,6 +426,8 @@ class UserModel {
       runeReadingsToday: json['runeReadingsToday'] ?? 0,
       oracleReadingsToday: json['oracleReadingsToday'] ?? 0,
       advisorConsultationsToday: json['advisorConsultationsToday'] ?? 0,
+      readingInterpretationsThisWeek:
+          json['readingInterpretationsThisWeek'] ?? 0,
       palmistryReadingsToday: json['palmistryReadingsToday'] ?? 0,
     );
   }

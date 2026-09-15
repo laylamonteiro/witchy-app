@@ -4,6 +4,9 @@ import 'dart:math';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:grimorio_de_bolso/core/database/database_helper.dart';
+import 'package:grimorio_de_bolso/core/divination/contexto_da_tiragem.dart';
+import 'package:grimorio_de_bolso/core/divination/dia_da_pergunta_repository.dart';
+import 'package:grimorio_de_bolso/core/divination/regra_da_tiragem.dart';
 import 'package:grimorio_de_bolso/core/database/reading_session_schema.dart';
 import 'package:grimorio_de_bolso/core/services/usage_coordinator.dart';
 import 'package:grimorio_de_bolso/features/tarot/data/data_sources/tarot_cards_data.dart';
@@ -38,18 +41,34 @@ void main() {
     repo = TarotSpreadRepository(random: Random(42));
   });
 
+  /// Estende a mesa e escreve a pergunta em cima dela, que é a ordem nova: a
+  /// mesa é de graça e sem pergunta, e ela é escrita enquanto se escolhe.
   Future<TarotSpreadSession> prepare({String spread = 'threeCards',
       bool premium = false, bool startNew = false, String question = 'My question?',
-      DateTime? at, String owner = user}) => repo.prepare(userId: owner,
-      spread: spread, question: question, catalog: tarotCards, premium: premium,
-      legacyOracleUsed: 0, freeLimit: 1, startNew: startNew, now: at ?? day);
+      DateTime? at, String owner = user}) async {
+    final aberta = await repo.prepare(userId: owner, spread: spread,
+        catalog: tarotCards, startNew: startNew, now: at ?? day);
+    if (aberta.isCommitted) return aberta;
+    await repo.atualizarPergunta(
+        userId: owner, sessionId: aberta.id, pergunta: question);
+    return repo.prepare(
+        userId: owner, spread: spread, catalog: tarotCards, now: at ?? day);
+  }
+
+  /// O contexto que a tela de escolha usa para avisar ANTES da escolha.
+  Future<ContextoDaTiragem> contexto({String spread = 'threeCards',
+          int legacyUsed = 0, DateTime? at, String owner = user}) =>
+      ContextoDaTiragemRepository().carregar(userId: owner, tool: 'tarot',
+          spread: spread, categoriaDeCota: UsageCoordinator.oracle,
+          legacyUsed: legacyUsed, freeLimit: 1, now: at ?? day);
 
   Future<TarotSpreadUpdate> choose(TarotSpreadSession session, String id,
       {bool premium = false, bool active = true, String owner = user}) =>
       repo.select(userId: owner, sessionId: session.id, cardId: id,
           expectedCount: session.selectedIds.length, catalog: tarotCards,
           positionLabels: List.generate(session.cardCount, (i) => 'Position $i'),
-          isCurrentUser: () => active, isPremium: () => premium, freeLimit: 1);
+          isCurrentUser: () => active, isPremium: () => premium, freeLimit: 1,
+          legacyOracleUsed: 0);
 
   Future<int> used([DateTime? at]) => UsageCoordinator().oracleUsed(
       userId: user, legacyUsed: 0, day: at ?? day);
@@ -148,7 +167,6 @@ void main() {
     await expectLater(DailyTarotRepository().selectAndCommit(
       userId: user, sessionId: session.id, cardId: session.deck.first.id,
       catalog: tarotCards, positionLabel: 'Daily', isCurrentUser: () => true,
-      isPremium: () => true, freeLimit: 1,
     ), throwsA(isA<TarotAccountChanged>()));
     expect((await prepare()).selectedIds, isEmpty);
     expect(await used(), 0);
@@ -158,9 +176,26 @@ void main() {
     await finish(await prepare());
     final cross = await finish(await prepare(spread: 'cross'));
     expect(cross.session.selectedIds, hasLength(5));
-    expect(await used(), 1);
-    expect((await prepare(startNew: true)).isCommitted, isTrue);
-    await expectLater(prepare(question: 'Another question?'), throwsA(isA<TarotQuotaExceeded>()));
+    expect(await used(), 1, reason: 'a mesma pergunta abre as duas mesas');
+
+    // Estender uma mesa nova é de graça — cobrar é no fechamento. Com a mesma
+    // pergunta, ela reabre a que já foi feita.
+    expect((await prepare()).isCommitted, isTrue);
+
+    // Uma pergunta NOVA abre a mesa sem custo, e é barrada ao fechá-la.
+    final outra =
+        await prepare(question: 'Another question?', startNew: true);
+    expect(outra.isCommitted, isFalse);
+    await expectLater(finish(outra), throwsA(isA<TarotQuotaExceeded>()));
+
+    // E a tela sabia disso antes de qualquer carta ser tocada.
+    final previa = await contexto();
+    expect(previa.situacaoDe('My question?', premium: false),
+        SituacaoDaTiragem.jaFeita);
+    expect(previa.situacaoDe('Another question?', premium: false),
+        SituacaoDaTiragem.semCota);
+    expect(previa.situacaoDe('Another question?', premium: true),
+        SituacaoDaTiragem.livre);
   });
 
   test('Premium resumes until a new reading is explicitly requested', () async {
@@ -218,7 +253,13 @@ void main() {
     final id = await readings.recordDraw(userId: user, spreadName: 'threeCards',
         signature: 'legacy', drawn: drawn, question: 'My question?', date: day);
     await readings.attachInterpretation(userId: user, signature: 'legacy', interpretation: 'Saved');
-    final adopted = await prepare();
+    // A adoção de uma tiragem antiga se ancora na pergunta LEMBRADA do dia —
+    // é ela que a mesa nova carrega quando é estendida. Quem tinha uma leitura
+    // guardada também tinha a pergunta dela guardada.
+    await DiaDaPerguntaRepository().remember(userId: user, day: day,
+        tool: DiaDaPerguntaRepository.tarot, question: 'My question?');
+    final adopted = await repo.prepare(
+        userId: user, spread: 'threeCards', catalog: tarotCards, now: day);
     expect(adopted.resultId, id);
     expect(adopted.selectedIds, drawn.map((d) => d.card.id).toList());
     expect(adopted.card(tarotCards[1].id).reversed, isTrue);

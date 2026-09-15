@@ -23,6 +23,7 @@ import '../../../../core/services/debug_log_service.dart';
 import '../../../auth/auth.dart';
 import '../../data/models/pendulum_model.dart';
 import '../../domain/inclinacao_do_pendulo.dart';
+import '../../domain/orbita_do_pendulo.dart';
 import '../../../../core/services/ad_service.dart';
 import '../../../your_day/presentation/providers/daily_checkin_provider.dart';
 import '../../../../core/tools/tool_identity.dart';
@@ -101,6 +102,10 @@ class _PendulumPageState extends State<PendulumPage>
   /// Diagonal do sim/não (~28,6°). Mesma constante posiciona os rótulos, então
   /// o cristal aponta exatamente para onde a palavra está.
   static const double _kSwingTarget = 0.5;
+
+  /// Uma volta inteira da órbita. Nos ~2350 ms de consulta dá pouco mais de
+  /// uma volta e meia — abaixo disso o olho lê "vai e volta" em vez de "gira".
+  static const Duration _kVoltaDaOrbita = Duration(milliseconds: 1500);
 
   double _anguloDaResposta(PendulumAnswer a) {
     switch (a) {
@@ -236,7 +241,7 @@ class _PendulumPageState extends State<PendulumPage>
     _focoDaPergunta.addListener(_registrarFoco);
     WidgetsBinding.instance.addObserver(this);
     _swingController = AnimationController(
-      duration: const Duration(seconds: 3),
+      duration: _kVoltaDaOrbita,
       vsync: this,
     );
     _settleController = AnimationController(
@@ -395,10 +400,13 @@ class _PendulumPageState extends State<PendulumPage>
     // Quem pergunta está na pose de consulta: ela vira o centro do pêndulo
     // (deitada de lado, sentada, com o celular na mesa — tanto faz).
     _pose.recalibrar();
-    // Zera a fase antes de tudo: no modo "reduzir movimento" (que não gira o
-    // controller) o cristal fica reto durante a pausa, em vez de travado num
-    // ângulo herdado da consulta anterior.
-    _swingController.value = 0;
+    // A fase de partida: no modo "reduzir movimento" (que não gira o
+    // controller) fica zerada, e o cristal fica reto durante a pausa em vez de
+    // travado num ângulo herdado da consulta anterior. Girando, a órbita
+    // começa num ponto sorteado — cada consulta entra por um lado diferente e
+    // o assentamento chega de outra direção. Enfeite puro: quem sorteia a
+    // resposta é `_pendingAnswer`, e nada daqui a alcança.
+    _swingController.value = reduced ? 0 : Random().nextDouble();
     _settleController.value = 0;
     // A inclinação recolhe para o sopro de consulta — animado, para o cristal
     // não pular quando o teto muda.
@@ -417,7 +425,9 @@ class _PendulumPageState extends State<PendulumPage>
         // Sem movimento: uma pausa curta de "consulta" e direto à resposta.
         await Future.delayed(const Duration(milliseconds: 600));
       } else {
-        _swingController.repeat(reverse: true);
+        // Sem `reverse`: um círculo não volta atrás. A fase avança sempre
+        // no mesmo sentido, e sin/cos são contínuos na virada de 1 para 0.
+        _swingController.repeat();
 
         // Oscila com força e, no fim, perde amplitude até assentar — o total
         // continua ~3 s, mas o pouso é físico em vez de corte seco.
@@ -755,20 +765,30 @@ class _PendulumPageState extends State<PendulumPage>
                             _inclinacao.value,
                             anguloMaximo: tetoAgora,
                           );
-                          final swing = _targetAngle * settleV +
-                              (_isSwinging
-                                  ? sin(_swingController.value * 2 * pi) *
-                                      0.6 *
-                                      (1 - settleV)
-                                  : 0.0) +
-                              inclinacao;
-                          // Órbita circular (sem achatamento): a ponta do cristal
-                          // segue a linha da corda, então apontar para o alvo é
-                          // apontar para o rótulo.
-                          final bob = Offset(
-                            anchor.dx + sin(swing) * cordLength,
-                            anchor.dy + cos(swing) * cordLength,
+                          // Quanto da órbita ainda existe. A guarda de
+                          // `isAnimating` é o que segura o modo "reduzir
+                          // movimento": lá o controller nunca é posto para
+                          // girar, mas `_isSwinging` fica ligado durante a
+                          // pausa de consulta — sem ela o cristal apareceria
+                          // congelado numa pose de órbita.
+                          final envelope = _swingController.isAnimating
+                              ? (1 - settleV)
+                              : 0.0;
+                          // A corda descreve um cone e o peso percorre uma
+                          // elipse: é assim que um círculo aparece para quem
+                          // olha de pouco acima. Ao assentar, o envelope vai a
+                          // zero e sobra o arco de sempre — a ponta volta a
+                          // apontar EXATAMENTE para o rótulo da resposta.
+                          final orbita = OrbitaDoPendulo.projetar(
+                            fixacao: anchor,
+                            corda: cordLength,
+                            fase: _swingController.value * 2 * pi,
+                            envelope: envelope,
+                            anguloNoPlano:
+                                _targetAngle * settleV + inclinacao,
                           );
+                          final swing = orbita.anguloAparente;
+                          final bob = orbita.peso;
                           return Stack(
                             clipBehavior: Clip.none,
                             children: [
@@ -805,17 +825,25 @@ class _PendulumPageState extends State<PendulumPage>
                                 top: bob.dy - attachTop,
                                 width: crystalBoxW,
                                 height: crystalH,
-                                child: Transform.rotate(
-                                  // O cristal é espelhado na vertical (flip), e
-                                  // espelho inverte o sentido do giro: girar por
-                                  // -swing faz a PONTA apontar na direção da
-                                  // corrente (= para a resposta), não o contrário.
-                                  angle: -swing,
+                                child: Transform.scale(
+                                  // Perto cresce, longe encolhe. A MESMA
+                                  // `alignment` da rotação — o ponto onde a
+                                  // corrente prende —, senão o topo do cristal
+                                  // descola do fim do fio ao escalar.
+                                  scale: orbita.escala,
                                   alignment: const Alignment(0, alignY),
-                                  child: const IgnorePointer(
-                                    child: CrystalGlyph(
-                                      height: crystalH,
-                                      flipVertical: true,
+                                  child: Transform.rotate(
+                                    // O cristal é espelhado na vertical (flip), e
+                                    // espelho inverte o sentido do giro: girar por
+                                    // -swing faz a PONTA apontar na direção da
+                                    // corrente (= para a resposta), não o contrário.
+                                    angle: -swing,
+                                    alignment: const Alignment(0, alignY),
+                                    child: const IgnorePointer(
+                                      child: CrystalGlyph(
+                                        height: crystalH,
+                                        flipVertical: true,
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -1047,8 +1075,10 @@ class PendulumPainter extends CustomPainter {
   final Offset anchor;
   final Offset bob;
 
-  /// Ângulo do balanço (0 = repouso). Só molda a flexão da corrente — o peso
-  /// já vem posicionado em [bob].
+  /// Ângulo APARENTE da corrente na tela (0 = repouso) — a direção de
+  /// [anchor] para [bob], não a abertura do cone. Durante a órbita os dois
+  /// divergem, e é o aparente que a corrente desenhada segue. Só molda a
+  /// flexão do fio: o peso já vem posicionado em [bob].
   final double swing;
 
   /// Inclinação do aparelho (−1..1): a corrente escorre de leve para o lado que

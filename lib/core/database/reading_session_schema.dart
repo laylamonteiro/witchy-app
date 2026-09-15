@@ -11,6 +11,7 @@ abstract final class ReadingSessionSchema {
   static const tables = [
     'selection_sessions',
     'tarot_day_state',
+    'day_question_state',
     'usage_balances',
     'usage_operations',
     'oracle_discoveries',
@@ -42,7 +43,7 @@ abstract final class ReadingSessionSchema {
     ''');
     await db.execute('''
       CREATE UNIQUE INDEX IF NOT EXISTS idx_daily_selection_identity
-      ON selection_sessions(user_id, tool, spread, day_key, normalized_question)
+      ON selection_sessions(user_id, tool, spread, day_key)
       WHERE tool = 'tarot' AND spread = 'daily'
     ''');
     await db.execute('''
@@ -53,6 +54,25 @@ abstract final class ReadingSessionSchema {
         last_question TEXT,
         synced INTEGER NOT NULL DEFAULT 0,
         PRIMARY KEY(user_id, day_key)
+      )
+    ''');
+    // A pergunta do dia de CADA adivinhação (v30). Generaliza
+    // `tarot_day_state`, que só sabia do tarô: a âncora da cota e o rascunho
+    // do campo agora existem uma vez por ferramenta.
+    //
+    // As duas colunas guardam coisas diferentes e não podem ser trocadas:
+    // `daily_question` é a ÂNCORA da cota e vive normalizada (é ela que
+    // `decidirTiragem` compara); `last_question` é o rascunho, na grafia
+    // original, e é ele que repõe o texto no campo.
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS day_question_state (
+        user_id TEXT NOT NULL,
+        day_key TEXT NOT NULL,
+        tool TEXT NOT NULL,
+        daily_question TEXT,
+        last_question TEXT,
+        synced INTEGER NOT NULL DEFAULT 0,
+        PRIMARY KEY(user_id, day_key, tool)
       )
     ''');
     await db.execute('''

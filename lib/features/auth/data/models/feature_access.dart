@@ -81,6 +81,11 @@ enum AppFeature {
 
   // Funcionalidades de IA
   aiMysticCounselor,
+  // A leitura do que as cartas/pedras dizem JUNTAS, na tela da tiragem. É
+  // separada de [aiMysticCounselor]: aquela é a página de perguntas soltas,
+  // com a cota dela por dia; esta é o que a assinatura de fato vende, e tem
+  // cota própria por semana, dividida entre tarô, runas e oráculo.
+  aiReadingInterpretation,
   aiDreamAnalysis,
   aiPalmistry,
   aiPersonalizedDreamInterpretation,
@@ -100,7 +105,7 @@ enum AppFeature {
 }
 
 /// Janela de apuração de limites de uso.
-enum LimitWindow { daily, monthly, total }
+enum LimitWindow { daily, weekly, monthly, total }
 
 /// Definição centralizada de limite para uma feature.
 class FeatureUsageLimit {
@@ -313,6 +318,16 @@ class FeatureAccessService {
       used: (user) => user.advisorConsultationsToday,
       availableMessage: _l10n.featureLimitCounselorAvailable,
       blockedMessage: _l10n.featureLimitCounselorBlocked,
+    ),
+    // Semanal, e a única do app que é: ler o que as cartas dizem juntas é o
+    // que a assinatura vende, e a única coisa aqui que custa geração de IA.
+    // Uma para as três ferramentas — a pessoa escolhe em qual mesa gastar.
+    AppFeature.aiReadingInterpretation: FeatureUsageLimit(
+      limit: UserModel.freeReadingInterpretationsLimit,
+      window: LimitWindow.weekly,
+      used: (user) => user.readingInterpretationsThisWeek,
+      availableMessage: _l10n.featureLimitInterpretationAvailable,
+      blockedMessage: _l10n.featureLimitInterpretationBlocked,
     ),
     AppFeature.aiDreamAnalysis: _aiLimit,
     // aiPalmistry e aiPersonalizedDreamInterpretation são exclusivas Premium:

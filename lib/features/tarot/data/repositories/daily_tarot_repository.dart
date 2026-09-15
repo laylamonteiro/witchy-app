@@ -7,12 +7,25 @@ import 'package:uuid/uuid.dart';
 import '../../../../core/database/database_helper.dart';
 import '../../../../core/services/usage_coordinator.dart';
 import '../../domain/daily_tarot_session.dart';
-import '../../domain/regra_da_carta_do_dia.dart';
 import '../models/tarot_card_model.dart';
-import 'tarot_day_repository.dart';
+import '../../../../core/divination/dia_da_pergunta_repository.dart';
 import 'tarot_reading_repository.dart';
 
-/// A resumable daily choice. Animation never selects, records or consumes.
+/// A Carta do Dia: UMA por pessoa por dia, e a mesma o dia inteiro.
+///
+/// Ela não tem pergunta. É a carta DO DIA — a energia que acompanha o dia de
+/// quem a tirou —, não a resposta de alguma coisa. Antes ela era indexada pela
+/// pergunta, e o efeito era o contrário do nome: uma pergunta diferente no
+/// mesmo dia gerava outra "carta do dia", cobrando do Free e sem limite nenhum
+/// no Premium. Quem tirasse três vezes tinha três cartas do dia, o que é o
+/// mesmo que não ter nenhuma.
+///
+/// Por não ter pergunta, ela também não consome cota — de ninguém. O que a
+/// assinatura vende é perguntar OUTRA coisa no mesmo dia, e isso continua
+/// valendo para as tiragens de três cartas e da cruz.
+///
+/// Escolher continua sendo da pessoa: o baralho é embaralhado e gravado antes
+/// de o leque aparecer, e a animação nunca sorteia, grava nem consome.
 class DailyTarotRepository {
   DailyTarotRepository({DatabaseHelper? dbHelper, Random? random})
       : _dbHelper = dbHelper ?? DatabaseHelper.instance,
@@ -24,15 +37,9 @@ class DailyTarotRepository {
 
   Future<DailyTarotSession> prepare({
     required String userId,
-    required String question,
     required List<TarotCard> catalog,
-    required bool premium,
-    required int legacyOracleUsed,
-    required int freeLimit,
     DateTime? now,
   }) async {
-    final asked = question.trim();
-    if (asked.isEmpty) throw ArgumentError.value(question, 'question');
     if (catalog.length != 78 || catalog.map((c) => c.id).toSet().length != 78) {
       throw const FormatException('Expected the complete tarot catalog');
     }
@@ -40,41 +47,36 @@ class DailyTarotRepository {
     final key = UsageCoordinator.dayKey(instant);
     final start = DateTime(instant.year, instant.month, instant.day);
     final end = DateTime(instant.year, instant.month, instant.day + 1);
-    final seed = await TarotDayRepository.legacySeed(userId, instant);
+    final seed = await DiaDaPerguntaRepository.legacySeed(userId, instant,
+        tool: DiaDaPerguntaRepository.tarot);
     final db = await _dbHelper.database;
     return db.transaction((txn) async {
-      final day = await TarotDayRepository.ensureIn(txn,
-          userId: userId, dayKey: key, seed: seed);
-      await UsageCoordinator.importBalance(txn,
-          userId: userId, dayKey: key, legacyUsed: legacyOracleUsed);
+      // A memória do dia continua sendo semeada aqui: a Carta do Dia é, para
+      // muita gente, a primeira coisa que se abre no dia, e é ela que cria a
+      // linha em que as tiragens seguintes vão ancorar a pergunta.
+      await DiaDaPerguntaRepository.ensureIn(txn,
+          userId: userId,
+          dayKey: key,
+          tool: DiaDaPerguntaRepository.tarot,
+          seed: seed);
 
+      // UMA por pessoa por dia: a pergunta não entra na identidade.
       final existing = await txn.query('selection_sessions',
-          where: 'user_id = ? AND tool = ? AND spread = ? '
-              'AND day_key = ? AND normalized_question = ?',
-          whereArgs: [userId, 'tarot', 'daily', key, asked.toLowerCase()],
+          where: 'user_id = ? AND tool = ? AND spread = ? AND day_key = ?',
+          whereArgs: [userId, 'tarot', 'daily', key],
+          orderBy: 'created_at ASC, rowid ASC',
           limit: 1);
       if (existing.isNotEmpty) return DailyTarotSession.fromRow(existing.single);
 
-      // Adopt an already drawn daily card before offering a new choice.
-      // The upper bound prevents a future/other-day record from matching.
+      // Adota uma carta do dia já tirada antes de oferecer uma escolha nova —
+      // a PRIMEIRA do dia, que é a que a pessoa chamou de "a minha de hoje".
+      // O limite de cima impede casar com o registro de outro dia.
       final oldDraws = await txn.query('tarot_readings',
           where: 'user_id = ? AND spread_type = ? AND date >= ? AND date < ?',
           whereArgs: [userId, 'daily', start.millisecondsSinceEpoch,
             end.millisecondsSinceEpoch],
-          orderBy: 'date ASC, id ASC');
-      Map<String, Object?>? legacy;
-      for (final row in oldDraws) {
-        if ((row['question'] as String?)?.trim().toLowerCase() ==
-            asked.toLowerCase()) {
-          legacy = row;
-          break;
-        }
-      }
-      if (legacy == null) {
-        final used = await UsageCoordinator.usedIn(txn,
-            userId: userId, dayKey: key);
-        _checkQuota(premium, day.dailyQuestion, asked, used, freeLimit);
-      }
+          orderBy: 'date ASC, id ASC', limit: 1);
+      final legacy = oldDraws.isEmpty ? null : oldDraws.single;
 
       final cards = [...catalog]..shuffle(_random);
       final deck = [for (final card in cards)
@@ -113,8 +115,9 @@ class DailyTarotRepository {
         'day_key': key,
         'day_start': start.millisecondsSinceEpoch,
         'day_end': end.millisecondsSinceEpoch,
-        'question': asked,
-        'normalized_question': asked.toLowerCase(),
+        // Sem pergunta: é a carta DO DIA, não a resposta de nada.
+        'question': '',
+        'normalized_question': '',
         'deck_version': deckVersion,
         'deck_json': jsonEncode(deck.map((c) => c.toJson()).toList()),
         'selected_json': jsonEncode([if (selectedId != null) selectedId]),
@@ -124,10 +127,6 @@ class DailyTarotRepository {
         'updated_at': instant.millisecondsSinceEpoch,
       };
       await txn.insert('selection_sessions', row);
-      // Remember a draft's question without charging or moving the quota's
-      // remembered question. Reopening the app can resume this same fan.
-      await txn.update('tarot_day_state', {'last_question': asked},
-          where: 'user_id = ? AND day_key = ?', whereArgs: [userId, key]);
       return DailyTarotSession.fromRow(row);
     });
   }
@@ -139,8 +138,6 @@ class DailyTarotRepository {
     required List<TarotCard> catalog,
     required String positionLabel,
     required bool Function() isCurrentUser,
-    required bool Function() isPremium,
-    required int freeLimit,
   }) async {
     final db = await _dbHelper.database;
     // Persist the choice first: a result-write failure must not allow a
@@ -163,17 +160,10 @@ class DailyTarotRepository {
       if (session.isCommitted) return DailyTarotCommit(session, created: false);
       final selected = session.card(session.selectedId!);
       final card = catalog.firstWhere((c) => c.id == selected.id);
-      final day = await TarotDayRepository.ensureIn(txn,
-          userId: userId, dayKey: session.dayKey, seed: const TarotDayState());
-      final used = await UsageCoordinator.usedIn(txn,
-          userId: userId, dayKey: session.dayKey);
       _checkAccount(isCurrentUser);
-      final decision = _checkQuota(
-          isPremium(), day.dailyQuestion, session.question, used, freeLimit);
-      if (decision == DecisaoDaTiragem.cobrar) {
-        await UsageCoordinator.recordIn(txn, userId: userId,
-            dayKey: session.dayKey, operationId: session.id);
-      }
+      // Sem cota: a Carta do Dia é uma só por dia e não tem pergunta, então
+      // não há o que cobrar nem de quem. O que a assinatura vende é perguntar
+      // outra coisa no mesmo dia, e isso é assunto das outras tiragens.
       final signature = 'daily-session:${session.id}';
       final resultId = await TarotReadingRepository(dbHelper: _dbHelper)
           .recordDraw(
@@ -187,12 +177,6 @@ class DailyTarotRepository {
         sessionId: session.id,
         date: session.dayStart,
       );
-      await txn.update('tarot_day_state', {
-        if (decision == DecisaoDaTiragem.cobrar || day.dailyQuestion == null)
-          'daily_question': session.question.toLowerCase(),
-        'last_question': session.question,
-      }, where: 'user_id = ? AND day_key = ?',
-          whereArgs: [userId, session.dayKey]);
       _checkAccount(isCurrentUser);
       await txn.update('selection_sessions', {
         'result_id': resultId,
@@ -227,12 +211,4 @@ class DailyTarotRepository {
     if (!isCurrentUser()) throw const TarotAccountChanged();
   }
 
-  static DecisaoDaTiragem _checkQuota(bool premium, String? remembered,
-      String question, int used, int freeLimit) {
-    final decision = decidirTiragem(premium: premium,
-        perguntaDoDia: remembered, pergunta: question,
-        tiragemJaFeitaHoje: false, temCota: used < freeLimit);
-    if (decision == DecisaoDaTiragem.bloquear) throw const TarotQuotaExceeded();
-    return decision;
-  }
 }

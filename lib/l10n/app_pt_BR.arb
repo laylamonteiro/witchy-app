@@ -738,7 +738,6 @@
   "runesReadingIntro": "As runas são símbolos do alfabeto rúnico nórdico usado para adivinhação. Cada runa pode aparecer em posição normal ou invertida (quando aplicável), mudando seu significado",
   "runesReversedNote": "Runas Invertidas: Quando uma runa aparece de cabeça para baixo, geralmente indica bloqueios ou aspectos desafiadores do significado original",
   "runesChooseLayout": "Escolha um Layout",
-  "runesQuestionOptional": "Sua Pergunta (opcional)",
   "runesQuestionHint": "O que as runas devem revelar?",
   "runesDrawing": "Tirando runas...",
   "runesDraw": "Tirar Runas",
@@ -865,6 +864,8 @@
   "featureLimitTarotAvailable": "leitura(s) gratuita(s) de tarot hoje",
   "featureLimitCounselorAvailable": "consulta(s) ao Conselheiro hoje",
   "featureLimitCounselorBlocked": "Você usou sua consulta ao Conselheiro Místico hoje. Assine Premium para consultas ilimitadas",
+  "featureLimitInterpretationAvailable": "leitura(s) da tiragem esta semana",
+  "featureLimitInterpretationBlocked": "Você já leu uma tiragem esta semana. Assine Premium para ler todas",
   "featurePreviewEncyclopedia": "Desbloqueie detalhes completos da enciclopédia com o plano Premium",
   "featurePreviewLunar": "Informações detalhadas das fases lunares são exclusivas Premium",
   "featurePreviewWheel": "Rituais e celebrações detalhadas são conteúdo Premium",
@@ -1430,7 +1431,6 @@
   "faqQ8": "Como falo com o suporte?",
   "faqA8": "Pelo e-mail suporte.grimoriodebolso@gmail.com — o botão \"Email de Suporte\" em Ajuda & Suporte abre seu aplicativo de e-mail",
   "tarotQuestionLabel": "Sua pergunta",
-  "tarotQuestionRequired": "Escreva sua pergunta antes de tirar as cartas",
   "tarotQuestionHint": "Concentre-se e escreva sua pergunta para as cartas",
   "tarotQuestionPrefix": "Pergunta: {question}",
   "guidedRitualTitle": "Ritual guiado",
@@ -1918,6 +1918,7 @@
   "conviteRotuloOraculo": "Oráculo e Tarô",
   "conviteRotuloAfirmacoes": "Afirmações",
   "conviteUltimaHoje": "{rotulo} · resta 1 hoje",
+  "conviteUltimaEstaSemana": "{rotulo} · resta 1 esta semana",
   "@conviteUltimaHoje": {
     "placeholders": {
       "rotulo": {
@@ -2271,5 +2272,16 @@
   "@menstrualLunarNearNew": {"placeholders": {"near": {"type": "int"}, "total": {"type": "int"}}},
   "@menstrualLunarNearFull": {"placeholders": {"near": {"type": "int"}, "total": {"type": "int"}}},
   "@menstrualLunarNeither": {"placeholders": {"total": {"type": "int"}}},
-  "@menstrualLunarMoods": {"placeholders": {"moods": {"type": "String"}}}
+  "@menstrualLunarMoods": {"placeholders": {"moods": {"type": "String"}}},
+  "perguntaAjudaLivre": "Esta tiragem é livre: é a sua pergunta de hoje",
+  "perguntaAjudaGastaUma": "Uma pergunta nova usa a sua tiragem de hoje",
+  "perguntaAjudaSemCota": "Você já fez a sua pergunta de hoje",
+  "perguntaAjudaJaFeita": "Você já tirou esta mesa hoje — é a mesma",
+  "perguntaVoltarParaHoje": "Voltar para a pergunta de hoje",
+  "perguntaVerAMesa": "Ver a mesa",
+  "oracleQuestionHint": "O que o oráculo deve iluminar?",
+  "conviteAvaliacaoTitulo": "Avalie o Grimório de Bolso",
+  "conviteAvaliacaoCorpo": "Sua avaliação na Play Store ajuda outras bruxas a encontrarem o app 🌙",
+  "conviteAvaliacaoAvaliar": "Avaliar",
+  "conviteAvaliacaoAgoraNao": "Agora não"
 }
