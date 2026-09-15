@@ -7,7 +7,7 @@ import 'package:uuid/uuid.dart';
 import '../../../../core/database/database_helper.dart';
 import '../../../../core/services/usage_coordinator.dart';
 import '../../domain/daily_tarot_session.dart';
-import '../../domain/regra_da_carta_do_dia.dart';
+import '../../../../core/divination/regra_da_tiragem.dart';
 import '../../domain/tarot_spread_session.dart';
 import '../models/tarot_card_model.dart';
 import '../../../../core/divination/dia_da_pergunta_repository.dart';

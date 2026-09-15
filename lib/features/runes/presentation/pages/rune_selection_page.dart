@@ -127,7 +127,7 @@ class _RuneSelectionPageState extends State<RuneSelectionPage> {
 
   Widget _campo(AppLocalizations l10n) {
     final mesaFeita = widget.contexto.mesaFeitaCom(_pergunta.text);
-    final voltar = widget.contexto.perguntaDoDia;
+    final voltar = widget.contexto.perguntaDeHojeNoCampo;
     final podeVoltar = _situacao == SituacaoDaTiragem.semCota && voltar != null;
     return CampoDaPergunta(
       controller: _pergunta,

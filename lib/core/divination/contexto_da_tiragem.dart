@@ -35,6 +35,21 @@ class ContextoDaTiragem {
   /// está feita" sem ir ao banco a cada letra.
   final Map<String, String> mesasDeHoje;
 
+  /// A pergunta de hoje na grafia em que a pessoa a escreveu.
+  ///
+  /// A âncora é guardada NORMALIZADA — é ela que a comparação usa —, e devolver
+  /// isso ao campo faria a pergunta reaparecer toda em minúsculas, como se o
+  /// app tivesse reescrito o que ela digitou. Quando o rascunho é a mesma
+  /// pergunta, é a grafia dele que volta; só quando não é (a pessoa começou a
+  /// escrever outra coisa) sobra a forma normalizada.
+  String? get perguntaDeHojeNoCampo {
+    final ancora = perguntaDoDia;
+    if (ancora == null) return null;
+    final grafia = rascunho;
+    if (grafia != null && normalizarPergunta(grafia) == ancora) return grafia;
+    return ancora;
+  }
+
   /// O id da mesa já feita com [pergunta], se houver.
   String? mesaFeitaCom(String pergunta) =>
       mesasDeHoje[normalizarPergunta(pergunta)];

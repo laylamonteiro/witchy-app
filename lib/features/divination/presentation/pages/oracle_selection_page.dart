@@ -127,7 +127,7 @@ class _OracleSelectionPageState extends State<OracleSelectionPage> {
       };
 
   Widget _campo(AppLocalizations l10n) {
-    final voltar = widget.contexto.perguntaDoDia;
+    final voltar = widget.contexto.perguntaDeHojeNoCampo;
     final podeVoltar = _situacao == SituacaoDaTiragem.semCota && voltar != null;
     return CampoDaPergunta(
       controller: _pergunta,

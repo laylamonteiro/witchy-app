@@ -108,7 +108,7 @@ class _TarotSpreadSelectionPageState extends State<TarotSpreadSelectionPage> {
       };
 
   Widget _campo(AppLocalizations l10n) {
-    final voltar = widget.contexto.perguntaDoDia;
+    final voltar = widget.contexto.perguntaDeHojeNoCampo;
     final podeVoltar = _situacao == SituacaoDaTiragem.semCota && voltar != null;
     return CampoDaPergunta(
       controller: _pergunta,
