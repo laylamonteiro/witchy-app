@@ -122,9 +122,9 @@ Future<bool> convidarEGuardar(
 /// button or card".
 ///
 /// A folha continua existindo para o único caso em que ela funciona: há Play no
-/// aparelho, mas o fluxo do card falhou. Onde não há Play ([DesfechoDoCard.
-/// semPlay]) ninguém é convidado — a folha manda para uma ficha da Play que
-/// aquela pessoa não tem como usar, e ainda marcaria "já avaliou" para sempre.
+/// aparelho, mas o fluxo do card falhou. Onde não há Play nenhum ninguém é
+/// convidado — a folha manda para uma ficha que aquela pessoa não tem como
+/// usar, e ainda marcaria "já avaliou" para sempre.
 Future<void> convidarAgora(
   BuildContext context,
   ConviteDeAvaliacao convite,
