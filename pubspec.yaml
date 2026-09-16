@@ -142,6 +142,7 @@ dependencies:
   # ali. Declarado explicitamente porque hoje só vinha como dependência
   # transitiva, o que o analisador reprova.
   web: ^1.1.0
+  in_app_review: ^2.0.12
 
 dev_dependencies:
   flutter_test:
