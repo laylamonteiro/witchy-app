@@ -20,7 +20,8 @@ import 'regra_do_convite.dart';
 /// pop-up que cai no meio de uma escolha é a maneira mais rápida de ganhar uma
 /// avaliação de uma estrela.
 ///
-/// Quem decide se é hora é [podeConvidar], que é pura. Aqui fica só o gatilho.
+/// Quem decide se é hora são [podeConvidar] e [podeMostrarCardNativo], que são
+/// puras, e [convidarAgora], que decide o que aparece. Aqui fica só o gatilho.
 class VigiaDoConvite extends StatefulWidget {
   const VigiaDoConvite({super.key, required this.child, this.convite});
 
@@ -94,10 +95,7 @@ class _VigiaDoConviteState extends State<VigiaDoConvite> {
     // A leitura do banco vem ANTES da decisão, e só quando a memória do
     // convite já não descartou a pessoa por outros motivos — não vale ir ao
     // disco a cada rito de quem já avaliou.
-    if (convite.memoria.jaAvaliou ||
-        convite.memoria.dispensas >= dispensasAteDesistir) {
-      return;
-    }
+    if (!convite.valeIrAoDisco) return;
 
     int dias;
     try {
@@ -113,16 +111,27 @@ class _VigiaDoConviteState extends State<VigiaDoConvite> {
       sequencia: checkin.streak,
       diasPraticados: dias,
     );
-    if (!convite.devoConvidar(uso)) return;
 
     // Um quadro de respiro: o rito acabou de fechar, e a tela dele ainda está
-    // assentando. A folha entra depois que a cena parou de se mexer.
+    // assentando. O convite entra depois que a cena parou de se mexer.
     await Future<void>.delayed(const Duration(milliseconds: 900));
     if (!mounted || _mostrando) return;
 
+    // O app precisa estar à FRENTE. Um card disparado com o app em segundo
+    // plano não aparece — e gasta uma das poucas chances assim mesmo. O lado
+    // nativo confere de novo, mais perto do disparo; esta é a checagem barata.
+    //
+    // Estado nulo é estado DESCONHECIDO, não "parado": é assim que ele começa
+    // antes do primeiro aviso do sistema. Só recusamos quando se sabe que o app
+    // não está à frente.
+    final estadoDoApp = WidgetsBinding.instance.lifecycleState;
+    if (estadoDoApp != null && estadoDoApp != AppLifecycleState.resumed) {
+      return;
+    }
+
     _mostrando = true;
     try {
-      await convidarEGuardar(context, convite);
+      await convidarAgora(context, convite, uso);
     } finally {
       if (mounted) _mostrando = false;
     }

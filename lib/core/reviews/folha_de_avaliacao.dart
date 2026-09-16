@@ -5,6 +5,7 @@ import '../theme/grimoire_colors.dart';
 import '../widgets/folha_com_saida.dart';
 import '../widgets/magical_button.dart';
 import 'convite_de_avaliacao.dart';
+import 'regra_do_convite.dart';
 
 /// O que a pessoa respondeu ao convite.
 enum RespostaDoConvite {
@@ -109,4 +110,32 @@ Future<bool> convidarEGuardar(
   }
   await convite.registrarDispensa();
   return false;
+}
+
+/// O convite inteiro, do começo ao fim.
+///
+/// Esta é a função que a política do Google torna delicada, e por isso ela mora
+/// aqui, testável, em vez de ficar solta dentro do widget que a dispara: ONDE
+/// HÁ CARD NATIVO, NADA NOSSO APARECE ANTES DELE. Inverter as duas partes
+/// deixaria a suíte inteira verde e o app em desacordo com a loja — "your app
+/// shouldn't ask the user any questions before or while presenting the rating
+/// button or card".
+///
+/// A folha continua existindo para o único caso em que ela funciona: há Play no
+/// aparelho, mas o fluxo do card falhou. Onde não há Play ([DesfechoDoCard.
+/// semPlay]) ninguém é convidado — a folha manda para uma ficha da Play que
+/// aquela pessoa não tem como usar, e ainda marcaria "já avaliou" para sempre.
+Future<void> convidarAgora(
+  BuildContext context,
+  ConviteDeAvaliacao convite,
+  UsoAtePagora uso,
+) async {
+  if (convite.temCardNativo) {
+    if (!convite.devoMostrarCard(uso)) return;
+    final desfecho = await convite.pedirCardNativo();
+    if (desfecho != DesfechoDoCard.falhou) return;
+    if (!context.mounted) return;
+  }
+  if (!convite.devoConvidar(uso)) return;
+  await convidarEGuardar(context, convite);
 }

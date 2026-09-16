@@ -117,3 +117,43 @@ Duration intervaloApos(int dispensas) {
   if (dispensas >= intervalosDoConvite.length) return intervalosDoConvite.last;
   return intervalosDoConvite[dispensas];
 }
+
+/// De quanto em quanto tempo o CARD NATIVO do Google pode voltar.
+///
+/// A escada acima foi calibrada para a nossa folha, que a gente vê aparecer e
+/// vê ser respondida. O card não é assim: quem decide se ele aparece é o Play,
+/// por uma cota que não é publicada e que o app não consegue ler. A própria
+/// documentação avisa que chamar o fluxo "more than once during a short period
+/// of time (for example, less than a month) might not always display a dialog".
+///
+/// Quarenta e cinco dias ficam com folga acima desse mês. Pedir mais que isso
+/// não rende avaliação — gasta uma chance que a gente nem vê queimar.
+const Duration intervaloEntreCards = Duration(days: 45);
+
+/// Depois de tantos cards disparados, o assunto se encerra.
+///
+/// Com o intervalo acima, são uns quatro meses e meio de convívio antes de o
+/// app parar de pedir. A folha tem o seu próprio teto, e os dois não se
+/// misturam de propósito: um disparo de card não é uma recusa, e uma recusa na
+/// folha não é um card gasto.
+const int cardsAteDesistir = 3;
+
+/// Se o card nativo pode ser pedido AGORA.
+///
+/// Não há sorteio aqui, ao contrário de [podeConvidar]. Lá ele existe para o
+/// convite ser encontrado em vez de esperado; com quarenta e cinco dias de
+/// intervalo isso já está resolvido, e o card cai no primeiro rito fechado
+/// depois da espera — que é, por construção, uma boa hora.
+bool podeMostrarCardNativo({
+  required DateTime? ultimoCard,
+  required int cardsDisparados,
+  required UsoAtePagora uso,
+  required DateTime agora,
+}) {
+  if (cardsDisparados >= cardsAteDesistir) return false;
+  if (!uso.usaDeVerdade) return false;
+  if (ultimoCard != null && agora.isBefore(ultimoCard.add(intervaloEntreCards))) {
+    return false;
+  }
+  return true;
+}

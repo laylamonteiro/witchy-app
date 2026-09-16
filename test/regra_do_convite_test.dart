@@ -186,4 +186,84 @@ void main() {
           reason: 'convites em ${diasComConvite[i - 1]} e ${diasComConvite[i]}');
     }
   });
+
+  group('o card nativo tem orçamento próprio', () {
+    bool pode({
+      DateTime? ultimoCard,
+      int cardsDisparados = 0,
+      UsoAtePagora uso = _bruxaAntiga,
+      DateTime? agora,
+    }) =>
+        podeMostrarCardNativo(
+          ultimoCard: ultimoCard,
+          cardsDisparados: cardsDisparados,
+          uso: uso,
+          agora: agora ?? _agora,
+        );
+
+    test('a espera é bem maior que a da folha', () {
+      // O Google avisa que chamar o fluxo mais de uma vez em menos de um mês
+      // "might not always display a dialog". A escada da folha — 2, 5 e 15 —
+      // gastaria as três chances da vida inteira dentro dessa janela, a maior
+      // parte delas em disparos que ninguém veria.
+      expect(intervaloEntreCards.inDays, greaterThan(30),
+          reason: 'menos de um mês é a janela que o próprio Google desaconselha');
+      expect(intervaloEntreCards, greaterThan(intervalosDoConvite.last));
+    });
+
+    test('dentro da espera não pede; passada ela, pede', () {
+      final noPonto = _agora.subtract(intervaloEntreCards);
+      expect(pode(ultimoCard: noPonto.add(const Duration(minutes: 1))), isFalse);
+      expect(pode(ultimoCard: noPonto), isTrue);
+    });
+
+    test('o primeiro card não espera nada', () {
+      expect(pode(), isTrue);
+    });
+
+    test('depois de três cards, o assunto se encerra', () {
+      expect(pode(cardsDisparados: cardsAteDesistir - 1), isTrue);
+      expect(
+          pode(
+              cardsDisparados: cardsAteDesistir,
+              ultimoCard: DateTime(2020)),
+          isFalse);
+      expect(
+          pode(
+              cardsDisparados: cardsAteDesistir + 9,
+              ultimoCard: DateTime(2020)),
+          isFalse,
+          reason: 'passar do teto não ressuscita ninguém');
+    });
+
+    test('quem ainda não formou opinião também não recebe card', () {
+      expect(pode(uso: const UsoAtePagora(sequencia: 1, diasPraticados: 1)),
+          isFalse);
+      expect(
+          pode(
+              uso: const UsoAtePagora(
+                  sequencia: sequenciaQueBastaParaConvidar,
+                  diasPraticados: 7)),
+          isTrue);
+    });
+
+    test('três cards levam meses, não semanas', () {
+      // O ponto inteiro do orçamento separado: a folha gastava tudo em ~20
+      // dias; o card leva um trimestre largo.
+      var quando = _agora;
+      final dias = <int>[];
+      for (var disparados = 0; disparados < cardsAteDesistir; disparados++) {
+        dias.add(quando.difference(_agora).inDays);
+        quando = quando.add(intervaloEntreCards);
+      }
+      expect(dias.last, greaterThan(80),
+          reason: 'os três cards caíram em ${dias.last} dias');
+    });
+
+    test('a escada da folha não é usada pelo card', () {
+      // Se um dia alguém apontar o card para intervaloApos, este teste cai.
+      expect(intervaloEntreCards, isNot(intervalosDoConvite.first));
+      expect(intervaloEntreCards, isNot(intervalosDoConvite.last));
+    });
+  });
 }
