@@ -10,6 +10,8 @@ import 'package:provider/provider.dart';
 import '../../../../core/ai/ai_service.dart';
 import '../../../../core/navigation/grimoire_route.dart';
 import '../../../../core/services/ad_service.dart';
+import '../../../../core/divination/contexto_da_tiragem.dart';
+import '../../../../core/services/usage_coordinator.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/theme/grimoire_motion.dart';
 import '../../../../core/tools/tool_emblem_art.dart';
@@ -60,9 +62,9 @@ class _RuneReadingBody extends StatefulWidget {
 }
 
 class _RuneReadingBodyState extends State<_RuneReadingBody> {
-  final _questionController = TextEditingController();
   final _repository = RuneReadingRepository();
   final _sessions = RuneSelectionRepository();
+  final _contextos = ContextoDaTiragemRepository();
 
   /// Escreve a leitura em "Meus Registros" assim que ela sai.
   final _archive = ReadingArchiveRecorder();
@@ -105,7 +107,6 @@ class _RuneReadingBodyState extends State<_RuneReadingBody> {
 
   @override
   void dispose() {
-    _questionController.dispose();
     _textTimer?.cancel();
     super.dispose();
   }
@@ -146,15 +147,23 @@ class _RuneReadingBodyState extends State<_RuneReadingBody> {
     await auth.refreshRuneUsage();
     if (!mounted || auth.currentUser.id != _userId) return;
     final spread = _selectedSpread;
+    // O pano é estendido de graça e sem pergunta: ela é escrita em cima dele,
+    // na tela de escolha, e continua editável enquanto a pessoa escolhe.
     final session = await _sessions.prepare(
       userId: _userId,
       spread: spread,
-      question: _questionController.text,
       catalog: runesData,
-      premium: auth.isPremiumEffective,
-      legacyRuneUsed: auth.currentUser.runeReadingsToday,
-      freeLimit: UserModel.freeRuneReadingsLimit,
       startNew: _newReadingRequested,
+    );
+    // O que a tela de escolha precisa para avisar, ANTES da escolha, o que a
+    // pergunta custa. Uma leitura só, e daí em diante tudo é síncrono.
+    final contexto = await _contextos.carregar(
+      userId: _userId,
+      tool: RuneSelectionSession.tool,
+      spread: spread.name,
+      categoriaDeCota: UsageCoordinator.runes,
+      legacyUsed: auth.currentUser.runeReadingsToday,
+      freeLimit: UserModel.freeRuneReadingsLimit,
     );
     if (!mounted || auth.currentUser.id != _userId) return;
     _newReadingRequested = false;
@@ -169,6 +178,10 @@ class _RuneReadingBodyState extends State<_RuneReadingBody> {
       final route = MaterialPageRoute<RuneSelectionUpdate>(builder: (_) =>
         RuneSelectionPage(
           session: session, positionLabels: labels,
+          contexto: contexto,
+          premium: auth.isPremiumEffective,
+          aoEscreverPergunta: (pergunta) => _sessions.atualizarPergunta(
+              userId: _userId, sessionId: session.id, pergunta: pergunta),
           onSelect: (runeId, expectedCount) async {
             final update = await _sessions.select(
               userId: _userId, sessionId: session.id, runeId: runeId,
@@ -177,6 +190,7 @@ class _RuneReadingBodyState extends State<_RuneReadingBody> {
               isCurrentUser: () => mounted && auth.currentUser.id == _userId,
               isPremium: () => auth.isPremiumEffective,
               freeLimit: UserModel.freeRuneReadingsLimit,
+              legacyRuneUsed: auth.currentUser.runeReadingsToday,
             );
             // Keep the cloth in front while the table is prepared: the
             // destination must already hold the stones when the route pops.
@@ -302,7 +316,6 @@ class _RuneReadingBodyState extends State<_RuneReadingBody> {
       _textVisible = false;
       _focused = 0;
       _showAll = false;
-      if (newReading) _questionController.clear();
     });
   }
 
@@ -328,8 +341,12 @@ class _RuneReadingBodyState extends State<_RuneReadingBody> {
     final reading = _lastReading;
     if (reading == null || _isReadingAI) return;
 
-    // Sem acesso o botão nem aparece: o card mostra a degustação no lugar.
-    if (!context.read<AuthProvider>().isPremiumEffective) return;
+    // Ler o que as peças dizem JUNTAS é o que a assinatura vende — tirar
+    // qualquer site faz. O Free tem UMA leitura por semana, dividida entre
+    // tarô, runas e oráculo. Sem ela, o botão nem aparece.
+    final auth = context.read<AuthProvider>();
+    final ehPremium = auth.isPremiumEffective;
+    if (!ehPremium && !auth.currentUser.canInterpretReading) return;
 
     setState(() => _isReadingAI = true);
     try {
@@ -342,6 +359,9 @@ class _RuneReadingBodyState extends State<_RuneReadingBody> {
       );
       // Uma resposta atrasada não pertence a outra mesa.
       if (!mounted || _lastReading?.id != reading.id) return;
+      // A leitura saiu: é ela que gasta a leitura da semana, e só do Free.
+      // Debitar antes seria cobrar por um erro de rede.
+      if (!ehPremium) await auth.incrementReadingInterpretations();
       setState(() => _aiReading = interpretation);
       // Fica junto da leitura: reabrir a mesa não pede outra geração.
       await _repository.attachInterpretation(
@@ -492,38 +512,9 @@ class _RuneReadingBodyState extends State<_RuneReadingBody> {
                 ),
               ),
 
-              const SizedBox(height: 16),
-
-              // Campo de pergunta
-              MagicalCard(
-                child: TextField(
-                  controller: _questionController,
-                  style: TextStyle(color: context.gc.softWhite),
-                  decoration: InputDecoration(
-                    labelText: AppLocalizations.of(context).runesQuestionOptional,
-                    labelStyle: TextStyle(color: context.gc.lilac),
-                    hintText: AppLocalizations.of(context).runesQuestionHint,
-                    hintStyle: TextStyle(
-                      color: context.gc.softWhite.withValues(alpha: 0.5),
-                    ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: context.gc.lilac),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(
-                        color: context.gc.lilac.withValues(alpha: 0.3),
-                      ),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: context.gc.lilac),
-                    ),
-                  ),
-                  maxLines: 2,
-                ),
-              ),
+              // A pergunta saiu daqui: ela é escrita em cima do pano, na tela
+              // de escolha, e continua editável enquanto a pessoa escolhe as
+              // pedras. Aqui só se escolhe a tiragem.
 
               const SizedBox(height: 24),
 
@@ -1133,8 +1124,8 @@ class _RuneReadingBodyState extends State<_RuneReadingBody> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           if (_lastReading != null &&
-              !context.watch<AuthProvider>().isPremiumEffective)
-            // Sem acesso: no lugar do botão, o sumário do que o
+              !context.watch<AuthProvider>().podeLerOConselheiro)
+            // Sem leitura disponível: no lugar do botão, o sumário do que o
             // Conselheiro teceria sobre as runas que já estão na mesa.
             _previaDoConselheiro(context)
           else if (_aiReading == null)

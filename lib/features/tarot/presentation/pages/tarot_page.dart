@@ -13,7 +13,8 @@ import '../../../../core/theme/grimoire_motion.dart';
 import '../../../../core/widgets/reading_focus_panel.dart';
 import '../../../auth/data/models/user_model.dart';
 import '../../data/repositories/daily_tarot_repository.dart';
-import '../../data/repositories/tarot_day_repository.dart';
+import '../../../../core/divination/contexto_da_tiragem.dart';
+import '../../../../core/services/usage_coordinator.dart';
 import '../../domain/daily_tarot_session.dart';
 import '../../domain/tarot_spread_session.dart';
 import '../../data/repositories/tarot_spread_repository.dart';
@@ -167,19 +168,16 @@ class _SpreadTabState extends State<_SpreadTab>
   DateTime? _activeReadingDate;
   bool _newSpreadRequested = false;
   final _spreadRepository = TarotSpreadRepository();
+  final _contextos = ContextoDaTiragemRepository();
   final _dailyRepository = DailyTarotRepository();
 
   /// Pergunta de quem consulta — obrigatória, capturada ao iniciar a
   /// tiragem. O foco volta para cá quando alguém tenta tirar sem perguntar.
-  final _questionController = TextEditingController();
-  final _questionFocus = FocusNode();
   String _question = '';
 
   /// O que foi posto no campo por esta tela (a pergunta de hoje) e em que
   /// dia. Quando o dia vira com a tela aberta, o campo só é limpo se ainda
   /// mostrar exatamente isto — o que a pessoa digitou por conta própria fica.
-  String? _perguntaPreenchida;
-  String? _diaPreenchido;
 
   String? _aiReading;
   bool _isReadingAI = false;
@@ -206,15 +204,12 @@ class _SpreadTabState extends State<_SpreadTab>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _userId = context.read<AuthProvider>().currentUser.id;
-    _carregarPerguntaDoDia();
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _textTimer?.cancel();
-    _questionController.dispose();
-    _questionFocus.dispose();
     super.dispose();
   }
 
@@ -222,7 +217,6 @@ class _SpreadTabState extends State<_SpreadTab>
   /// campo (e a de hoje, se já houver, entra).
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) _carregarPerguntaDoDia();
   }
 
   /// A identidade da sessão também distingue consultas com cartas iguais.
@@ -254,39 +248,9 @@ class _SpreadTabState extends State<_SpreadTab>
     await prefs.setString('tarot_ai_$_userId', reading);
   }
 
-  /// Chave do dia de hoje, para lembrar a última pergunta da carta do dia.
-  String _todayKey() {
-    final now = DateTime.now();
-    return '${now.year}-${now.month}-${now.day}';
-  }
-
-  /// Ao abrir (e ao voltar do segundo plano): a pergunta de hoje volta ao
-  /// campo; a de ontem, não. Se o dia virou com a tela aberta e o campo
-  /// ainda mostra o que foi preenchido, limpa — o que a pessoa digitou fica.
-  Future<void> _carregarPerguntaDoDia() async {
-    TarotDayState state;
-    try {
-      state = await TarotDayRepository().read(_userId, DateTime.now());
-    } catch (_) {
-      return; // A failed draft lookup must not overwrite typed text.
-    }
-    if (!mounted) return;
-    final hoje = _todayKey();
-    final deHoje = state.lastQuestion;
-    final campo = _questionController.text;
-    if (deHoje != null) {
-      if (campo.isEmpty || campo == _perguntaPreenchida) {
-        _questionController.text = deHoje;
-      }
-    } else if (_diaPreenchido != null &&
-        _diaPreenchido != hoje &&
-        campo == _perguntaPreenchida) {
-      _questionController.clear();
-    }
-    _perguntaPreenchida = deHoje;
-    _diaPreenchido = hoje;
-  }
-
+  // A reposição da pergunta do dia saiu daqui junto com o campo: quem repõe
+  // agora é a própria tela de escolha, que nasce com a última pergunta do dia
+  // já dentro da sessão.
   Future<void> _startSpread(TarotSpread spread) async {
     if (_starting) return;
     setState(() => _starting = true);
@@ -313,26 +277,16 @@ class _SpreadTabState extends State<_SpreadTab>
   }
 
   Future<void> _startDailySpread() async {
-    final question = _questionController.text.trim();
-    if (question.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(AppLocalizations.of(context).tarotQuestionRequired)));
-      _questionFocus.requestFocus();
-      return;
-    }
+    // A Carta do Dia não tem pergunta, não consome cota e é UMA por dia: é a
+    // carta DO DIA, não a resposta de alguma coisa. Perguntar é o que as
+    // outras tiragens fazem.
     final auth = context.read<AuthProvider>();
-    await auth.refreshOracleUsage();
     if (!mounted || auth.currentUser.id != _userId) return;
     final session = await _dailyRepository.prepare(
       userId: _userId,
-      question: question,
       catalog: tarotCards,
-      premium: auth.isPremiumEffective,
-      legacyOracleUsed: auth.currentUser.oracleReadingsToday,
-      freeLimit: UserModel.freeOracleReadingsLimit,
     );
     if (!mounted || auth.currentUser.id != _userId) return;
-    _questionFocus.unfocus();
     final position = AppLocalizations.of(context).tarotDailyCard;
     DailyTarotCommit? result;
     if (session.isCommitted) {
@@ -350,8 +304,6 @@ class _SpreadTabState extends State<_SpreadTab>
               catalog: tarotCards,
               positionLabel: position,
               isCurrentUser: () => mounted && auth.currentUser.id == _userId,
-              isPremium: () => auth.isPremiumEffective,
-              freeLimit: UserModel.freeOracleReadingsLimit,
             );
             // Keep the fan in front while loading the result. The destination
             // must already contain the closed card when the route pops.
@@ -415,24 +367,27 @@ class _SpreadTabState extends State<_SpreadTab>
   }
 
   Future<void> _startManualSpread(TarotSpread spread) async {
-    final question = _questionController.text.trim();
-    if (question.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(AppLocalizations.of(context).tarotQuestionRequired)));
-      _questionFocus.requestFocus();
-      return;
-    }
     final auth = context.read<AuthProvider>();
     await auth.refreshOracleUsage();
     if (!mounted || auth.currentUser.id != _userId) return;
+    // A mesa é estendida de graça e sem pergunta: ela é escrita em cima dela,
+    // na tela de escolha, e continua editável enquanto a pessoa escolhe.
     final session = await _spreadRepository.prepare(
-      userId: _userId, spread: spread.name, question: question, catalog: tarotCards,
-      premium: auth.isPremiumEffective, legacyOracleUsed: auth.currentUser.oracleReadingsToday,
-      freeLimit: UserModel.freeOracleReadingsLimit, startNew: _newSpreadRequested,
+      userId: _userId, spread: spread.name, catalog: tarotCards,
+      startNew: _newSpreadRequested,
+    );
+    // O que a tela de escolha precisa para avisar, ANTES da escolha, o que a
+    // pergunta custa. Uma leitura só, e daí em diante tudo é síncrono.
+    final contexto = await _contextos.carregar(
+      userId: _userId,
+      tool: 'tarot',
+      spread: spread.name,
+      categoriaDeCota: UsageCoordinator.oracle,
+      legacyUsed: auth.currentUser.oracleReadingsToday,
+      freeLimit: UserModel.freeOracleReadingsLimit,
     );
     if (!mounted || auth.currentUser.id != _userId) return;
     _newSpreadRequested = false;
-    _questionFocus.unfocus();
     final labels = spread.positions(AppLocalizations.of(context));
     final title = spread.displayName(AppLocalizations.of(context));
     TarotSpreadUpdate? result;
@@ -443,12 +398,17 @@ class _SpreadTabState extends State<_SpreadTab>
       final route = MaterialPageRoute<TarotSpreadUpdate>(builder: (_) =>
         TarotSpreadSelectionPage(
           session: session, title: title, positionLabels: labels,
+          contexto: contexto,
+          premium: auth.isPremiumEffective,
+          aoEscreverPergunta: (pergunta) => _spreadRepository.atualizarPergunta(
+              userId: _userId, sessionId: session.id, pergunta: pergunta),
           onSelect: (cardId, expectedCount) async {
             final update = await _spreadRepository.select(
               userId: _userId, sessionId: session.id, cardId: cardId,
               expectedCount: expectedCount, catalog: tarotCards, positionLabels: labels,
               isCurrentUser: () => mounted && auth.currentUser.id == _userId,
               isPremium: () => auth.isPremiumEffective, freeLimit: UserModel.freeOracleReadingsLimit,
+              legacyOracleUsed: auth.currentUser.oracleReadingsToday,
             );
             if (update.session.isCommitted) {
               await _prepareManualResult(spread, update);
@@ -698,9 +658,14 @@ class _SpreadTabState extends State<_SpreadTab>
   Future<void> _askCounselor() async {
     if (_drawn.isEmpty || _isReadingAI) return;
 
-    // Interpretação do Conselheiro Místico: exclusiva Premium. Sem acesso o
-    // botão nem aparece — o card mostra a degustação no lugar.
-    if (!context.read<AuthProvider>().isPremiumEffective) return;
+    // Ler o que as cartas dizem JUNTAS é o que a assinatura vende — tirar
+    // qualquer site faz. Então isto deixou de ser zero para quem não assina:
+    // o Free tem UMA leitura por semana, dividida entre tarô, runas e oráculo,
+    // e escolhe em qual mesa gastar. Sem ela, o botão nem aparece e o card
+    // mostra a prévia no lugar.
+    final auth = context.read<AuthProvider>();
+    final ehPremium = auth.isPremiumEffective;
+    if (!ehPremium && !auth.currentUser.canInterpretReading) return;
 
     final signature = _signature(_activeSpread!, _drawn);
     setState(() => _isReadingAI = true);
@@ -710,6 +675,9 @@ class _SpreadTabState extends State<_SpreadTab>
         question: _question.isEmpty ? null : _question,
       );
       if (!mounted || _activeReadingSignature != signature) return;
+      // A leitura saiu: é ela que gasta a leitura da semana, e só do Free.
+      // Debitar antes seria cobrar por um erro de rede.
+      if (!ehPremium) await auth.incrementReadingInterpretations();
       final spreadLabel = _activeSpread!.displayName(AppLocalizations.of(context));
       setState(() => _aiReading = reading);
       // Guarda a interpretação atrelada a estas cartas para não regerar.
@@ -983,9 +951,9 @@ class _SpreadTabState extends State<_SpreadTab>
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            if (!context.watch<AuthProvider>().isPremiumEffective)
-              // Sem acesso: no lugar do botão, o sumário do que o Conselheiro
-              // teceria sobre as cartas que já estão na mesa.
+            if (!context.watch<AuthProvider>().podeLerOConselheiro)
+              // Sem leitura disponível: no lugar do botão, o sumário do que o
+              // Conselheiro teceria sobre as cartas que já estão na mesa.
               _previaDoConselheiro(context)
             else if (_aiReading == null)
               // Sem interpretação para estas cartas: mostra o botão.
@@ -1057,48 +1025,10 @@ class _SpreadTabState extends State<_SpreadTab>
                     ),
               ),
             ),
-            // Pergunta obrigatória: as cartas e o Conselheiro Místico ancoram
-            // a leitura nela. Caixa dourada — é o convite principal da tiragem.
-            MagicalCard.accent(
-              accent: context.gc.gold,
-              child: TextField(
-                controller: _questionController,
-                focusNode: _questionFocus,
-                maxLines: 2,
-                minLines: 1,
-                textCapitalization: TextCapitalization.sentences,
-                style: TextStyle(color: context.gc.textPrimary),
-                decoration: InputDecoration(
-                  labelText: AppLocalizations.of(context).tarotQuestionLabel,
-                  labelStyle: TextStyle(
-                    color: context.gc.gold,
-                    fontWeight: FontWeight.w600,
-                  ),
-                  hintText: AppLocalizations.of(context).tarotQuestionHint,
-                  hintStyle: TextStyle(
-                    color: context.gc.starYellow.withValues(alpha: 0.7),
-                    fontSize: 13,
-                  ),
-                  prefixIcon:
-                      Icon(Icons.auto_awesome, color: context.gc.gold),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(
-                        color: context.gc.gold.withValues(alpha: 0.5)),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(
-                        color: context.gc.gold.withValues(alpha: 0.5)),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide:
-                        BorderSide(color: context.gc.gold, width: 1.5),
-                  ),
-                ),
-              ),
-            ),
+            // A pergunta saiu daqui: ela é escrita em cima da mesa, na tela
+            // de escolha, e continua editável enquanto a pessoa escolhe as
+            // cartas. Aqui só se escolhe a tiragem — e a Carta do Dia nem
+            // pergunta tem.
             // O toque é do próprio MagicalCard, como no hub das Ferramentas:
             // com um InkWell POR FORA, o Ink opaco do card cobria o brilho do
             // toque e o alvo invadia a margem entre dois cartões.

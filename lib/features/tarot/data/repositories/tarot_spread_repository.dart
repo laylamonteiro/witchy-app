@@ -7,10 +7,10 @@ import 'package:uuid/uuid.dart';
 import '../../../../core/database/database_helper.dart';
 import '../../../../core/services/usage_coordinator.dart';
 import '../../domain/daily_tarot_session.dart';
-import '../../domain/regra_da_carta_do_dia.dart';
+import '../../../../core/divination/regra_da_tiragem.dart';
 import '../../domain/tarot_spread_session.dart';
 import '../models/tarot_card_model.dart';
-import 'tarot_day_repository.dart';
+import '../../../../core/divination/dia_da_pergunta_repository.dart';
 import 'tarot_reading_repository.dart';
 
 class TarotSpreadRepository {
@@ -21,20 +21,21 @@ class TarotSpreadRepository {
   final DatabaseHelper _dbHelper;
   final Random _random;
 
+  /// Estende a mesa: retoma o rascunho aberto do dia, ou lança uma nova.
+  ///
+  /// NÃO recebe pergunta e NÃO cobra nada. A pergunta passou a ser escrita na
+  /// tela de escolha, em cima da mesa, e continua editável enquanto a pessoa
+  /// escolhe — então quando a mesa é estendida ainda não se sabe qual pergunta
+  /// vai valer. Quem decide e cobra é [select], quando a mesa fecha.
   Future<TarotSpreadSession> prepare({
     required String userId,
     required String spread,
-    required String question,
     required List<TarotCard> catalog,
-    required bool premium,
-    required int legacyOracleUsed,
-    required int freeLimit,
     bool startNew = false,
     DateTime? now,
   }) async {
-    final asked = question.trim();
-    if (asked.isEmpty || !TarotSpreadSession.counts.containsKey(spread)) {
-      throw ArgumentError('Expected a question and a supported spread');
+    if (!TarotSpreadSession.counts.containsKey(spread)) {
+      throw ArgumentError.value(spread, 'spread', 'Unsupported spread');
     }
     if (catalog.length != 78 || catalog.map((c) => c.id).toSet().length != 78) {
       throw const FormatException('Expected the complete tarot catalog');
@@ -43,37 +44,48 @@ class TarotSpreadRepository {
     final key = UsageCoordinator.dayKey(instant);
     final start = DateTime(instant.year, instant.month, instant.day);
     final end = DateTime(instant.year, instant.month, instant.day + 1);
-    final seed = await TarotDayRepository.legacySeed(userId, instant);
+    final seed = await DiaDaPerguntaRepository.legacySeed(userId, instant,
+        tool: DiaDaPerguntaRepository.tarot);
     final db = await _dbHelper.database;
     return db.transaction((txn) async {
-      final day = await TarotDayRepository.ensureIn(txn,
-          userId: userId, dayKey: key, seed: seed);
-      await UsageCoordinator.importBalance(txn,
-          userId: userId, dayKey: key, legacyUsed: legacyOracleUsed);
+      final day = await DiaDaPerguntaRepository.ensureIn(txn,
+          userId: userId,
+          dayKey: key,
+          tool: DiaDaPerguntaRepository.tarot,
+          seed: seed);
+      final asked = day.ultimaPergunta?.trim() ?? '';
+      final normalizada = normalizarPergunta(asked);
 
       Map<String, Object?>? legacy;
-      if (!(startNew && premium)) {
-        // An unfinished consultation keeps its original day across midnight.
-        final existing = await txn.query('selection_sessions',
+      if (!startNew) {
+        // Um rascunho aberto por tiragem: a pergunta ainda pode mudar, então
+        // ele não é mais identificado por ela. Uma consulta inacabada mantém o
+        // dia em que começou, mesmo depois da meia-noite.
+        final aberta = await txn.query('selection_sessions',
             where: 'user_id = ? AND tool = ? AND spread = ? '
-                'AND normalized_question = ? AND (day_key = ? OR result_id IS NULL)',
-            whereArgs: [userId, 'tarot', spread, asked.toLowerCase(), key],
+                'AND result_id IS NULL',
+            whereArgs: [userId, 'tarot', spread],
             orderBy: 'rowid DESC', limit: 1);
-        if (existing.isNotEmpty) return TarotSpreadSession.fromRow(existing.single);
+        if (aberta.isNotEmpty) return TarotSpreadSession.fromRow(aberta.single);
+        // Sem rascunho: se a mesa de hoje já foi feita com a pergunta que a
+        // pessoa deixou escrita, é ELA que volta.
+        final feita = await txn.query('selection_sessions',
+            where: 'user_id = ? AND tool = ? AND spread = ? AND day_key = ? '
+                'AND normalized_question = ? AND result_id IS NOT NULL',
+            whereArgs: [userId, 'tarot', spread, key, normalizada],
+            orderBy: 'rowid DESC', limit: 1);
+        if (feita.isNotEmpty) return TarotSpreadSession.fromRow(feita.single);
         final oldDraws = await txn.query('tarot_readings',
             where: 'user_id = ? AND spread_type = ? AND date >= ? AND date < ?',
             whereArgs: [userId, spread, start.millisecondsSinceEpoch,
               end.millisecondsSinceEpoch], orderBy: 'date DESC, id DESC');
         for (final row in oldDraws) {
-          if ((row['question'] as String?)?.trim().toLowerCase() == asked.toLowerCase()) {
+          if (normalizarPergunta((row['question'] as String?) ?? '') ==
+              normalizada) {
             legacy = row;
             break;
           }
         }
-      }
-      if (legacy == null) {
-        final used = await UsageCoordinator.usedIn(txn, userId: userId, dayKey: key);
-        _quota(premium, day.dailyQuestion, asked, used, freeLimit);
       }
 
       final shuffled = [...catalog]..shuffle(_random);
@@ -103,7 +115,8 @@ class TarotSpreadRepository {
       }
       final row = <String, Object?>{
         'id': const Uuid().v4(), 'user_id': userId, 'tool': 'tarot',
-        'spread': spread, 'question': asked, 'normalized_question': asked.toLowerCase(),
+        'spread': spread, 'question': asked,
+        'normalized_question': normalizada,
         'day_key': key, 'day_start': start.millisecondsSinceEpoch,
         'day_end': end.millisecondsSinceEpoch, 'deck_version': DailyTarotSession.deckVersion,
         'deck_json': jsonEncode(deck.map((c) => c.toJson()).toList()),
@@ -114,9 +127,46 @@ class TarotSpreadRepository {
       };
       final session = TarotSpreadSession.fromRow(row);
       await txn.insert('selection_sessions', row);
-      await txn.update('tarot_day_state', {'last_question': asked},
-          where: 'user_id = ? AND day_key = ?', whereArgs: [userId, key]);
+      await txn.update('day_question_state', {'last_question': asked},
+          where: 'user_id = ? AND day_key = ? AND tool = ?',
+          whereArgs: [userId, key, DiaDaPerguntaRepository.tarot]);
       return session;
+    });
+  }
+
+  /// Guarda a pergunta que está sendo escrita em cima da mesa.
+  ///
+  /// Não cobra e não move a âncora da cota: digitar nunca pode custar nada. Uma
+  /// mesa já confirmada não muda mais de pergunta — a leitura gravada citaria
+  /// uma pergunta que não foi a dela.
+  Future<void> atualizarPergunta({
+    required String userId,
+    required String sessionId,
+    required String pergunta,
+  }) async {
+    final asked = pergunta.trim();
+    final db = await _dbHelper.database;
+    await db.transaction((txn) async {
+      final linhas = await txn.query('selection_sessions',
+          columns: ['day_key', 'result_id'],
+          where: 'id = ? AND user_id = ?',
+          whereArgs: [sessionId, userId],
+          limit: 1);
+      if (linhas.isEmpty || linhas.single['result_id'] != null) return;
+      final dia = linhas.single['day_key'] as String;
+      await txn.update('selection_sessions', {
+        'question': asked,
+        'normalized_question': normalizarPergunta(asked),
+        'updated_at': DateTime.now().millisecondsSinceEpoch,
+      }, where: 'id = ? AND user_id = ?', whereArgs: [sessionId, userId]);
+      await DiaDaPerguntaRepository.ensureIn(txn,
+          userId: userId,
+          dayKey: dia,
+          tool: DiaDaPerguntaRepository.tarot,
+          seed: const EstadoDoDia());
+      await txn.update('day_question_state', {'last_question': asked},
+          where: 'user_id = ? AND day_key = ? AND tool = ?',
+          whereArgs: [userId, dia, DiaDaPerguntaRepository.tarot]);
     });
   }
 
@@ -130,6 +180,7 @@ class TarotSpreadRepository {
     required bool Function() isCurrentUser,
     required bool Function() isPremium,
     required int freeLimit,
+    required int legacyOracleUsed,
   }) async {
     final db = await _dbHelper.database;
     final chosen = await db.transaction((txn) async {
@@ -158,8 +209,17 @@ class TarotSpreadRepository {
       _account(isCurrentUser);
       final session = await _read(txn, userId, sessionId);
       if (session.isCommitted) return TarotSpreadUpdate(session);
-      final day = await TarotDayRepository.ensureIn(txn,
-          userId: userId, dayKey: session.dayKey, seed: const TarotDayState());
+      final day = await DiaDaPerguntaRepository.ensureIn(txn,
+          userId: userId,
+          dayKey: session.dayKey,
+          tool: DiaDaPerguntaRepository.tarot,
+          seed: const EstadoDoDia());
+      // A mesa já não semeia o dia — ela nem olha a cota. Semear aqui deixa o
+      // fechamento de pé sozinho, sem depender de quem abriu a tela.
+      await UsageCoordinator.importBalance(txn,
+          userId: userId,
+          dayKey: session.dayKey,
+          legacyUsed: legacyOracleUsed);
       final used = await UsageCoordinator.usedIn(txn,
           userId: userId, dayKey: session.dayKey);
       final premium = isPremium();
@@ -175,7 +235,7 @@ class TarotSpreadRepository {
             session.question.toLowerCase())) throw const TarotQuotaExceeded();
       }
       _account(isCurrentUser);
-      final decision = _quota(premium, day.dailyQuestion, session.question, used, freeLimit);
+      final decision = _quota(premium, day.perguntaDoDia, session.question, used, freeLimit);
       if (decision == DecisaoDaTiragem.cobrar) {
         await UsageCoordinator.recordIn(txn, userId: userId,
             dayKey: session.dayKey, operationId: session.id);
@@ -192,11 +252,12 @@ class TarotSpreadRepository {
         drawn: drawn, question: session.question, executor: txn,
         sessionId: session.id, date: session.startedAt,
       );
-      await txn.update('tarot_day_state', {
-        if (decision == DecisaoDaTiragem.cobrar || day.dailyQuestion == null)
-          'daily_question': session.question.toLowerCase(),
+      await txn.update('day_question_state', {
+        if (decision == DecisaoDaTiragem.cobrar || day.perguntaDoDia == null)
+          'daily_question': normalizarPergunta(session.question),
         'last_question': session.question,
-      }, where: 'user_id = ? AND day_key = ?', whereArgs: [userId, session.dayKey]);
+      }, where: 'user_id = ? AND day_key = ? AND tool = ?',
+          whereArgs: [userId, session.dayKey, DiaDaPerguntaRepository.tarot]);
       await txn.update('selection_sessions', {
         'result_id': resultId, 'result_signature': signature,
         'updated_at': DateTime.now().millisecondsSinceEpoch,

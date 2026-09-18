@@ -72,6 +72,11 @@ abstract final class TabelasLocais {
     // A pergunta da carta do dia. Perde-se a pergunta do dia corrente; a
     // tiragem em si está em `tarot_readings`.
     'tarot_day_state',
+    // A pergunta do dia de cada adivinhação (a que ancora a cota e o rascunho
+    // que repõe o campo). Perde-se a pergunta do dia corrente — o campo volta
+    // vazio e a próxima pergunta vira a do dia; as tiragens em si estão em
+    // `tarot_readings`, `rune_readings` e `oracle_readings`, que sobem.
+    'day_question_state',
   };
 
   /// Os contadores de cota de IA do dia: quanto ela gastou hoje, e em quê.

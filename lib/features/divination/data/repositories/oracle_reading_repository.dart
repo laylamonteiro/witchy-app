@@ -27,6 +27,7 @@ class OracleReadingRepository {
       'id': reading.id,
       'user_id': userId,
       'spread_type': reading.spreadType.name,
+      'question': reading.question,
       'reading_data': reading.toJsonString(),
       'date': reading.date.millisecondsSinceEpoch,
       'created_at': now,

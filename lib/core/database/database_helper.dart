@@ -81,7 +81,7 @@ class DatabaseHelper {
     // é no-op — o sqflite envolve os dois numa transação).
     return await openDatabase(
       path,
-      version: 29,
+      version: 30,
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
     );
@@ -311,6 +311,7 @@ class DatabaseHelper {
         id TEXT PRIMARY KEY,
         user_id TEXT NOT NULL DEFAULT 'local_user',
         spread_type TEXT NOT NULL,
+        question TEXT,
         reading_data TEXT NOT NULL,
         date INTEGER NOT NULL,
         created_at INTEGER NOT NULL,
@@ -1218,6 +1219,71 @@ class DatabaseHelper {
     // frente (menstrual_cycle_schema.dart explica).
     if (oldVersion < 29) {
       await MenstrualCycleSchema.addSeason(db);
+    }
+    // v30: a pergunta do dia deixa de ser só do tarô. A tabela nova nasce
+    // sabendo o que `tarot_day_state` já sabia — e a velha fica onde está: a
+    // casa só migra para a frente, e apagar tabela não é migração aditiva.
+    if (oldVersion < 30) {
+      await ReadingSessionSchema.create(db);
+      await db.execute('''
+        INSERT OR IGNORE INTO day_question_state
+          (user_id, day_key, tool, daily_question, last_question, synced)
+        SELECT user_id, day_key, 'tarot', daily_question, last_question, 0
+        FROM tarot_day_state
+      ''');
+
+      // A Carta do Dia volta a ser UMA por dia: a pergunta sai da identidade
+      // dela. A ORDEM destes três passos importa, e inverter derruba a
+      // abertura do app — criar o índice antes de desempatar estoura em
+      // "UNIQUE constraint failed" e leva a migração inteira junto.
+      //
+      // 1. Desempatar: onde já houve mais de uma carta do dia no mesmo dia
+      //    (perguntas diferentes), fica a PRIMEIRA — a que a pessoa chamou de
+      //    "a minha de hoje". As outras perdem só a sessão de escolha; as
+      //    tiragens em si continuam em `tarot_readings`, em Meus Registros e
+      //    no acervo, que esta migração não toca.
+      await db.execute('''
+        DELETE FROM selection_sessions
+        WHERE tool = 'tarot' AND spread = 'daily' AND rowid NOT IN (
+          SELECT MIN(rowid) FROM selection_sessions
+          WHERE tool = 'tarot' AND spread = 'daily'
+          GROUP BY user_id, day_key
+        )
+      ''');
+      // 2. O índice velho carrega a pergunta na chave; `IF NOT EXISTS` não o
+      //    redefiniria, então ele precisa cair.
+      await db.execute('DROP INDEX IF EXISTS idx_daily_selection_identity');
+      // 3. E o novo entra sem ela.
+      await db.execute('''
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_daily_selection_identity
+        ON selection_sessions(user_id, tool, spread, day_key)
+        WHERE tool = 'tarot' AND spread = 'daily'
+      ''');
+      // A carta do dia deixou de ter pergunta: as que ficaram guardam uma que
+      // não vale mais, e deixá-la ali faria a tela citar uma pergunta que a
+      // pessoa não fez para aquela carta.
+      await db.execute('''
+        UPDATE selection_sessions SET question = '', normalized_question = ''
+        WHERE tool = 'tarot' AND spread = 'daily'
+      ''');
+
+      // O Oráculo ganhou pergunta e era a única das quatro adivinhações sem
+      // uma. Nullable de propósito, sem DEFAULT '': assim "tiragem antiga, de
+      // quando não havia pergunta" continua distinguível de "a pessoa escolheu
+      // não escrever nada".
+      // A tabela pode não existir: ela nasce na migração v5, que um aparelho
+      // vindo de uma versão posterior nunca roda. Sem esta guarda, o ALTER
+      // estoura em "no such table" e derruba a migração — e migração que falha
+      // é app que não abre.
+      final temOracle = await db.rawQuery("SELECT name FROM sqlite_master "
+          "WHERE type = 'table' AND name = 'oracle_readings'");
+      if (temOracle.isNotEmpty) {
+        final colunas = await db.rawQuery('PRAGMA table_info(oracle_readings)');
+        if (!colunas.any((c) => c['name'] == 'question')) {
+          await db
+              .execute('ALTER TABLE oracle_readings ADD COLUMN question TEXT');
+        }
+      }
     }
   }
 

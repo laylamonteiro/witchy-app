@@ -84,6 +84,11 @@ flutter {
 
 dependencies {
     coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.4'
+    // Card nativo de avaliação (In-App Review). Quem usa é o canal
+    // com.grimoriodebolso.app/avaliacao, em MainActivity.kt — e mais ninguém.
+    // Versão exata de propósito: nada de '+' nem 'latest.release' num build
+    // que precisa ser reproduzível.
+    implementation 'com.google.android.play:review:2.0.2'
 }
 
 // Plugin do Google Services (processa google-services.json)

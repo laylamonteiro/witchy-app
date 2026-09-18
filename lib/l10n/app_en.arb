@@ -738,7 +738,6 @@
   "runesReadingIntro": "Runes are symbols of the Norse runic alphabet used for divination. Each rune can appear upright or reversed (when applicable), changing its meaning",
   "runesReversedNote": "Reversed Runes: When a rune appears upside down, it usually points to blocks or challenging aspects of the original meaning",
   "runesChooseLayout": "Choose a Layout",
-  "runesQuestionOptional": "Your Question (optional)",
   "runesQuestionHint": "What should the runes reveal?",
   "runesDrawing": "Drawing runes...",
   "runesDraw": "Draw Runes",
@@ -865,6 +864,8 @@
   "featureLimitTarotAvailable": "free tarot reading(s) today",
   "featureLimitCounselorAvailable": "Counselor consultation(s) today",
   "featureLimitCounselorBlocked": "You used your Mystic Counselor consultation today. Subscribe to Premium for unlimited consultations",
+  "featureLimitInterpretationAvailable": "reading(s) of a spread this week",
+  "featureLimitInterpretationBlocked": "You've already read one spread this week. Go Premium to read them all",
   "featurePreviewEncyclopedia": "Unlock full encyclopedia details with the Premium plan",
   "featurePreviewLunar": "Detailed moon-phase information is Premium-exclusive",
   "featurePreviewWheel": "Detailed rituals and celebrations are Premium content",
@@ -1430,7 +1431,6 @@
   "faqQ8": "How do I contact support?",
   "faqA8": "Via suporte.grimoriodebolso@gmail.com — the \"Support Email\" button in Help & Support opens your email app",
   "tarotQuestionLabel": "Your question",
-  "tarotQuestionRequired": "Write your question before drawing the cards",
   "tarotQuestionHint": "Focus and write your question for the cards",
   "tarotQuestionPrefix": "Question: {question}",
   "guidedRitualTitle": "Guided ritual",
@@ -1918,6 +1918,7 @@
   "conviteRotuloOraculo": "Oracle and Tarot",
   "conviteRotuloAfirmacoes": "Affirmations",
   "conviteUltimaHoje": "{rotulo} · 1 left today",
+  "conviteUltimaEstaSemana": "{rotulo} · 1 left this week",
   "@conviteUltimaHoje": {
     "placeholders": {
       "rotulo": {
@@ -2271,5 +2272,16 @@
   "@menstrualLunarNearNew": {"placeholders": {"near": {"type": "int"}, "total": {"type": "int"}}},
   "@menstrualLunarNearFull": {"placeholders": {"near": {"type": "int"}, "total": {"type": "int"}}},
   "@menstrualLunarNeither": {"placeholders": {"total": {"type": "int"}}},
-  "@menstrualLunarMoods": {"placeholders": {"moods": {"type": "String"}}}
+  "@menstrualLunarMoods": {"placeholders": {"moods": {"type": "String"}}},
+  "perguntaAjudaLivre": "This reading is free: it's your question for today",
+  "perguntaAjudaGastaUma": "A new question uses your reading for today",
+  "perguntaAjudaSemCota": "You've already asked your question today",
+  "perguntaAjudaJaFeita": "You've already laid this table today — it's the same one",
+  "perguntaVoltarParaHoje": "Back to today's question",
+  "perguntaVerAMesa": "See the table",
+  "oracleQuestionHint": "What should the oracle shed light on?",
+  "conviteAvaliacaoTitulo": "Rate Grimório de Bolso",
+  "conviteAvaliacaoCorpo": "Your review on the Play Store helps other witches find the app 🌙",
+  "conviteAvaliacaoAvaliar": "Rate it",
+  "conviteAvaliacaoAgoraNao": "Not now"
 }
