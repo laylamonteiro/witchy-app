@@ -23,6 +23,7 @@ import 'ai_prompts_pt.dart';
 class AiPrompts {
   const AiPrompts({
     required this.localizedInstruction,
+    required this.truthfulnessInstruction,
     required this.languageRepairSystemPrompt,
     required this.languageRepairUserPrompt,
     required this.spellGenerationSystemPrompt,
@@ -66,6 +67,12 @@ class AiPrompts {
   /// Reforço de idioma injetado no início de todo prompt de sistema
   /// (recebe a tag do idioma atual, ex.: `pt-BR`).
   final String Function(String languageTag) localizedInstruction;
+
+  /// Fidelidade à tradição, injetada logo depois do reforço de idioma em
+  /// todo prompt que interpreta, aconselha ou gera conteúdo. Sem ela o
+  /// modelo doura a pílula: inventa um sentido bom para uma crendice que,
+  /// na tradição, é de azar (ex.: frango na virada do ano = retrocesso).
+  final String truthfulnessInstruction;
 
   /// Persona da REESCRITA de idioma: recebe um texto já gerado que escapou
   /// para outra língua e devolve o MESMO texto inteiro no idioma do app.
