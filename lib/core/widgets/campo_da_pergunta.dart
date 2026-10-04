@@ -29,6 +29,7 @@ class CampoDaPergunta extends StatelessWidget {
     required this.dica,
     required this.situacao,
     this.mostrarCota = true,
+    this.avisoForaDaCota = false,
     this.textoDoAviso,
     this.rotuloDoAtalho,
     this.aoUsarOAtalho,
@@ -50,6 +51,18 @@ class CampoDaPergunta extends StatelessWidget {
   /// feita" continua aparecendo: vale para qualquer plano.
   final bool mostrarCota;
 
+  /// O aviso desta caixa não é sobre cota, e por isso aparece para todo mundo.
+  ///
+  /// É o caso da Carta do Dia: ela não custa nada a ninguém, e o que a frase
+  /// precisa dizer é outra coisa — que a carta de hoje é uma só, e que a
+  /// pergunta muda a leitura, não a carta. Sem isto, quem escrevesse outra
+  /// pergunta e recebesse a mesma carta acharia que quebrou.
+  ///
+  /// Ele vem em tom neutro de propósito: o verde de [SituacaoDaTiragem.livre]
+  /// quer dizer "não gastou a sua tiragem de hoje", e aqui não há tiragem a
+  /// gastar — usar a mesma cor faria duas coisas diferentes parecerem a mesma.
+  final bool avisoForaDaCota;
+
   /// A frase do aviso, já traduzida. Nulo = nada a dizer neste estado.
   final String? textoDoAviso;
 
@@ -60,19 +73,22 @@ class CampoDaPergunta extends StatelessWidget {
 
   final bool habilitado;
 
-  Color _corDoAviso(BuildContext context) => switch (situacao) {
-        SituacaoDaTiragem.livre => context.gc.success,
-        SituacaoDaTiragem.gastaUma => context.gc.starYellow,
-        SituacaoDaTiragem.semCota => context.gc.alert,
-        SituacaoDaTiragem.jaFeita => context.gc.textSecondary,
-      };
+  Color _corDoAviso(BuildContext context) => avisoForaDaCota
+      ? context.gc.textSecondary
+      : switch (situacao) {
+          SituacaoDaTiragem.livre => context.gc.success,
+          SituacaoDaTiragem.gastaUma => context.gc.starYellow,
+          SituacaoDaTiragem.semCota => context.gc.alert,
+          SituacaoDaTiragem.jaFeita => context.gc.textSecondary,
+        };
 
   @override
   Widget build(BuildContext context) {
     final gold = context.gc.gold;
-    final aviso = (situacao == SituacaoDaTiragem.jaFeita || mostrarCota)
-        ? textoDoAviso
-        : null;
+    final aviso =
+        (avisoForaDaCota || situacao == SituacaoDaTiragem.jaFeita || mostrarCota)
+            ? textoDoAviso
+            : null;
     return MagicalCard.accent(
       accent: gold,
       child: Column(

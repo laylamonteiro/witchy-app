@@ -230,6 +230,61 @@ void main() {
     expect(tester.widget<TextField>(campo).enabled, isTrue);
   });
 
+  testWidgets('a Carta Diária avisa que a carta é uma só — para todo plano',
+      (tester) async {
+    tester.view.physicalSize = const Size(390, 1400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    // Um contexto que, em QUALQUER outra mesa, gritaria "sem cota": pergunta
+    // do dia já fixada, cota zerada e a mesa de hoje já feita. Na diária nada
+    // disso vale — ela não custa nada e é uma por dia.
+    const apertado = ContextoDaTiragem(
+        perguntaDoDia: 'vou viajar?',
+        temCota: false,
+        mesasDeHoje: {'mudo de casa?': 'mesa-de-hoje'});
+
+    for (final premium in [false, true]) {
+      await tester.pumpWidget(_app(
+          OracleSelectionPage(
+            session: diaria,
+            positionLabels: const ['A'],
+            onSelect: (_, __) async => OracleSelectionUpdate(diaria),
+            contexto: apertado,
+            premium: premium,
+            aoEscreverPergunta: (_) async {},
+          ),
+          premium: premium));
+      await tester.pump();
+      final campo = find.byKey(const ValueKey('campo-da-pergunta'));
+      final l10n = AppLocalizations.of(tester.element(campo));
+      final plano = premium ? 'Premium' : 'Free';
+
+      // A caixa existe — era isso que faltava na Carta do Dia.
+      expect(campo, findsOneWidget, reason: '$plano: a caixa tem de existir');
+
+      await tester.enterText(campo, 'Uma pergunta qualquer');
+      await tester.pump();
+      expect(find.text(l10n.perguntaAjudaCartaDoDia), findsOneWidget,
+          reason: '$plano: quem escrever outra pergunta e receber a mesma '
+              'carta precisa saber por quê');
+      // E nenhum dos avisos de cota, que aqui não querem dizer nada.
+      for (final cota in [
+        l10n.perguntaAjudaGastaUma,
+        l10n.perguntaAjudaSemCota,
+        l10n.perguntaAjudaJaFeita,
+        l10n.perguntaAjudaLivre,
+      ]) {
+        expect(find.text(cota), findsNothing,
+            reason: '$plano: a Carta do Dia não fala de cota');
+      }
+      // E o leque nunca se desliga: não há tiragem a economizar.
+      expect(find.byKey(const ValueKey('atalho-da-pergunta')), findsNothing,
+          reason: '$plano: não há "voltar para a pergunta de hoje" aqui');
+    }
+  });
+
   testWidgets('Premium não vê aviso de cota, mas vê "já feita"',
       (tester) async {
     tester.view.physicalSize = const Size(390, 1400);
@@ -242,11 +297,15 @@ void main() {
         temCota: false,
         mesasDeHoje: {'mudo de casa?': 'mesa-de-hoje'});
 
+    // Mesa SEMANAL, não a diária: a Carta Diária está fora da cota e por isso
+    // mostra um aviso próprio a todo mundo — ela não serve para provar nada
+    // sobre quem tem cota e quem não tem. O caso dela é o teste seguinte.
     await tester.pumpWidget(_app(
         OracleSelectionPage(
-          session: diaria,
-          positionLabels: const ['A'],
-          onSelect: (_, __) async => OracleSelectionUpdate(diaria),
+          session: semanal,
+          positionLabels:
+              List.generate(semanal.spread.cardCount, (i) => 'P$i'),
+          onSelect: (_, __) async => OracleSelectionUpdate(semanal),
           contexto: contexto,
           premium: true,
           aoEscreverPergunta: (_) async {},

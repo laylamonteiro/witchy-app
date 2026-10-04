@@ -123,7 +123,7 @@ void main() {
     // Se a ordem dos passos estivesse errada, a migração estouraria aqui — e
     // com ela a abertura do app.
     final db = await DatabaseHelper.instance.database;
-    expect(await db.getVersion(), 30);
+    expect(await db.getVersion(), 31);
 
     final doDia = await db.query('selection_sessions',
         where: "tool = 'tarot' AND spread = 'daily'", orderBy: 'id ASC');

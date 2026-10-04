@@ -19,6 +19,8 @@ import 'oracle_reading_repository.dart';
 /// mesma pergunta a pessoa abre as três mesas; é uma pergunta nova que gasta.
 ///
 /// A Carta Diária é a exceção: é a do DIA, uma por dia, e não custa nada.
+/// Ela também tem pergunta — mas a pergunta não entra na identidade dela, e
+/// por isso digitar outra coisa devolve sempre a MESMA carta.
 class OracleSelectionRepository {
   OracleSelectionRepository({DatabaseHelper? dbHelper, Random? random})
       : _dbHelper = dbHelper ?? DatabaseHelper.instance,
@@ -58,9 +60,42 @@ class OracleSelectionRepository {
           seed: seed);
       // Discoveries recoverable from the local history are adopted quietly.
       await OracleDiscoveryRepository.backfillIn(txn, userId);
-      final asked = dia.ultimaPergunta?.trim() ?? '';
+      final ehDiaria = spread == OracleSpreadType.daily;
+      // A Carta Diária é a do DIA: a identidade dela é (conta, ferramenta,
+      // tiragem, dia) e mais nada. Ela tem caixa de pergunta como as outras,
+      // mas a pergunta fica FORA da identidade — digitar nunca re-sorteia,
+      // nunca abre sessão nova e nunca cobra.
+      //
+      // E ela NÃO se semeia do rascunho do dia. Era esse empréstimo que fazia
+      // a Carta Diária abrir com uma pergunta escrita em OUTRA ferramenta. A
+      // caixa começa vazia; o que volta para ela é só a pergunta da PRÓPRIA
+      // sessão diária, pelo resume logo abaixo.
+      final asked = ehDiaria ? '' : (dia.ultimaPergunta?.trim() ?? '');
       final normalizada = normalizarPergunta(asked);
-      if (!startNew) {
+      if (ehDiaria) {
+        // Um query só, sem pergunta no WHERE — o molde é o do tarô. E
+        // `startNew` é IGNORADO de propósito: "Nova leitura" não sorteia outra
+        // Carta Diária. Era por aí que saía a segunda do dia, sem nem precisar
+        // que a pergunta mudasse; e, com o índice único da v31, tentar inserir
+        // a segunda estouraria na cara da pessoa como erro de carregamento.
+        final doDia = await txn.query('selection_sessions',
+            where: 'user_id = ? AND tool = ? AND spread = ? AND day_key = ?',
+            whereArgs: [userId, OracleSelectionSession.tool, spread.name, key],
+            orderBy: 'created_at ASC, rowid ASC', limit: 1);
+        if (doDia.isNotEmpty) {
+          try {
+            return OracleSelectionSession.fromRow(doDia.single);
+          } on FormatException {
+            // Linha ilegível (deck truncado, versão velha, meio-gravada).
+            // Antes a saída era "Nova leitura", que pulava o resume; agora o
+            // ramo da diária sempre volta aqui, e sem isto a pessoa ficaria o
+            // dia inteiro sem Carta do Dia, vendo só erro de carregamento.
+            await txn.delete('selection_sessions',
+                where: 'id = ? AND user_id = ?',
+                whereArgs: [doDia.single['id'], userId]);
+          }
+        }
+      } else if (!startNew) {
         // Um rascunho aberto por tiragem: a pergunta ainda pode mudar, então
         // ele não é identificado por ela.
         final aberta = await txn.query('selection_sessions',
@@ -120,7 +155,7 @@ class OracleSelectionRepository {
     final db = await _dbHelper.database;
     await db.transaction((txn) async {
       final linhas = await txn.query('selection_sessions',
-          columns: ['day_key', 'result_id'],
+          columns: ['day_key', 'spread', 'result_id'],
           where: 'id = ? AND user_id = ?',
           whereArgs: [sessionId, userId],
           limit: 1);
@@ -131,6 +166,12 @@ class OracleSelectionRepository {
         'normalized_question': normalizarPergunta(asked),
         'updated_at': DateTime.now().millisecondsSinceEpoch,
       }, where: 'id = ? AND user_id = ?', whereArgs: [sessionId, userId]);
+      // A Carta Diária guarda a pergunta SÓ na sessão dela. O rascunho do dia
+      // é por (conta, dia, ferramenta), não por tiragem: gravá-lo aqui faria a
+      // caixa da tiragem PAGA abrir preenchida com o que a pessoa escreveu de
+      // graça na diária — a mesma surpresa da queixa original, ao contrário e
+      // agora com preço.
+      if (linhas.single['spread'] == OracleSpreadType.daily.name) return;
       await DiaDaPerguntaRepository.ensureIn(txn,
           userId: userId,
           dayKey: dia,
@@ -242,6 +283,12 @@ class OracleSelectionRepository {
       final fresh = await OracleDiscoveryRepository.recordIn(txn,
           userId: userId, cardIds: cards.map((c) => c.id),
           readingId: reading.id, seenAt: session.startedAt);
+      // A Carta Diária NÃO ancora `daily_question`, e isso é econômico, não
+      // estético: `decidirTiragem` libera de graça toda pergunta que repete a
+      // âncora. Com `freeOracleReadingsLimit = 1`, uma diária que ancorasse
+      // daria ao Free as outras mesas com aquela pergunta sem gastar nada,
+      // deixando a única cota intacta para uma SEGUNDA pergunta. Só mesa
+      // efetivamente cobrada move a âncora.
       if (session.spread != OracleSpreadType.daily) {
         await txn.update('day_question_state', {
           if (decisao == DecisaoDaTiragem.cobrar || dia.perguntaDoDia == null)

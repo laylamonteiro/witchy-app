@@ -277,9 +277,9 @@ class _SpreadTabState extends State<_SpreadTab>
   }
 
   Future<void> _startDailySpread() async {
-    // A Carta do Dia não tem pergunta, não consome cota e é UMA por dia: é a
-    // carta DO DIA, não a resposta de alguma coisa. Perguntar é o que as
-    // outras tiragens fazem.
+    // A Carta do Dia não consome cota e é UMA por dia. Ela tem pergunta, como
+    // as outras mesas, mas a pergunta não entra na identidade dela: é a carta
+    // DO DIA, e escrever outra coisa devolve sempre a mesma carta.
     final auth = context.read<AuthProvider>();
     if (!mounted || auth.currentUser.id != _userId) return;
     final session = await _dailyRepository.prepare(
@@ -296,6 +296,8 @@ class _SpreadTabState extends State<_SpreadTab>
       final selectionRoute = MaterialPageRoute<DailyTarotCommit>(
         builder: (_) => DailyTarotSelectionPage(
           session: session,
+          aoEscreverPergunta: (pergunta) => _dailyRepository.atualizarPergunta(
+              userId: _userId, sessionId: session.id, pergunta: pergunta),
           onCommit: (cardId) async {
             final committed = await _dailyRepository.selectAndCommit(
               userId: _userId,

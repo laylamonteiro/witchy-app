@@ -2277,6 +2277,8 @@
   "perguntaAjudaGastaUma": "Una pregunta nueva usa tu tirada de hoy",
   "perguntaAjudaSemCota": "Ya hiciste tu pregunta de hoy",
   "perguntaAjudaJaFeita": "Ya tendiste esta mesa hoy — es la misma",
+  "perguntaAjudaCartaDoDia": "Hoy solo hay una carta — la pregunta cambia la lectura, no la carta",
+  "cartaDoDiaQuestionHint": "¿Qué llevas al día de hoy? (opcional)",
   "perguntaVoltarParaHoje": "Volver a la pregunta de hoy",
   "perguntaVerAMesa": "Ver la mesa",
   "oracleQuestionHint": "¿Qué debe iluminar el oráculo?",

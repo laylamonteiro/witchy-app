@@ -101,7 +101,12 @@ void main() {
     expect(ModalRoute.of(tester.element(selection))!.isCurrent, isTrue);
     refreshGate.complete();
     await until(tester, () {
-      expect(find.byType(TextField), findsNothing,
+      // The daily card now has a question box of its own, so a bare TextField
+      // no longer means "the spread menu leaked through". What must never
+      // happen is a field that is NOT the fan's: while the fan is up there is
+      // exactly one, and once it leaves there is none.
+      expect(find.byType(TextField).evaluate().length,
+          selection.evaluate().isEmpty ? 0 : 1,
           reason: 'No frame between the fan and the result may show the spread menu');
       if (selection.evaluate().isNotEmpty) {
         expect(find.byType(TarotCardView), findsNothing,

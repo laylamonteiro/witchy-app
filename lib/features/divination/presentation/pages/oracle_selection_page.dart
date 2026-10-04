@@ -10,6 +10,7 @@ import '../../../../core/widgets/campo_da_pergunta.dart';
 import '../../../../core/widgets/motion/tool_scene_frame.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../data/models/oracle_card_model.dart';
 import '../../domain/oracle_selection_session.dart';
 import '../widgets/card_selection_surface.dart';
 import '../widgets/grimoire_card_back.dart';
@@ -23,8 +24,11 @@ import '../widgets/oracle_spread_board.dart';
 /// aviso do que aquela pergunta custa fica logo abaixo dela, e o leque se
 /// desliga quando não há mais tiragem.
 ///
-/// A Carta Diária é a exceção: é a carta do DIA, não tem pergunta, e lá o
-/// campo nem aparece ([pedePergunta]).
+/// A Carta Diária tem a caixa como as outras, mas é a exceção na economia: ela
+/// é a carta do DIA, não custa nada, e a pergunta não entra na identidade dela
+/// — digitar outra coisa devolve sempre a MESMA carta. Por isso o aviso dela
+/// não fala de cota, o leque nunca se desliga, e quem decide isso é a própria
+/// sessão ([_cartaDoDia]), não um parâmetro que o call site pode esquecer.
 class OracleSelectionPage extends StatefulWidget {
   const OracleSelectionPage({
     super.key,
@@ -34,7 +38,6 @@ class OracleSelectionPage extends StatefulWidget {
     required this.contexto,
     required this.premium,
     required this.aoEscreverPergunta,
-    this.pedePergunta = true,
   });
 
   final OracleSelectionSession session;
@@ -45,7 +48,6 @@ class OracleSelectionPage extends StatefulWidget {
   /// custa. Carregado uma vez por quem abriu a página.
   final ContextoDaTiragem contexto;
   final bool premium;
-  final bool pedePergunta;
 
   /// Grava o rascunho da pergunta. Chamado com atraso, não a cada tecla.
   final Future<void> Function(String pergunta) aoEscreverPergunta;
@@ -71,11 +73,9 @@ class _OracleSelectionPageState extends State<OracleSelectionPage> {
   @override
   void initState() {
     super.initState();
-    if (widget.pedePergunta) {
-      // Redesenha o aviso a cada tecla — a avaliação é pura e síncrona, então
-      // não custa banco nenhum. Gravar o rascunho, isso sim, espera.
-      _pergunta.addListener(_aoDigitar);
-    }
+    // Redesenha o aviso a cada tecla — a avaliação é pura e síncrona, então
+    // não custa banco nenhum. Gravar o rascunho, isso sim, espera.
+    _pergunta.addListener(_aoDigitar);
     if (_session.isComplete && !_session.isCommitted) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) _select(_session.selectedIds.last);
@@ -105,16 +105,19 @@ class _OracleSelectionPageState extends State<OracleSelectionPage> {
   /// Grava o que estiver escrito AGORA, sem esperar o atraso. Vai antes de
   /// qualquer escolha: a carta fecha a mesa, e a mesa cita a pergunta.
   Future<void> _fixarPergunta() async {
-    if (!widget.pedePergunta) return;
     _gravacaoDoRascunho?.cancel();
     await widget.aoEscreverPergunta(_pergunta.text);
   }
+
+  /// A Carta Diária se reconhece pela própria sessão: assim a tela não pode
+  /// ser montada com uma sessão diária e anunciar custo.
+  bool get _cartaDoDia => _session.spread == OracleSpreadType.daily;
 
   SituacaoDaTiragem get _situacao =>
       widget.contexto.situacaoDe(_pergunta.text, premium: widget.premium);
 
   bool get _lequeLigado =>
-      !widget.pedePergunta ||
+      _cartaDoDia ||
       (_situacao != SituacaoDaTiragem.semCota &&
           _situacao != SituacaoDaTiragem.jaFeita);
 
@@ -128,15 +131,19 @@ class _OracleSelectionPageState extends State<OracleSelectionPage> {
 
   Widget _campo(AppLocalizations l10n) {
     final voltar = widget.contexto.perguntaDeHojeNoCampo;
-    final podeVoltar = _situacao == SituacaoDaTiragem.semCota && voltar != null;
+    final podeVoltar = !_cartaDoDia &&
+        _situacao == SituacaoDaTiragem.semCota &&
+        voltar != null;
     return CampoDaPergunta(
       controller: _pergunta,
       focusNode: _focoDaPergunta,
       rotulo: l10n.tarotQuestionLabel,
-      dica: l10n.oracleQuestionHint,
+      dica: _cartaDoDia ? l10n.cartaDoDiaQuestionHint : l10n.oracleQuestionHint,
       situacao: _situacao,
-      mostrarCota: !widget.premium,
-      textoDoAviso: _avisoDe(l10n),
+      mostrarCota: !_cartaDoDia && !widget.premium,
+      avisoForaDaCota: _cartaDoDia,
+      textoDoAviso:
+          _cartaDoDia ? l10n.perguntaAjudaCartaDoDia : _avisoDe(l10n),
       habilitado: !_saving && !_session.isCommitted,
       rotuloDoAtalho: podeVoltar ? l10n.perguntaVoltarParaHoje : null,
       aoUsarOAtalho: podeVoltar ? () => _pergunta.text = voltar : null,
@@ -145,6 +152,11 @@ class _OracleSelectionPageState extends State<OracleSelectionPage> {
 
   Future<void> _select(String cardId) async {
     if (_saving) return;
+    // `_saving` ANTES de esperar a gravação: ele é o que desliga o campo. Sem
+    // isso, uma tecla digitada durante o await rearma o atraso de meio segundo
+    // e pode gravar DEPOIS de a leitura já ter copiado a pergunta — a mesa
+    // citaria um texto escrito depois de a carta ser tocada.
+    setState(() => _saving = true);
     // A carta fecha a mesa, e a mesa cita a pergunta: o que está escrito agora
     // tem de estar no banco antes da escolha, não meio segundo depois.
     await _fixarPergunta();
@@ -195,10 +207,8 @@ class _OracleSelectionPageState extends State<OracleSelectionPage> {
         body: ToolSceneFrame(child: SafeArea(child: SingleChildScrollView(
           padding: const EdgeInsets.all(20),
           child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-            if (widget.pedePergunta) ...[
-              _campo(l10n),
-              const SizedBox(height: 4),
-            ],
+            _campo(l10n),
+            const SizedBox(height: 4),
             Text(l10n.cardSelectionDay(MaterialLocalizations.of(context)
                 .formatMediumDate(DateTime(parts[0], parts[1], parts[2]))),
                 style: Theme.of(context).textTheme.bodySmall),
