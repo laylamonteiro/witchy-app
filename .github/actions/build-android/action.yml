@@ -1,0 +1,221 @@
+name: Build Android assinado
+description: >-
+  APK ou AAB de release, assinado com o keystore de release, com as
+  verificações que valem para todo binário Android: nenhuma chave de IA
+  dentro e assinatura igual à registrada. Uma receita só de --dart-define
+  para o release e o APK candidato. Pressupõe checkout + credenciais-app
+  (com google-services.json) + setup-flutter já feitos.
+
+inputs:
+  formato:
+    description: apk | aab
+    required: true
+  build-name:
+    required: true
+  build-number:
+    required: true
+  previa:
+    description: "true = APK de teste (Leitura do Ciclo sem espera; sem Turnstile só avisa)"
+    required: false
+    default: 'false'
+  sha1-esperado:
+    description: Fingerprint SHA-1 do keystore de release (registrado no Google Cloud).
+    required: false
+    default: '54:84:54:75:7F:A8:37:1C:21:F4:B9:71:E7:B7:F8:05:25:85:FB:60'
+  keystore-base64:
+    required: true
+  key-alias:
+    required: true
+  key-password:
+    required: true
+  store-password:
+    required: true
+  keystore-type:
+    required: false
+    default: 'JKS'
+  supabase-url:
+    required: true
+  supabase-anon-key:
+    required: true
+  revenuecat-android-key:
+    required: false
+    default: ''
+  revenuecat-ios-key:
+    required: false
+    default: ''
+  admin-email:
+    required: false
+    default: ''
+  admin-password:
+    required: false
+    default: ''
+  admob-android-interstitial-id:
+    required: false
+    default: ''
+  turnstile-site-key:
+    required: false
+    default: ''
+
+outputs:
+  arquivo:
+    description: Caminho do binário gerado.
+    value: ${{ steps.build.outputs.arquivo }}
+  sem-login-google:
+    description: "'true' quando a SHA-1 do APK não está no google-services.json."
+    value: ${{ steps.assinatura.outputs.sem_login_google }}
+
+runs:
+  using: composite
+  steps:
+    - name: 🧹 Liberar disco do runner
+      # Não apagar $AGENT_TOOLSDIRECTORY: o Flutter mora no hostedtoolcache.
+      shell: bash
+      run: |
+        sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/share/boost
+        sudo apt-get clean
+
+    - name: 🔑 Keystore de release
+      uses: ./.github/actions/keystore-android
+      with:
+        keystore-base64: ${{ inputs.keystore-base64 }}
+        key-alias: ${{ inputs.key-alias }}
+        key-password: ${{ inputs.key-password }}
+        store-password: ${{ inputs.store-password }}
+        keystore-type: ${{ inputs.keystore-type }}
+
+    - name: 🏗️ Build ${{ inputs.formato }}
+      id: build
+      shell: bash
+      env:
+        FORMATO: ${{ inputs.formato }}
+        PREVIA: ${{ inputs.previa }}
+        NOME: ${{ inputs.build-name }}
+        CODIGO: ${{ inputs.build-number }}
+        SUPABASE_URL: ${{ inputs.supabase-url }}
+        SUPABASE_ANON_KEY: ${{ inputs.supabase-anon-key }}
+        REVENUECAT_ANDROID_KEY: ${{ inputs.revenuecat-android-key }}
+        REVENUECAT_IOS_KEY: ${{ inputs.revenuecat-ios-key }}
+        ADMIN_EMAIL: ${{ inputs.admin-email }}
+        ADMIN_PASSWORD: ${{ inputs.admin-password }}
+        ADMOB_ANDROID_INTERSTITIAL_ID: ${{ inputs.admob-android-interstitial-id }}
+        TURNSTILE_SITE_KEY: ${{ inputs.turnstile-site-key }}
+      run: |
+        case "$FORMATO" in
+          apk) ALVO=apk; ARQUIVO=build/app/outputs/flutter-apk/app-release.apk ;;
+          aab) ALVO=appbundle; ARQUIVO=build/app/outputs/bundle/release/app-release.aab ;;
+          *) echo "::error::formato '$FORMATO' inválido (apk | aab)."; exit 1 ;;
+        esac
+
+        EXTRAS=()
+        # Sem o secret do AdMob o app usa o id de teste (define vazio derruba os anúncios).
+        if [ -n "$ADMOB_ANDROID_INTERSTITIAL_ID" ]; then
+          EXTRAS+=(--dart-define=ADMOB_ANDROID_INTERSTITIAL_ID="$ADMOB_ANDROID_INTERSTITIAL_ID")
+        fi
+        # O captcha é exigido no Supabase: sem a site key ninguém entra.
+        if [ -n "$TURNSTILE_SITE_KEY" ]; then
+          EXTRAS+=(--dart-define=TURNSTILE_SITE_KEY="$TURNSTILE_SITE_KEY")
+        elif [ "$PREVIA" = "true" ]; then
+          echo "::warning::TURNSTILE_SITE_KEY vazio: este APK não consegue cadastrar nem entrar por e-mail."
+        else
+          echo "::error::TURNSTILE_SITE_KEY vazio — este build não conseguiria cadastrar nem entrar ninguém."
+          exit 1
+        fi
+        if [ "$PREVIA" = "true" ]; then
+          EXTRAS+=(--dart-define=UNLIMITED_CYCLE_READINGS=true)
+        fi
+
+        flutter build "$ALVO" --release \
+          --build-name="$NOME" \
+          --build-number="$CODIGO" \
+          --dart-define=SUPABASE_URL="$SUPABASE_URL" \
+          --dart-define=SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY" \
+          --dart-define=REVENUECAT_ANDROID_KEY="$REVENUECAT_ANDROID_KEY" \
+          --dart-define=REVENUECAT_IOS_KEY="$REVENUECAT_IOS_KEY" \
+          --dart-define=ADMIN_EMAIL="$ADMIN_EMAIL" \
+          --dart-define=ADMIN_PASSWORD="$ADMIN_PASSWORD" \
+          --dart-define=IA_PELO_SERVIDOR=true \
+          "${EXTRAS[@]}"
+
+        if [ ! -f "$ARQUIVO" ]; then
+          echo "::error::O build não produziu $ARQUIVO."
+          exit 1
+        fi
+        echo "arquivo=$ARQUIVO" >> "$GITHUB_OUTPUT"
+
+    - name: 🔒 Nenhuma chave de IA dentro do binário
+      # O Android fala com a Edge Function `ia` (docs/CHAVES_DE_IA.md). O AOT
+      # guarda literais ASCII legíveis, então grep -a os encontra.
+      shell: bash
+      env:
+        ARQUIVO: ${{ steps.build.outputs.arquivo }}
+      run: |
+        padrao='gsk_[A-Za-z0-9]{20,}|AIza[A-Za-z0-9_-]{30,}'
+        dir=$(mktemp -d)
+        unzip -oq "$ARQUIVO" -d "$dir" 'lib/*' 'assets/*' 'base/lib/*' 'base/assets/*' 2>/dev/null || true
+        if grep -rlaE "$padrao" "$dir" >/dev/null 2>&1; then
+          echo "::error::Chave de IA dentro de $ARQUIVO (gsk_/AIza) — ver docs/CHAVES_DE_IA.md."
+          grep -rlaE "$padrao" "$dir" | sed "s#^$dir/##" | head
+          exit 1
+        fi
+        echo "Nenhuma chave de IA em $ARQUIVO."
+
+    - name: 🔏 Conferir a assinatura
+      # Assinatura diferente da registrada quebra o login Google: erro fatal.
+      # APK (v2/v3) → apksigner; AAB (v1/JAR) → keytool.
+      id: assinatura
+      shell: bash
+      env:
+        FORMATO: ${{ inputs.formato }}
+        ARQUIVO: ${{ steps.build.outputs.arquivo }}
+        SHA1_ESPERADO: ${{ inputs.sha1-esperado }}
+      run: |
+        if [ "$FORMATO" = "apk" ]; then
+          sdk="${ANDROID_SDK_ROOT:-$ANDROID_HOME}"
+          apksigner=$(find "$sdk/build-tools" -name apksigner 2>/dev/null | sort -V | tail -1)
+          if [ -z "$apksigner" ]; then
+            echo "::error::apksigner não encontrado em $sdk/build-tools."
+            exit 1
+          fi
+          bruto=$("$apksigner" verify --print-certs "$ARQUIVO" 2>/dev/null \
+            | grep -m1 'SHA-1 digest:' | sed 's/.*digest: *//')
+        else
+          bruto=$(keytool -printcert -jarfile "$ARQUIVO" 2>/dev/null \
+            | grep -m1 'SHA1:' | sed 's/.*SHA1: *//')
+        fi
+
+        norm() { echo "$1" | tr -d ' :' | tr 'a-f' 'A-F'; }
+        sha1=$(norm "$bruto")
+        esperado=$(norm "$SHA1_ESPERADO")
+        if [ -z "$sha1" ]; then
+          echo "::error::Não foi possível ler a assinatura de $ARQUIVO."
+          exit 1
+        fi
+        if [ "$sha1" != "$esperado" ]; then
+          echo "::error::$ARQUIVO assinado com SHA-1 $sha1, esperado $esperado."
+          exit 1
+        fi
+        echo "✅ Assinado com o keystore esperado."
+
+        # O login Google confere a digital contra o client OAuth Android
+        # (android/app/google-services.json), não o keystore.
+        registrados=$(jq -r '[ .client[]?.oauth_client[]?.android_info?.certificate_hash // empty ] | .[]' \
+          android/app/google-services.json 2>/dev/null | tr -d ' :' | tr 'a-f' 'A-F')
+        if printf '%s\n' "$registrados" | grep -qx "$sha1"; then
+          echo "✅ SHA-1 registrada no google-services.json."
+          echo "sem_login_google=false" >> "$GITHUB_OUTPUT"
+        elif [ "$FORMATO" = "apk" ]; then
+          # Só afeta quem instala o APK direto (a Play re-assina o AAB):
+          # aviso + nome carimbado, em vez de derrubar o release.
+          echo "sem_login_google=true" >> "$GITHUB_OUTPUT"
+          echo "::warning::Login Google vai falhar (ApiException: 10) neste APK: SHA-1 $sha1 não registrada no google-services.json. AAB, Play e site não são afetados."
+          {
+            echo "### ⚠️ APK sem login com o Google"
+            echo
+            echo "A SHA-1 \`$sha1\` não está em \`android/app/google-services.json\`."
+            echo "Conserto: Google Cloud → Credentials → client OAuth *Android* → adicione a SHA-1,"
+            echo "baixe o \`google-services.json\` de novo e substitua o do repositório."
+          } >> "$GITHUB_STEP_SUMMARY"
+        else
+          echo "sem_login_google=false" >> "$GITHUB_OUTPUT"
+          echo "::warning::SHA-1 $sha1 (chave de upload) não está no google-services.json. Na Play isso pode ser esperado — confirme que a SHA-1 de *App integrity* está registrada no client OAuth Android."
+        fi

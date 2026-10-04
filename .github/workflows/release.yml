@@ -1,44 +1,28 @@
 name: 🚀 Release
 
-# Publicar é DECISÃO, nunca efeito colateral de merge.
+# Publicar é DECISÃO, nunca efeito colateral de merge. Tudo sai do MESMO commit:
 #
-# Este workflow só roda quando uma tag vX.Y.Z nasce (via
-# `bash scripts/release.sh X.Y.Z`) ou pelo botão Run workflow — e mesmo
-# assim nada chega a usuários sem a aprovação do environment `production`
-# (Settings → Environments → production → Required reviewers).
+#   push na main     → dry-run: gate + AAB/APK assinados + web de produção, sem publicar
+#   push na release  → (merge do PR "🚢 Publicar") versão = última tag + 1 no patch
+#   Run workflow     → versão escolhida (minor/major) ou dry-run (somente_validar)
 #
-# O que UM release publica, sempre do MESMO commit:
-#   1. o site grimoriodebolso.app (Cloudflare Pages, --branch=main)
-#   2. o AAB numa faixa de TESTE da Play — qual delas vem da variável
-#      PLAY_TRACK do repositório (a promoção para produção continua
-#      manual, na Play Console)
-#   3. a GitHub Release com APK, AAB e símbolos anexados
+# Ao publicar, em dois tempos:
+#   1. play-interno (automático): AAB na faixa de teste (PLAY_TRACK) → tag vX.Y.Z
+#      → GitHub Release em RASCUNHO. Só testers veem.
+#   2. producao-web (aprovação do environment `production`): site em
+#      grimoriodebolso.app → Release publicada.
+#   A promoção na Play (teste → produção) continua manual, na Play Console.
 #
-# Versionamento — a tag é a única fonte de verdade:
-#   versionName = tag sem o "v"        (v2.1.0 → 2.1.0)
-#   versionCode = M*100000 + m*1000 + p*10   (2.1.0 → 201000)
-# Determinístico (o mesmo release produz sempre o mesmo par, APK e AAB
-# idênticos por construção), monotônico enquanto o nome só crescer (e isso
-# é VERIFICADO, não assumido), e sem estado: nenhum commit de bot, nenhum
-# [skip ci], nenhum pubspec regravado. O dígito final fica livre para um
-# eventual hotfix fora do esquema. Piso legado: 126 (v2.0.25+126).
+# Versão: versionName = X.Y.Z; versionCode = M*100000 + m*1000 + p*10.
+# Determinístico, sem commit de bot. Piso legado: 126 (tags vX.Y.Z+N).
 
 on:
   push:
-    branches:
-      # `release` = publicar de verdade (merge do PR de publicação).
-      # `main`    = dry-run automático: valida + builda TUDO (analyze, testes,
-      #             AAB e APK assinados, web com a chave de produção) e para
-      #             antes de publicar. Deixa a main sempre PROVADAMENTE
-      #             pronta pra publicar, sem você precisar clicar em nada.
-      - release
-      - main
-    tags:
-      - 'v*.*.*'
+    branches: [release, main]
   workflow_dispatch:
     inputs:
       versao:
-        description: 'Versão a publicar (ex.: 2.1.0 — a tag v2.1.0 nasce só na publicação)'
+        description: 'Versão a publicar (ex.: 2.1.0). Publicar só é aceito a partir da main.'
         required: true
         type: string
       somente_validar:
@@ -47,31 +31,23 @@ on:
         type: boolean
         default: false
       faixa:
-        description: 'Faixa da Play só para esta execução (vazio = a variável PLAY_TRACK do repositório)'
+        description: 'Faixa da Play só para esta execução (vazio = variável PLAY_TRACK)'
         required: false
         type: string
         default: ''
 
-# Um release por vez, e nunca cancelar um no meio: interromper depois do
-# site e antes da Play deixaria produção pela metade.
+# Publicações: uma por vez e nunca canceladas no meio. Dry-runs da main têm
+# grupo próprio (não ficam presos atrás de um release esperando aprovação) e
+# o push mais novo cancela o anterior.
 concurrency:
-  group: release
-  cancel-in-progress: false
+  group: ${{ github.ref == 'refs/heads/main' && github.event_name == 'push' && 'release-dry-run' || 'release' }}
+  cancel-in-progress: ${{ github.ref == 'refs/heads/main' && github.event_name == 'push' }}
 
 permissions:
   contents: read
 
-env:
-  # Fingerprint SHA-1 do keystore de release (registrado no Google Cloud
-  # para o login Google). Build assinado com OUTRA chave é erro fatal.
-  SHA1_ESPERADO: '54:84:54:75:7F:A8:37:1C:21:F4:B9:71:E7:B7:F8:05:25:85:FB:60'
-
 jobs:
-  # ────────────────────────────────────────────────────────────────────
-  # Resolve a versão, aplica as guardas e falha ANTES de gastar 20 min de
-  # build: semver estrito, maior que toda tag existente, versionCode acima
-  # do legado, secrets presentes.
-  # ────────────────────────────────────────────────────────────────────
+  # Falha em segundos, antes de qualquer build: versão, faixa e secrets.
   preparar:
     name: 🔢 Versão e guardas
     runs-on: ubuntu-latest
@@ -83,133 +59,99 @@ jobs:
       dry_run: ${{ steps.versao.outputs.dry }}
 
     steps:
-      - name: 📥 Checkout repository
+      - name: 📥 Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          persist-credentials: false
 
       - name: 🔢 Resolver e validar a versão
         id: versao
         env:
+          EVENTO: ${{ github.event_name }}
           INPUT_VERSAO: ${{ inputs.versao }}
+          SOMENTE_VALIDAR: ${{ inputs.somente_validar }}
         run: |
           git fetch --tags --quiet
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+          ultima_tag() { git tag -l 'v*' | sed -e 's/^v//' -e 's/+.*//' | sort -V | tail -1; }
+
+          if [ "$EVENTO" = "workflow_dispatch" ]; then
             NOME="${INPUT_VERSAO#v}"
-          elif [ "${GITHUB_REF_TYPE}" = "branch" ]; then
-            # Push num branch (main ou release) = a versão sai da última tag
-            # + 1 no patch. No `release` isso vira a publicação de verdade; na
-            # `main` é só o dry-run (nada é publicado — ver a flag `dry`
-            # abaixo). Correção é o caso comum, e a decisão que sobra (2.0.26
-            # ou 2.1.0?) não deve travar. Para minor/major, use o botão Run
-            # workflow ou scripts/release.sh com o número desejado.
-            ULTIMA=$(git tag -l 'v*' | sed -e 's/^v//' -e 's/+.*//' \
-              | sort -V | tail -1)
-            ULTIMA=${ULTIMA:-0.0.0}
-            NOME=$(echo "$ULTIMA" | awk -F. '{print $1"."$2"."$3+1}')
-            echo "Versão a partir do branch ${GITHUB_REF_NAME}: $ULTIMA → $NOME"
           else
-            NOME="${GITHUB_REF_NAME#v}"
+            ULTIMA=$(ultima_tag); ULTIMA=${ULTIMA:-0.0.0}
+            NOME=$(echo "$ULTIMA" | awk -F. '{print $1"."$2"."$3+1}')
+            echo "Versão a partir de $GITHUB_REF_NAME: $ULTIMA → $NOME"
           fi
 
-          # Dry-run (valida e builda, não publica) quando: é o botão Run
-          # workflow com "somente validar" marcado, OU é um push na main (a
-          # main nunca publica — publicar é o merge no `release`). Um único
-          # lugar decide isso; os jobs `secrets` e `publicar` leem daqui.
-          if [ "${{ github.event_name }}" = "push" ] && \
-             [ "${GITHUB_REF_NAME}" = "main" ]; then
+          # A main nunca publica; o botão publica só com somente_validar desligado.
+          if [ "$EVENTO" = "push" ] && [ "$GITHUB_REF_NAME" = "main" ]; then
             DRY=true
-          elif [ "${{ inputs.somente_validar }}" = "true" ]; then
+          elif [ "$SOMENTE_VALIDAR" = "true" ]; then
             DRY=true
           else
             DRY=false
           fi
-          echo "dry=$DRY" >> "$GITHUB_OUTPUT"
-          echo "Dry-run: $DRY"
 
-          if ! echo "$NOME" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$'; then
-            echo "::error::Versão inválida: '$NOME'. Use o formato X.Y.Z (ex.: 2.1.0)."
+          # Publicar pelo botão só a partir da main: impede levar à Play/site o
+          # código de uma branch que nunca passou por PR.
+          if [ "$EVENTO" = "workflow_dispatch" ] && [ "$DRY" = "false" ] && \
+             [ "$GITHUB_REF_NAME" != "main" ]; then
+            echo "::error::Publicar pelo botão só a partir da main (você rodou em '$GITHUB_REF_NAME'). Para testar esta branch, marque somente_validar."
             exit 1
           fi
 
-          MAJOR=$(echo "$NOME" | cut -d. -f1)
-          MINOR=$(echo "$NOME" | cut -d. -f2)
-          PATCH=$(echo "$NOME" | cut -d. -f3)
+          if ! echo "$NOME" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "::error::Versão inválida: '$NOME'. Use X.Y.Z (ex.: 2.1.0)."
+            exit 1
+          fi
+          IFS=. read -r MAJOR MINOR PATCH <<< "$NOME"
           CODIGO=$((MAJOR * 100000 + MINOR * 1000 + PATCH * 10))
 
-          # A nova versão precisa ser MAIOR que toda tag existente (as
-          # legadas v2.0.25+126 contam pelo nome, ignorando o +N). No push
-          # de tag a própria tag já existe — sai da comparação.
-          MAIOR_EXISTENTE=$(git tag -l 'v*' \
-            | grep -v "^v${NOME}\$" \
-            | sed -e 's/^v//' -e 's/+.*//' \
-            | sort -V | tail -1)
-          if [ -n "$MAIOR_EXISTENTE" ]; then
-            TOPO=$(printf '%s\n%s\n' "$MAIOR_EXISTENTE" "$NOME" | sort -V | tail -1)
-            if [ "$TOPO" != "$NOME" ] || [ "$MAIOR_EXISTENTE" = "$NOME" ]; then
-              echo "::error::A versão $NOME não é maior que a última publicada ($MAIOR_EXISTENTE)."
+          MAIOR=$(ultima_tag)
+          if [ -n "$MAIOR" ]; then
+            TOPO=$(printf '%s\n%s\n' "$MAIOR" "$NOME" | sort -V | tail -1)
+            if [ "$TOPO" != "$NOME" ] || [ "$MAIOR" = "$NOME" ]; then
+              echo "::error::A versão $NOME não é maior que a última publicada ($MAIOR)."
               exit 1
             fi
           fi
 
-          # versionCode precisa superar o legado (+N das tags antigas; piso
-          # conhecido: 126). O esquema garante isso por construção, mas
-          # dinheiro não se protege com suposição.
-          MAIOR_CODIGO_LEGADO=$(git tag -l 'v*+*' | sed 's/.*+//' | sort -n | tail -1)
-          MAIOR_CODIGO_LEGADO=${MAIOR_CODIGO_LEGADO:-126}
-          if [ "$CODIGO" -le "$MAIOR_CODIGO_LEGADO" ]; then
-            echo "::error::versionCode $CODIGO não supera o legado ($MAIOR_CODIGO_LEGADO)."
+          LEGADO=$(git tag -l 'v*+*' | sed 's/.*+//' | sort -n | tail -1)
+          LEGADO=${LEGADO:-126}
+          if [ "$CODIGO" -le "$LEGADO" ]; then
+            echo "::error::versionCode $CODIGO não supera o legado ($LEGADO)."
             exit 1
           fi
 
           {
             echo "nome=$NOME"
             echo "codigo=$CODIGO"
-            echo "sha=${GITHUB_SHA}"
+            echo "sha=$GITHUB_SHA"
+            echo "dry=$DRY"
           } >> "$GITHUB_OUTPUT"
-          echo "✅ Release $NOME (versionCode $CODIGO) a partir de ${GITHUB_SHA}"
+          echo "✅ $NOME (versionCode $CODIGO) de $GITHUB_SHA — dry-run: $DRY"
 
       - name: 🎯 Resolver a faixa da Play
+        # Variável de repositório PLAY_TRACK (sem commit para trocar). O
+        # identificador é o da URL da Play Console (.../tracks/<nome>).
         id: faixa
-        # A faixa vive FORA do YAML (Settings → Secrets and variables →
-        # Actions → Variables → PLAY_TRACK), porque mudar de faixa é
-        # decisão de produto e não deve exigir commit. Nomes da Play:
-        # `internal`, `alpha` (o Closed testing original), `beta` (Open
-        # testing) ou o identificador de uma faixa fechada criada por você
-        # — é o que aparece na URL da Play Console em .../tracks/<nome>.
         env:
           INPUT_FAIXA: ${{ inputs.faixa }}
           VAR_FAIXA: ${{ vars.PLAY_TRACK }}
         run: |
           FAIXA="${INPUT_FAIXA:-$VAR_FAIXA}"
           if [ -z "$FAIXA" ]; then
-            echo "::warning::PLAY_TRACK vazio (não é uma *variável* de repositório, ou tem outro nome) — caindo em 'internal'. Se você quer outra faixa, confira Settings → Secrets and variables → Actions → aba VARIABLES."
+            echo "::warning::PLAY_TRACK vazio — usando 'internal'. Confira Settings → Secrets and variables → Actions → Variables."
             FAIXA="internal"
-          elif [ -n "$INPUT_FAIXA" ]; then
-            echo "Faixa pelo input do botão Run workflow: '$FAIXA'."
-          else
-            echo "Faixa pela variável PLAY_TRACK: '$FAIXA'."
           fi
-
-          # Rejeita só o que quebraria a chamada: vazio (tratado acima),
-          # espaços ou quebras de linha. Acento é permitido — o identificador
-          # da faixa fechada pode ser "Pré-produção", com é/ç/ã, e a API da
-          # Play o aceita como está.
           case "$FAIXA" in
             *[[:space:]]*)
-              echo "::error::Faixa '$FAIXA' tem espaço ou quebra de linha — o identificador não pode ter."
-              exit 1
-              ;;
+              echo "::error::Faixa '$FAIXA' tem espaço ou quebra de linha."
+              exit 1 ;;
+            production)
+              echo "::error::Produção não passa por aqui — a promoção é manual, na Play Console."
+              exit 1 ;;
           esac
-
-          # A service account não tem permissão de produção (ver
-          # docs/PLAY_SERVICE_ACCOUNT.md); esta guarda existe para o erro
-          # falhar aqui, com mensagem clara, e não depois de 20 min de build.
-          if [ "$FAIXA" = "production" ]; then
-            echo "::error::Publicar direto em produção não passa por aqui — a promoção é manual, na Play Console."
-            exit 1
-          fi
-
           echo "nome=$FAIXA" >> "$GITHUB_OUTPUT"
           echo "✅ AAB irá para a faixa '$FAIXA'."
 
@@ -230,27 +172,18 @@ jobs:
             [ -z "$PLAY_SA" ] && faltando="$faltando PLAY_SERVICE_ACCOUNT_JSON"
           fi
           if [ -n "$faltando" ]; then
-            echo "::error::Secrets ausentes:$faltando — configure antes de publicar (docs/PLAY_SERVICE_ACCOUNT.md para o da Play)."
+            echo "::error::Secrets ausentes:$faltando (docs/PLAY_SERVICE_ACCOUNT.md para o da Play)."
             exit 1
           fi
-          # O contexto `secrets` NÃO existe em `if:` de step — só `env` e
-          # `steps`. Por isso a presença do secret da Play sai daqui como
-          # output, e o passo seguinte decide por ele.
+          # `secrets` não existe em `if:` de step — sai como output.
           if [ -n "$PLAY_SA" ]; then
             echo "tem_play=true" >> "$GITHUB_OUTPUT"
           else
             echo "tem_play=false" >> "$GITHUB_OUTPUT"
           fi
-          echo "Secrets presentes."
 
       - name: 🔎 A faixa existe mesmo na Play?
-        # O identificador de uma faixa fechada criada à mão não é o rótulo
-        # da tela — errar é fácil. Sem esta conferência o erro só apareceria
-        # no upload, que roda DEPOIS do deploy do site: produção teria
-        # mudado e o app não. Aqui morre antes de qualquer build.
-        #
-        # Roda também no dry-run (é o que faz o dry-run realmente provar a
-        # faixa); só é pulada se o secret da Play ainda não existir.
+        # Identificador errado morre aqui (~20s), não depois de 10 min de build.
         if: steps.secrets.outputs.tem_play == 'true'
         env:
           PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
@@ -260,353 +193,78 @@ jobs:
           pip install --quiet --disable-pip-version-check google-auth
           python3 scripts/ci/conferir_faixa_play.py
 
-  # ────────────────────────────────────────────────────────────────────
-  # O mesmo gate do branch-validate, BLOQUEANTE, no commit exato da tag.
-  # Redundante quando a tag aponta para uma main verde — e é essa
-  # redundância que protege contra tag criada num commit antigo ou nunca
-  # validado.
-  # ────────────────────────────────────────────────────────────────────
+  # Gate e builds correm em PARALELO; nada publica sem os três verdes.
   validar:
-    name: 🧪 Gate de qualidade (bloqueante)
+    name: 🧪 Gate de qualidade
     needs: preparar
     runs-on: ubuntu-latest
-
     steps:
-      - name: 📥 Checkout repository
+      - name: 📥 Checkout
         uses: actions/checkout@v4
         with:
           ref: ${{ needs.preparar.outputs.sha }}
+          persist-credentials: false
+      - uses: ./.github/actions/credenciais-app
+      - uses: ./.github/actions/setup-flutter
+      - uses: ./.github/actions/gate
 
-      - name: 🔐 Credential stubs (analyze/teste não usam APIs reais)
-        uses: ./.github/actions/credenciais-app
-
-      - name: 🛠️ Setup Flutter (pinado)
-        uses: ./.github/actions/setup-flutter
-
-      - name: 🧭 Analyze (bloqueante em erros/warnings)
-        run: flutter analyze --no-fatal-infos
-
-      - name: 🧪 Suíte completa (bloqueante — sem || echo)
-        run: flutter test
-
-      - name: 🧪 As páginas legais do site vêm dos documentos (Node)
-        # Mesmo gate do branch-validate, repetido aqui porque ESTE workflow é
-        # o que publica grimoriodebolso.app. A montagem já se recusa a
-        # escrever uma página que diga que a nuvem é do Premium
-        # (scripts/gerar_paginas_legais.mjs confere antes de gravar), mas essa
-        # recusa só cobre a frase; a prova de que a página inteira é o
-        # documento está no teste, e numa publicação de produção ela tem de
-        # correr. Sem dependência nova: o runner já traz Node.
-        run: node test/paginas_legais_site_test.mjs
-
-      - name: 🧪 Redirecionamento do QR (Node)
-        # O `/baixar` é uma Cloudflare Pages Function: roda no servidor, e
-        # `flutter test` nunca chega nele. Um QR já impresso não se corrige,
-        # então um destino errado só apareceria depois do cartaz pronto — daí
-        # este gate. O runner já traz Node.
-        run: node test/redirecionamento_qr_test.mjs
-
-      - name: 🧪 Service worker (Node)
-        # O sw.js é gerado na montagem e roda dentro do navegador: `flutter
-        # test` nunca chega nele, e o que ele protege só aparece sem rede, no
-        # celular de alguém. O teste roda o gerador contra um build falso e o
-        # sw.js gerado num vm com dublês de caches e fetch. O runner já traz
-        # Node.
-        run: node test/service_worker_test.mjs
-
-      - name: 🔤 ARB key parity
-        run: bash scripts/check_arb_sync.sh
-
-      - name: 🔧 Garantir ripgrep (o scanner de i18n depende dele)
-        env:
-          RIPGREP_VERSAO: 14.1.1
-        run: |
-          if command -v rg >/dev/null; then
-            echo "ripgrep já presente: $(rg --version | head -1)"
-            exit 0
-          fi
-          destino="$RUNNER_TEMP/ripgrep"
-          mkdir -p "$destino"
-          url="https://github.com/BurntSushi/ripgrep/releases/download/${RIPGREP_VERSAO}/ripgrep-${RIPGREP_VERSAO}-x86_64-unknown-linux-musl.tar.gz"
-          curl -sSfL --retry 3 --retry-delay 2 "$url" \
-            | tar xz --strip-components=1 -C "$destino"
-          "$destino/rg" --version
-          echo "$destino" >> "$GITHUB_PATH"
-
-      - name: 🔎 Hardcoded PT scan (bloqueante)
-        run: bash scripts/check_hardcoded_pt.sh
-
-  # ────────────────────────────────────────────────────────────────────
-  # APK e AAB em PARALELO, um runner para cada.
-  #
-  # Eram sequenciais no mesmo job (o appbundle reaproveitava o cache Gradle
-  # do apk). Em paralelo paga-se esse cache duas vezes, e em troca o tempo
-  # de parede cai de ~20 min para ~10: numa publicação, a espera custa mais
-  # que o minuto de runner.
-  #
-  # Matrix em vez de dois jobs copiados: a receita de build (a lista longa
-  # de --dart-define) vive num lugar só. Um define que entrasse em um e não
-  # no outro produziria dois binários diferentes da MESMA versão — o tipo
-  # de divergência que não aparece em teste nenhum.
-  #
-  # fail-fast: false de propósito: se um falhar, ainda interessa saber se o
-  # outro passou. "Quebrou o Android" e "quebrou só o empacotamento do AAB"
-  # são diagnósticos diferentes.
-  # ────────────────────────────────────────────────────────────────────
+  # APK e AAB em runners separados (~10 min em vez de ~20). fail-fast: false
+  # para um diagnóstico não esconder o outro.
   build-android:
     name: 🤖 Build Android (${{ matrix.formato }})
-    needs: [preparar, validar]
+    needs: preparar
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         formato: [apk, aab]
-
     steps:
-      - name: 📥 Checkout repository
+      - name: 📥 Checkout
         uses: actions/checkout@v4
         with:
           ref: ${{ needs.preparar.outputs.sha }}
+          persist-credentials: false
 
-      - name: 🧹 Free runner disk space
-        run: |
-          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/share/boost
-          sudo apt-get clean
-
-      - name: 🔐 Credenciais do app (sem chaves de IA — o Android fala com a função)
-        # Etapa 5 de docs/CHAVES_DE_IA.md: com IA_PELO_SERVIDOR=true o Android
-        # também passa pela Edge Function `ia`, então as chaves da Groq/Gemini
-        # NÃO entram mais no APK/AAB. Os stubs vazios mantêm o código
-        # compilando; o gate depois do build falha se alguma reaparecer.
-        uses: ./.github/actions/credenciais-app
+      - uses: ./.github/actions/credenciais-app
         with:
           google-services-json: ${{ secrets.GOOGLE_SERVICES_JSON }}
 
-      - name: 🛠️ Setup Flutter (pinado)
-        uses: ./.github/actions/setup-flutter
+      - uses: ./.github/actions/setup-flutter
 
-      - name: 🔑 Keystore de release (obrigatório)
-        uses: ./.github/actions/keystore-android
+      - name: 🏗️ Build assinado
+        id: build
+        uses: ./.github/actions/build-android
         with:
+          formato: ${{ matrix.formato }}
+          build-name: ${{ needs.preparar.outputs.version_name }}
+          build-number: ${{ needs.preparar.outputs.version_code }}
           keystore-base64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
           key-alias: ${{ secrets.ANDROID_KEY_ALIAS }}
           key-password: ${{ secrets.ANDROID_KEY_PASSWORD }}
           store-password: ${{ secrets.ANDROID_STORE_PASSWORD }}
           keystore-type: ${{ secrets.ANDROID_KEYSTORE_TYPE || 'JKS' }}
+          supabase-url: ${{ vars.SUPABASE_URL || secrets.SUPABASE_URL }}
+          supabase-anon-key: ${{ vars.SUPABASE_ANON_KEY || secrets.SUPABASE_ANON_KEY }}
+          revenuecat-android-key: ${{ secrets.REVENUECAT_ANDROID_KEY }}
+          revenuecat-ios-key: ${{ secrets.REVENUECAT_IOS_KEY }}
+          admin-email: ${{ secrets.ADMIN_EMAIL }}
+          admin-password: ${{ secrets.ADMIN_PASSWORD }}
+          admob-android-interstitial-id: ${{ secrets.ADMOB_ANDROID_INTERSTITIAL_ID }}
+          turnstile-site-key: ${{ secrets.TURNSTILE_SITE_KEY }}
 
-      - name: 🏗️ Build ${{ matrix.formato }}
-        # Secrets entram via env e expandem entre aspas: valores com
-        # caracteres especiais de shell não quebram o script nem vazam.
-        env:
-          ALVO: ${{ matrix.formato == 'apk' && 'apk' || 'appbundle' }}
-          SUPABASE_URL: ${{ vars.SUPABASE_URL || secrets.SUPABASE_URL }}
-          SUPABASE_ANON_KEY: ${{ vars.SUPABASE_ANON_KEY || secrets.SUPABASE_ANON_KEY }}
-          REVENUECAT_ANDROID_KEY: ${{ secrets.REVENUECAT_ANDROID_KEY }}
-          REVENUECAT_IOS_KEY: ${{ secrets.REVENUECAT_IOS_KEY }}
-          ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
-          ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
-          ADMOB_ANDROID_INTERSTITIAL_ID: ${{ secrets.ADMOB_ANDROID_INTERSTITIAL_ID }}
-          TURNSTILE_SITE_KEY: ${{ secrets.TURNSTILE_SITE_KEY }}
-          NOME: ${{ needs.preparar.outputs.version_name }}
-          CODIGO: ${{ needs.preparar.outputs.version_code }}
-        run: |
-          # Sem o secret do AdMob, NÃO passa o define — o app usa o id de
-          # teste do Google (um define vazio derrubaria os anúncios).
-          ADMOB_FLAG=""
-          if [ -n "$ADMOB_ANDROID_INTERSTITIAL_ID" ]; then
-            ADMOB_FLAG="--dart-define=ADMOB_ANDROID_INTERSTITIAL_ID=$ADMOB_ANDROID_INTERSTITIAL_ID"
-          fi
-          # Trava: o captcha está EXIGIDO no servidor (Supabase →
-          # Authentication → Attack Protection, Turnstile, conferido em
-          # 23/08/2026). Com ele ligado lá, um app compilado sem a site key
-          # não sabe produzir o token — e o Supabase recusa 100% dos
-          # cadastros e das entradas por e-mail. Publicar assim é publicar
-          # um app onde ninguém consegue entrar.
-          #
-          # Antes esta esteira apenas omitia o define quando o secret
-          # faltava. Isso era correto ENQUANTO a exigência do servidor
-          # estava desligada; hoje é a receita de um release morto.
-          if [ -z "$TURNSTILE_SITE_KEY" ]; then
-            echo "::error::TURNSTILE_SITE_KEY vazio e o captcha está exigido no Supabase — este build não conseguiria cadastrar nem entrar ninguém. Cadastre o secret (Cloudflare Turnstile → site key) ou desligue Attack Protection no painel antes de publicar."
-            exit 1
-          fi
-          CAPTCHA_FLAG="--dart-define=TURNSTILE_SITE_KEY=$TURNSTILE_SITE_KEY"
-          DEFINES=(
-            --build-name="$NOME"
-            --build-number="$CODIGO"
-            --dart-define=SUPABASE_URL="$SUPABASE_URL"
-            --dart-define=SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY"
-            --dart-define=REVENUECAT_ANDROID_KEY="$REVENUECAT_ANDROID_KEY"
-            --dart-define=REVENUECAT_IOS_KEY="$REVENUECAT_IOS_KEY"
-            --dart-define=ADMIN_EMAIL="$ADMIN_EMAIL"
-            --dart-define=ADMIN_PASSWORD="$ADMIN_PASSWORD"
-            --dart-define=IA_PELO_SERVIDOR=true
-          )
-          flutter build "$ALVO" --release "${DEFINES[@]}" $ADMOB_FLAG $CAPTCHA_FLAG
-
-      - name: 🔒 Nenhuma chave de IA dentro do APK/AAB
-        # Etapa 5 de docs/CHAVES_DE_IA.md. O Android também fala com a Edge
-        # Function `ia`, então a chave da Groq/Gemini não pode estar compilada
-        # no snapshot Dart (libapp.so) nem nos assets. Abre cada artefato e
-        # procura os padrões gsk_/AIza — o AOT guarda literais ASCII como
-        # bytes legíveis, então o grep -a os encontra. Lista só o arquivo,
-        # nunca a chave. Zero artefato também é erro (passe vazio não vale).
-        run: |
-          padrao='gsk_[A-Za-z0-9]{20,}|AIza[A-Za-z0-9_-]{30,}'
-          artefatos=$(find build/app/outputs -type f \( -name '*.apk' -o -name '*.aab' \))
-          if [ -z "$artefatos" ]; then
-            echo "::error::Nenhum .apk/.aab em build/app/outputs — o build não produziu artefato."
-            exit 1
-          fi
-          achou=0
-          for art in $artefatos; do
-            dir=$(mktemp -d)
-            unzip -oq "$art" -d "$dir" 'lib/*' 'assets/*' 'base/lib/*' 'base/assets/*' 2>/dev/null || true
-            if grep -rlaE "$padrao" "$dir" >/dev/null 2>&1; then
-              echo "::error::Chave de IA dentro de $art (gsk_/AIza). O Android deve falar com a Edge Function ia — ver docs/CHAVES_DE_IA.md."
-              grep -rlaE "$padrao" "$dir" | sed "s#^$dir/##" | head
-              achou=1
-            fi
-            rm -rf "$dir"
-          done
-          [ "$achou" = "0" ] || exit 1
-          echo "Nenhuma chave de IA nos artefatos Android."
-
-      - name: 🔏 Conferir a assinatura
-        # Assinatura diferente da registrada no Google Cloud quebra o login
-        # Google em produção — e um AAB assinado errado não pode nem chegar
-        # perto da Play. Erro fatal, não aviso de log. Cada job confere o
-        # SEU artefato: nenhum dos dois sai sem passar por aqui.
-        #
-        # DUAS ferramentas, de propósito. O APK de release sai só com v2/v3
-        # (o v1/JAR fica desligado por padrão com AGP >= 8 e minSdk >= 24),
-        # e `keytool -printcert -jarfile` só lê o v1 — daí a leitura vinha
-        # vazia e o release parava aqui. O apksigner lê v2/v3 e é a
-        # ferramenta certa para APK. O AAB tem assinatura JAR (v1), que o
-        # keytool lê bem — e o apksigner nem verifica bundle. Por isso cada
-        # formato usa a sua.
-        env:
-          FORMATO: ${{ matrix.formato }}
-          ARQUIVO: ${{ matrix.formato == 'apk'
-            && 'build/app/outputs/flutter-apk/app-release.apk'
-            || 'build/app/outputs/bundle/release/app-release.aab' }}
-        run: |
-          if [ "$FORMATO" = "apk" ]; then
-            sdk="${ANDROID_SDK_ROOT:-$ANDROID_HOME}"
-            apksigner=$(find "$sdk/build-tools" -name apksigner 2>/dev/null \
-              | sort -V | tail -1)
-            if [ -z "$apksigner" ]; then
-              echo "::error::apksigner não encontrado em $sdk/build-tools."
-              exit 1
-            fi
-            bruto=$("$apksigner" verify --print-certs "$ARQUIVO" 2>/dev/null \
-              | grep -m1 'SHA-1 digest:' | sed 's/.*digest: *//')
-          else
-            bruto=$(keytool -printcert -jarfile "$ARQUIVO" 2>/dev/null \
-              | grep -m1 'SHA1:' | sed 's/.*SHA1: *//')
-          fi
-
-          # Normaliza os dois lados: sem espaço, sem ':' e maiúsculo — o
-          # keytool imprime com dois-pontos, o apksigner sem.
-          norm() { echo "$1" | tr -d ' :' | tr 'a-f' 'A-F'; }
-          sha1=$(norm "$bruto")
-          esperado=$(norm "$SHA1_ESPERADO")
-
-          if [ -z "$sha1" ]; then
-            echo "::error::Não foi possível ler a assinatura de $ARQUIVO."
-            exit 1
-          fi
-          if [ "$sha1" != "$esperado" ]; then
-            echo "::error::$ARQUIVO assinado com SHA-1 $sha1, esperado $esperado."
-            exit 1
-          fi
-          echo "✅ $ARQUIVO assinado com o keystore esperado."
-
-          # O keystore ser o certo NÃO basta para o login com o Google. O
-          # Google não olha o keystore: olha se ESTA impressão digital está
-          # registrada no cliente OAuth Android do projeto — e o que o app
-          # carrega dentro é o android/app/google-services.json.
-          #
-          # As duas constantes do repositório se contradizem hoje: o
-          # SHA1_ESPERADO acima é 54:84:… e o único certificate_hash do
-          # google-services.json efetivo é 8b:d7:… Sem esta conferência, um
-          # APK desta pipeline instalado direto abre a tela do Google e
-          # volta com "ApiException: 10", sem nada acusando — nem teste, nem
-          # build. Foi assim que o defeito chegou até aqui.
-          #
-          # (Existe um SEGUNDO google-services.json em android/, divergente
-          # deste e NÃO lido pelo Gradle. Só android/app/ vale.)
-          registrados=$(jq -r '
-            [ .client[]?.oauth_client[]?.android_info?.certificate_hash // empty ] | .[]
-          ' android/app/google-services.json 2>/dev/null | tr -d ' :' | tr 'a-f' 'A-F')
-
-          if printf '%s\n' "$registrados" | grep -qx "$sha1"; then
-            echo "✅ SHA-1 registrado no google-services.json: o login com o Google reconhece este binário."
-          elif [ "$FORMATO" = "apk" ]; then
-            # O APK é o binário que se instala direto — é ele que o próprio
-            # checklist de docs/GOOGLE_SIGNIN_SETUP.md manda instalar para
-            # testar o login. Se a digital dele não está registrada, o login
-            # está quebrado NESTE artefato, com certeza.
-            #
-            # AVISO, não erro fatal — e a razão é o alcance de cada coisa.
-            # Isto não diz nada sobre a Play (o AAB é re-assinado por ela) nem
-            # sobre o site: é um defeito SÓ do APK, que a própria pipeline
-            # trata como anexo opcional ("o APK é opcional", na publicação).
-            # Como erro fatal, ele matava o job inteiro ANTES do empacotar, e
-            # o APK deixava de existir — de 23/08 a 28/08 nenhum release teve
-            # anexo e todo run ficou vermelho, sem que isso significasse nada
-            # de errado com o que foi publicado.
-            #
-            # Para não repetir o defeito que esta trava nasceu para pegar (um
-            # APK com login do Google quebrado passando despercebido), o
-            # arquivo sai CARIMBADO no nome — quem baixar lê o problema antes
-            # de instalar — e o aviso vai também para o resumo do run.
-            echo "APK_SEM_LOGIN_GOOGLE=1" >> "$GITHUB_ENV"
-            echo "::warning::O login com o Google vai falhar (ApiException: 10) em quem instalar este APK: a SHA-1 $sha1 não está registrada. O APK sai marcado no nome; AAB, Play e site não são afetados."
-            {
-              echo "### ⚠️ APK sem login com o Google"
-              echo
-              echo "A SHA-1 \`$sha1\` (keystore de release) não está em"
-              echo "\`android/app/google-services.json\` (registradas:"
-              echo "\`$(printf '%s ' $registrados)\`). Quem instalar este APK direto"
-              echo "vai ver *ApiException: 10* ao entrar com o Google."
-              echo
-              echo "**Conserto:** Google Cloud → Credentials → client OAuth *Android*"
-              echo "do pacote \`com.grimoriodebolso.app\` → adicione esta SHA-1;"
-              echo "baixe o \`google-services.json\` de novo e substitua"
-              echo "\`android/app/google-services.json\`."
-              echo
-              echo "Não afeta a Play (o AAB é re-assinado por ela) nem o site."
-            } >> "$GITHUB_STEP_SUMMARY"
-          else
-            # No AAB isto pode ser normal: a Play re-assina com a chave dela
-            # (Play App Signing), e a digital que precisa estar registrada é
-            # a de Play Console → Test and release → App integrity — que o
-            # repositório não tem como conhecer. Por isso aqui é aviso.
-            echo "::warning::SHA-1 $sha1 (chave de upload) não está em android/app/google-services.json (registradas: $(printf '%s ' $registrados)). Para a Play isso pode ser esperado — confirme que a SHA-1 de *App integrity* está registrada no client OAuth Android."
-          fi
-
-      - name: 📦 Empacotar artefato
-        # Os símbolos saem só do AAB: os dois builds os produzem, e com
-        # nomes iguais eles colidiriam ao juntar os artifacts na publicação.
-        # É o do AAB que interessa — é o binário que vai para a Play.
+      - name: 📦 Empacotar
+        # Símbolos só do AAB (é o binário da Play; os dois colidiriam no nome).
+        # APK sem login Google sai carimbado no nome.
         env:
           NOME: ${{ needs.preparar.outputs.version_name }}
           CODIGO: ${{ needs.preparar.outputs.version_code }}
           FORMATO: ${{ matrix.formato }}
-          ARQUIVO: ${{ matrix.formato == 'apk'
-            && 'build/app/outputs/flutter-apk/app-release.apk'
-            || 'build/app/outputs/bundle/release/app-release.aab' }}
+          ARQUIVO: ${{ steps.build.outputs.arquivo }}
+          SEM_LOGIN: ${{ steps.build.outputs.sem-login-google }}
         run: |
           mkdir -p release-files
-          # Carimbo herdado da conferência acima: um APK cuja digital não
-          # está registrada no google-services.json entrega o app com o
-          # login do Google quebrado. Ele continua sendo gerado (serve para
-          # testar todo o resto), mas diz isso no próprio nome.
           SUFIXO=''
-          if [ "${APK_SEM_LOGIN_GOOGLE:-}" = "1" ]; then
-            SUFIXO='-SEM-LOGIN-GOOGLE'
-          fi
+          if [ "$SEM_LOGIN" = "true" ]; then SUFIXO='-SEM-LOGIN-GOOGLE'; fi
           cp "$ARQUIVO" "release-files/grimorio-de-bolso-${NOME}+${CODIGO}${SUFIXO}.${FORMATO}"
           if [ "$FORMATO" = "aab" ] && [ -d build/app/outputs/symbols ]; then
             (cd build/app/outputs/symbols && zip -qr - .) \
@@ -614,240 +272,136 @@ jobs:
           fi
           ls -la release-files/
 
-      - name: 📤 Upload do artefato Android
+      - name: 📤 Upload
         uses: actions/upload-artifact@v4
         with:
           name: android-release-${{ matrix.formato }}
           path: release-files/*
           retention-days: 30
 
-  # ────────────────────────────────────────────────────────────────────
-  # O site do MESMO commit — nada publica sem Android E web verdes juntos:
-  # uma correção de APK que quebrasse o webapp morre aqui, não em produção.
-  # ────────────────────────────────────────────────────────────────────
   build-web:
-    name: 🌐 Build web (release)
-    needs: [preparar, validar]
+    name: 🌐 Build web (produção)
+    needs: preparar
     runs-on: ubuntu-latest
-
     steps:
-      - name: 📥 Checkout repository
+      - name: 📥 Checkout
         uses: actions/checkout@v4
         with:
           ref: ${{ needs.preparar.outputs.sha }}
+          persist-credentials: false
 
-      - name: 🔐 Credenciais do app (sem chaves de IA — a web fala com a função)
-        # Etapa 4 de docs/CHAVES_DE_IA.md: com IA_PELO_SERVIDOR=true a IA na
-        # web passa pela Edge Function `ia`, então as chaves da Groq/Gemini
-        # NÃO entram mais neste bundle. Os stubs vazios mantêm o código
-        # compilando; o gate depois do build falha se alguma reaparecer.
-        uses: ./.github/actions/credenciais-app
+      - uses: ./.github/actions/credenciais-app
 
-      - name: 🛠️ Setup Flutter (pinado)
-        uses: ./.github/actions/setup-flutter
+      - uses: ./.github/actions/setup-flutter
         with:
           com-java: 'false'
 
-      - name: 🏗️ Build web (release)
-        # ADMIN_* NÃO entra: o bundle web é público.
-        env:
-          # A versão da tag TAMBÉM no web: o build Android sempre a recebeu
-          # (--build-name/--build-number) e o web não — então a tela "Sobre"
-          # do site publicado mostrava para sempre a baseline morta do
-          # pubspec (2.0.25+126), e "qual versão está no ar?" só se
-          # respondia pelo version.txt.
-          NOME: ${{ needs.preparar.outputs.version_name }}
-          CODIGO: ${{ needs.preparar.outputs.version_code }}
-          SUPABASE_URL: ${{ vars.SUPABASE_URL || secrets.SUPABASE_URL }}
-          SUPABASE_ANON_KEY: ${{ vars.SUPABASE_ANON_KEY || secrets.SUPABASE_ANON_KEY }}
-          TURNSTILE_SITE_KEY: ${{ secrets.TURNSTILE_SITE_KEY }}
-          # Produção usa a chave REAL do RevenueCat Billing (rcb_): cobra de
-          # verdade. A sandbox (rcb_sb_) fica só no branch-validate.yml
-          # (staging/prévias). Simétrico à trava de lá.
-          REVENUECAT_WEB_KEY: ${{ secrets.REVENUECAT_WEB_KEY }}
-          # ID do cliente OAuth *Web* do Google (o mesmo do provedor Google
-          # no Supabase). Com ele, a entrada com o Google acontece dentro da
-          # página e a aba nunca vai para accounts.google.com. Sem ele, o app
-          # continua no redirecionamento de sempre — não é obrigatório.
-          GOOGLE_WEB_CLIENT_ID: ${{ secrets.GOOGLE_WEB_CLIENT_ID }}
-        run: |
-          # Trava: em produção a chave web NÃO pode ser sandbox. Se veio uma
-          # rcb_sb_ (ex.: a de teste por engano), para aqui — senão o site
-          # de produção aceitaria só cartão de teste e ninguém conseguiria
-          # pagar de verdade.
-          if printf '%s' "$REVENUECAT_WEB_KEY" | grep -q '^rcb_sb_'; then
-            echo "::error::REVENUECAT_WEB_KEY é uma chave sandbox (rcb_sb_). A produção precisa da chave real (rcb_)."
-            exit 1
-          fi
-
-          # Trava: sem GOOGLE_WEB_CLIENT_ID a entrada com o Google DENTRO da
-          # página não existe, e o app volta ao redirecionamento — que deixa
-          # accounts.google.com no histórico da aba e faz o voltar sair do
-          # app. Era o defeito que originou a feature.
-          #
-          # O que torna isso pior do que uma falha comum: o build passa, o
-          # site publica, tudo parece certo, e o único sintoma é um botão de
-          # voltar se comportando mal. Ninguém liga uma coisa à outra. Por
-          # isso a produção PARA aqui em vez de avisar.
-          # Mesma trava do build Android, pelo mesmo motivo: o captcha é
-          # exigido no servidor, e o site sem a site key compilada recusaria
-          # todo cadastro e toda entrada por e-mail.
-          if [ -z "$TURNSTILE_SITE_KEY" ]; then
-            echo "::error::TURNSTILE_SITE_KEY vazio e o captcha está exigido no Supabase — o site publicaria sem conseguir cadastrar nem entrar ninguém."
-            exit 1
-          fi
-
-          if [ -z "$GOOGLE_WEB_CLIENT_ID" ]; then
-            echo "::error::GOOGLE_WEB_CLIENT_ID vazio. Cadastre o secret (Google Cloud → Credentials → o client OAuth *Web*) — sem ele a produção publica com o login antigo, e o voltar volta a sair do app."
-            exit 1
-          fi
-          # Forma, não só presença: o valor certo é o Web client ID, não o
-          # id do client Android nem o secret. Um valor de outro formato
-          # falharia só no navegador da usuária, com origin_mismatch.
-          case "$GOOGLE_WEB_CLIENT_ID" in
-            *.apps.googleusercontent.com) ;;
-            *)
-              echo "::error::GOOGLE_WEB_CLIENT_ID não parece um client ID do Google (esperado terminar em .apps.googleusercontent.com)."
-              exit 1
-              ;;
-          esac
-          # O service worker do Flutter foi removido na 3.47 (o que sobra é
-          # um stub que se desregistra); o nosso sw.js, gerado na montagem, o
-          # substitui — por isso o Flutter não escreve nenhum. E o CanvasKit
-          # local, em vez da CDN do Google, é o que cabe no cache offline.
-          # scripts/assemble_site.sh confere os dois e para sem eles.
-          flutter build web --release --no-wasm-dry-run \
-            --pwa-strategy=none \
-            --no-web-resources-cdn \
-            --build-name="$NOME" \
-            --build-number="$CODIGO" \
-            --dart-define=SUPABASE_URL="$SUPABASE_URL" \
-            --dart-define=SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY" \
-            --dart-define=TURNSTILE_SITE_KEY="$TURNSTILE_SITE_KEY" \
-            --dart-define=REVENUECAT_WEB_KEY="$REVENUECAT_WEB_KEY" \
-            --dart-define=IA_PELO_SERVIDOR=true \
-            --dart-define=GOOGLE_WEB_CLIENT_ID="$GOOGLE_WEB_CLIENT_ID"
-
-      - name: 🧩 Montar publicação (app na raiz, páginas estáticas ao lado)
-        run: bash scripts/assemble_site.sh public
-
-      - name: 🔒 Nenhuma chave de IA no bundle web
-        # Etapa 4 de docs/CHAVES_DE_IA.md. Com IA_PELO_SERVIDOR=true a chave
-        # mora na Edge Function `ia`; se uma reaparecer no JavaScript
-        # publicado, é regressão de segurança e o build para aqui. Padrões:
-        # Groq (gsk_…) e Google AI (AIza…). Não há Firebase no projeto, logo
-        # AIza não tem uso legítimo no bundle. Só lista ARQUIVOS, nunca a
-        # chave, para o log do CI não virar mais um lugar onde ela aparece.
-        run: |
-          padrao='gsk_[A-Za-z0-9]{20,}|AIza[A-Za-z0-9_-]{30,}'
-          if grep -rqE "$padrao" public/; then
-            echo "::error::Chave de IA encontrada no bundle web (gsk_/AIza). A IA na web deve passar pela Edge Function ia — ver docs/CHAVES_DE_IA.md."
-            grep -rlE "$padrao" public/ | head
-            exit 1
-          fi
-          echo "Nenhuma chave de IA no bundle."
-
-      - name: 🔍 A Leitura do Ciclo está DENTRO do bundle?
-        # Verificação de fim de linha: não "o código está no arquivo", mas
-        # "os textos da feature estão no JavaScript que o navegador baixa".
-        #
-        # SÓ TRECHOS ASCII. O dart2js emite JS ASCII-safe: acento vira
-        # escape \u00e1, então procurar os bytes UTF-8 de "grimório" dá
-        # falso negativo — foi assim que este check acusou ausência de uma
-        # feature que estava lá. O controle abaixo existe para essa
-        # armadilha nunca mais passar por diagnóstico de produto.
-        run: |
-          js=$(find public -name '*.js' -type f)
-          if [ -z "$js" ]; then
-            echo "::error::Nenhum .js em public/ — a publicação não foi montada."
-            exit 1
-          fi
-
-          # Controle: string acentuada que existe no app desde sempre. Se
-          # ELA não for encontrada, o problema é o método de busca, não a
-          # feature — e o check diz isso em vez de acusar o inocente.
-          if grep -rqF "Evolução Mágica" $js 2>/dev/null; then
-            echo "ℹ️  Controle acentuado encontrado: acentos estão literais no bundle."
-          else
-            echo "ℹ️  Controle acentuado NÃO encontrado: o bundle escapa não-ASCII."
-            echo "   (esperado no dart2js; por isso as sondas abaixo são ASCII)"
-          fi
-
-          faltando=0
-          procurar() {
-            if grep -rqF "$1" $js 2>/dev/null; then
-              echo "  ✅ $1"
-            else
-              echo "  ❌ AUSENTE: $1"
-              faltando=1
-            fi
-          }
-          echo "Sondas da Leitura do Ciclo (ASCII):"
-          procurar "Leitura do Ciclo"
-          procurar "Leitura da Semana"
-          procurar "Gerar minha leitura"
-          procurar "Abrir minha leitura"
-          procurar "Usar meus sonhos"
-          procurar "tecida a partir do que"
-          procurar "Conhecer a Leitura do Ciclo"
-
-          if [ "$faltando" = "1" ]; then
-            echo "::error::Textos da Leitura do Ciclo ausentes do bundle publicado — investigar compilação condicional, tree-shaking ou build de origem errada."
-            exit 1
-          fi
-          echo "A feature está no bundle."
-
-      - name: 🔖 Carimbo de versão (public/version.txt)
-        # Endereço de deploy é hash e todo build parece igual por fora. Sem
-        # carimbo, "por que a novidade não aparece?" só se responde
-        # adivinhando qual build está servindo aquela aba. Com ele, é abrir
-        # <endereço>/version.txt e ler o commit.
-        run: |
-          {
-            echo "commit:   ${GITHUB_SHA}"
-            echo "branch:   ${GITHUB_REF_NAME}"
-            echo "run:      ${GITHUB_RUN_NUMBER} (${GITHUB_RUN_ID})"
-            echo "buildado: $(date -u +'%Y-%m-%dT%H:%M:%SZ')"
-          } > public/version.txt
-          cat public/version.txt
-
-      - name: 🛡️ Garantir que nenhum admin foi embutido
-        run: |
-          if grep -rqE "ADMIN_(EMAIL|PASSWORD)=" public/main.dart.js 2>/dev/null; then
-            echo "::error::Credenciais de admin encontradas no bundle web — publicação abortada."
-            exit 1
-          fi
-          echo "Bundle sem credenciais de admin."
+      - uses: ./.github/actions/build-web
+        with:
+          ambiente: producao
+          build-name: ${{ needs.preparar.outputs.version_name }}
+          build-number: ${{ needs.preparar.outputs.version_code }}
+          supabase-url: ${{ vars.SUPABASE_URL || secrets.SUPABASE_URL }}
+          supabase-anon-key: ${{ vars.SUPABASE_ANON_KEY || secrets.SUPABASE_ANON_KEY }}
+          turnstile-site-key: ${{ secrets.TURNSTILE_SITE_KEY }}
+          revenuecat-web-key: ${{ secrets.REVENUECAT_WEB_KEY }}
+          google-web-client-id: ${{ secrets.GOOGLE_WEB_CLIENT_ID }}
 
       - name: 📤 Upload do site
+        # 30 dias: a aprovação do site pode vir bem depois do build.
         uses: actions/upload-artifact@v4
         with:
           name: site-release
           path: public/
-          retention-days: 7
+          retention-days: 30
 
-  # ────────────────────────────────────────────────────────────────────
-  # O ÚNICO job que toca usuários — atrás do environment `production`
-  # (aprovação humana). Ordem: tag → site → Play → GitHub Release, para a
-  # Release ser o registro do que DE FATO foi publicado.
-  # ────────────────────────────────────────────────────────────────────
-  publicar:
-    name: 📣 Publicar (site + Play + Release)
-    # NÃO exige a matrix Android inteira verde. O que vai para a Play é o
-    # AAB; o APK é só anexo da GitHub Release e material de teste local.
-    # Um APK vermelho não pode segurar a publicação do AAB — por isso o
-    # gate real é a PRESENÇA do AAB (passo abaixo), não o resultado do job.
-    # `always()` faz o publicar rodar mesmo com a matrix parcialmente
-    # vermelha; as condições explícitas garantem que gate, site e versão
-    # estejam verdes. Ainda assim ESPERA a matrix terminar (está em needs),
-    # para um APK que só demorou entrar no anexo.
+  # ── Tempo 1: Play (sem aprovação — só testers veem a faixa de teste) ──
+  # Exige gate, AAB e web verdes. O APK é opcional (só anexo da Release).
+  play-interno:
+    name: 🤖 Play (faixa de teste) + Release rascunho
     needs: [preparar, validar, build-android, build-web]
     if: >-
       always() &&
-      needs.preparar.outputs.dry_run != 'true' &&
       needs.preparar.result == 'success' &&
+      needs.preparar.outputs.dry_run == 'false' &&
       needs.validar.result == 'success' &&
       needs.build-web.result == 'success'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GH_REPO: ${{ github.repository }}
+      NOME: ${{ needs.preparar.outputs.version_name }}
+      CODIGO: ${{ needs.preparar.outputs.version_code }}
+      SHA: ${{ needs.preparar.outputs.sha }}
+      FAIXA: ${{ needs.preparar.outputs.faixa }}
+
+    steps:
+      - name: 📥 Baixar os artefatos Android
+        uses: actions/download-artifact@v4
+        with:
+          pattern: android-release-*
+          merge-multiple: true
+          path: release-files
+
+      - name: 🔎 AAB presente? Já foi enviado?
+        # Sem AAB não há o que publicar. A tag nasce logo após o upload, então
+        # ela existir num re-run = versionCode já consumido na Play: pula o upload.
+        id: estado
+        run: |
+          ls -la release-files/
+          if ! ls release-files/*.aab >/dev/null 2>&1; then
+            echo "::error::Nenhum .aab — o build do AAB não entregou."
+            exit 1
+          fi
+          if ! ls release-files/*.apk >/dev/null 2>&1; then
+            echo "::warning::APK ausente — a Release terá só o AAB."
+          fi
+          if gh api "repos/$GH_REPO/git/ref/tags/v$NOME" >/dev/null 2>&1; then
+            echo "Tag v$NOME já existe (re-execução) — upload já feito."
+            echo "enviado=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "enviado=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: 🤖 AAB para a faixa de teste
+        # A service account nem tem permissão de produção (docs/PLAY_SERVICE_ACCOUNT.md).
+        if: steps.estado.outputs.enviado != 'true'
+        uses: r0adkll/upload-google-play@935ef9c68bb393a8e6116b1575626a7f5be3a7fb # v1.1.3
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: com.grimoriodebolso.app
+          releaseFiles: release-files/*.aab
+          track: ${{ needs.preparar.outputs.faixa }}
+          status: completed
+
+      - name: 🏷️ Tag no commit buildado
+        if: steps.estado.outputs.enviado != 'true'
+        run: gh api "repos/$GH_REPO/git/refs" -f ref="refs/tags/v$NOME" -f sha="$SHA"
+
+      - name: 📝 GitHub Release em rascunho
+        run: |
+          if gh release view "v$NOME" >/dev/null 2>&1; then
+            echo "Release v$NOME já existe."
+            exit 0
+          fi
+          gh release create "v$NOME" release-files/* \
+            --draft \
+            --verify-tag \
+            --title "Grimório de Bolso v$NOME" \
+            --generate-notes \
+            --notes "$(printf '%s\n\n%s\n%s\n' \
+              "## v$NOME (versionCode $CODIGO)" \
+              "- 🤖 AAB na faixa **\`$FAIXA\`** da Play — teste e promova na Play Console." \
+              "- 📦 Commit: \`$SHA\`")"
+
+  # ── Tempo 2: site em produção (aprovação do environment `production`) ──
+  # Aprove depois de testar a faixa interna. Rejeitar = site não muda.
+  producao-web:
+    name: 🌐 Site em produção + Release publicada
+    needs: [preparar, play-interno]
+    if: always() && needs.play-interno.result == 'success'
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -856,29 +410,12 @@ jobs:
       url: https://grimoriodebolso.app
 
     steps:
-      - name: 📥 Checkout repository
+      # O checkout traz `functions/` (Pages Functions, ex.: /baixar).
+      - name: 📥 Checkout
         uses: actions/checkout@v4
         with:
           ref: ${{ needs.preparar.outputs.sha }}
-
-      - name: 🏷️ Criar a tag
-        # Só no push de tag ela já existe. No dispatch e no merge do branch
-        # `release` ela nasce AQUI, depois da aprovação — um dry-run ou uma
-        # rejeição não queimam a versão. O push de tag pelo GITHUB_TOKEN não
-        # redispara este workflow.
-        if: github.ref_type != 'tag'
-        env:
-          NOME: ${{ needs.preparar.outputs.version_name }}
-          SHA: ${{ needs.preparar.outputs.sha }}
-        run: |
-          if git rev-parse -q --verify "refs/tags/v$NOME" >/dev/null; then
-            echo "Tag v$NOME já existe (re-execução) — seguindo."
-            exit 0
-          fi
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git tag "v$NOME" "$SHA"
-          git push origin "v$NOME"
+          persist-credentials: false
 
       - name: 📥 Baixar o site
         uses: actions/download-artifact@v4
@@ -886,102 +423,37 @@ jobs:
           name: site-release
           path: public
 
-      - name: 📥 Baixar os artefatos Android
-        # Dois artifacts agora (um por job da matrix); merge-multiple junta
-        # os dois na MESMA pasta, que é o que os passos seguintes esperam:
-        # o upload da Play pega release-files/*.aab e a GitHub Release
-        # anexa release-files/* inteiro.
-        uses: actions/download-artifact@v4
-        with:
-          pattern: android-release-*
-          merge-multiple: true
-          path: release-files
-
-      - name: 🔎 O AAB chegou? (o APK é opcional)
-        # O AAB é o que vai para a Play — sem ele, publicar não faz sentido,
-        # e um upload vazio o r0adkll trataria como "nada a enviar" seguindo
-        # verde. Então AAB ausente é erro fatal. O APK só é anexado à GitHub
-        # Release; se o job dele falhou, a publicação segue sem o anexo, com
-        # um aviso — nunca travando a Play por causa dele.
-        run: |
-          ls -la release-files/
-          if ! ls release-files/*.aab >/dev/null 2>&1; then
-            echo "::error::Nenhum .aab em release-files — o build do AAB não entregou. Sem ele não há o que publicar na Play."
-            exit 1
-          fi
-          if ls release-files/*.apk >/dev/null 2>&1; then
-            echo "✅ AAB presente; APK também (irá anexado à Release)."
-          else
-            echo "::warning::AAB presente, APK ausente — publicando na Play e anexando só o AAB à Release. O APK falhou; a Play não depende dele."
-          fi
-
-      - name: 🔎 Conferir a branch de produção do projeto Cloudflare
-        # Aqui o --branch=main PRECISA significar produção. Divergência é
-        # erro: publicar produção como prévia é exatamente o silêncio que
-        # este desenho existe para matar.
+      - name: 🔎 Production branch do Cloudflare é `main`?
+        # Senão o --branch=main abaixo seria só uma prévia.
         env:
           TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
-          resposta=$(curl -sS --retry 2 \
-            -H "Authorization: Bearer $TOKEN" \
+          atual=$(curl -sS --retry 2 -H "Authorization: Bearer $TOKEN" \
             "https://api.cloudflare.com/client/v4/accounts/$ACCOUNT/pages/projects/grimorio-de-bolso" \
-            || true)
-          atual=$(printf '%s' "$resposta" | jq -r '.result.production_branch // empty')
+            | jq -r '.result.production_branch // empty' || true)
           if [ "$atual" != "main" ]; then
-            echo "::error::Production branch do projeto é '${atual:-ilegível}', não 'main' — este deploy NÃO iria para grimoriodebolso.app. Corrija no painel e re-execute."
+            echo "::error::Production branch do projeto é '${atual:-ilegível}', não 'main'. Corrija no painel e re-execute."
             exit 1
           fi
-          echo "Production branch = main ✓"
 
       - name: 🚀 Site em produção (grimoriodebolso.app)
-        uses: cloudflare/wrangler-action@v3
+        uses: cloudflare/wrangler-action@9acf94ace14e7dc412b076f2c5c20b8ce93c79cd # v3.15.0
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: >-
-            pages deploy public
-            --project-name=grimorio-de-bolso
-            --branch=main
-            --commit-dirty=true
+          command: pages deploy public --project-name=grimorio-de-bolso --branch=main --commit-dirty=true
 
-      - name: 🤖 AAB para a faixa de teste da Play
-        # A faixa vem da variável PLAY_TRACK (ou do input do botão) — ver o
-        # job `preparar`. A promoção faixa-de-teste→produção segue manual,
-        # na Play Console, e a service account nem TEM permissão de
-        # produção (defesa em profundidade; docs/PLAY_SERVICE_ACCOUNT.md).
-        uses: r0adkll/upload-google-play@v1.1.3
-        with:
-          serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
-          packageName: com.grimoriodebolso.app
-          releaseFiles: release-files/*.aab
-          track: ${{ needs.preparar.outputs.faixa }}
-          status: completed
-
-      - name: 🎉 GitHub Release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: v${{ needs.preparar.outputs.version_name }}
-          # target_commitish trava a tag no commit BUILDADO — sem isso a
-          # tag nasceria no HEAD da main do momento, que pode já ter andado
-          # (foi o bug das tags v2.0.22/v2.0.23 no mesmo commit).
-          target_commitish: ${{ needs.preparar.outputs.sha }}
-          name: 'Grimório de Bolso v${{ needs.preparar.outputs.version_name }}'
-          generate_release_notes: true
-          files: release-files/*
-          draft: false
-          prerelease: false
-          body: |
-            ## v${{ needs.preparar.outputs.version_name }} (versionCode ${{ needs.preparar.outputs.version_code }})
-
-            - 🌐 Site publicado: <https://grimoriodebolso.app>
-            - 🤖 AAB já enviado à faixa **`${{ needs.preparar.outputs.faixa }}`** da Play —
-              teste pelo link de opt-in e promova na Play Console quando aprovar.
-            - 📦 Commit: `${{ needs.preparar.outputs.sha }}`
+      - name: 🎉 Publicar a GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          NOME: ${{ needs.preparar.outputs.version_name }}
+        run: gh release edit "v$NOME" --draft=false --latest
 
   resumo:
     name: 📋 Resumo
-    needs: [preparar, validar, build-android, build-web, publicar]
+    needs: [preparar, validar, build-android, build-web, play-interno, producao-web]
     if: always()
     runs-on: ubuntu-latest
     steps:
@@ -990,33 +462,32 @@ jobs:
           NOME: ${{ needs.preparar.outputs.version_name }}
           CODIGO: ${{ needs.preparar.outputs.version_code }}
           SHA: ${{ needs.preparar.outputs.sha }}
+          FAIXA: ${{ needs.preparar.outputs.faixa }}
           DRY: ${{ needs.preparar.outputs.dry_run }}
+          R_PREPARAR: ${{ needs.preparar.result }}
+          R_VALIDAR: ${{ needs.validar.result }}
+          R_ANDROID: ${{ needs.build-android.result }}
+          R_WEB: ${{ needs.build-web.result }}
+          R_PLAY: ${{ needs.play-interno.result }}
+          R_SITE: ${{ needs.producao-web.result }}
         run: |
           {
             if [ "$DRY" = "true" ]; then
               echo "## 🧪 Dry-run do release (nada publicado)"
               echo
-              echo "Validou e buildou tudo no caminho de publicação — sem"
-              echo "criar tag, subir site ou enviar à Play. A versão \`v${NOME}\`"
-              echo "é só a que SERIA usada; ela nasce mesmo no merge do PR de"
-              echo "publicação (main → release)."
+              echo "\`v${NOME}\` é só a versão que SERIA usada. Os APK/AAB assinados estão em *Artifacts*."
             else
               echo "## 🚀 Release v${NOME}"
             fi
             echo
             echo "| Etapa | Status |"
             echo "|---|---|"
-            echo "| Versão e guardas | ${{ needs.preparar.result }} |"
-            echo "| Gate de qualidade | ${{ needs.validar.result }} |"
-            echo "| Build Android | ${{ needs.build-android.result }} |"
-            echo "| Build web | ${{ needs.build-web.result }} |"
-            echo "| Publicação | ${{ needs.publicar.result }} |"
+            echo "| Versão e guardas | $R_PREPARAR |"
+            echo "| Gate de qualidade | $R_VALIDAR |"
+            echo "| Build Android | $R_ANDROID |"
+            echo "| Build web | $R_WEB |"
+            echo "| Play (faixa \`$FAIXA\`) + Release rascunho | $R_PLAY |"
+            echo "| Site em produção + Release publicada | $R_SITE |"
             echo
             echo "versionCode: \`${CODIGO}\` · commit: \`${SHA}\`"
-            if [ "${{ needs.publicar.result }}" = "success" ]; then
-              echo
-              echo "- Site: <https://grimoriodebolso.app>"
-              echo "- Play: faixa **interna** — promover na Play Console"
-              echo "- Release: <https://github.com/${{ github.repository }}/releases/tag/v${NOME}>"
-            fi
           } >> "$GITHUB_STEP_SUMMARY"
