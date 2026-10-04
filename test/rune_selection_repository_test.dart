@@ -4,6 +4,8 @@ import 'dart:math';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:grimorio_de_bolso/core/database/database_helper.dart';
+import 'package:grimorio_de_bolso/core/divination/contexto_da_tiragem.dart';
+import 'package:grimorio_de_bolso/core/divination/regra_da_tiragem.dart';
 import 'package:grimorio_de_bolso/core/database/reading_session_schema.dart';
 import 'package:grimorio_de_bolso/core/services/usage_coordinator.dart';
 import 'package:grimorio_de_bolso/features/runes/data/data_sources/runes_data.dart';
@@ -37,13 +39,35 @@ void main() {
     repo = RuneSelectionRepository(random: Random(42));
   });
 
+  /// Estende o pano e escreve a pergunta em cima dele, que é a ordem nova: o
+  /// pano é de graça e sem pergunta, e ela é escrita enquanto se escolhe.
   Future<RuneSelectionSession> prepare({
     RuneSpreadType spread = RuneSpreadType.threeCast,
     bool premium = false, bool startNew = false, String question = 'My question?',
     int legacyUsed = 0, DateTime? at, String owner = user,
-  }) => repo.prepare(userId: owner, spread: spread, question: question,
-      catalog: runesData, premium: premium, legacyRuneUsed: legacyUsed,
-      freeLimit: 1, startNew: startNew, now: at ?? day);
+  }) async {
+    if (legacyUsed > 0) {
+      // O espelho do AuthProvider semeia o dia antes de qualquer pano.
+      await UsageCoordinator().used(userId: owner, legacyUsed: legacyUsed,
+          category: UsageCoordinator.runes, day: at ?? day);
+    }
+    final aberta = await repo.prepare(userId: owner, spread: spread,
+        catalog: runesData, startNew: startNew, now: at ?? day);
+    if (aberta.isCommitted) return aberta;
+    await repo.atualizarPergunta(
+        userId: owner, sessionId: aberta.id, pergunta: question);
+    return repo.prepare(userId: owner, spread: spread, catalog: runesData,
+        now: at ?? day);
+  }
+
+  /// O contexto que a tela de escolha usa para avisar ANTES da escolha.
+  Future<ContextoDaTiragem> contexto({
+    RuneSpreadType spread = RuneSpreadType.threeCast,
+    int legacyUsed = 0, DateTime? at, String owner = user,
+  }) => ContextoDaTiragemRepository().carregar(userId: owner,
+      tool: RuneSelectionSession.tool, spread: spread.name,
+      categoriaDeCota: UsageCoordinator.runes, legacyUsed: legacyUsed,
+      freeLimit: 1, now: at ?? day);
 
   Future<RuneSelectionUpdate> choose(RuneSelectionSession session, String id,
       {bool premium = false, bool active = true, String owner = user}) =>
@@ -51,7 +75,8 @@ void main() {
           expectedCount: session.selectedIds.length, catalog: runesData,
           positionLabels: List.generate(session.stonesNeeded, (i) => 'Position $i'),
           emptyQuestionLabel: 'No question',
-          isCurrentUser: () => active, isPremium: () => premium, freeLimit: 1);
+          isCurrentUser: () => active, isPremium: () => premium, freeLimit: 1,
+          legacyRuneUsed: 0);
 
   Future<int> used([DateTime? at]) => UsageCoordinator().used(
       userId: user, legacyUsed: 0, category: UsageCoordinator.runes, day: at ?? day);
@@ -169,31 +194,77 @@ void main() {
     expect(await used(), 1);
   });
 
-  test('Free keeps one table per day and reopens it without another debit', () async {
+  test('a cota é por PERGUNTA: a mesma pergunta abre todas as mesas do dia',
+      () async {
     final done = await finish(await prepare());
     expect(await used(), 1);
+
+    // Reabrir a mesma mesa devolve a que já foi feita, sem debitar de novo.
     final revisited = await prepare();
     expect(revisited.id, done.session.id);
     expect(revisited.isCommitted, isTrue);
-    expect((await prepare(startNew: true)).id, done.session.id);
-    await expectLater(prepare(spread: RuneSpreadType.single),
-        throwsA(isA<RuneQuotaExceeded>()));
-    await expectLater(prepare(question: 'Another question?'),
-        throwsA(isA<RuneQuotaExceeded>()));
-    await expectLater(prepare(question: ''), throwsA(isA<RuneQuotaExceeded>()));
+
+    // Uma tiragem DIFERENTE, com a MESMA pergunta, sai livre — é o que antes
+    // custava a segunda cota e barrava a pessoa.
+    await finish(await prepare(spread: RuneSpreadType.single));
+    expect(await used(), 1, reason: 'a pergunta do dia já estava paga');
+
+    // Uma pergunta NOVA é que gasta — e, sem cota, é barrada no fechamento da
+    // mesa. O pano em si continua de graça: é a tela que o desliga antes.
+    final outra = await prepare(question: 'Another question?',
+        spread: RuneSpreadType.nordicCross);
+    expect(outra.isCommitted, isFalse,
+        reason: 'estender o pano nunca cobra nem barra');
+    await expectLater(finish(outra), throwsA(isA<RuneQuotaExceeded>()));
+
     final db = await DatabaseHelper.instance.database;
-    expect(await db.query('rune_readings'), hasLength(1));
+    expect(await db.query('rune_readings'), hasLength(2));
+  });
+
+  test('a tela sabe o que dizer antes da escolha', () async {
+    // Nada feito ainda: a primeira pergunta do dia gasta a tiragem.
+    expect((await contexto()).situacaoDe('My question?', premium: false),
+        SituacaoDaTiragem.gastaUma);
+
+    await finish(await prepare());
+
+    final depois = await contexto();
+    // A mesma pergunta, na mesma mesa: já feita, e reabrir é livre.
+    expect(depois.situacaoDe('My question?', premium: false),
+        SituacaoDaTiragem.jaFeita);
+    expect(depois.mesaFeitaCom('  MY QUESTION? '), isNotNull,
+        reason: 'grafia diferente é a mesma pergunta');
+    // Em OUTRA mesa, a mesma pergunta é livre.
+    expect(
+        (await contexto(spread: RuneSpreadType.single))
+            .situacaoDe('My question?', premium: false),
+        SituacaoDaTiragem.livre);
+    // Pergunta nova, sem cota: convite ao Premium, e o pano se desliga.
+    expect(depois.situacaoDe('Another question?', premium: false),
+        SituacaoDaTiragem.semCota);
+    // Premium não esbarra em cota nenhuma.
+    expect(depois.situacaoDe('Another question?', premium: true),
+        SituacaoDaTiragem.livre);
+    // E o rascunho volta na grafia original, para repor o campo.
+    expect(depois.rascunho, 'My question?');
   });
 
   test('the legacy counter is imported once and blocks a second Free table', () async {
     // The AuthProvider mirror seeds the day before any table is prepared.
     expect(await UsageCoordinator().used(userId: user, legacyUsed: 1,
         category: UsageCoordinator.runes, day: day), 1);
-    await expectLater(prepare(legacyUsed: 1), throwsA(isA<RuneQuotaExceeded>()));
+    // O pano abre — cobrar é no fechamento —, mas a mesa não fecha.
+    await expectLater(finish(await prepare(legacyUsed: 1)),
+        throwsA(isA<RuneQuotaExceeded>()));
     expect(await used(), 1);
     expect(await UsageCoordinator().used(userId: user, legacyUsed: 5,
         category: UsageCoordinator.runes, day: day), 1, reason: 'Imported once');
-    final premium = await prepare(legacyUsed: 1, premium: true);
+    // E a tela já sabia dizer isso antes de qualquer pedra ser tocada.
+    expect((await contexto(legacyUsed: 1))
+        .situacaoDe('My question?', premium: false),
+        SituacaoDaTiragem.semCota);
+    final premium = await prepare(legacyUsed: 1, premium: true,
+        spread: RuneSpreadType.single);
     await finish(premium, premium: true);
     expect(await used(), 1);
   });

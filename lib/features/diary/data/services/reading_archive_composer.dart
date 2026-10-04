@@ -82,7 +82,9 @@ abstract final class ReadingArchiveComposer {
 
   static ArchiveEntry oracle(OracleReading reading, {String? interpretation}) {
     final l10n = _l10n;
+    final pergunta = reading.question?.trim() ?? '';
     final parts = <String>[
+      if (pergunta.isNotEmpty) '✦ ${l10n.readingQuestionLabel}\n$pergunta',
       for (final position in reading.positions)
         '✦ ${position.positionMeaning} — '
             '${position.card.emoji} ${position.card.name}'

@@ -83,9 +83,8 @@ class _DailyTarotSelectionPageState extends State<DailyTarotSelectionPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Text(l10n.tarotQuestionPrefix(widget.session.question),
-                      style: Theme.of(context).textTheme.titleMedium),
-                  const SizedBox(height: 8),
+                  // Sem linha de pergunta: a Carta do Dia não tem uma. A
+                  // data é o que identifica esta carta — ela é DO DIA.
                   Text(l10n.cardSelectionDay(
                       MaterialLocalizations.of(context).formatMediumDate(day)),
                       style: Theme.of(context).textTheme.bodySmall),

@@ -259,6 +259,9 @@ CREATE TABLE IF NOT EXISTS oracle_readings (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
   spread_type TEXT NOT NULL,
+  -- Nullable, e sem DEFAULT '': "tiragem de quando o Oráculo não tinha
+  -- pergunta" continua distinguível de "a pessoa não quis escrever nada".
+  question TEXT,
   reading_data JSONB NOT NULL,
   date TIMESTAMPTZ NOT NULL,
   created_at TIMESTAMPTZ DEFAULT NOW()
@@ -307,6 +310,7 @@ ALTER TABLE magical_profiles       ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP
 ALTER TABLE rune_readings          ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
 ALTER TABLE pendulum_consultations ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
 ALTER TABLE oracle_readings        ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE oracle_readings        ADD COLUMN IF NOT EXISTS question TEXT;
 ALTER TABLE daily_magical_weather  ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
 ALTER TABLE daily_checkins         ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
 

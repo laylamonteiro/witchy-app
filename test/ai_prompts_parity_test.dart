@@ -85,6 +85,7 @@ void main() {
     // Sondas nomeadas: cada uma resolve um campo para String.
     final probes = <String, String Function(AiPrompts p, Gender g)>{
       'localizedInstruction': (p, g) => p.localizedInstruction('pt-BR'),
+      'truthfulnessInstruction': (p, g) => p.truthfulnessInstruction,
       'languageRepairSystemPrompt': (p, g) =>
           p.languageRepairSystemPrompt('pt-BR'),
       'languageRepairUserPrompt': (p, g) =>
@@ -430,5 +431,58 @@ void main() {
       expect(identical(aiPrompts, aiPromptsPt), isTrue,
           reason: 'fallback para pt');
     });
+  });
+
+  /// A IA dourava a pílula: "frango na virada do ano" virou "abundância",
+  /// quando a crendice é de retrocesso (a ave cisca para trás). A fidelidade
+  /// à tradição vale para todos os prompts, e nenhum prompt pode voltar a
+  /// mandar transformar carta, runa ou símbolo difícil em coisa boa.
+  group('Fidelidade à tradição — sem dourar a pílula', () {
+    const exemploDoFrango = {'pt': 'cisca', 'en': 'scratches', 'es': 'escarba'};
+    const frasesQueSuavizam = [
+      'nunca como presságios',
+      'nunca presságios',
+      'never as omens',
+      'never omens',
+      'nunca como presagios',
+      'nunca presagios',
+      'são convites à reflexão e transformação',
+      'are invitations to reflection and transformation',
+      'son invitaciones a la reflexión y la transformación',
+    ];
+
+    for (final entry in promptsByLang.entries) {
+      final lang = entry.key;
+      final prompts = entry.value;
+
+      test('$lang: a instrução cobre a sombra e o folclore', () {
+        expect(prompts.truthfulnessInstruction,
+            contains(exemploDoFrango[lang]!));
+      });
+
+      test('$lang: nenhum prompt manda suavizar o lado difícil', () {
+        for (final gender in Gender.values) {
+          final todos = [
+            prompts.mysticAdvisorSystemPrompt(gender),
+            prompts.tarotSpreadSystemPrompt(gender),
+            prompts.runeSpreadSystemPrompt(gender),
+            prompts.oracleSpreadSystemPrompt(gender),
+            prompts.dreamInterpreterSystemPrompt(gender),
+            prompts.palmistrySystemPrompt(gender),
+            prompts.numerologySystemPrompt(gender),
+            prompts.cycleReadingSystemPrompt(gender),
+            prompts.dailyWeatherSystemPrompt(gender),
+            prompts.magicalProfileSystemPrompt(gender),
+            prompts.spellGenerationSystemPrompt(gender),
+          ];
+          for (final prompt in todos) {
+            for (final frase in frasesQueSuavizam) {
+              expect(prompt.toLowerCase(), isNot(contains(frase)),
+                  reason: '"$frase" [$lang/${gender.name}]');
+            }
+          }
+        }
+      });
+    }
   });
 }

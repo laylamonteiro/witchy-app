@@ -161,6 +161,13 @@ class AIService {
   String _localizedInstruction() =>
       _prompts.localizedInstruction(currentLanguageTag);
 
+  /// Abertura de todo prompt que interpreta, aconselha ou gera conteúdo:
+  /// idioma + fidelidade à tradição (sem dourar a pílula nem inventar
+  /// crendice). Ficam só com o idioma a revisão de idioma, a identificação
+  /// por foto e a afirmação (que, por técnica, é sempre positiva).
+  String _baseInstructions() =>
+      '${_localizedInstruction()}\n\n${_prompts.truthfulnessInstruction}';
+
   /// Verificar se o serviço está disponível (sempre true para Groq)
   Future<bool> hasApiKey() async {
     return true;
@@ -629,7 +636,7 @@ class AIService {
   String _buildMagicalProfileSystemPrompt(
     Gender gender,
   ) {
-    return '${_localizedInstruction()}\n\n'
+    return '${_baseInstructions()}\n\n'
         '${_prompts.magicalProfileSystemPrompt(gender)}';
   }
 
@@ -639,7 +646,7 @@ class AIService {
   String _buildDailyWeatherSystemPrompt(
     Gender gender,
   ) {
-    return '${_localizedInstruction()}\n\n'
+    return '${_baseInstructions()}\n\n'
         '${_prompts.dailyWeatherSystemPrompt(gender)}';
   }
 
@@ -676,7 +683,7 @@ class AIService {
   }
 
   String _buildSystemPrompt(Gender gender) {
-    return '${_localizedInstruction()}\n\n'
+    return '${_baseInstructions()}\n\n'
         '${_prompts.spellGenerationSystemPrompt(gender)}';
   }
 
@@ -1465,7 +1472,7 @@ class AIService {
     gender ??= _gender;
     try {
       final leitura = await _visionRequest(
-        systemPrompt: '${_localizedInstruction()}\n\n'
+        systemPrompt: '${_baseInstructions()}\n\n'
             '${_prompts.palmistrySystemPrompt(gender)}',
         userText: _prompts.palmUserMessage,
         jpegBytes: jpegBytes,
@@ -1715,7 +1722,7 @@ class AIService {
       // visíveis), não numa descrição genérica da espécie.
       if (jpegBytes != null && _hasGemini) {
         final content = await _visionRequest(
-          systemPrompt: '${_localizedInstruction()}\n\n'
+          systemPrompt: '${_baseInstructions()}\n\n'
               '${_prompts.encyGenerateSystemPrompt(categoryKey, name)}',
           userText: _prompts.encyGenerateUserMessage(name),
           jpegBytes: jpegBytes,
@@ -1730,7 +1737,7 @@ class AIService {
       }
 
       final content = await _textRequest(
-        systemPrompt: '${_localizedInstruction()}\n\n'
+        systemPrompt: '${_baseInstructions()}\n\n'
             '${_prompts.encyGenerateSystemPrompt(categoryKey, name)}',
         userText: _prompts.encyGenerateUserMessage(name),
         tag: 'página enciclopédia',
@@ -1850,7 +1857,7 @@ class AIService {
         : '$summary\n${_prompts.tarotQuestionIntro}\n"$trimmedQuestion"';
     try {
       final content = await _textRequest(
-        systemPrompt: '${_localizedInstruction()}\n\n'
+        systemPrompt: '${_baseInstructions()}\n\n'
             '${_prompts.tarotSpreadSystemPrompt(gender)}',
         userText: userContent,
         tag: 'tarot',
@@ -1913,7 +1920,7 @@ class AIService {
         : '$summary\n${_prompts.tarotQuestionIntro}\n"$trimmedQuestion"';
     try {
       final content = await _textRequest(
-        systemPrompt: '${_localizedInstruction()}\n\n${systemPrompt(gender)}',
+        systemPrompt: '${_baseInstructions()}\n\n${systemPrompt(gender)}',
         userText: userContent,
         tag: tag,
         temperature: 0.7,
@@ -1939,7 +1946,7 @@ class AIService {
     gender ??= _gender;
     try {
       final content = await _textRequest(
-        systemPrompt: '${_localizedInstruction()}\n\n'
+        systemPrompt: '${_baseInstructions()}\n\n'
             '${_prompts.numerologySystemPrompt(gender)}',
         userText: summary,
         tag: 'numerologia',
@@ -1994,7 +2001,7 @@ class AIService {
   }
 
   String _buildDreamInterpreterSystemPrompt(Gender gender) {
-    return '${_localizedInstruction()}\n\n'
+    return '${_baseInstructions()}\n\n'
         '${_prompts.dreamInterpreterSystemPrompt(gender)}';
   }
 
@@ -2013,7 +2020,7 @@ class AIService {
     Gender? gender,
   }) async {
     gender ??= _gender;
-    final systemPrompt = '${_localizedInstruction()}\n\n'
+    final systemPrompt = '${_baseInstructions()}\n\n'
         '${_prompts.cycleReadingSystemPrompt(gender)}';
     final userText = '${_prompts.cycleReadingSectionInstruction(sectionKey)}'
         '\n\nJSON:\n$materialJson';
@@ -2058,7 +2065,7 @@ class AIService {
   String _buildMysticAdvisorSystemPrompt(
     Gender gender,
   ) {
-    return '${_localizedInstruction()}\n\n'
+    return '${_baseInstructions()}\n\n'
         '${_prompts.mysticAdvisorSystemPrompt(gender)}';
   }
 }
