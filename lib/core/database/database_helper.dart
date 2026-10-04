@@ -81,7 +81,7 @@ class DatabaseHelper {
     // é no-op — o sqflite envolve os dois numa transação).
     return await openDatabase(
       path,
-      version: 30,
+      version: 31,
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
     );
@@ -1282,6 +1282,104 @@ class DatabaseHelper {
         if (!colunas.any((c) => c['name'] == 'question')) {
           await db
               .execute('ALTER TABLE oracle_readings ADD COLUMN question TEXT');
+        }
+      }
+    }
+
+    // v31: a Carta Diária do ORÁCULO também é UMA por dia.
+    //
+    // A v30 arrumou a do tarô e deixou a do oráculo de fora. O estrago era
+    // maior do que parecia: lá a sessão nascia semeada com a última pergunta
+    // do dia — escrita em OUTRA ferramenta —, o resume casava por essa
+    // pergunta, e o botão "Nova leitura" pulava o resume inteiro. Resultado:
+    // a Carta Diária abria com uma pergunta que a pessoa nunca escreveu ali, e
+    // saía de novo no mesmo dia por dois caminhos diferentes.
+    //
+    // A ORDEM aqui é a mesma da v30, e inverter derruba a abertura do app:
+    // desempatar ANTES de criar o índice. Criar primeiro estoura em "UNIQUE
+    // constraint failed", a migração inteira volta atrás, e o app tenta de
+    // novo na abertura seguinte — e falha de novo, para sempre.
+    if (oldVersion < 31) {
+      // `selection_sessions` nasce na v24 e os blocos < 24 / < 27 / < 30
+      // chamam o helper, então ela existe em todo caminho que chega aqui. A
+      // guarda fica porque DELETE em tabela ausente é "no such table" — foi o
+      // que o ALTER de `oracle_readings` ensinou logo acima.
+      final temSessoes = await db.rawQuery("SELECT name FROM sqlite_master "
+          "WHERE type = 'table' AND name = 'selection_sessions'");
+      if (temSessoes.isNotEmpty) {
+        // 1. Primeiro saem os RASCUNHOS de um dia que já tem mesa confirmada.
+        //    Sobreviver por idade, como a v30 fez, não serve aqui: o oráculo
+        //    não adota tiragem legada — quem sobra é o que a pessoa vai ver, e
+        //    um rascunho vazio sobrevivente mostraria o leque de novo e
+        //    deixaria a leitura do dia órfã, inalcançável pela aba.
+        await db.execute('''
+          DELETE FROM selection_sessions
+          WHERE spread = 'daily' AND (tool = 'tarot' OR tool = 'oracle')
+            AND result_id IS NULL
+            AND EXISTS (
+              SELECT 1 FROM selection_sessions AS s2
+              WHERE s2.spread = 'daily'
+                AND s2.tool = selection_sessions.tool
+                AND s2.user_id = selection_sessions.user_id
+                AND s2.day_key = selection_sessions.day_key
+                AND s2.result_id IS NOT NULL
+            )
+        ''');
+        // 2. Do que sobrou em cada (conta, ferramenta, dia) fica a ÚLTIMA, não
+        //    a primeira: é ela que o oráculo vem mostrando o dia todo (o
+        //    resume de hoje ordena por `rowid DESC`). Ficar com a primeira
+        //    trocaria, sem aviso, a carta que a pessoa viu de manhã.
+        //
+        //    O `tool` no GROUP BY não é enfeite: sem ele a diária do oráculo
+        //    seria apagada sempre que a do tarô do mesmo dia tivesse rowid
+        //    maior, e o CREATE passaria sem reclamar — defeito silencioso, que
+        //    é o pior tipo.
+        await db.execute('''
+          DELETE FROM selection_sessions
+          WHERE spread = 'daily' AND (tool = 'tarot' OR tool = 'oracle')
+            AND rowid NOT IN (
+              SELECT MAX(rowid) FROM selection_sessions
+              WHERE spread = 'daily' AND (tool = 'tarot' OR tool = 'oracle')
+              GROUP BY user_id, tool, day_key
+            )
+        ''');
+        // 3. O índice da v30 só conhece o tarô, e `CREATE ... IF NOT EXISTS`
+        //    NÃO redefine um índice que já existe com o mesmo nome: sem este
+        //    DROP o predicado continuaria `tool = 'tarot'` e o oráculo seguiria
+        //    desprotegido, em silêncio.
+        await db.execute('DROP INDEX IF EXISTS idx_daily_selection_identity');
+        // 4. E o novo entra cobrindo as duas. `OR` em vez de `IN`: índice
+        //    PARCIAL é do SQLite 3.8, o aparelho mais velho que o app suporta
+        //    é Android 7 (minSdk 24, SQLite do SISTEMA, ~3.9), e igualdade com
+        //    OR não deixa margem a dúvida. Um CREATE recusado aqui desfaria a
+        //    transação inteira — inclusive o DROP — e o app não abriria mais.
+        await db.execute('''
+          CREATE UNIQUE INDEX IF NOT EXISTS idx_daily_selection_identity
+          ON selection_sessions(user_id, tool, spread, day_key)
+          WHERE spread = 'daily' AND (tool = 'tarot' OR tool = 'oracle')
+        ''');
+        // 5. E a pergunta emprestada vai embora. Nenhuma Carta Diária de
+        //    oráculo tem, neste instante, uma pergunta que a pessoa tenha
+        //    escrito NELA: a caixa nasce com esta versão. Tudo que está ali
+        //    veio do rascunho do dia, e deixar faria a tela citar uma pergunta
+        //    que ninguém fez para aquela carta — exatamente a queixa que abriu
+        //    esta mudança. É o mesmo passo que a v30 deu pelo tarô.
+        await db.execute('''
+          UPDATE selection_sessions SET question = '', normalized_question = ''
+          WHERE tool = 'oracle' AND spread = 'daily'
+        ''');
+      }
+      // A mesma pergunta emprestada foi copiada para a leitura gravada, que é
+      // o que o acervo e Meus Registros leem. A coluna é nullable de propósito
+      // desde a v30 ("tiragem antiga, de quando não havia pergunta"), e é esse
+      // o estado certo para ela aqui.
+      final temOracleV31 = await db.rawQuery("SELECT name FROM sqlite_master "
+          "WHERE type = 'table' AND name = 'oracle_readings'");
+      if (temOracleV31.isNotEmpty) {
+        final colunas = await db.rawQuery('PRAGMA table_info(oracle_readings)');
+        if (colunas.any((c) => c['name'] == 'question')) {
+          await db.execute("UPDATE oracle_readings SET question = NULL "
+              "WHERE spread_type = 'daily'");
         }
       }
     }

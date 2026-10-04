@@ -52,6 +52,7 @@ void main() {
               final result = await Navigator.of(context).push<DailyTarotCommit>(
                 MaterialPageRoute(builder: (_) => DailyTarotSelectionPage(
                   session: session(auth.currentUser.id), onCommit: commit,
+                  aoEscreverPergunta: (_) async {},
                 )),
               );
               returned.add(result);

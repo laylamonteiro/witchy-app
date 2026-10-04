@@ -2277,6 +2277,8 @@
   "perguntaAjudaGastaUma": "A new question uses your reading for today",
   "perguntaAjudaSemCota": "You've already asked your question today",
   "perguntaAjudaJaFeita": "You've already laid this table today — it's the same one",
+  "perguntaAjudaCartaDoDia": "Today's card is a single one — the question changes the reading, not the card",
+  "cartaDoDiaQuestionHint": "What are you carrying into today? (optional)",
   "perguntaVoltarParaHoje": "Back to today's question",
   "perguntaVerAMesa": "See the table",
   "oracleQuestionHint": "What should the oracle shed light on?",
