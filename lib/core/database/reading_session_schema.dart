@@ -41,10 +41,18 @@ abstract final class ReadingSessionSchema {
         synced INTEGER NOT NULL DEFAULT 0
       )
     ''');
+    // UMA Carta do Dia por pessoa, por ferramenta, por dia — e a pergunta NÃO
+    // entra na chave. As duas Cartas do Dia têm caixa de pergunta, mas ela
+    // muda a leitura, nunca qual carta é; se entrasse aqui, uma pergunta nova
+    // geraria outra "carta do dia", que é o mesmo que não ter nenhuma.
+    //
+    // O oráculo entrou neste índice depois (v31). O tarô já estava desde a
+    // v30, e é por isso que a v31 precisa DERRUBAR o índice antes de recriar:
+    // `IF NOT EXISTS` não redefine um índice que já existe com este nome.
     await db.execute('''
       CREATE UNIQUE INDEX IF NOT EXISTS idx_daily_selection_identity
       ON selection_sessions(user_id, tool, spread, day_key)
-      WHERE tool = 'tarot' AND spread = 'daily'
+      WHERE spread = 'daily' AND (tool = 'tarot' OR tool = 'oracle')
     ''');
     await db.execute('''
       CREATE TABLE IF NOT EXISTS tarot_day_state (

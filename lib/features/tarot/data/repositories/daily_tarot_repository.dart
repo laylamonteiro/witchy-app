@@ -9,20 +9,21 @@ import '../../../../core/services/usage_coordinator.dart';
 import '../../domain/daily_tarot_session.dart';
 import '../models/tarot_card_model.dart';
 import '../../../../core/divination/dia_da_pergunta_repository.dart';
+import '../../../../core/divination/regra_da_tiragem.dart';
 import 'tarot_reading_repository.dart';
 
 /// A Carta do Dia: UMA por pessoa por dia, e a mesma o dia inteiro.
 ///
-/// Ela não tem pergunta. É a carta DO DIA — a energia que acompanha o dia de
-/// quem a tirou —, não a resposta de alguma coisa. Antes ela era indexada pela
-/// pergunta, e o efeito era o contrário do nome: uma pergunta diferente no
-/// mesmo dia gerava outra "carta do dia", cobrando do Free e sem limite nenhum
-/// no Premium. Quem tirasse três vezes tinha três cartas do dia, o que é o
-/// mesmo que não ter nenhuma.
+/// Ela tem pergunta, como as outras mesas — mas a pergunta NÃO entra na
+/// identidade dela. É a carta DO DIA: a energia que acompanha o dia de quem a
+/// tirou. A pergunta muda a LEITURA; nunca muda qual carta é. Antes ela era
+/// indexada pela pergunta, e o efeito era o contrário do nome: uma pergunta
+/// diferente no mesmo dia gerava outra "carta do dia". Quem tirasse três vezes
+/// tinha três cartas do dia, o que é o mesmo que não ter nenhuma.
 ///
-/// Por não ter pergunta, ela também não consome cota — de ninguém. O que a
-/// assinatura vende é perguntar OUTRA coisa no mesmo dia, e isso continua
-/// valendo para as tiragens de três cartas e da cruz.
+/// Ela também não consome cota — de ninguém —, e por isso não ancora a
+/// pergunta do dia: o que a assinatura vende é perguntar OUTRA coisa no mesmo
+/// dia, e quem move a âncora é a mesa que de fato cobrou.
 ///
 /// Escolher continua sendo da pessoa: o baralho é embaralhado e gravado antes
 /// de o leque aparecer, e a animação nunca sorteia, grava nem consome.
@@ -83,6 +84,11 @@ class DailyTarotRepository {
         HiddenTarotCard(id: card.id, reversed: _random.nextInt(4) == 0)];
       String? selectedId;
       String? legacySignature;
+      // A tiragem adotada já tem a pergunta que a pessoa fez naquele dia:
+      // nenhuma migração limpou `tarot_readings.question`. Sem trazê-la, a
+      // tela mostraria mesa sem pergunta e a página do acervo da MESMA leitura
+      // mostraria "✦ Pergunta".
+      var perguntaLegada = '';
       if (legacy != null) {
         final payload = jsonDecode(legacy['reading_data'] as String)
             as Map<String, dynamic>;
@@ -98,6 +104,7 @@ class DailyTarotRepository {
         final index = deck.indexWhere((c) => c.id == selectedId);
         deck[index] = HiddenTarotCard(
             id: card.id, reversed: saved['reversed'] == true);
+        perguntaLegada = (legacy['question'] as String?)?.trim() ?? '';
         legacySignature = legacy['signature'] as String?;
         if (legacySignature == null) {
           legacySignature = 'daily-legacy:${legacy['id']}';
@@ -115,9 +122,10 @@ class DailyTarotRepository {
         'day_key': key,
         'day_start': start.millisecondsSinceEpoch,
         'day_end': end.millisecondsSinceEpoch,
-        // Sem pergunta: é a carta DO DIA, não a resposta de nada.
-        'question': '',
-        'normalized_question': '',
+        // Nasce sem pergunta: a caixa começa vazia e é a pessoa que escreve,
+        // na tela de escolha. A exceção é a mesa adotada, que já traz a dela.
+        'question': perguntaLegada,
+        'normalized_question': normalizarPergunta(perguntaLegada),
         'deck_version': deckVersion,
         'deck_json': jsonEncode(deck.map((c) => c.toJson()).toList()),
         'selected_json': jsonEncode([if (selectedId != null) selectedId]),
@@ -185,6 +193,36 @@ class DailyTarotRepository {
       }, where: 'id = ? AND user_id = ?', whereArgs: [session.id, userId]);
       return DailyTarotCommit(await _read(txn, userId, sessionId), created: true);
     });
+  }
+
+  /// Guarda a pergunta escrita em cima da mesa da Carta do Dia.
+  ///
+  /// Um UPDATE e mais nada. Digitar não re-sorteia, não abre sessão nova e não
+  /// cobra — a identidade da carta é (conta, ferramenta, tiragem, dia), e a
+  /// pergunta não está lá.
+  ///
+  /// NÃO encosta em `day_question_state`: a Carta do Dia é de graça, e ancorar
+  /// de graça a pergunta que as mesas pagas usam como cota daria tiragem
+  /// cobrada de brinde. Mesa já confirmada não muda mais de pergunta — a
+  /// leitura gravada citaria uma pergunta que não foi a dela.
+  Future<void> atualizarPergunta({
+    required String userId,
+    required String sessionId,
+    required String pergunta,
+  }) async {
+    final asked = pergunta.trim();
+    final db = await _dbHelper.database;
+    await db.update(
+      'selection_sessions',
+      {
+        'question': asked,
+        'normalized_question': normalizarPergunta(asked),
+        'updated_at': DateTime.now().millisecondsSinceEpoch,
+      },
+      where: 'id = ? AND user_id = ? AND tool = ? AND spread = ? '
+          'AND result_id IS NULL',
+      whereArgs: [sessionId, userId, 'tarot', 'daily'],
+    );
   }
 
   Future<String?> interpretation(DailyTarotSession session) async {

@@ -57,7 +57,7 @@ void main() {
     // A versão atual do banco, não a 29: o aparelho atravessa TODAS as
     // migrações pendentes de uma vez, e o que se confere aqui é que ele chegou
     // ao fim com o que estava escrito.
-    expect(await upgraded.getVersion(), 30);
+    expect(await upgraded.getVersion(), 31);
     final row = (await upgraded.query(MenstrualCycleSchema.table)).single;
     expect(row['note'], 'já estava aqui');
     expect(row['season'], isNull,

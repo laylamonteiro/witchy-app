@@ -163,8 +163,9 @@ class _OracleBodyState extends State<_OracleBody> {
       startNew: _newReadingRequested,
     );
     // O que a tela de escolha precisa para avisar, ANTES da escolha, o que a
-    // pergunta custa. A Carta Diária é a do DIA e não custa nada, então nela
-    // não há aviso nenhum a dar.
+    // pergunta custa. A Carta Diária é a do DIA e não custa nada: ela tem
+    // caixa, mas o aviso dela não é sobre cota, então não há contexto de cota
+    // a carregar.
     final contexto = spread == OracleSpreadType.daily
         ? const ContextoDaTiragem()
         : await _contextos.carregar(
@@ -188,8 +189,6 @@ class _OracleBodyState extends State<_OracleBody> {
           session: session, positionLabels: labels,
           contexto: contexto,
           premium: auth.isPremiumEffective,
-          // A Carta Diária não tem pergunta: é a carta do DIA.
-          pedePergunta: spread != OracleSpreadType.daily,
           aoEscreverPergunta: (pergunta) => _sessions.atualizarPergunta(
               userId: _userId, sessionId: session.id, pergunta: pergunta),
           onSelect: (cardId, expectedCount) async {
@@ -240,6 +239,12 @@ class _OracleBodyState extends State<_OracleBody> {
       )];
     final reading = OracleReading(
       id: stored.id, spreadType: stored.spreadType, positions: positions,
+      // A pergunta vinha ficando para trás aqui: a mesa remontada perdia a
+      // dela, o cabeçalho parava de citá-la ao reabrir e o acervo era
+      // reescrito sem o bloco da pergunta. Com a caixa na Carta Diária isso
+      // deixaria de ser detalhe — a pergunta escrita hoje sumiria na primeira
+      // reabertura.
+      question: stored.question,
       date: stored.date, interpretation: stored.interpretation, sessionId: stored.sessionId,
     );
     _textTimer?.cancel();

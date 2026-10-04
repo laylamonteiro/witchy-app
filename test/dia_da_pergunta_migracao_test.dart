@@ -60,7 +60,7 @@ void main() {
     await antigo.close();
 
     final db = await DatabaseHelper.instance.database;
-    expect(await db.getVersion(), 30);
+    expect(await db.getVersion(), 31);
 
     final copiadas = await db.query('day_question_state',
         orderBy: 'user_id ASC, day_key ASC');
