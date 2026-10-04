@@ -224,20 +224,46 @@ class SupabaseAuthRepository implements AuthRepository {
         'display_name': displayName,
         'updated_at': DateTime.now().toIso8601String(),
       });
-
-      // Fora do upsert de propósito: `upsert` reescreve a linha inteira, e
-      // este método também roda em login social de conta ANTIGA. Incluir a
-      // origem ali apagaria o registro original toda vez que a pessoa
-      // entrasse por outra plataforma. Este update só preenche o que ainda
-      // está vazio — nunca sobrescreve.
-      await _supabase
-          .from(SupabaseTables.profiles)
-          .update({'signup_platform': _signupPlatform})
-          .eq('id', supabaseUser.id)
-          .isFilter('signup_platform', null);
     } catch (e) {
       // Log error but don't fail registration
       print('Erro ao criar perfil: $e');
+    }
+
+    // Fora do upsert de propósito: `upsert` reescreve a linha inteira, e
+    // este método também roda em login social de conta ANTIGA. Incluir a
+    // origem ali apagaria o registro original toda vez que a pessoa
+    // entrasse por outra plataforma.
+    //
+    // E fora do MESMO try: quando o upsert falhava, o catch acima pulava
+    // também esta gravação, e a origem ficava NULL sem erro nenhum.
+    await _preencherOrigemSeVazia(supabaseUser.id);
+  }
+
+  /// O perfil lido do servidor ainda não tem a origem gravada?
+  ///
+  /// Sem perfil (`null`) não há o que preencher: quem cria a linha é o
+  /// `_createProfile`, que já grava a origem por conta própria.
+  @visibleForTesting
+  static bool perfilSemOrigem(Map<String, dynamic>? profileData) =>
+      profileData != null && profileData['signup_platform'] == null;
+
+  /// Grava `signup_platform` só se a coluna ainda estiver vazia — nunca
+  /// sobrescreve a origem de uma conta antiga que entrou por outra
+  /// plataforma.
+  ///
+  /// Login com Google NÃO leva a plataforma no metadata (quem cria a linha é
+  /// o trigger handle_new_user, que lê a origem do metadata do signUp por
+  /// e-mail), então nesse caminho a origem depende desta gravação. Falha
+  /// aqui não derruba o login: a origem é histórico, não acesso.
+  Future<void> _preencherOrigemSeVazia(String userId) async {
+    try {
+      await _supabase
+          .from(SupabaseTables.profiles)
+          .update({'signup_platform': _signupPlatform})
+          .eq('id', userId)
+          .isFilter('signup_platform', null);
+    } catch (e) {
+      print('Erro ao gravar signup_platform: $e');
     }
   }
 
@@ -964,6 +990,14 @@ class SupabaseAuthRepository implements AuthRepository {
       } catch (e) {
         // Segue com os dados do próprio usuário do Supabase.
       }
+    } else if (perfilSemOrigem(profileData)) {
+      // O perfil existe mas nasceu sem origem. É o login com Google na web:
+      // o trigger handle_new_user cria a linha antes de o app voltar (sem
+      // plataforma, que o Google não manda), e então o ramo acima — o único
+      // que chamava _createProfile neste caminho — não roda. Só dispara
+      // quando falta a origem, então não custa uma requisição a mais no
+      // caso comum.
+      await _preencherOrigemSeVazia(supabaseUser.id);
     }
 
     // Detectar método de autenticação
