@@ -1,811 +1,234 @@
 name: ✅ Branch Validation
 
-# Validação bloqueante (analyze + test + build debug) e publicação do site.
-# Análise e testes FALHAM o job aqui — é o gate de qualidade, e nada passa
-# dele para o ar.
+# Gate de qualidade + prévia do site. NUNCA toca produção.
 #
-# Divisão de trabalho com o release.yml na MAIN:
-#   - Todo push na main dispara o release.yml em modo dry-run (mesmo push),
-#     que já roda analyze + testes + ARB + scan de PT e ainda AAB/APK
-#     assinados e web de produção. Ele é o gate da main.
-#   - Por isso, na main, ESTE workflow não repete o `validate` nem o
-#     `apk-candidato`: fica só com o que é exclusivo dele — publicar o
-#     staging e abrir o PR de publicação (main → release).
-#   Nas branches de trabalho (claude/**) nada muda: o `validate` daqui
-#   continua sendo o gate e o required status check, porque o release.yml
-#   não roda nelas.
+#   branch de trabalho → gate (required check) + prévia própria do site + PR draft para a main
+#   main               → staging do site + PR "🚢 Publicar" (main → release).
+#                        O gate da main é o dry-run do release.yml, no mesmo push.
+#   Run workflow       → também gera um APK candidato assinado de qualquer branch.
 #
-# Roda em TODA branch e em TODO commit, sem `paths-ignore`, porque o job
-# `validate` é required status check da main: um check que não roda é um PR
-# que nunca fica mergeável. Com paths-ignore, um PR só de documentação
-# ficaria travado para sempre esperando um run que jamais aconteceria — e
-# com filtro de nome, um PR de uma branch fora do padrão faria o mesmo.
-# Dois minutos de gate valem menos que esse tipo de impasse.
+# Sem paths-ignore: o `validate` é required check e precisa rodar em todo PR,
+# senão um PR só de docs ficaria travado esperando um check que nunca vem.
 
 on:
   push:
-    branches:
-      - '**'
+    branches: ['**']
   workflow_dispatch:
 
-# Pushes em sequência cancelam o run anterior desatualizado — corta o
-# desperdício de minutos nas rajadas de commits.
 concurrency:
   group: branch-validate-${{ github.ref }}
   cancel-in-progress: true
 
-# Versões de Flutter/Java vivem em .github/actions/setup-flutter (um lugar
-# só, usado por todos os jobs e também pelo release.yml).
+permissions:
+  contents: read
 
 jobs:
   validate:
+    # Nome usado pela branch protection — não renomear.
     name: 🔍 Analyze, Test & Build
-    # NÃO roda na main: lá o release.yml dispara um dry-run no mesmo push, que
-    # já faz analyze + testes + ARB + scan de PT (e ainda AAB/APK assinados e
-    # web de produção). Rodar o mesmo gate aqui seria pagar duas vezes. Nas
-    # branches de trabalho e nos PRs este job continua sendo o gate — e o
-    # required status check da branch protection roda no push da branch, antes
-    # do merge, onde a ref é `claude/**`, não `main`.
     if: github.ref != 'refs/heads/main'
     runs-on: ubuntu-latest
     outputs:
-      native_changed: ${{ steps.native.outputs.changed }}
+      android_mudou: ${{ steps.android.outputs.mudou }}
 
     steps:
-      - name: 📥 Checkout repository
+      - name: 📥 Checkout
         uses: actions/checkout@v4
         with:
-          # HEAD^ disponível para detectar mudanças em android/pubspec.
           fetch-depth: 2
+          persist-credentials: false
 
-      - name: 🔎 Mudou o ANDROID? (android/ ou pubspec)
-        # Decide se o build de fumaça Android (job à parte, ~8 min) precisa
-        # rodar: ele só detecta problemas de Gradle/NDK/manifest, e analyze +
-        # testes já cobrem o Dart. O resultado sai como output do job.
-        #
-        # O nome dizia "código nativo" e olhava só para `android/`. Agora
-        # diz a verdade: o iOS NÃO é compilado por job nenhum desta esteira,
-        # e não vai ser.
-        #
-        # DECISÃO DA DONA DO PRODUTO: não haverá app iOS nativo. Com isso
-        # caem, de uma vez, o runner macOS no CI, o GoogleService-Info.plist,
-        # o GIDClientID e o identificador de TESTE do AdMob em
-        # ios/Runner/Info.plist — a auditoria listava os quatro, e os quatro
-        # só existiriam para um app que não vai à App Store.
-        #
-        # ATENÇÃO ao que NÃO cai junto: o app WEB aberto no iPhone continua
-        # existindo, é Safari, e é lá que vale a regra dos 7 dias da Apple
-        # que apaga o armazenamento gravável por script. Foi por causa dela
-        # que a sincronização foi aberta para o plano gratuito. Quando a
-        # auditoria fala de "iOS" no achado crítico, é deste que ela fala.
-        id: native
+      - name: 🔎 Mudou android/ ou pubspec?
+        id: android
         run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "changed=true" >> "$GITHUB_OUTPUT"
-          elif ! git rev-parse HEAD^ > /dev/null 2>&1; then
-            echo "changed=true" >> "$GITHUB_OUTPUT"
-          elif git diff --name-only HEAD^ HEAD | grep -qE '^(android/|pubspec\.yaml|pubspec\.lock)'; then
-            echo "changed=true" >> "$GITHUB_OUTPUT"
+          if ! git rev-parse HEAD^ >/dev/null 2>&1 || \
+             git diff --name-only HEAD^ HEAD | grep -qE '^(android/|pubspec\.(yaml|lock))'; then
+            echo "mudou=true" >> "$GITHUB_OUTPUT"
           else
-            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "mudou=false" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: 🔐 Create credential stubs (analyze/test não usam APIs reais)
-        uses: ./.github/actions/credenciais-app
+      - uses: ./.github/actions/credenciais-app
+      - uses: ./.github/actions/setup-flutter
+      - uses: ./.github/actions/gate
 
-      - name: 🛠️ Setup Flutter (pinado)
-        uses: ./.github/actions/setup-flutter
-
-      - name: 🔍 Check formatting (informativo — ainda NÃO bloqueia)
-        # O `--set-exit-if-changed` existe para falhar, e o
-        # `continue-on-error` logo abaixo anulava esse efeito: o passo
-        # anunciava verificação, não verificava nada e ainda saía verde. Pior
-        # que não existir, porque ensina a ignorar check verde.
-        #
-        # Agora ele pelo menos DIZ o tamanho do problema — antes nem a lista
-        # saía, porque `--output=none` sem `--show` só emite resumo.
-        #
-        # Para virar gate faltam dois passos, nesta ordem, e o primeiro exige
-        # uma máquina com o Flutter 3.47.0 (o mesmo pin de
-        # .github/actions/setup-flutter): (1) um commit ISOLADO com
-        # `dart format lib test` — isolado porque um diff de centenas de
-        # arquivos misturado com lógica é irrevisável e envenena todo `git
-        # blame` seguinte; (2) apagar o `continue-on-error` daqui.
-        #
-        # Formatar com outra versão do dart_style reescreve o repositório num
-        # terceiro estilo e quebra o gate no primeiro PR — por isso o pin
-        # importa.
-        run: |
-          dart format --output=none --show=changed lib test | tee /tmp/fmt.txt
-          echo "::warning::arquivos fora de formato: $(grep -c '^Changed' /tmp/fmt.txt || true)"
-          dart format --output=none --set-exit-if-changed lib test
-        continue-on-error: true
-
-      - name: 🧭 Analyze (bloqueante em erros/warnings)
-        # --no-fatal-infos: falha só em erros e warnings (problemas reais
-        # introduzidos), não na dívida de lint info pré-existente
-        # (withOpacity depreciado, prefer_const etc.).
-        #
-        # A saída é guardada porque o passo seguinte precisa dela: entre as
-        # centenas de infos que este `--no-fatal-infos` perdoa existe uma
-        # regra que NÃO é cosmética, e ela estava escondida no meio do
-        # resto. `set -o pipefail` para o `tee` não engolir a falha.
-        run: |
-          set -o pipefail
-          flutter analyze --no-fatal-infos 2>&1 | tee /tmp/analyze.txt
-
-      - name: 🔒 Contexto usado depois do await (catraca, não pode crescer)
-        # `use_build_context_synchronously` é info, então
-        # `--no-fatal-infos` a perdoa junto com o `withOpacity` depreciado —
-        # e ela não é cosmética: usar um BuildContext depois de um `await`
-        # dá exceção em tempo de execução quando a tela saiu no meio, que é
-        # exatamente o caso que ninguém testa (rede lenta, pessoa voltando).
-        #
-        # CATRACA, e não trava: escalar a regra para warning derrubaria o
-        # build hoje, com dezenas de ocorrências antigas e ninguém para
-        # consertá-las no mesmo passo. Aqui o número só pode CAIR. Quem
-        # introduzir uma nova é barrado; quem consertar uma antiga vê o
-        # aviso pedindo para baixar o teto.
-        #
-        # O teto veio da auditoria (26); a primeira execução confirmou 26. Em
-        # 08/09/2026 desceu para 25: o `_saveConsultation` do pêndulo passou a
-        # ler o `context` ANTES do await (o uso depois dele estourava de
-        # verdade quando a pessoa recomeçava a consulta ou saía da tela).
-        run: |
-          TETO=25
-          atual=$(grep -c 'use_build_context_synchronously' /tmp/analyze.txt || true)
-          echo "use_build_context_synchronously: $atual (teto $TETO)"
-          if [ "$atual" -gt "$TETO" ]; then
-            echo "::error::$atual usos de contexto depois do await — o teto é $TETO. Uma ocorrência nova entrou: guarde o contexto antes do await, ou confira \`mounted\` depois dele."
-            exit 1
-          fi
-          if [ "$atual" -lt "$TETO" ]; then
-            echo "::warning::$atual usos (teto $TETO): baixe TETO para $atual em .github/workflows/branch-validate.yml, senão a catraca afrouxa sozinha."
-          fi
-
-      - name: 🧪 Testes de i18n/conteúdo (bloqueante)
-        # Paridade pt/en/es da camada de conteúdo + localização de feitiços:
-        # é o núcleo verificável do trabalho de i18n e NÃO pode regredir.
-        run: |
-          flutter test \
-            test/content_parity_test.dart \
-            test/trails_parity_test.dart \
-            test/dream_themes_parity_test.dart \
-            test/astrology_interpretations_parity_test.dart \
-            test/daily_weather_content_parity_test.dart \
-            test/spell_localization_test.dart \
-            test/app_deep_link_test.dart \
-            test/numerology_meanings_parity_test.dart \
-            test/content_models_parity_test.dart \
-            test/moon_sun_content_parity_test.dart \
-            test/guided_rituals_parity_test.dart \
-            test/tarot_concept_questions_parity_test.dart \
-            test/ai_prompts_parity_test.dart \
-            test/life_eras_content_parity_test.dart \
-            test/highlighted_text_test.dart \
-            test/month_sky_math_test.dart \
-            test/l10n_test.dart \
-            test/numerology_calculator_test.dart \
-            test/i18n_smoke_test.dart
-
-      - name: 🧪 Suíte completa (bloqueante)
-        # A dívida foi zerada (suíte verde) e o passo virou gate: uma
-        # regressão nova falha o job em vez de virar dívida. O custo assumido
-        # é que um teste instável barra a publicação do site — se isso
-        # incomodar na prática, rebaixar a informativo é reverter esta linha.
-        run: flutter test
-
-      - name: 🧪 Ponte de HEIC (Node)
-        # A ponte JavaScript que decodifica HEIC/HEIF só existe no navegador,
-        # e `flutter test` roda na VM — então este é o único gate que a
-        # exercita. Ele prova o que cerca a decodificação: o encadeamento de
-        # promessas, o limite de tempo (a chamada de volta do libheif pode
-        # nunca vir) e a liberação da memória do wasm, que o coletor de lixo
-        # do JavaScript não alcança. O runner já traz Node.
-        run: node test/ponte_heic_test.mjs
-
-      - name: 🧪 Ponte de HEIC num Chrome de verdade
-        # O teste em Node usa um libheif de mentira. Foi o libheif DE VERDADE
-        # que quebrou na primeira publicação (a variante compilada não busca
-        # o .wasm sozinha), e só um navegador pega isso: este passo serve
-        # web/ num servidor local e decodifica um HEIC real pela ponte, no
-        # Chrome que o runner já traz. Sem Chrome, o passo FALHA — nunca
-        # pula em silêncio, senão o gate fingiria que verificou.
-        run: |
-          npm install --no-save --no-audit --no-fund playwright-core@1.63.0 > /dev/null
-          node test/ponte_heic_navegador_test.mjs
-
-      - name: 🧪 As páginas legais do site vêm dos documentos (Node)
-        # As páginas de /privacidade/ e /termos/, nos três idiomas, deixaram
-        # de ser HTML digitado e passaram a ser geradas de assets/legal/*.md
-        # (scripts/gerar_paginas_legais.mjs). Enquanto eram digitadas, elas
-        # divergiram do documento e ninguém viu: a página prometia a nuvem
-        # "apenas para quem é Premium" muito depois de o paywall ter saído do
-        # código, porque a catraca de test/politica_legal_test.dart guardava o
-        # .md e o ARB — e o site não vinha do .md.
-        #
-        # Este é o gate que alcança o site. Ele roda o gerador (a página só
-        # existe depois da montagem) e compara bloco a bloco com o documento.
-        # Fica aqui, e não no job que publica, porque tem de falhar ANTES —
-        # o job do site leva ~2 min e um gate que só acusa depois de publicar
-        # não é gate. Não instala nada: o runner já traz Node.
-        run: node test/paginas_legais_site_test.mjs
-
-      - name: 🧪 Redirecionamento do QR (Node)
-        # O `/baixar` é uma Cloudflare Pages Function: roda no servidor, e
-        # `flutter test` nunca chega nele. Um QR já impresso não se corrige,
-        # então um destino errado só apareceria depois do cartaz pronto — daí
-        # este gate. O runner já traz Node.
-        run: node test/redirecionamento_qr_test.mjs
-
-      - name: 🧪 Service worker (Node)
-        # O sw.js é gerado na montagem e roda dentro do navegador: `flutter
-        # test` nunca chega nele, e o que ele protege só aparece sem rede, no
-        # celular de alguém. O teste roda o gerador contra um build falso e o
-        # sw.js gerado num vm com dublês de caches e fetch. O runner já traz
-        # Node.
-        run: node test/service_worker_test.mjs
-
-      - name: 🔤 ARB key parity
-        run: bash scripts/check_arb_sync.sh
-
-      - name: 🧹 Chaves ARB órfãs
-        # A paridade acima compara ARB com ARB e nunca abre um .dart, então
-        # chave que nenhuma tela usa passava batido. Cinquenta apodreciam
-        # assim — e no meio delas estava `appTitle`, que existia traduzida
-        # nos quatro idiomas enquanto a tela mostrava o nome em português
-        # cravado para todo mundo.
-        run: bash scripts/check_arb_orfas.sh
-
-      - name: 🔧 Garantir ripgrep (o scanner de i18n depende dele)
-        # Sem o rg, o scanner buscava vazio e o gate passava sem verificar
-        # nada. Agora o script falha alto se ele faltar — então o runner
-        # precisa tê-lo.
-        #
-        # Vem do release, e não do apt: `apt-get update` roda a cada execução
-        # e o custo oscilava de 10s a mais de 10min conforme o espelho, sem
-        # nada que a gente controle. Baixar o binário é constante e o retry
-        # do curl cobre falha de rede. Instala só quando ausente.
-        env:
-          RIPGREP_VERSAO: 14.1.1
-        run: |
-          if command -v rg >/dev/null; then
-            echo "ripgrep já presente: $(rg --version | head -1)"
-            exit 0
-          fi
-          destino="$RUNNER_TEMP/ripgrep"
-          mkdir -p "$destino"
-          url="https://github.com/BurntSushi/ripgrep/releases/download/${RIPGREP_VERSAO}/ripgrep-${RIPGREP_VERSAO}-x86_64-unknown-linux-musl.tar.gz"
-          curl -sSfL --retry 3 --retry-delay 2 "$url" \
-            | tar xz --strip-components=1 -C "$destino"
-          # Confere aqui mesmo: sem isto, quem quebraria seria o passo
-          # seguinte, com uma mensagem que não aponta para a causa.
-          "$destino/rg" --version
-          echo "$destino" >> "$GITHUB_PATH"
-
-      - name: 🔎 Hardcoded PT scan (bloqueante — gate final da i18n)
-        run: bash scripts/check_hardcoded_pt.sh
-
-  # ──────────────────────────────────────────────────────────────────────
-  # Build de fumaça do Android, FORA do gate.
-  #
-  # Ele vivia dentro do `validate` e segurava a publicação do site por ~8
-  # minutos — um build Android atrasando o webapp, que não tem nada a ver
-  # com ele. Agora corre em paralelo: o site sobe assim que os testes
-  # passam.
-  #
-  # Não roda quando o `apk-candidato` vai rodar (main/dispatch): lá sai um
-  # APK de RELEASE assinado, que prova a mesma camada nativa com mais rigor
-  # — construir os dois seria pagar 8 minutos por uma informação que já
-  # temos.
-  # ──────────────────────────────────────────────────────────────────────
+  # Fumaça de Gradle/NDK/manifest, fora do gate para não segurar a prévia.
+  # No dispatch o apk-candidato já prova a mesma camada.
   build-android-debug:
     name: 🤖 Build Android (fumaça)
     needs: validate
-    if: >-
-      needs.validate.outputs.native_changed == 'true' &&
-      github.ref != 'refs/heads/main' &&
-      github.event_name != 'workflow_dispatch'
+    if: needs.validate.outputs.android_mudou == 'true' && github.event_name == 'push'
     runs-on: ubuntu-latest
-
     steps:
-      - name: 📥 Checkout repository
+      - name: 📥 Checkout
         uses: actions/checkout@v4
-
-      - name: 🧹 Free runner disk space
-        # O build Android esgota o disco do runner (Gradle/NDK/SDK). NÃO
-        # apagar $AGENT_TOOLSDIRECTORY: o Flutter é instalado em
-        # hostedtoolcache e apagá-lo deixava o build sem o comando.
+        with:
+          persist-credentials: false
+      - name: 🧹 Liberar disco do runner
         run: |
           sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/share/boost
           sudo apt-get clean
-
-      - name: 🔐 Create credential stubs
-        uses: ./.github/actions/credenciais-app
-
-      - name: 🛠️ Setup Flutter (pinado)
-        uses: ./.github/actions/setup-flutter
-
+      - uses: ./.github/actions/credenciais-app
+      - uses: ./.github/actions/setup-flutter
       - name: 📱 Build debug APK
         run: flutter build apk --debug
 
-  # ──────────────────────────────────────────────────────────────────────
-  # Publicação do site no Cloudflare Pages — NUNCA em produção.
-  #
-  # Roda só DEPOIS do gate acima passar: código que não compila, não analisa
-  # ou quebra os testes de i18n nunca chega ao ar — coisa que o build manual
-  # na máquina não garantia.
-  #
-  # Destinos por branch (todos prévias/staging; produção é só do release.yml):
-  #   main            → staging.grimorio-de-bolso.pages.dev (espelho de
-  #                     integração; grimoriodebolso.app NÃO muda)
-  #   qualquer outro  → URL de prévia própria, sem tocar no site publicado
-  #
-  # O Cloudflare decide produção comparando o --branch com o campo
-  # "Production branch" do projeto (painel), que precisa estar em `main`.
-  # Como este workflow nunca passa `main`, produção é inalcançável daqui —
-  # e um passo confere via API que o painel continua em `main` (divergência
-  # é ERRO, porque tornaria o alias de staging produção por acidente).
-  #
-  # Secrets necessários (Settings → Secrets and variables → Actions):
-  #   CLOUDFLARE_API_TOKEN   token com permissão "Cloudflare Pages: Edit"
-  #   CLOUDFLARE_ACCOUNT_ID  id da conta (aparece na barra lateral do painel)
-  #   REVENUECAT_WEB_KEY_SANDBOX  chave rcb_sb_ do RevenueCat Billing
-  #                               (sandbox: cartão de teste; nunca cobra)
-  #   GOOGLE_WEB_CLIENT_ID        (opcional) id do cliente OAuth Web do
-  #                               Google. Sem ele o login social segue pelo
-  #                               redirecionamento de página inteira.
-  #   (SUPABASE_URL, SUPABASE_ANON_KEY, TURNSTILE_SITE_KEY, GROQ_API_KEY,
-  #    GEMINI_API_KEY já são usados pelo workflow de release)
-  #
-  # ADMIN_EMAIL/ADMIN_PASSWORD NÃO entram aqui de propósito: o bundle web é
-  # público e qualquer visitante conseguiria lê-los no main.dart.js.
-  # ──────────────────────────────────────────────────────────────────────
+  # main → alias fixo `staging`; outras branches → prévia com o próprio nome.
+  # Este workflow nunca passa --branch=main, então produção é inalcançável.
   deploy-web:
-    name: 🌐 Publicar site (Cloudflare Pages)
+    name: 🌐 Publicar prévia do site
     needs: validate
-    # Na main o `validate` é pulado (o dry-run do release.yml é o gate), então
-    # aqui aceitamos `success` OU `skipped` — mas NUNCA `failure`: numa branch
-    # de trabalho, gate vermelho não publica prévia.
-    if: >-
-      always() &&
-      (needs.validate.result == 'success' || needs.validate.result == 'skipped')
+    # Na main o validate é pulado (skipped); numa branch, gate vermelho não publica.
+    if: always() && (needs.validate.result == 'success' || needs.validate.result == 'skipped')
     runs-on: ubuntu-latest
 
     steps:
-      - name: 📥 Checkout repository
+      - name: 📥 Checkout
         uses: actions/checkout@v4
         with:
-          # Histórico completo por causa das TAGS: a versão que a tela
-          # "Sobre" mostra na prévia/staging é derivada da última tag de
-          # release (abaixo), não digitada à mão.
-          fetch-depth: 0
+          fetch-depth: 0   # tags: a versão da prévia deriva da última release
+          persist-credentials: false
 
-      - name: 🔢 Versão coerente com produção (última tag + commit)
-        # A prévia compila o pubspec, cuja versão é baseline morta — o
-        # "Sobre" dizia 2.0.25 para sempre e parecia deploy quebrado. Aqui a
-        # versão nasce da MESMA fonte da produção (a tag): produção em
-        # v2.0.31 → prévia mostra "2.0.31-dev.<commit>". Sobe sozinha a cada
-        # release, sem ninguém lembrar de editar arquivo nenhum.
-        id: versao
+      - name: 🔢 Versão e alias
+        id: alvo
+        env:
+          REF_NAME: ${{ github.ref_name }}
         run: |
           TAG="$(git tag --list 'v*' --sort=-v:refname | head -1)"
-          NOME="${TAG#v}"
-          NOME="${NOME%%+*}"
-          [ -z "$NOME" ] && NOME="0.0.0"
+          NOME="${TAG#v}"; NOME="${NOME%%+*}"; NOME="${NOME:-0.0.0}"
           echo "nome=${NOME}-dev.${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
-          echo "Prévia identificada como ${NOME}-dev.${GITHUB_SHA::7}"
+          if [ "$REF_NAME" = "main" ]; then
+            echo "alias=staging" >> "$GITHUB_OUTPUT"
+          else
+            echo "alias=$REF_NAME" >> "$GITHUB_OUTPUT"
+          fi
 
-      - name: 🔑 Conferir secrets do Cloudflare
-        # Falha cedo e com mensagem clara: sem isto o erro só apareceria lá
-        # na frente, como uma recusa opaca do wrangler.
+      - name: 🔎 Secrets e Production branch do Cloudflare
+        # Se o painel deixar de apontar produção para `main`, o alias staging
+        # poderia virar produção — por isso divergência é erro.
+        id: cf
         env:
           TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
-          faltando=""
-          [ -z "$TOKEN" ] && faltando="$faltando CLOUDFLARE_API_TOKEN"
-          [ -z "$ACCOUNT" ] && faltando="$faltando CLOUDFLARE_ACCOUNT_ID"
-          if [ -n "$faltando" ]; then
-            echo "::error::Secrets ausentes:$faltando — cadastre em Settings → Secrets and variables → Actions"
+          if [ -z "$TOKEN" ] || [ -z "$ACCOUNT" ]; then
+            echo "::error::CLOUDFLARE_API_TOKEN / CLOUDFLARE_ACCOUNT_ID ausentes."
             exit 1
           fi
-          echo "Secrets do Cloudflare presentes."
+          atual=$(curl -sS --retry 2 -H "Authorization: Bearer $TOKEN" \
+            "https://api.cloudflare.com/client/v4/accounts/$ACCOUNT/pages/projects/grimorio-de-bolso" \
+            | jq -r '.result.production_branch // empty' || true)
+          if [ -z "$atual" ]; then
+            echo "::warning::Não foi possível ler a Production branch do projeto."
+          elif [ "$atual" != "main" ]; then
+            echo "::error::A Production branch do Cloudflare é '$atual', não 'main' — ajuste em Workers & Pages → grimorio-de-bolso → Settings antes de qualquer deploy."
+            exit 1
+          fi
 
-      - name: 🔐 Credenciais do app (sem chaves de IA — a web fala com a função)
-        # Etapa 4 de docs/CHAVES_DE_IA.md: com IA_PELO_SERVIDOR=true a IA na
-        # web passa pela Edge Function `ia`, então as chaves da Groq/Gemini
-        # NÃO entram mais neste bundle. Os stubs vazios mantêm o código
-        # compilando; o gate depois do build falha se alguma reaparecer.
-        uses: ./.github/actions/credenciais-app
+      - uses: ./.github/actions/credenciais-app
 
-      - name: 🛠️ Setup Flutter (pinado)
-        uses: ./.github/actions/setup-flutter
+      - uses: ./.github/actions/setup-flutter
         with:
           com-java: 'false'
 
-      - name: 🏗️ Build web (release)
-        # --no-wasm-dry-run: wasm_ffi e purchases_flutter não são compatíveis
-        # com wasm, e o aviso do dry run não diz respeito a este build.
-        env:
-          SUPABASE_URL: ${{ vars.SUPABASE_URL || secrets.SUPABASE_URL }}
-          SUPABASE_ANON_KEY: ${{ vars.SUPABASE_ANON_KEY || secrets.SUPABASE_ANON_KEY }}
-          TURNSTILE_SITE_KEY: ${{ secrets.TURNSTILE_SITE_KEY }}
-          # Staging usa a chave SANDBOX do RevenueCat Billing (rcb_sb_):
-          # cartão de teste, nada cobrado. A de produção (rcb_) fica só no
-          # release.yml. Sem fallback para a de produção — de propósito:
-          # cair na chave real no staging cobraria cartões de verdade.
-          REVENUECAT_WEB_KEY: ${{ secrets.REVENUECAT_WEB_KEY_SANDBOX }}
-          # ID do cliente OAuth *Web* do Google (o mesmo do provedor Google
-          # no Supabase). Com ele, a entrada com o Google acontece dentro da
-          # página e a aba nunca vai para accounts.google.com. Sem ele, o app
-          # continua no redirecionamento de sempre — não é obrigatório.
-          GOOGLE_WEB_CLIENT_ID: ${{ secrets.GOOGLE_WEB_CLIENT_ID }}
-        run: |
-          # Aviso, não trava: o captcha está EXIGIDO no servidor (Supabase →
-          # Authentication → Attack Protection), e o staging fala com o
-          # MESMO projeto. Sem a site key compilada, a prévia sobe mas
-          # ninguém consegue entrar nem cadastrar por e-mail — e quem for
-          # testar vai achar que quebrou o login. Aqui só avisa (prévia não
-          # publica nada); no release.yml a mesma falta PARA o build.
-          if [ -z "$TURNSTILE_SITE_KEY" ]; then
-            echo "::warning::TURNSTILE_SITE_KEY vazio. Esta prévia sobe sem captcha e o Supabase vai recusar cadastro e entrada por e-mail — teste só o que não depende de login."
-          fi
-
-          # Trava: no staging a chave web PRECISA ser sandbox. Se veio uma
-          # que não começa com rcb_sb_ (ex.: a de produção por engano), para
-          # aqui em vez de aceitar pagamento real numa prévia.
-          if [ -n "$REVENUECAT_WEB_KEY" ] && \
-             ! printf '%s' "$REVENUECAT_WEB_KEY" | grep -q '^rcb_sb_'; then
-            echo "::error::REVENUECAT_WEB_KEY_SANDBOX não é uma chave sandbox (rcb_sb_). O staging não pode usar a chave de produção."
-            exit 1
-          fi
-          # Prévia de branch e staging são ambientes de TESTE: a Leitura do
-          # Ciclo sai sem a espera de 7/30 dias, para dar para avaliar o
-          # resultado sem esperar um mês. O release.yml, que é quem publica
-          # em produção, tem o build dele e NÃO passa este define.
-          # O service worker do Flutter foi removido na 3.47 (o que sobra é
-          # um stub que se desregistra); o nosso sw.js, gerado na montagem, o
-          # substitui — por isso o Flutter não escreve nenhum. E o CanvasKit
-          # local, em vez da CDN do Google, é o que cabe no cache offline.
-          # scripts/assemble_site.sh confere os dois e para sem eles.
-          flutter build web --release --no-wasm-dry-run \
-            --pwa-strategy=none \
-            --no-web-resources-cdn \
-            --build-name="${{ steps.versao.outputs.nome }}" \
-            --dart-define=SUPABASE_URL="$SUPABASE_URL" \
-            --dart-define=SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY" \
-            --dart-define=TURNSTILE_SITE_KEY="$TURNSTILE_SITE_KEY" \
-            --dart-define=UNLIMITED_CYCLE_READINGS=true \
-            --dart-define=REVENUECAT_WEB_KEY="$REVENUECAT_WEB_KEY" \
-            --dart-define=IA_PELO_SERVIDOR=true \
-            --dart-define=GOOGLE_WEB_CLIENT_ID="$GOOGLE_WEB_CLIENT_ID"
-
-      - name: 🧩 Montar publicação (app na raiz, páginas estáticas ao lado)
-        run: bash scripts/assemble_site.sh public
-
-      - name: 🔒 Nenhuma chave de IA no bundle web
-        # Etapa 4 de docs/CHAVES_DE_IA.md. Com IA_PELO_SERVIDOR=true a chave
-        # mora na Edge Function `ia`; se uma reaparecer no JavaScript
-        # publicado, é regressão de segurança e o build para aqui. Padrões:
-        # Groq (gsk_…) e Google AI (AIza…). Não há Firebase no projeto, logo
-        # AIza não tem uso legítimo no bundle. Só lista ARQUIVOS, nunca a
-        # chave, para o log do CI não virar mais um lugar onde ela aparece.
-        run: |
-          padrao='gsk_[A-Za-z0-9]{20,}|AIza[A-Za-z0-9_-]{30,}'
-          if grep -rqE "$padrao" public/; then
-            echo "::error::Chave de IA encontrada no bundle web (gsk_/AIza). A IA na web deve passar pela Edge Function ia — ver docs/CHAVES_DE_IA.md."
-            grep -rlE "$padrao" public/ | head
-            exit 1
-          fi
-          echo "Nenhuma chave de IA no bundle."
-
-      - name: 🔍 A Leitura do Ciclo está DENTRO do bundle?
-        # Verificação de fim de linha: não "o código está no arquivo", mas
-        # "os textos da feature estão no JavaScript que o navegador baixa".
-        #
-        # SÓ TRECHOS ASCII. O dart2js emite JS ASCII-safe: acento vira
-        # escape \u00e1, então procurar os bytes UTF-8 de "grimório" dá
-        # falso negativo — foi assim que este check acusou ausência de uma
-        # feature que estava lá. O controle abaixo existe para essa
-        # armadilha nunca mais passar por diagnóstico de produto.
-        run: |
-          js=$(find public -name '*.js' -type f)
-          if [ -z "$js" ]; then
-            echo "::error::Nenhum .js em public/ — a publicação não foi montada."
-            exit 1
-          fi
-
-          # Controle: string acentuada que existe no app desde sempre. Se
-          # ELA não for encontrada, o problema é o método de busca, não a
-          # feature — e o check diz isso em vez de acusar o inocente.
-          if grep -rqF "Evolução Mágica" $js 2>/dev/null; then
-            echo "ℹ️  Controle acentuado encontrado: acentos estão literais no bundle."
-          else
-            echo "ℹ️  Controle acentuado NÃO encontrado: o bundle escapa não-ASCII."
-            echo "   (esperado no dart2js; por isso as sondas abaixo são ASCII)"
-          fi
-
-          faltando=0
-          procurar() {
-            if grep -rqF "$1" $js 2>/dev/null; then
-              echo "  ✅ $1"
-            else
-              echo "  ❌ AUSENTE: $1"
-              faltando=1
-            fi
-          }
-          echo "Sondas da Leitura do Ciclo (ASCII):"
-          procurar "Leitura do Ciclo"
-          procurar "Leitura da Semana"
-          procurar "Gerar minha leitura"
-          procurar "Abrir minha leitura"
-          procurar "Usar meus sonhos"
-          procurar "tecida a partir do que"
-          procurar "Conhecer a Leitura do Ciclo"
-
-          if [ "$faltando" = "1" ]; then
-            echo "::error::Textos da Leitura do Ciclo ausentes do bundle publicado — investigar compilação condicional, tree-shaking ou build de origem errada."
-            exit 1
-          fi
-          echo "A feature está no bundle."
-
-      - name: 🔖 Carimbo de versão (public/version.txt)
-        # Endereço de deploy é hash e todo build parece igual por fora. Sem
-        # carimbo, "por que a novidade não aparece?" só se responde
-        # adivinhando qual build está servindo aquela aba. Com ele, é abrir
-        # <endereço>/version.txt e ler o commit.
-        run: |
-          {
-            echo "commit:   ${GITHUB_SHA}"
-            echo "branch:   ${GITHUB_REF_NAME}"
-            echo "run:      ${GITHUB_RUN_NUMBER} (${GITHUB_RUN_ID})"
-            echo "buildado: $(date -u +'%Y-%m-%dT%H:%M:%SZ')"
-          } > public/version.txt
-          cat public/version.txt
-
-      - name: 🛡️ Garantir que nenhum admin foi embutido
-        # Rede de segurança: se algum dia ADMIN_* entrar no build por engano,
-        # o site publicado daria acesso de admin a qualquer visitante.
-        run: |
-          if grep -rqE "ADMIN_(EMAIL|PASSWORD)=" public/main.dart.js 2>/dev/null; then
-            echo "::error::Credenciais de admin encontradas no bundle — publicação abortada"
-            exit 1
-          fi
-          echo "Bundle sem credenciais de admin."
-
-      - name: 🎯 Alias de publicação (produção é inalcançável daqui)
-        # ESTE workflow nunca publica produção. Push em main vai para o alias
-        # fixo `staging` (staging.grimorio-de-bolso.pages.dev — o espelho de
-        # integração); qualquer outra branch ganha a prévia com o próprio
-        # nome. grimoriodebolso.app só muda pelo release.yml, que é o único a
-        # passar --branch=main ao wrangler — publicar é decisão, não efeito
-        # colateral de merge.
-        id: alias
-        run: |
-          if [ "${{ github.ref_name }}" = "main" ]; then
-            echo "branch=staging" >> "$GITHUB_OUTPUT"
-          else
-            echo "branch=${{ github.ref_name }}" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: 🔎 Conferir a branch de produção do projeto
-        # O Cloudflare decide produção vs prévia comparando o --branch com o
-        # campo "Production branch" DO PROJETO (painel, não repositório).
-        # Este workflow depende de a produção ser `main`: se alguém mudar o
-        # painel para `staging`, cada push em main passaria a publicar o
-        # domínio — exatamente o acidente que este desenho elimina. Por isso
-        # a divergência aqui é ERRO, não aviso.
-        id: prod_branch
-        env:
-          TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        run: |
-          resposta=$(curl -sS --retry 2 \
-            -H "Authorization: Bearer $TOKEN" \
-            "https://api.cloudflare.com/client/v4/accounts/$ACCOUNT/pages/projects/grimorio-de-bolso" \
-            || true)
-          atual=$(printf '%s' "$resposta" | jq -r '.result.production_branch // empty')
-          if [ -z "$atual" ]; then
-            # Só um aviso: não conseguir ler a configuração não é motivo para
-            # impedir uma publicação de prévia/staging.
-            echo "::warning::Não foi possível ler a branch de produção do projeto."
-            atual="(não foi possível ler)"
-          elif [ "$atual" != "main" ]; then
-            echo "::error::A branch de produção do projeto Cloudflare é '$atual', não 'main'. Com este valor, o alias '$atual' publicaria o domínio em todo push — ajuste em Workers & Pages -> grimorio-de-bolso -> Settings -> Builds & deployments antes de qualquer deploy."
-            exit 1
-          fi
-          echo "atual=$atual" >> "$GITHUB_OUTPUT"
+      - uses: ./.github/actions/build-web
+        with:
+          ambiente: previa
+          build-name: ${{ steps.alvo.outputs.nome }}
+          supabase-url: ${{ vars.SUPABASE_URL || secrets.SUPABASE_URL }}
+          supabase-anon-key: ${{ vars.SUPABASE_ANON_KEY || secrets.SUPABASE_ANON_KEY }}
+          turnstile-site-key: ${{ secrets.TURNSTILE_SITE_KEY }}
+          # Sem fallback para a chave real: prévia nunca cobra.
+          revenuecat-web-key: ${{ secrets.REVENUECAT_WEB_KEY_SANDBOX }}
+          google-web-client-id: ${{ secrets.GOOGLE_WEB_CLIENT_ID }}
 
       - name: 🚀 Deploy para o Cloudflare Pages
         id: deploy
-        # --commit-dirty: o runner escreve arquivos de credencial e as
-        # localizacoes geradas antes do build, entao a arvore fica 'suja'
-        # por construcao — o aviso do wrangler aqui e ruido.
-        uses: cloudflare/wrangler-action@v3
+        uses: cloudflare/wrangler-action@9acf94ace14e7dc412b076f2c5c20b8ce93c79cd # v3.15.0
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: >-
-            pages deploy public
-            --project-name=grimorio-de-bolso
-            --branch=${{ steps.alias.outputs.branch }}
-            --commit-dirty=true
+          command: pages deploy public --project-name=grimorio-de-bolso --branch=${{ steps.alvo.outputs.alias }} --commit-dirty=true
 
       - name: 🔗 Endereço publicado
-        # O wrangler devolve a URL no meio do log, onde ninguém acha. Aqui ela
-        # sobe para o resumo da execução — a primeira coisa que aparece ao
-        # abrir o resultado no GitHub.
         env:
           URL: ${{ steps.deploy.outputs.deployment-url }}
           ALIAS: ${{ steps.deploy.outputs.pages-deployment-alias-url }}
           BRANCH: ${{ github.ref_name }}
-          BRANCH_PRODUCAO: ${{ steps.prod_branch.outputs.atual }}
         run: |
           {
             if [ "$BRANCH" = "main" ]; then
-              echo "## 🧪 Staging atualizado — o site de produção NÃO mudou"
-              echo
-              echo "<https://staging.grimorio-de-bolso.pages.dev>"
-              echo
-              echo "grimoriodebolso.app só muda por um release aprovado"
-              echo "(workflow release.yml)."
+              echo "## 🧪 Staging atualizado — grimoriodebolso.app NÃO mudou"
             else
               echo "## 🔍 Prévia do branch \`$BRANCH\`"
-              echo
-              echo "Não toca no site publicado."
             fi
             echo
-            # `if` e não `[ ... ] && echo`: o runner roda com `bash -e`, e uma
-            # lista && que falha derrubaria o passo — bastaria uma das URLs
-            # vir vazia para a publicação aparecer como quebrada.
-            if [ -n "$ALIAS" ]; then
-              echo "- Endereço do alias: <$ALIAS>"
-            fi
-            if [ -n "$URL" ]; then
-              echo "- Endereço desta publicação: <$URL>"
-            fi
-            echo
-            echo "Branch de produção do projeto: \`$BRANCH_PRODUCAO\` · commit \`${{ github.sha }}\`"
+            if [ -n "$ALIAS" ]; then echo "- Alias: <$ALIAS>"; fi
+            if [ -n "$URL" ]; then echo "- Esta publicação: <$URL>"; fi
           } >> "$GITHUB_STEP_SUMMARY"
 
-  # ──────────────────────────────────────────────────────────────────────
-  # APK candidato: APK de RELEASE assinado, como artifact, para instalar no
-  # aparelho e testar. O versionName ganha sufixo -rc.<sha> para o aparelho
-  # mostrar de qual commit veio.
-  #
-  # SÓ no dispatch manual (botão Run workflow) — é o jeito de tirar um APK
-  # assinado de QUALQUER branch, sem versão nem tag. No push da main ele NÃO
-  # roda: o dry-run do release.yml (mesmo push) já produz um APK assinado
-  # idêntico como artifact; construir os dois seria pagar ~10 min à toa.
-  # ──────────────────────────────────────────────────────────────────────
+  # APK de release assinado de qualquer branch (só pelo botão Run workflow).
+  # Na main, o dry-run do release.yml já entrega APK/AAB assinados.
   apk-candidato:
     name: 📱 APK candidato (assinado)
-    # Depende do site de propósito, e não só do gate: o site leva ~2 min e o
-    # APK ~10, então publicar primeiro é ver o resultado antes. De quebra, se
-    # a publicação falhar, não se gastam 10 minutos de build para descobrir.
-    needs: [validate, deploy-web]
+    needs: validate
     if: >-
       always() &&
       github.event_name == 'workflow_dispatch' &&
-      needs.deploy-web.result == 'success' &&
       (needs.validate.result == 'success' || needs.validate.result == 'skipped')
     runs-on: ubuntu-latest
 
     steps:
-      - name: 📥 Checkout repository
+      - name: 📥 Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # tags: a versão do candidato deriva da última release
+          persist-credentials: false
 
-      - name: 🧹 Free runner disk space
+      - name: 🔢 Versão do candidato
+        id: versao
         run: |
-          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/share/boost
-          sudo apt-get clean
+          TAG="$(git tag --list 'v*' --sort=-v:refname | head -1)"
+          NOME="${TAG#v}"; NOME="${NOME%%+*}"; NOME="${NOME:-0.0.0}"
+          IFS=. read -r MAJOR MINOR PATCH <<< "$NOME"
+          echo "nome=${NOME}-rc.${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+          echo "codigo=$((MAJOR * 100000 + MINOR * 1000 + PATCH * 10))" >> "$GITHUB_OUTPUT"
 
-      - name: 🔐 Credenciais do app (sem chaves de IA — o Android fala com a função)
-        # Etapa 5 de docs/CHAVES_DE_IA.md: com IA_PELO_SERVIDOR=true o Android
-        # também passa pela Edge Function `ia`, então as chaves da Groq/Gemini
-        # NÃO entram mais no APK/AAB. Os stubs vazios mantêm o código
-        # compilando; o gate depois do build falha se alguma reaparecer.
-        uses: ./.github/actions/credenciais-app
+      - uses: ./.github/actions/credenciais-app
         with:
           google-services-json: ${{ secrets.GOOGLE_SERVICES_JSON }}
 
-      - name: 🛠️ Setup Flutter (pinado)
-        uses: ./.github/actions/setup-flutter
+      - uses: ./.github/actions/setup-flutter
 
-      - name: 🔑 Keystore de release (obrigatório)
-        # Candidato assinado em debug não serve: o login Google falharia
-        # (ApiException 10) e o teste local não provaria nada.
-        uses: ./.github/actions/keystore-android
+      - name: 📱 Build APK candidato
+        id: build
+        uses: ./.github/actions/build-android
         with:
+          formato: apk
+          previa: 'true'
+          build-name: ${{ steps.versao.outputs.nome }}
+          build-number: ${{ steps.versao.outputs.codigo }}
           keystore-base64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
           key-alias: ${{ secrets.ANDROID_KEY_ALIAS }}
           key-password: ${{ secrets.ANDROID_KEY_PASSWORD }}
           store-password: ${{ secrets.ANDROID_STORE_PASSWORD }}
           keystore-type: ${{ secrets.ANDROID_KEYSTORE_TYPE || 'JKS' }}
+          supabase-url: ${{ vars.SUPABASE_URL || secrets.SUPABASE_URL }}
+          supabase-anon-key: ${{ vars.SUPABASE_ANON_KEY || secrets.SUPABASE_ANON_KEY }}
+          revenuecat-android-key: ${{ secrets.REVENUECAT_ANDROID_KEY }}
+          revenuecat-ios-key: ${{ secrets.REVENUECAT_IOS_KEY }}
+          admin-email: ${{ secrets.ADMIN_EMAIL }}
+          admin-password: ${{ secrets.ADMIN_PASSWORD }}
+          admob-android-interstitial-id: ${{ secrets.ADMOB_ANDROID_INTERSTITIAL_ID }}
+          turnstile-site-key: ${{ secrets.TURNSTILE_SITE_KEY }}
 
-      - name: 🔢 Versão do candidato
-        # Nome: o do pubspec + -rc.<sha curto>. Código: mesmo esquema do
-        # release (major*100000 + minor*1000 + patch*10) — determinístico e
-        # sempre acima do legado (piso 126).
-        id: versao
-        run: |
-          NOME=$(grep '^version:' pubspec.yaml | sed 's/version: *//' | cut -d+ -f1)
-          SHA_CURTO=$(git rev-parse --short HEAD)
-          MAJOR=$(echo "$NOME" | cut -d. -f1)
-          MINOR=$(echo "$NOME" | cut -d. -f2)
-          PATCH=$(echo "$NOME" | cut -d. -f3)
-          CODIGO=$((MAJOR * 100000 + MINOR * 1000 + PATCH * 10))
-          echo "nome=${NOME}-rc.${SHA_CURTO}" >> "$GITHUB_OUTPUT"
-          echo "codigo=$CODIGO" >> "$GITHUB_OUTPUT"
-
-      - name: 📱 Build APK candidato (release assinado)
+      - name: 📦 Renomear
         env:
-          SUPABASE_URL: ${{ vars.SUPABASE_URL || secrets.SUPABASE_URL }}
-          SUPABASE_ANON_KEY: ${{ vars.SUPABASE_ANON_KEY || secrets.SUPABASE_ANON_KEY }}
-          REVENUECAT_ANDROID_KEY: ${{ secrets.REVENUECAT_ANDROID_KEY }}
-          REVENUECAT_IOS_KEY: ${{ secrets.REVENUECAT_IOS_KEY }}
-          ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
-          ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
-          ADMOB_ANDROID_INTERSTITIAL_ID: ${{ secrets.ADMOB_ANDROID_INTERSTITIAL_ID }}
-          TURNSTILE_SITE_KEY: ${{ secrets.TURNSTILE_SITE_KEY }}
+          ARQUIVO: ${{ steps.build.outputs.arquivo }}
+          NOME: ${{ steps.versao.outputs.nome }}
         run: |
-          # Sem o secret do AdMob, NÃO passa o define — o app usa o id de
-          # teste do Google (um define vazio derrubaria os anúncios).
-          ADMOB_FLAG=""
-          if [ -n "$ADMOB_ANDROID_INTERSTITIAL_ID" ]; then
-            ADMOB_FLAG="--dart-define=ADMOB_ANDROID_INTERSTITIAL_ID=$ADMOB_ANDROID_INTERSTITIAL_ID"
-          fi
-          # Mesmo aviso do build web: com o captcha exigido no servidor,
-          # um APK sem a site key não cadastra nem entra ninguém.
-          CAPTCHA_FLAG=""
-          if [ -n "$TURNSTILE_SITE_KEY" ]; then
-            CAPTCHA_FLAG="--dart-define=TURNSTILE_SITE_KEY=$TURNSTILE_SITE_KEY"
-          else
-            echo "::warning::TURNSTILE_SITE_KEY vazio. Este APK de prévia não consegue cadastrar nem entrar por e-mail — o Supabase exige o token do captcha."
-          fi
-          flutter build apk --release \
-            --build-name="${{ steps.versao.outputs.nome }}" \
-            --build-number="${{ steps.versao.outputs.codigo }}" \
-            --dart-define=SUPABASE_URL="$SUPABASE_URL" \
-            --dart-define=SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY" \
-            --dart-define=REVENUECAT_ANDROID_KEY="$REVENUECAT_ANDROID_KEY" \
-            --dart-define=REVENUECAT_IOS_KEY="$REVENUECAT_IOS_KEY" \
-            --dart-define=ADMIN_EMAIL="$ADMIN_EMAIL" \
-            --dart-define=ADMIN_PASSWORD="$ADMIN_PASSWORD" \
-            --dart-define=IA_PELO_SERVIDOR=true \
-            --dart-define=UNLIMITED_CYCLE_READINGS=true $ADMOB_FLAG $CAPTCHA_FLAG
           mkdir -p candidato
-          cp build/app/outputs/flutter-apk/app-release.apk \
-             "candidato/grimorio-de-bolso-${{ steps.versao.outputs.nome }}.apk"
-
-      - name: 🔒 Nenhuma chave de IA dentro do APK/AAB
-        # Etapa 5 de docs/CHAVES_DE_IA.md. O Android também fala com a Edge
-        # Function `ia`, então a chave da Groq/Gemini não pode estar compilada
-        # no snapshot Dart (libapp.so) nem nos assets. Abre cada artefato e
-        # procura os padrões gsk_/AIza — o AOT guarda literais ASCII como
-        # bytes legíveis, então o grep -a os encontra. Lista só o arquivo,
-        # nunca a chave. Zero artefato também é erro (passe vazio não vale).
-        run: |
-          padrao='gsk_[A-Za-z0-9]{20,}|AIza[A-Za-z0-9_-]{30,}'
-          artefatos=$(find build/app/outputs -type f \( -name '*.apk' -o -name '*.aab' \))
-          if [ -z "$artefatos" ]; then
-            echo "::error::Nenhum .apk/.aab em build/app/outputs — o build não produziu artefato."
-            exit 1
-          fi
-          achou=0
-          for art in $artefatos; do
-            dir=$(mktemp -d)
-            unzip -oq "$art" -d "$dir" 'lib/*' 'assets/*' 'base/lib/*' 'base/assets/*' 2>/dev/null || true
-            if grep -rlaE "$padrao" "$dir" >/dev/null 2>&1; then
-              echo "::error::Chave de IA dentro de $art (gsk_/AIza). O Android deve falar com a Edge Function ia — ver docs/CHAVES_DE_IA.md."
-              grep -rlaE "$padrao" "$dir" | sed "s#^$dir/##" | head
-              achou=1
-            fi
-            rm -rf "$dir"
-          done
-          [ "$achou" = "0" ] || exit 1
-          echo "Nenhuma chave de IA nos artefatos Android."
+          cp "$ARQUIVO" "candidato/grimorio-de-bolso-${NOME}.apk"
 
       - name: 📤 Upload do candidato
         uses: actions/upload-artifact@v4
@@ -814,30 +237,7 @@ jobs:
           path: candidato/*.apk
           retention-days: 14
 
-      - name: 📝 Onde baixar
-        run: |
-          {
-            echo "## 📱 APK candidato \`${{ steps.versao.outputs.nome }}\`"
-            echo
-            echo "Baixe no fim desta página (seção **Artifacts**), instale no"
-            echo "aparelho e teste. Quando estiver satisfeita, publique este"
-            echo "commit com \`bash scripts/release.sh <versão>\`."
-          } >> "$GITHUB_STEP_SUMMARY"
-
-  # ──────────────────────────────────────────────────────────────────────
-  # Abre o PR da branch de trabalho para a main, sozinho.
-  #
-  # Com branch protection ligada, TODA mudança passa por PR — e abrir um PR
-  # à mão a cada branch é o tipo de passo manual que a reestruturação
-  # existe para eliminar.
-  #
-  # Só abre depois do gate VERDE (`needs: validate`): PR aberto com o CI
-  # vermelho é ruído, e o gate leva ~2 min. Se o PR já existe, não faz nada
-  # — os commits seguintes entram nele sozinhos.
-  #
-  # O PR nasce em DRAFT: sinaliza "em andamento" sem impedir você de
-  # acompanhar o diff, e vira normal com um clique quando estiver pronta.
-  # ──────────────────────────────────────────────────────────────────────
+  # Toda branch de trabalho ganha um PR draft para a main depois do gate verde.
   abrir-pr:
     name: 🔀 Abrir PR para a main
     needs: validate
@@ -851,10 +251,11 @@ jobs:
       pull-requests: write
 
     steps:
-      - name: 📥 Checkout repository
+      - name: 📥 Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          persist-credentials: false
 
       - name: 🔀 Abrir se ainda não existe
         env:
@@ -862,62 +263,34 @@ jobs:
           BRANCH: ${{ github.ref_name }}
         run: |
           set -euo pipefail
-
-          existente=$(gh pr list --head "$BRANCH" --state open \
-            --json number --jq '.[0].number // empty')
+          existente=$(gh pr list --head "$BRANCH" --state open --json number --jq '.[0].number // empty')
           if [ -n "$existente" ]; then
-            echo "PR #$existente já está aberto para $BRANCH — nada a fazer."
-            echo "- PR já aberto: #$existente" >> "$GITHUB_STEP_SUMMARY"
+            echo "PR #$existente já aberto — nada a fazer."
             exit 0
           fi
-
-          # Branch sem nada além da main não rende PR — o GitHub recusaria
-          # e o job ficaria vermelho por um não-problema.
           git fetch origin main --quiet
           if [ -z "$(git log --oneline origin/main..HEAD)" ]; then
-            echo "Nenhum commit além da main — PR desnecessário."
+            echo "Nenhum commit além da main."
             exit 0
           fi
-
-          numero=$(git log --oneline origin/main..HEAD | wc -l | tr -d ' ')
-          gh pr create \
-            --base main \
-            --head "$BRANCH" \
-            --draft \
+          gh pr create --base main --head "$BRANCH" --draft \
             --title "$(git log -1 --pretty=%s)" \
-            --body "$(printf '%s\n\n%s\n\n%s\n' \
+            --body "$(printf '%s\n\n%s\n' \
               "Aberto pelo CI depois do gate verde em \`$BRANCH\`." \
-              "$numero commit(s) além da \`main\`:" \
               "$(git log --pretty='- %s' origin/main..HEAD)")"
 
-          novo=$(gh pr list --head "$BRANCH" --state open \
-            --json number --jq '.[0].number // empty')
-          echo "- PR aberto: #$novo" >> "$GITHUB_STEP_SUMMARY"
-
-  # ──────────────────────────────────────────────────────────────────────
-  # PR de publicação: main → release.
-  #
-  # `release` é o branch do que ESTÁ publicado. O que está na main e não
-  # está nele é exatamente o que ainda não chegou em usuária — e esse
-  # diff, num PR aberto, é a lista do que você publicaria se mergeasse.
-  #
-  # O CI abre e mantém o PR; MERGEAR é seu. O merge dispara o release.yml,
-  # que ainda para na aprovação do environment `production`. São dois
-  # cliques seus entre a main e a usuária, e nenhum deles é meu.
-  # ──────────────────────────────────────────────────────────────────────
+  # PR de publicação main → release: o diff é exatamente o que ainda não chegou
+  # às usuárias. Mergear dispara o release.yml.
   pr-release:
     name: 🚢 PR de publicação (main → release)
-    # Sem `needs: validate` — na main esse job é pulado, e o PR de publicação
-    # só abre/atualiza a lista do que seria publicado. O gate da main é o
-    # dry-run do release.yml, cujos checks aparecem NESTE PR.
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      contents: write        # criar o branch `release` na primeira vez
       pull-requests: write
 
     steps:
-      - name: 📥 Checkout repository
+      - name: 📥 Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
@@ -929,43 +302,33 @@ jobs:
           set -euo pipefail
           git fetch --tags --quiet origin
 
-          # Primeira vez: `release` nasce na última tag publicada, não na
-          # main. Assim o primeiro PR já contém tudo que está pronto e
-          # nunca foi publicado, em vez de nascer vazio.
           if ! git ls-remote --exit-code --heads origin release >/dev/null 2>&1; then
-            ULTIMA_TAG=$(git tag -l 'v*' | sort -V | tail -1)
-            base=${ULTIMA_TAG:-$(git rev-list --max-parents=0 HEAD | tail -1)}
-            echo "Branch release não existe — criando em $base."
+            base=$(git tag -l 'v*' | sort -V | tail -1)
+            base=${base:-$(git rev-list --max-parents=0 HEAD | tail -1)}
             git push origin "$base:refs/heads/release"
             git fetch origin release --quiet
           fi
 
           pendentes=$(git log --oneline origin/release..origin/main | wc -l | tr -d ' ')
           if [ "$pendentes" = "0" ]; then
-            echo "Nada por publicar — release já tem tudo da main."
-            echo "Nada por publicar." >> "$GITHUB_STEP_SUMMARY"
+            echo "Nada por publicar."
             exit 0
           fi
 
-          # Mesma conta do release.yml para o merge no branch release.
           ULTIMA=$(git tag -l 'v*' | sed -e 's/^v//' -e 's/+.*//' | sort -V | tail -1)
           ULTIMA=${ULTIMA:-0.0.0}
           PROXIMA=$(echo "$ULTIMA" | awk -F. '{print $1"."$2"."$3+1}')
 
           titulo="🚢 Publicar v$PROXIMA ($pendentes commit(s))"
           corpo=$(printf '%s\n\n%s\n\n%s\n\n%s\n' \
-            "Mergear este PR **publica**: site em grimoriodebolso.app, AAB na faixa de teste da Play e GitHub Release — depois da sua aprovação no environment \`production\`." \
-            "Versão proposta: **v$PROXIMA** (última publicada: v$ULTIMA). Para minor/major, use \`bash scripts/release.sh X.Y.Z\` em vez de mergear." \
+            "Mergear este PR envia o AAB **v$PROXIMA** à faixa de teste da Play (automático) e deixa a GitHub Release em rascunho. O site em grimoriodebolso.app só muda quando você aprovar o environment \`production\`, depois de testar." \
+            "Última publicada: v$ULTIMA. Para minor/major, use o botão *Run workflow* do Release com a versão, em vez de mergear." \
             "### O que entra" \
             "$(git log --pretty='- %s' origin/release..origin/main)")
 
-          existente=$(gh pr list --base release --head main --state open \
-            --json number --jq '.[0].number // empty')
+          existente=$(gh pr list --base release --head main --state open --json number --jq '.[0].number // empty')
           if [ -n "$existente" ]; then
             gh pr edit "$existente" --title "$titulo" --body "$corpo"
-            echo "PR de publicação #$existente atualizado." >> "$GITHUB_STEP_SUMMARY"
           else
-            gh pr create --base release --head main \
-              --title "$titulo" --body "$corpo"
-            echo "PR de publicação aberto." >> "$GITHUB_STEP_SUMMARY"
+            gh pr create --base release --head main --title "$titulo" --body "$corpo"
           fi
