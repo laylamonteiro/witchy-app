@@ -1,169 +1,78 @@
 # CI/CD do Grimório de Bolso
 
-Dois workflows, papéis sem sobreposição:
+Princípio: **publicar é decisão, nunca efeito colateral de merge** — e o site só
+vai ao ar depois que a versão Android passou pela faixa de teste da Play.
 
-| Workflow | Dispara em | O que faz | Toca usuários? |
+| Workflow | Dispara em | O que faz | Toca usuárias? |
 |---|---|---|---|
-| `branch-validate.yml` | push em qualquer branch | gate de qualidade (branches) + prévia/staging do site + APK candidato (dispatch) | **Nunca** |
-| `release.yml` | push na `main` (dry-run), push na `release` / tag `vX.Y.Z` / botão Run workflow | gate + builds assinados; **na main só valida**, no resto publica site, Play e Release | **Só com aprovação** |
+| `branch-validate.yml` | push em qualquer branch, Run workflow | gate, prévia/staging do site, PRs automáticos, APK candidato (botão) | **Nunca** |
+| `release.yml` | push na `main` (dry-run), push na `release`, Run workflow | gate + builds assinados; publica Play (teste) e, com aprovação, o site | **Só o site, e só com aprovação** |
 
-O princípio: **publicar é decisão, nunca efeito colateral de merge.**
-
-Na `main`, os dois se dividem sem sobrepor: o `release.yml` roda em **dry-run**
-(gate + AAB/APK assinados + web de produção, sem publicar), e o
-`branch-validate.yml` fica só com o que é dele — **staging** e o **PR de
-publicação**. Assim toda main fica provadamente pronta pra publicar, sem
-nenhum dry-run manual.
-
-## O fluxo do dia a dia
+## O fluxo
 
 ```
-qualquer branch ──push──▶ gate + prévia própria do site
-        │                 + o CI ABRE O PR para a main (draft)
-        │
-        ▼ VOCÊ mergeia o PR
-      main ──push──▶ branch-validate: STAGING (staging.grimorio-de-bolso.pages.dev)
-        │                  + o CI ABRE/ATUALIZA o PR "🚢 Publicar vX.Y.Z"
-        │            release.yml (DRY-RUN, mesmo push): gate + AAB/APK
-        │                  assinados (artifact) + web de produção — NÃO publica
-        │
-        │  baixa o APK do dry-run, instala no aparelho, testa
-        │  (e o site novo já está em staging para testar na web)
-        ▼ VOCÊ mergeia o PR de publicação
-    release ──push──▶ release.yml: guardas → gate → APK+AAB+web do commit
-        │
-        ▼ VOCÊ aprova o environment `production`
-   site em produção + AAB na faixa de teste da Play + GitHub Release
-        │
-        ▼ testa pela faixa de teste e, quando aprovar,
-   promove para produção NA PLAY CONSOLE (manual, de propósito)
+branch ──push──▶ gate + prévia do site + PR draft para a main (automático)
+   ▼ você mergeia
+ main ──push──▶ staging.grimorio-de-bolso.pages.dev
+   │            + dry-run do release.yml (gate + AAB/APK assinados + web de produção)
+   │            + PR "🚢 Publicar vX.Y.Z" (main → release), aberto/atualizado sozinho
+   ▼ você mergeia o PR de publicação
+release ──push──▶ preparar → gate ‖ build Android ‖ build web (em paralelo)
+   │
+   ├─▶ play-interno (AUTOMÁTICO): AAB na faixa de teste → tag vX.Y.Z → Release em rascunho
+   │      ▼ você testa pela faixa interna da Play
+   └─▶ producao-web (você APROVA o environment `production`):
+          site em grimoriodebolso.app → Release publicada
+   ▼ quando quiser
+ promove teste → produção NA PLAY CONSOLE (manual, de propósito)
 ```
 
-O CI abre os dois PRs; **mergear os dois é você**, e ainda há a aprovação
-do environment depois. Três decisões suas entre uma branch e a usuária, e
-nenhum passo manual de digitação entre elas.
+- Achou um problema na faixa interna? **Rejeite** a aprovação: o site não muda.
+  A versão fica gasta (o versionCode já foi à Play) e o próximo merge usa o patch seguinte.
+- Patch = mergear o PR. **Minor/major** = Actions → 🚀 Release → *Run workflow* com a
+  versão (ex.: `2.1.0`), a partir da `main`.
+- Enquanto um release espera aprovação do site, o próximo release espera na fila
+  (um por vez). Os dry-runs da `main` não esperam — têm fila própria.
 
-## branch-validate.yml
+## Jobs do `release.yml`
 
-- **Gate** (bloqueante): `flutter analyze`, suíte completa de testes,
-  paridade dos 4 ARBs, scanner de PT hardcoded. ~2 min — o build Android
-  saiu daqui de propósito (ver abaixo). **Não roda na `main`**: lá o dry-run
-  do `release.yml` (mesmo push) é o gate; roda nas branches de trabalho e nos
-  PRs, onde é o required status check.
-- **Build de fumaça Android**: job separado, só quando `android/` ou
-  `pubspec` mudam. Fora do gate para não atrasar o site em ~8 min.
-- **Na `main`**: este workflow faz só STAGING + PR de publicação. O gate, o
-  APK e o AAB assinados vêm do dry-run do `release.yml`, disparado no mesmo
-  push — sem repetição.
-- **Site**: toda branch ganha prévia própria; `main` publica no alias fixo
-  `staging` — **grimoriodebolso.app não muda nunca por este workflow** (ele
-  jamais passa `--branch=main` ao wrangler, e um passo confere via API que
-  a Production branch do projeto Cloudflare segue `main`; divergência é
-  erro).
-- **PR automático**: toda branch que não seja `main` ganha um PR em draft
-  para a `main` assim que o gate fica verde (job `abrir-pr`). Já existindo
-  um PR aberto, o job não faz nada — os commits seguintes entram nele.
-- **Cache do site**: `site/_headers` obriga o navegador a revalidar os
-  pontos de entrada (`/`, `index.html`, `flutter_bootstrap.js`, `sw.js`,
-  `version.*`). O resto fica no cache do service worker, por versão, e só é
-  baixado de novo quando o md5 muda. Junto com o recarregamento automático em
-  `controllerchange` (em `web/index.html`), acaba o "publicou e não
-  aparece até recarregar duas vezes".
-  O `sw.js` é NOSSO, gerado na montagem (`scripts/gerar_service_worker.mjs`,
-  lógica em `scripts/service_worker/logica.js`): o service worker do Flutter
-  foi descontinuado e a 3.47 o desregistra. É ele que faz o app abrir sem
-  rede depois da primeira visita — e exige `--pwa-strategy=none` e
-  `--no-web-resources-cdn` no build (a montagem para sem eles).
-  `test/service_worker_test.mjs` roda no gate dos dois workflows.
-- **Carimbo de versão**: todo site publicado (prévia, staging e produção)
-  serve `/version.txt` com commit, branch e run. "Por que a novidade não
-  aparece?" se responde abrindo `<endereço>/version.txt`, em vez de
-  adivinhar qual build está naquela aba.
-- **APK candidato** (só no **dispatch** manual): APK de **release assinado**,
-  versionName `X.Y.Z-rc.<sha>`, como artifact — o jeito de tirar um APK
-  assinado de qualquer branch. Na `main` não roda: o dry-run do `release.yml`
-  já produz um APK assinado idêntico no mesmo push.
+- **preparar**: versão (`versionName` = X.Y.Z; `versionCode` = `M*100000 + m*1000 + p*10`),
+  maior que toda tag, acima do legado (126), secrets presentes, faixa da Play existe
+  (`scripts/ci/conferir_faixa_play.py`). Publicar pelo botão só a partir da `main`.
+- **validar / build-android (apk, aab) / build-web**: em paralelo, do mesmo SHA. Cada
+  binário Android confere a própria assinatura contra o SHA-1 registrado. O APK é só anexo:
+  se falhar, a publicação segue sem ele.
+- **play-interno**: idempotente — num re-run, a tag existente indica que o upload já foi feito.
+- **producao-web**: atrás do environment `production`.
+- **Faixa**: variável de repositório `PLAY_TRACK` (sem ela, `internal`); `production` é recusado.
 
-## release.yml
+## Composite actions (`.github/actions/`)
 
-- **Quando roda**: push na `release` ou tag `vX.Y.Z` → **publica**; push na
-  `main` → **dry-run** (valida e builda tudo, não publica); botão Run workflow
-  → publica ou dry-run conforme `somente_validar`. Um único ponto no job
-  `preparar` decide "isto é dry-run?" (`main` sempre é) e os jobs `secrets` e
-  `publicar` leem dessa flag.
-- **Versão**: a tag é a fonte de verdade. `versionName` = tag sem o `v`;
-  `versionCode` = `major*100000 + minor*1000 + patch*10` (2.1.0 → 201000).
-  Determinístico, monotônico (verificado contra todas as tags, incluindo as
-  legadas `vX.Y.Z+N`), sem commit de bot e sem tocar no pubspec.
-- **Guardas antes de buildar**: semver estrito, versão maior que toda tag
-  existente, versionCode acima do legado (piso 126), secrets presentes.
-- **Gate bloqueante**: os mesmos testes do branch-validate, no commit exato
-  da tag — sem `|| echo`.
-- **Builds do mesmo SHA**: APK e AAB em **jobs paralelos** (matrix, um
-  runner cada — ~10 min em vez de ~20) e o site. Cada job confere a própria
-  assinatura contra o SHA-1 registrado (APK via apksigner, que lê v2/v3;
-  AAB via keytool, que lê o v1 do bundle); divergência é erro fatal.
-  **A Play precisa só do AAB** — o APK é anexo da GitHub Release e material
-  de teste. Publicar exige o AAB e o site verdes; um APK vermelho não
-  segura a publicação, só deixa de ser anexado (com aviso).
-- **Publicação** (job único, atrás do environment `production`):
-  tag (se veio do botão) → site (`--branch=main`) → AAB na faixa de teste
-  da Play → GitHub Release com `target_commitish` no SHA buildado.
-- **Qual faixa da Play**: a variável de repositório `PLAY_TRACK` (Settings →
-  Secrets and variables → Actions → *Variables*). Sem ela, `internal`.
-  Trocar de faixa é mudar a variável — não exige commit. `production` é
-  recusado de propósito: promover é decisão manual na Play Console. O job
-  `preparar` ainda **pergunta à Play se a faixa existe** antes de qualquer
-  build (`scripts/ci/conferir_faixa_play.py`) — o identificador errado morre
-  em ~20s, e não no upload, que é depois do site já ter ido ao ar.
-- **Dry-run**: acontece automático em **todo push na `main`**, e também pelo
-  botão Run workflow com `somente_validar: true`. Exercita tudo até os builds
-  (AAB/APK assinados, web de produção) sem criar tag nem publicar nada —
-  incluindo a conferência da faixa da Play, que é justamente o que não dá para
-  adivinhar no papel. É o que mantém a `main` sempre pronta pra publicar.
+Uma receita só para os dois workflows:
 
-## Como publicar uma versão
+| Action | O que faz |
+|---|---|
+| `setup-flutter` | Java + Flutter **pinado** + pub get + gen-l10n (atualizar o Flutter = mudar o default lá) |
+| `credenciais-app` | stubs vazios das credenciais de IA + `google-services.json` opcional |
+| `gate` | analyze, catraca de `use_build_context_synchronously`, `flutter test`, testes Node/Chrome, ARBs, scan de PT |
+| `build-web` | travas do ambiente (`producao`/`previa`), build, montagem, bundle sem chave de IA/admin, `version.txt` |
+| `build-android` | keystore, build apk/aab, sem chave de IA, conferência de assinatura |
+| `keystore-android` | decodifica e valida o keystore |
 
-```bash
-git checkout main && git pull
-bash scripts/release.sh 2.1.0
-# → acompanhe em Actions, aprove o environment "production",
-# → teste pela faixa de teste da Play e promova na Play Console.
-```
+Actions de terceiros são fixadas por SHA de commit (tag no comentário).
 
-## Setup que vive fora do repositório
+## Setup fora do repositório
 
-1. **Secrets** (Settings → Secrets and variables → Actions): os já
-   existentes (`ANDROID_KEYSTORE_*`, `GOOGLE_SERVICES_JSON`,
-   `GROQ/GEMINI`, `SUPABASE_*`, `REVENUECAT_*`, `ADMIN_*`,
-   `TURNSTILE_SITE_KEY`, `CLOUDFLARE_*`) mais
-   **`PLAY_SERVICE_ACCOUNT_JSON`** — ver `docs/PLAY_SERVICE_ACCOUNT.md`.
-   Os secrets `PROKERALA_*` deixaram de ser lidos por qualquer workflow (o
-   mapa astral é calculado no aparelho); podem ser apagados do GitHub.
-1b. **Variável `PLAY_TRACK`** (mesma tela, aba *Variables*): o identificador
-   da faixa da Play que recebe o AAB. Como descobrir o seu está em
-   `docs/PLAY_SERVICE_ACCOUNT.md`.
-2. **Environment `production`** (Settings → Environments): criar com
-   *Required reviewers* = você. É o clique que separa "buildou" de
-   "usuários viram".
-3. **Cloudflare Pages**: Production branch do projeto `grimorio-de-bolso`
-   precisa ser `main` (Workers & Pages → Settings → Builds & deployments).
-4. **Branch protection na `main`** (Settings → Branches, DEPOIS do primeiro
-   run verde dos workflows novos): require status check
-   `🔍 Analyze, Test & Build`, require branch up to date, block force
-   pushes, restrict deletions, sem bypass — nenhum bot commita mais na main.
+1. **Secrets** (Settings → Secrets and variables → Actions): `ANDROID_KEYSTORE_*`,
+   `GOOGLE_SERVICES_JSON`, `SUPABASE_*`, `REVENUECAT_*` (incl. `REVENUECAT_WEB_KEY_SANDBOX`),
+   `ADMIN_*`, `ADMOB_ANDROID_INTERSTITIAL_ID`, `TURNSTILE_SITE_KEY`, `GOOGLE_WEB_CLIENT_ID`,
+   `CLOUDFLARE_*`, `PLAY_SERVICE_ACCOUNT_JSON` (ver `docs/PLAY_SERVICE_ACCOUNT.md`).
+2. **Variável `PLAY_TRACK`** (aba *Variables*): identificador da faixa de teste.
+3. **Environment `production`** (Settings → Environments): *Required reviewers* = você e
+   *Deployment branches* = `release` e `main`.
+4. **Cloudflare Pages**: Production branch do projeto `grimorio-de-bolso` = `main`
+   (os workflows conferem e falham se divergir).
+5. **Branch protection na `main`**: required check `🔍 Analyze, Test & Build`.
 
-## Endereços e allowlists
-
-Turnstile, Supabase e RevenueCat autorizam por domínio: um endereço novo
-falha só ali, com o app correto. O que cadastrar em cada um está em
-`docs/AMBIENTES_WEB.md` — leia antes de testar login ou compra num
-endereço que você nunca usou.
-
-## Versões
-
-- Flutter/Java do CI: pinados em `.github/actions/setup-flutter/action.yml`
-  (um lugar só). Para atualizar o Flutter do CI, mude o default lá.
-- As composite actions em `.github/actions/` (`setup-flutter`,
-  `credenciais-app`, `keystore-android`) são compartilhadas pelos dois
-  workflows — mudou num, valeu nos dois.
+Endereços novos precisam estar nas allowlists de Turnstile, Supabase e RevenueCat —
+ver `docs/AMBIENTES_WEB.md`. Todo site publicado serve `/version.txt` com versão e commit.

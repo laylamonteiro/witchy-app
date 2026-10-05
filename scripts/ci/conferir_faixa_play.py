@@ -5,9 +5,8 @@ A faixa vem de uma variável de repositório (PLAY_TRACK) e, para uma faixa
 fechada criada à mão, o identificador não é o rótulo que aparece na tela —
 é um id que só se descobre na URL da Play Console. Errar é fácil.
 
-Sem esta conferência, o erro só apareceria no upload, que acontece DEPOIS
-do deploy do site: produção já teria mudado e o app não. Aqui o release
-morre em ~20 segundos, antes de qualquer build e de qualquer publicação.
+Sem esta conferência, o erro só apareceria no upload, depois de ~10 min de
+build. Aqui o release morre em ~20 segundos, antes de qualquer build.
 
 Entra por ambiente (nada em argv, para o JSON da service account não vazar
 em `ps` nem no log do runner):

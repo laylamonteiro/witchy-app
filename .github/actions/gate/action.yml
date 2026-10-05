@@ -1,0 +1,77 @@
+name: Gate de qualidade
+description: >-
+  O gate bloqueante, num lugar só: o branch-validate (branches de trabalho) e
+  o release.yml (commit a publicar) rodam exatamente os mesmos passos.
+  Pressupõe checkout + credenciais-app + setup-flutter já feitos.
+
+runs:
+  using: composite
+  steps:
+    - name: 🧭 Analyze (falha em erros/warnings)
+      shell: bash
+      run: |
+        set -o pipefail
+        flutter analyze --no-fatal-infos 2>&1 | tee "$RUNNER_TEMP/analyze.txt"
+
+    - name: 🔒 Contexto usado depois do await (catraca, só pode cair)
+      # `use_build_context_synchronously` é info (perdoada acima), mas dá
+      # exceção em runtime. O número só pode diminuir.
+      shell: bash
+      run: |
+        TETO=25
+        atual=$(grep -c 'use_build_context_synchronously' "$RUNNER_TEMP/analyze.txt" || true)
+        echo "use_build_context_synchronously: $atual (teto $TETO)"
+        if [ "$atual" -gt "$TETO" ]; then
+          echo "::error::$atual usos de contexto depois do await — o teto é $TETO. Guarde o contexto antes do await, ou confira \`mounted\` depois dele."
+          exit 1
+        fi
+        if [ "$atual" -lt "$TETO" ]; then
+          echo "::warning::$atual usos (teto $TETO): baixe TETO para $atual em .github/actions/gate/action.yml."
+        fi
+
+    - name: 🧪 Suíte completa
+      shell: bash
+      run: flutter test
+
+    # Código que `flutter test` não alcança (navegador, Pages Function,
+    # montagem do site). O runner já traz Node e Chrome.
+    - name: 🧪 Testes Node (HEIC, páginas legais, QR, service worker)
+      shell: bash
+      run: |
+        node test/ponte_heic_test.mjs
+        node test/paginas_legais_site_test.mjs
+        node test/redirecionamento_qr_test.mjs
+        node test/service_worker_test.mjs
+
+    - name: 🧪 Ponte de HEIC num Chrome de verdade
+      shell: bash
+      run: |
+        npm install --no-save --no-audit --no-fund playwright-core@1.63.0 > /dev/null
+        node test/ponte_heic_navegador_test.mjs
+
+    - name: 🔤 ARBs (paridade e chaves órfãs)
+      shell: bash
+      run: |
+        bash scripts/check_arb_sync.sh
+        bash scripts/check_arb_orfas.sh
+
+    - name: 🔧 Garantir ripgrep (o scanner de PT depende dele)
+      shell: bash
+      env:
+        RIPGREP_VERSAO: 14.1.1
+      run: |
+        if command -v rg >/dev/null; then
+          rg --version | head -1
+          exit 0
+        fi
+        destino="$RUNNER_TEMP/ripgrep"
+        mkdir -p "$destino"
+        curl -sSfL --retry 3 --retry-delay 2 \
+          "https://github.com/BurntSushi/ripgrep/releases/download/${RIPGREP_VERSAO}/ripgrep-${RIPGREP_VERSAO}-x86_64-unknown-linux-musl.tar.gz" \
+          | tar xz --strip-components=1 -C "$destino"
+        "$destino/rg" --version
+        echo "$destino" >> "$GITHUB_PATH"
+
+    - name: 🔎 Português hardcoded
+      shell: bash
+      run: bash scripts/check_hardcoded_pt.sh

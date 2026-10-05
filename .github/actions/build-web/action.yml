@@ -1,0 +1,149 @@
+name: Build do site
+description: >-
+  Build web + montagem do site em public/, com as travas de cada ambiente e
+  as verificações do bundle (sem chave de IA, sem admin, version.txt).
+  `producao` = grimoriodebolso.app; `previa` = staging e prévias de branch.
+  Pressupõe checkout + credenciais-app + setup-flutter já feitos.
+
+inputs:
+  ambiente:
+    description: producao | previa
+    required: true
+  build-name:
+    required: true
+  build-number:
+    required: false
+    default: ''
+  supabase-url:
+    required: true
+  supabase-anon-key:
+    required: true
+  turnstile-site-key:
+    required: false
+    default: ''
+  revenuecat-web-key:
+    required: false
+    default: ''
+  google-web-client-id:
+    required: false
+    default: ''
+
+runs:
+  using: composite
+  steps:
+    - name: 🚧 Travas do ambiente
+      shell: bash
+      env:
+        AMBIENTE: ${{ inputs.ambiente }}
+        TURNSTILE_SITE_KEY: ${{ inputs.turnstile-site-key }}
+        REVENUECAT_WEB_KEY: ${{ inputs.revenuecat-web-key }}
+        GOOGLE_WEB_CLIENT_ID: ${{ inputs.google-web-client-id }}
+      run: |
+        case "$AMBIENTE" in
+          producao)
+            # Chave real (rcb_) cobra de verdade; sandbox em produção = ninguém paga.
+            if printf '%s' "$REVENUECAT_WEB_KEY" | grep -q '^rcb_sb_'; then
+              echo "::error::REVENUECAT_WEB_KEY é sandbox (rcb_sb_). A produção precisa da chave real (rcb_)."
+              exit 1
+            fi
+            # O captcha é exigido no Supabase: sem a site key ninguém entra.
+            if [ -z "$TURNSTILE_SITE_KEY" ]; then
+              echo "::error::TURNSTILE_SITE_KEY vazio — o site publicaria sem conseguir cadastrar nem entrar ninguém."
+              exit 1
+            fi
+            # Sem o client ID Web, o login Google volta ao redirecionamento.
+            case "$GOOGLE_WEB_CLIENT_ID" in
+              *.apps.googleusercontent.com) ;;
+              *)
+                echo "::error::GOOGLE_WEB_CLIENT_ID ausente ou inválido (esperado *.apps.googleusercontent.com)."
+                exit 1
+                ;;
+            esac
+            ;;
+          previa)
+            # Prévia nunca pode cobrar cartão de verdade.
+            if [ -n "$REVENUECAT_WEB_KEY" ] && \
+               ! printf '%s' "$REVENUECAT_WEB_KEY" | grep -q '^rcb_sb_'; then
+              echo "::error::REVENUECAT_WEB_KEY_SANDBOX não é sandbox (rcb_sb_). A prévia não pode usar a chave de produção."
+              exit 1
+            fi
+            if [ -z "$TURNSTILE_SITE_KEY" ]; then
+              echo "::warning::TURNSTILE_SITE_KEY vazio: esta prévia não consegue cadastrar nem entrar por e-mail."
+            fi
+            ;;
+          *)
+            echo "::error::ambiente '$AMBIENTE' inválido (producao | previa)."
+            exit 1
+            ;;
+        esac
+
+    - name: 🏗️ Build web (release)
+      # --pwa-strategy=none + --no-web-resources-cdn: o sw.js é nosso (gerado
+      # na montagem) e o CanvasKit local é o que cabe no cache offline.
+      # ADMIN_* nunca entra: o bundle web é público.
+      shell: bash
+      env:
+        AMBIENTE: ${{ inputs.ambiente }}
+        NOME: ${{ inputs.build-name }}
+        CODIGO: ${{ inputs.build-number }}
+        SUPABASE_URL: ${{ inputs.supabase-url }}
+        SUPABASE_ANON_KEY: ${{ inputs.supabase-anon-key }}
+        TURNSTILE_SITE_KEY: ${{ inputs.turnstile-site-key }}
+        REVENUECAT_WEB_KEY: ${{ inputs.revenuecat-web-key }}
+        GOOGLE_WEB_CLIENT_ID: ${{ inputs.google-web-client-id }}
+      run: |
+        EXTRAS=()
+        if [ -n "$CODIGO" ]; then
+          EXTRAS+=(--build-number="$CODIGO")
+        fi
+        # Prévias liberam a Leitura do Ciclo sem a espera de 7/30 dias.
+        if [ "$AMBIENTE" = "previa" ]; then
+          EXTRAS+=(--dart-define=UNLIMITED_CYCLE_READINGS=true)
+        fi
+        flutter build web --release --no-wasm-dry-run \
+          --pwa-strategy=none \
+          --no-web-resources-cdn \
+          --build-name="$NOME" \
+          --dart-define=SUPABASE_URL="$SUPABASE_URL" \
+          --dart-define=SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY" \
+          --dart-define=TURNSTILE_SITE_KEY="$TURNSTILE_SITE_KEY" \
+          --dart-define=REVENUECAT_WEB_KEY="$REVENUECAT_WEB_KEY" \
+          --dart-define=IA_PELO_SERVIDOR=true \
+          --dart-define=GOOGLE_WEB_CLIENT_ID="$GOOGLE_WEB_CLIENT_ID" \
+          "${EXTRAS[@]}"
+
+    - name: 🧩 Montar o site (app na raiz, páginas estáticas ao lado)
+      shell: bash
+      run: bash scripts/assemble_site.sh public
+
+    - name: 🔒 Bundle sem chave de IA nem credencial de admin
+      # A IA passa pela Edge Function `ia` (docs/CHAVES_DE_IA.md). Lista só
+      # arquivos, nunca a chave.
+      shell: bash
+      run: |
+        padrao='gsk_[A-Za-z0-9]{20,}|AIza[A-Za-z0-9_-]{30,}'
+        if grep -rqE "$padrao" public/; then
+          echo "::error::Chave de IA no bundle web (gsk_/AIza) — ver docs/CHAVES_DE_IA.md."
+          grep -rlE "$padrao" public/ | head
+          exit 1
+        fi
+        if grep -rqE "ADMIN_(EMAIL|PASSWORD)=" public/main.dart.js 2>/dev/null; then
+          echo "::error::Credenciais de admin no bundle web — publicação abortada."
+          exit 1
+        fi
+        echo "Bundle limpo."
+
+    - name: 🔖 Carimbo de versão (public/version.txt)
+      # "Por que a novidade não aparece?" → abrir <endereço>/version.txt.
+      shell: bash
+      env:
+        NOME: ${{ inputs.build-name }}
+      run: |
+        {
+          echo "versao:   ${NOME}"
+          echo "commit:   ${GITHUB_SHA}"
+          echo "branch:   ${GITHUB_REF_NAME}"
+          echo "run:      ${GITHUB_RUN_NUMBER} (${GITHUB_RUN_ID})"
+          echo "buildado: $(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+        } > public/version.txt
+        cat public/version.txt
