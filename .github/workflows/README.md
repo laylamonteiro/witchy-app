@@ -5,7 +5,7 @@ vai ao ar depois que a versão Android passou pela faixa de teste da Play.
 
 | Workflow | Dispara em | O que faz | Toca usuárias? |
 |---|---|---|---|
-| `branch-validate.yml` | push em qualquer branch, Run workflow | gate, prévia/staging do site, PRs automáticos, APK candidato (botão) | **Nunca** |
+| `branch-validate.yml` | push em qualquer branch exceto `release`, Run workflow | gate, prévia/staging do site, PRs automáticos, APK candidato (botão) | **Nunca** |
 | `release.yml` | push na `main` (dry-run), push na `release`, Run workflow | gate + builds assinados; publica Play (teste) e, com aprovação, o site | **Só o site, e só com aprovação** |
 
 ## O fluxo
