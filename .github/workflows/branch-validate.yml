@@ -6,13 +6,14 @@ name: ✅ Branch Validation
 #   main               → staging do site + PR "🚢 Publicar" (main → release).
 #                        O gate da main é o dry-run do release.yml, no mesmo push.
 #   Run workflow       → também gera um APK candidato assinado de qualquer branch.
+#   release            → ignorado: o release.yml já roda o gate no mesmo commit.
 #
 # Sem paths-ignore: o `validate` é required check e precisa rodar em todo PR,
 # senão um PR só de docs ficaria travado esperando um check que nunca vem.
 
 on:
   push:
-    branches: ['**']
+    branches-ignore: [release]
   workflow_dispatch:
 
 concurrency:
